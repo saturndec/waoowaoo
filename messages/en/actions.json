@@ -1,0 +1,18 @@
+{
+  "storyboard": "Storyboard",
+  "storyboard_candidate": "Storyboard Candidate",
+  "character": "Character",
+  "location": "Location",
+  "video": "Video",
+  "analyze": "Analyze",
+  "analyze_character": "Character Analysis",
+  "analyze_location": "Location Analysis",
+  "clips": "Clip Splitting",
+  "storyboard_text_plan": "Storyboard Planning",
+  "storyboard_text_detail": "Storyboard Details",
+  "tts": "Text-to-Speech",
+  "regenerate": "Regenerate",
+  "voice-generate": "Voice Generation",
+  "voice-design": "Voice Design",
+  "lip-sync": "Lip Sync"
+}

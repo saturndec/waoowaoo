@@ -1,0 +1,7 @@
+{
+    "analyzing": "Analyzing story structure...",
+    "splittingClips": "Splitting into clips...",
+    "convertingScreenplay": "Converting to screenplay...",
+    "submittingStoryboard": "Submitting storyboard...",
+    "step": "Step {current} of {total}"
+}

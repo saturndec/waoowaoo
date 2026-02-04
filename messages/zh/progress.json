@@ -1,0 +1,7 @@
+{
+    "analyzing": "正在分析故事结构...",
+    "splittingClips": "正在分割片段...",
+    "convertingScreenplay": "正在转换为分镜脚本...",
+    "submittingStoryboard": "正在提交分镜...",
+    "step": "第 {current} 步，共 {total} 步"
+}

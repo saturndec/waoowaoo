@@ -1,0 +1,18 @@
+{
+    "selectCharacter": "Select Character from Asset Hub",
+    "selectLocation": "Select Location from Asset Hub",
+    "selectVoice": "Select Voice from Asset Hub",
+    "searchPlaceholder": "Search by name or folder...",
+    "noAssets": "No assets in Asset Hub",
+    "createInAssetHub": "Please create characters/locations/voices in Asset Hub first",
+    "noSearchResults": "No matching assets found",
+    "appearances": "appearances",
+    "images": "images",
+    "cancel": "Cancel",
+    "confirmCopy": "Confirm Copy",
+    "copyFromGlobal": "Copy from Asset Hub",
+    "copySuccess": "Copy successful",
+    "copyFailed": "Copy failed",
+    "preview": "Preview",
+    "stop": "Stop"
+}

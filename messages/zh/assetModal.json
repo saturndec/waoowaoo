@@ -1,0 +1,58 @@
+{
+    "character": {
+        "title": "新建角色",
+        "name": "角色名称",
+        "namePlaceholder": "请输入角色名称",
+        "modeReference": "参考图模式",
+        "modeDescription": "描述模式",
+        "uploadReference": "上传参考图",
+        "pasteHint": "Ctrl+V 粘贴",
+        "dropOrClick": "点击上传或拖拽图片",
+        "supportedFormats": "支持 JPG、PNG 等格式",
+        "nameRequired": "请先输入角色名称才能使用参考图转换",
+        "convertToSheet": "将参考图转换为标准三视图",
+        "referenceTip": "上传任意角色图片，AI 将自动生成标准三视图设定",
+        "description": "角色描述",
+        "descPlaceholder": "请输入角色外貌描述...",
+        "generationMode": "生成方式",
+        "directGenerate": "直接生成",
+        "extractPrompt": "反推提示词",
+        "directGenerateDesc": "直接使用参考图生成角色设定图（图生图）",
+        "extractPromptDesc": "先从图片提取角色描述，可编辑后再生成（文生图）",
+        "maxReferenceImages": "最多上传 5 张参考图",
+        "selectedCount": "已选择 {count}/5 张参考图",
+        "extractDescription": "提取角色描述",
+        "extracting": "提取中...",
+        "extractedDescription": "提取的角色描述（可编辑）",
+        "reExtract": "重新提取",
+        "editHint": "编辑后点击下方按钮生成角色设定图",
+        "generateFromDescription": "使用描述生成",
+        "textToImageTip": "文生图模式：基于提取的描述生成角色设定图",
+        "pleaseExtractFirst": "请先提取角色描述"
+    },
+    "location": {
+        "title": "新建场景",
+        "name": "场景名称",
+        "namePlaceholder": "请输入场景名称",
+        "description": "场景描述",
+        "descPlaceholder": "请输入场景描述..."
+    },
+    "artStyle": {
+        "title": "画面风格"
+    },
+    "aiDesign": {
+        "title": "AI 设计",
+        "placeholder": "描述你想要的角色特征...",
+        "placeholderLocation": "描述场景氛围和环境...",
+        "generating": "设计中...",
+        "generate": "生成",
+        "tip": "输入简单描述，AI 帮你生成详细设定"
+    },
+    "common": {
+        "creating": "创建中...",
+        "create": "创建",
+        "cancel": "取消",
+        "adding": "添加中...",
+        "add": "添加"
+    }
+}

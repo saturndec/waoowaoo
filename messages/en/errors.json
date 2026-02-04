@@ -1,0 +1,19 @@
+{
+    "UNAUTHORIZED": "Please log in first",
+    "FORBIDDEN": "Access denied",
+    "NOT_FOUND": "Resource not found",
+    "INSUFFICIENT_BALANCE": "Insufficient API balance. Please top up and retry",
+    "RATE_LIMIT": "Too many requests. Please retry in {retryAfter} seconds",
+    "QUOTA_EXCEEDED": "Quota exceeded. Please try again later",
+    "GENERATION_FAILED": "Generation failed. Please retry",
+    "GENERATION_TIMEOUT": "Generation timed out. Please retry",
+    "SENSITIVE_CONTENT": "Content may contain sensitive material",
+    "INVALID_PARAMS": "Invalid parameters",
+    "MISSING_CONFIG": "Please complete model configuration first",
+    "INTERNAL_ERROR": "Server error. Please try again later",
+    "NETWORK_ERROR": "Network error. Please check your connection",
+    "EXTERNAL_ERROR": "External service temporarily unavailable. Please retry later",
+    "TASK_NOT_READY": "Task is still processing",
+    "NO_RESULT": "Task has no result",
+    "CONFLICT": "Resource state conflict"
+}

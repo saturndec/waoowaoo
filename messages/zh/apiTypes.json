@@ -1,0 +1,9 @@
+{
+  "image": "图片生成",
+  "video": "视频生成",
+  "text": "文本分析",
+  "tts": "语音合成",
+  "voice": "配音",
+  "voice_design": "声音设计",
+  "lip_sync": "口型同步"
+}

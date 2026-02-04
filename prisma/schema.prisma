@@ -1,0 +1,685 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Account {
+  id                String  @id @default(uuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? 
+  access_token      String? 
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? 
+  session_state     String?
+  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@index([userId])
+  @@map("account")
+}
+
+model CharacterAppearance {
+  id                     String                  @id @default(uuid())
+  characterId            String
+  appearanceIndex        Int
+  changeReason           String
+  description            String?                 
+  descriptions           String?                 
+  imageUrl               String?                 
+  imageUrls              String?                 
+  selectedIndex          Int?
+  generating             Boolean                 @default(false)
+  imageErrorMessage      String?                   // 图片生成错误消息
+  createdAt              DateTime                @default(now())
+  updatedAt              DateTime                @default(now()) @updatedAt
+  previousImageUrl       String?                 
+  previousImageUrls      String?                 
+  previousDescription    String?                   // 上一次的描述词（用于撤回）
+  previousDescriptions   String?                   // 上一次的描述词数组（用于撤回）
+  character              NovelPromotionCharacter @relation(fields: [characterId], references: [id], onDelete: Cascade)
+
+  @@unique([characterId, appearanceIndex])
+  @@index([characterId])
+  @@map("character_appearances")
+}
+
+model LocationImage {
+  id                  String                 @id @default(uuid())
+  locationId          String
+  imageIndex          Int
+  description         String?                
+  imageUrl            String?                
+  isSelected          Boolean                @default(false)
+  generating          Boolean                @default(false)
+  imageErrorMessage   String?                  // 图片生成错误消息
+  createdAt           DateTime               @default(now())
+  updatedAt           DateTime               @default(now()) @updatedAt
+  previousImageUrl    String?                
+  previousDescription String?                  // 上一次的描述词（用于撤回）
+  location            NovelPromotionLocation @relation(fields: [locationId], references: [id], onDelete: Cascade)
+
+  @@unique([locationId, imageIndex])
+  @@index([locationId])
+  @@map("location_images")
+}
+
+model NovelPromotionCharacter {
+  id                      String                @id @default(uuid())
+  novelPromotionProjectId String
+  name                    String
+  aliases                 String?               
+  createdAt               DateTime              @default(now())
+  updatedAt               DateTime              @default(now()) @updatedAt
+  customVoiceUrl          String?               
+  voiceId                 String?
+  voiceType               String?
+  profileData             String?               
+  profileConfirmed        Boolean               @default(false)
+  introduction            String?                 // 角色介绍（身份、关系、称呼映射，如"我"对应此角色）
+  sourceGlobalCharacterId String?               // 🆕 来源全局角色ID（复制时记录）
+  appearances             CharacterAppearance[]
+  novelPromotionProject   NovelPromotionProject @relation(fields: [novelPromotionProjectId], references: [id], onDelete: Cascade)
+
+  @@index([novelPromotionProjectId])
+  @@map("novel_promotion_characters")
+}
+
+model NovelPromotionLocation {
+  id                      String                @id @default(uuid())
+  novelPromotionProjectId String
+  name                    String
+  summary                 String?                // 场景简要描述（用途/人物关联）
+  createdAt               DateTime              @default(now())
+  updatedAt               DateTime              @default(now()) @updatedAt
+  sourceGlobalLocationId  String?               // 🆕 来源全局场景ID（复制时记录）
+  images                  LocationImage[]
+  novelPromotionProject   NovelPromotionProject @relation(fields: [novelPromotionProjectId], references: [id], onDelete: Cascade)
+
+  @@index([novelPromotionProjectId])
+  @@map("novel_promotion_locations")
+}
+
+model NovelPromotionEpisode {
+  id                      String                     @id @default(uuid())
+  novelPromotionProjectId String
+  episodeNumber           Int
+  name                    String
+  description             String?                    
+  novelText               String?                    
+  audioUrl                String?
+  srtContent              String?                    
+  createdAt               DateTime                   @default(now())
+  updatedAt               DateTime                   @default(now()) @updatedAt
+  speakerVoices           String?                    
+  clips                   NovelPromotionClip[]
+  novelPromotionProject   NovelPromotionProject      @relation(fields: [novelPromotionProjectId], references: [id], onDelete: Cascade)
+  shots                   NovelPromotionShot[]
+  storyboards             NovelPromotionStoryboard[]
+  voiceLines              NovelPromotionVoiceLine[]
+  editorProject           VideoEditorProject?
+
+  @@unique([novelPromotionProjectId, episodeNumber])
+  @@index([novelPromotionProjectId])
+  @@map("novel_promotion_episodes")
+}
+
+// 视频编辑器项目 - 存储剪辑数据
+model VideoEditorProject {
+  id           String                @id @default(uuid())
+  episodeId    String                @unique
+  projectData  String                 // JSON 存储编辑项目数据
+  renderStatus String? // pending | rendering | completed | failed
+  renderTaskId String?
+  outputUrl    String?               
+  createdAt    DateTime              @default(now())
+  updatedAt    DateTime              @default(now()) @updatedAt
+  episode      NovelPromotionEpisode @relation(fields: [episodeId], references: [id], onDelete: Cascade)
+
+  @@map("video_editor_projects")
+}
+
+model NovelPromotionClip {
+  id         String                    @id @default(uuid())
+  episodeId  String
+  start      Int?
+  end        Int?
+  duration   Int?
+  summary    String                    
+  location   String?
+  content    String                    
+  createdAt  DateTime                  @default(now())
+  updatedAt  DateTime                  @default(now()) @updatedAt
+  characters String?                   
+  endText    String?                   
+  shotCount  Int?
+  startText  String?                   
+  screenplay String?                   
+  episode    NovelPromotionEpisode     @relation(fields: [episodeId], references: [id], onDelete: Cascade)
+  shots      NovelPromotionShot[]
+  storyboard NovelPromotionStoryboard?
+
+  @@index([episodeId])
+  @@map("novel_promotion_clips")
+}
+
+model NovelPromotionPanel {
+  id                String                    @id @default(uuid())
+  storyboardId      String
+  panelIndex        Int
+  panelNumber       Int?
+  shotType          String?                   
+  cameraMove        String?                   
+  description       String?                   
+  location          String?                   
+  characters        String?                   
+  srtSegment        String?                   
+  srtStart          Float?
+  srtEnd            Float?
+  duration          Float?
+  imagePrompt       String?                   
+  imageUrl          String?                   
+  imageHistory      String?                   
+  videoPrompt       String?                   
+  videoUrl          String?                   
+  generatingVideo   Boolean                   @default(false)
+  videoErrorMessage String?                     // 视频生成错误消息
+  createdAt         DateTime                  @default(now())
+  updatedAt         DateTime                  @default(now()) @updatedAt
+  sceneType         String?                   
+  generatingImage   Boolean                   @default(false)
+  imageErrorMessage String?                     // 图片生成错误消息
+  candidateImages   String?                   
+  linkedToNextPanel Boolean                   @default(false)
+  generatingLipSync Boolean                   @default(false)
+  lipSyncErrorMessage String?                   // 口型同步错误消息
+  lipSyncTaskId     String?
+  lipSyncVideoUrl   String?                   
+  sketchImageUrl    String?                   
+  photographyRules  String?                   
+  actingNotes       String?                    // 演技指导数据 JSON
+  previousImageUrl  String?                   
+  storyboard        NovelPromotionStoryboard  @relation(fields: [storyboardId], references: [id], onDelete: Cascade)
+  matchedVoiceLines NovelPromotionVoiceLine[]
+
+  @@unique([storyboardId, panelIndex])
+  @@index([storyboardId])
+  @@map("novel_promotion_panels")
+}
+
+model NovelPromotionProject {
+  id              String                    @id @default(uuid())
+  projectId       String                    @unique
+  stage           String                    @default("config")
+  createdAt       DateTime                  @default(now())
+  updatedAt       DateTime                  @default(now()) @updatedAt
+  analysisModel   String? // 用户配置的分析模型（nullable，必须配置后才能使用）
+  imageModel      String? // 用户配置的图片模型
+  videoModel      String? // 用户配置的视频模型
+  videoRatio      String                    @default("9:16")
+  ttsRate         String                    @default("+50%")
+  globalAssetText String?                   
+  artStyle        String                    @default("american-comic")
+  artStylePrompt  String?                   
+  characterModel  String? // 用户配置的角色图片模型
+  locationModel   String? // 用户配置的场景图片模型
+  storyboardModel String? // 用户配置的分镜图片模型
+  editModel       String? // 用户配置的修图/编辑模型
+  ttsVoice        String                    @default("zh-CN-YunxiNeural")
+  videoResolution String                    @default("720p")
+  workflowMode    String                    @default("srt")
+  lastEpisodeId   String?
+  imageResolution String                    @default("2K")
+  importStatus    String?
+  characters      NovelPromotionCharacter[]
+  episodes        NovelPromotionEpisode[]
+  locations       NovelPromotionLocation[]
+  project         Project                   @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@map("novel_promotion_projects")
+}
+
+model NovelPromotionShot {
+  id              String                @id @default(uuid())
+  episodeId       String
+  clipId          String?
+  shotId          String
+  srtStart        Int
+  srtEnd          Int
+  srtDuration     Float
+  sequence        String?               
+  locations       String?               
+  characters      String?               
+  plot            String?               
+  imagePrompt     String?               
+  scale           String?               
+  module          String?               
+  focus           String?               
+  zhSummarize     String?               
+  imageUrl        String?               
+  generatingImage Boolean               @default(false)
+  createdAt       DateTime              @default(now())
+  updatedAt       DateTime              @default(now()) @updatedAt
+  pov             String?               
+  clip            NovelPromotionClip?   @relation(fields: [clipId], references: [id], onDelete: Cascade)
+  episode         NovelPromotionEpisode @relation(fields: [episodeId], references: [id], onDelete: Cascade)
+
+  @@index([clipId])
+  @@index([episodeId])
+  @@index([shotId])
+  @@map("novel_promotion_shots")
+}
+
+model NovelPromotionStoryboard {
+  id                  String                @id @default(uuid())
+  episodeId           String
+  clipId              String                @unique
+  storyboardImageUrl  String?               
+  createdAt           DateTime              @default(now())
+  updatedAt           DateTime              @default(now()) @updatedAt
+  panelCount          Int                   @default(9)
+  storyboardTextJson  String?               
+  generating          Boolean               @default(false)
+  imageHistory        String?               
+  candidateImages     String?               
+  lastError           String?               
+  photographyPlan     String?               
+  panels              NovelPromotionPanel[]
+  clip                NovelPromotionClip    @relation(fields: [clipId], references: [id], onDelete: Cascade)
+  episode             NovelPromotionEpisode @relation(fields: [episodeId], references: [id], onDelete: Cascade)
+  supplementaryPanels SupplementaryPanel[]
+
+  @@index([clipId])
+  @@index([episodeId])
+  @@map("novel_promotion_storyboards")
+}
+
+model SupplementaryPanel {
+  id            String                   @id @default(uuid())
+  storyboardId  String
+  sourceType    String
+  sourcePanelId String?
+  description   String?                  
+  imagePrompt   String?                  
+  imageUrl      String?                  
+  characters    String?                  
+  location      String?                  
+  generating    Boolean                  @default(false)
+  createdAt     DateTime                 @default(now())
+  updatedAt     DateTime                 @default(now()) @updatedAt
+  storyboard    NovelPromotionStoryboard @relation(fields: [storyboardId], references: [id], onDelete: Cascade)
+
+  @@index([storyboardId])
+  @@map("supplementary_panels")
+}
+
+model Project {
+  id                 String                 @id @default(uuid())
+  name               String
+  description        String?
+  mode               String                 @default("novel-promotion")
+  userId             String
+  createdAt          DateTime               @default(now())
+  updatedAt          DateTime               @default(now()) @updatedAt
+  lastAccessedAt     DateTime?
+  novelPromotionData NovelPromotionProject?
+  user               User                   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  usageCosts         UsageCost[]
+
+  @@index([userId])
+  @@map("projects")
+}
+
+model Session {
+  id           String   @id @default(uuid())
+  sessionToken String   @unique(map: "Session_sessionToken_key")
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("session")
+}
+
+model UsageCost {
+  id        String   @id @default(uuid())
+  projectId String
+  userId    String
+  apiType   String
+  model     String
+  action    String
+  quantity  Int
+  unit      String
+  cost      Float
+  metadata  String?  
+  createdAt DateTime @default(now())
+  project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([apiType])
+  @@index([createdAt])
+  @@index([projectId])
+  @@index([userId])
+  @@map("usage_costs")
+}
+
+model User {
+  id            String          @id @default(uuid())
+  name          String          @unique(map: "User_name_key")
+  email         String?
+  emailVerified DateTime?
+  image         String?
+  password      String?
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @default(now()) @updatedAt
+  accounts      Account[]
+  projects      Project[]
+  sessions      Session[]
+  usageCosts    UsageCost[]
+  balance       UserBalance?
+  preferences   UserPreference?
+  
+  // 资产中心
+  globalAssetFolders GlobalAssetFolder[]
+  globalCharacters   GlobalCharacter[]
+  globalLocations    GlobalLocation[]
+  globalVoices       GlobalVoice[]
+
+  @@map("user")
+}
+
+model UserPreference {
+  id              String   @id @default(uuid())
+  userId          String   @unique
+  analysisModel   String? // 用户配置的分析模型（nullable，必须配置后才能使用）
+  characterModel  String? // 用户配置的角色图片模型
+  locationModel   String? // 用户配置的场景图片模型
+  storyboardModel String? // 用户配置的分镜图片模型
+  editModel       String? // 用户配置的修图模型
+  videoModel      String? // 用户配置的视频模型
+  videoRatio      String   @default("9:16")
+  videoResolution String   @default("720p")
+  artStyle        String   @default("american-comic")
+  ttsRate         String   @default("+50%")
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @default(now()) @updatedAt
+  ttsVoice        String   @default("zh-CN-YunxiNeural")
+  imageResolution String   @default("2K")
+
+  // API Key 配置（极简版）
+  llmBaseUrl  String? @default("https://openrouter.ai/api/v1")
+  llmApiKey   String?  // 加密存储
+  falApiKey   String?  // FAL（图片+视频+语音）
+  googleAiKey String?  // Google AI（Gemini 图片）
+  arkApiKey   String?  // 火山引擎（Seedream+Seedance）
+  qwenApiKey  String?  // 阿里百炼（声音设计）
+
+  // 自定义模型列表 + 价格（JSON）
+  customModels String? 
+
+  // 自定义 OpenAI 兼容提供商列表（JSON，包含加密的 API Key）
+  customProviders String? 
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("user_preferences")
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique(map: "VerificationToken_token_key")
+  expires    DateTime
+
+  @@unique([identifier, token])
+  @@map("verificationtoken")
+}
+
+model NovelPromotionVoiceLine {
+  id                  String                @id @default(uuid())
+  episodeId           String
+  lineIndex           Int
+  speaker             String
+  content             String                
+  voicePresetId       String?
+  audioUrl            String?               
+  generating          Boolean               @default(false)
+  createdAt           DateTime              @default(now())
+  updatedAt           DateTime              @default(now()) @updatedAt
+  emotionPrompt       String?               
+  emotionStrength     Float?                @default(0.4)
+  matchedPanelIndex   Int?
+  matchedStoryboardId String?
+  audioDuration       Int?
+  matchedPanelId      String?
+  episode             NovelPromotionEpisode @relation(fields: [episodeId], references: [id], onDelete: Cascade)
+  matchedPanel        NovelPromotionPanel?  @relation(fields: [matchedPanelId], references: [id])
+
+  @@unique([episodeId, lineIndex])
+  @@index([episodeId])
+  @@index([matchedPanelId])
+  @@map("novel_promotion_voice_lines")
+}
+
+model VoicePreset {
+  id          String   @id @default(uuid())
+  name        String
+  audioUrl    String   
+  description String?
+  gender      String?
+  isSystem    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+
+  @@map("voice_presets")
+}
+
+model UserBalance {
+  id           String   @id @default(uuid())
+  userId       String   @unique
+  balance      Float    @default(0)
+  frozenAmount Float    @default(0)
+  totalSpent   Float    @default(0)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @default(now()) @updatedAt
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("user_balances")
+}
+
+model BalanceFreeze {
+  id        String   @id @default(uuid())
+  userId    String
+  amount    Float
+  status    String   @default("pending")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
+
+  @@index([userId])
+  @@index([status])
+  @@map("balance_freezes")
+}
+
+model BalanceTransaction {
+  id           String   @id @default(uuid())
+  userId       String
+  type         String
+  amount       Float
+  balanceAfter Float
+  description  String?
+  relatedId    String?
+  createdAt    DateTime @default(now())
+
+  @@index([userId])
+  @@index([type])
+  @@index([createdAt])
+  @@map("balance_transactions")
+}
+
+
+
+model AsyncTask {
+  id         String   @id @default(uuid())
+  type       String
+  targetId   String
+  targetType String
+  externalId String?  
+  status     String   @default("pending")
+  progress   Int?
+  error      String?  
+  payload    Json?
+  result     Json?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  // 📊 计费相关字段
+  userId      String? // 发起任务的用户
+  billingInfo Json? // { projectId, model, action, quantity, unit }
+  billedAt    DateTime? // 计费时间（防止重复计费）
+
+  @@index([status])
+  @@index([type])
+  @@index([targetId])
+  @@index([userId])
+  @@map("async_tasks")
+}
+
+// ==================== 资产中心 ====================
+
+// 资产文件夹（一层，不支持嵌套）
+model GlobalAssetFolder {
+  id         String   @id @default(uuid())
+  userId     String
+  name       String
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  user       User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  characters GlobalCharacter[]
+  locations  GlobalLocation[]
+  voices     GlobalVoice[]
+
+  @@index([userId])
+  @@map("global_asset_folders")
+}
+
+// 全局角色（结构与 NovelPromotionCharacter 一致）
+model GlobalCharacter {
+  id               String   @id @default(uuid())
+  userId           String
+  folderId         String?
+  name             String
+  aliases          String?  
+  profileData      String?  
+  profileConfirmed Boolean  @default(false)
+  voiceId          String?
+  voiceType        String?
+  customVoiceUrl   String?  
+  globalVoiceId    String?  // 绑定的全局音色 ID
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  user        User                        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  folder      GlobalAssetFolder?          @relation(fields: [folderId], references: [id], onDelete: SetNull)
+  appearances GlobalCharacterAppearance[]
+
+  @@index([userId])
+  @@index([folderId])
+  @@map("global_characters")
+}
+
+// 全局角色形象（结构与 CharacterAppearance 一致）
+model GlobalCharacterAppearance {
+  id                     String   @id @default(uuid())
+  characterId            String
+  appearanceIndex        Int
+  changeReason           String   @default("default")
+  description            String?  
+  descriptions           String?  
+  imageUrl               String?  
+  imageUrls              String?  
+  selectedIndex          Int?
+  generating             Boolean  @default(false)
+  previousImageUrl       String?  
+  previousImageUrls      String?  
+  previousDescription    String?    // 上一次的描述词（用于撤回）
+  previousDescriptions   String?    // 上一次的描述词数组（用于撤回）
+  createdAt              DateTime @default(now())
+  updatedAt              DateTime @updatedAt
+
+  character GlobalCharacter @relation(fields: [characterId], references: [id], onDelete: Cascade)
+
+  @@unique([characterId, appearanceIndex])
+  @@index([characterId])
+  @@map("global_character_appearances")
+}
+
+// 全局场景（结构与 NovelPromotionLocation 一致）
+model GlobalLocation {
+  id        String   @id @default(uuid())
+  userId    String
+  folderId  String?
+  name      String
+  summary   String?  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user   User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
+  folder GlobalAssetFolder?   @relation(fields: [folderId], references: [id], onDelete: SetNull)
+  images GlobalLocationImage[]
+
+  @@index([userId])
+  @@index([folderId])
+  @@map("global_locations")
+}
+
+// 全局场景图片（结构与 LocationImage 一致）
+model GlobalLocationImage {
+  id                  String   @id @default(uuid())
+  locationId          String
+  imageIndex          Int
+  description         String?  
+  imageUrl            String?  
+  isSelected          Boolean  @default(false)
+  generating          Boolean  @default(false)
+  previousImageUrl    String?  
+  previousDescription String?    // 上一次的描述词（用于撤回）
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  location GlobalLocation @relation(fields: [locationId], references: [id], onDelete: Cascade)
+
+  @@unique([locationId, imageIndex])
+  @@index([locationId])
+  @@map("global_location_images")
+}
+
+// 全局音色库
+model GlobalVoice {
+  id               String   @id @default(uuid())
+  userId           String
+  folderId         String?
+  name             String              // 音色名称
+  description      String?     // 详细描述
+  voiceId          String?             // qwen-tts-vd 的 voice ID
+  voiceType        String   @default("qwen-designed")  // qwen-designed | custom
+  customVoiceUrl   String?     // 上传的音频 URL（预览用）
+  voicePrompt      String?     // AI 设计时的提示词
+  gender           String?             // male | female | neutral
+  language         String   @default("zh")
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  user   User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  folder GlobalAssetFolder? @relation(fields: [folderId], references: [id], onDelete: SetNull)
+
+  @@index([userId])
+  @@index([folderId])
+  @@map("global_voices")
+}

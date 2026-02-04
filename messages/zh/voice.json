@@ -1,0 +1,198 @@
+{
+    "title": "台词配音",
+    "linesCount": "共 {count} 条台词，",
+    "audioGeneratedCount": "{count} 条已生成音频",
+    "emotionPrompt": "情绪提示词",
+    "emotionPromptTip": "(不填则使用台词自参考)",
+    "emotionPlaceholder": "如：laugh，仅支持英文...",
+    "emotionStrength": "情绪强度",
+    "flat": "平淡",
+    "intense": "强烈",
+    "generating": "生成中...",
+    "generateVoice": "🎙️ 生成语音",
+    "toolbar": {
+        "back": "← 返回",
+        "analyzeLines": "分析台词",
+        "generateAll": "🎙️ 一键生成所有配音",
+        "downloadAll": "📥 下载配音",
+        "generatingCount": "生成中 ({count})",
+        "packing": "打包中...",
+        "stats": "共 {total} 条台词 | 已设置音色 {withVoice} 条 | 已生成配音 {withAudio} 条",
+        "noDownload": "没有可下载的配音",
+        "downloadCount": "下载 {count} 条配音",
+        "uploadReferenceHint": "请先在资产库为所有角色上传参考音频"
+    },
+    "speakerVoice": {
+        "title": "发言人音色状态",
+        "hint": "请在资产库为角色上传参考音频",
+        "linesCount": "{count} 条台词",
+        "noVoice": "无参考音色",
+        "configured": "✓ 已设置",
+        "playVoice": "播放当前音色",
+        "aiDesign": "🎤 AI设计声音",
+        "aiDesignVoice": "🎤 AI 设计音色",
+        "redesign": "使用 AI 重新设计声音",
+        "uploadAudio": "上传音频",
+        "uploading": "上传中",
+        "upload": "📁 上传",
+        "microsoftVoice": "微软语音",
+        "microsoft": "🎤 微软",
+        "maleVoices": "男声",
+        "femaleVoices": "女声"
+    },
+    "embedded": {
+        "linesStats": "{total} 条台词 · {audio} 已生成",
+        "reanalyze": "🔄 重新分析",
+        "analyzeLines": "🔍 分析台词",
+        "reanalyzeHint": "重新分析台词并更新镜头匹配",
+        "analyzeHint": "从原文中提取台词",
+        "downloadVoice": "📥 下载配音",
+        "generateAllVoice": "🎙️ 生成全部配音",
+        "pendingCount": "({count} 条待生成)",
+        "generatingProgress": "生成中 ({current}/{total})",
+        "generatingHint": "正在生成中...",
+        "noVoiceHint": "请先在上方为所有角色设置音色",
+        "noLinesHint": "没有台词可生成",
+        "allDoneHint": "所有台词已生成完成",
+        "generateHint": "点击生成 {count} 条待生成的配音",
+        "speakerVoiceStatus": "角色音色状态",
+        "speakersCount": "{count} 个",
+        "listen": "试听",
+        "listenVoice": "试听音色",
+        "reset": "重设",
+        "resetDesign": "重新设计",
+        "aiDesign": "AI设计"
+    },
+    "lineCard": {
+        "generatingVoice": "生成中",
+        "speaker": "发言人",
+        "speakerPlaceholder": "发言人名称",
+        "content": "台词内容",
+        "contentPlaceholder": "台词内容",
+        "emotionConfigured": "情绪已设置",
+        "emotionSettings": "情绪设置",
+        "voiceConfigured": "✓ 已设置",
+        "needVoice": "请在上方设置音色",
+        "editLine": "编辑台词",
+        "deleteLine": "删除台词",
+        "deleteAudio": "删除配音"
+    },
+    "empty": {
+        "title": "暂无台词数据",
+        "description": "从剧本中提取台词和发言人",
+        "analyzeButton": "分析台词",
+        "hint": "请先在资产库为角色上传参考音频"
+    },
+    "confirm": {
+        "deleteLine": "确定要删除这条台词吗？\n\n\"{content}\"\n\n此操作不可撤销。",
+        "deleteAudio": "确定要删除这条台词的配音吗？\n\n\"{content}\"\n\n此操作不可撤销。"
+    },
+    "errors": {
+        "saveFailed": "保存失败",
+        "analyzeFailed": "分析台词失败",
+        "generateFailed": "生成配音失败",
+        "batchFailed": "批量生成失败",
+        "downloadFailed": "下载失败",
+        "deleteFailed": "删除失败",
+        "deleteAudioFailed": "删除配音失败",
+        "uploadFailed": "上传音频失败",
+        "voiceDesignFailed": "保存声音设计失败",
+        "emotionSaveFailed": "保存情绪设置失败",
+        "voiceGenerateFailed": "生成音频失败"
+    },
+    "alerts": {
+        "insufficientBalance": "💰 余额不足",
+        "insufficientBalanceMsg": "账户余额不足，请充值后继续使用",
+        "noLinesToGenerate": "没有需要生成的台词（请先为角色上传参考音频）",
+        "generateComplete": "生成完成：{success}/{total} 条成功",
+        "generateFailed": "{count} 条失败",
+        "speakerVoiceSet": "已为 {speaker} 生成参考音频",
+        "speakerVoiceUploaded": "已为 {speaker} 上传参考音频",
+        "voiceDesignSet": "已为 {speaker} 设置 AI 设计的声音"
+    },
+    "common": {
+        "loading": "加载中...",
+        "save": "保存",
+        "cancel": "取消",
+        "upload": "上传",
+        "download": "下载",
+        "generate": "生成",
+        "regenerate": "重新生成"
+    },
+    "assets": {
+        "image": {
+            "uploadFailed": "上传失败"
+        },
+        "stage": {
+            "analyzing": "分析中..."
+        }
+    },
+    "smartImport": {
+        "errors": {
+            "analyzeFailed": "分析失败"
+        }
+    },
+    "video": {
+        "panelCard": {
+            "play": "播放"
+        }
+    },
+    "tts": {
+        "generatedAudio": "生成的音频",
+        "browserNotSupport": "您的浏览器不支持音频播放",
+        "audioDuration": "音频时长：",
+        "subtitleCount": "字幕条数：",
+        "noAudio": "暂无音频",
+        "srtPreview": "SRT字幕预览",
+        "noSubtitle": "暂无字幕",
+        "stats": "生成统计",
+        "minute": "分",
+        "second": "秒",
+        "items": "条",
+        "completed": "✓ 已完成",
+        "regenerating": "重新生成中...",
+        "regenerateTTS": "重新生成TTS",
+        "nextStep": "下一步: 分析资产",
+        "readyTip": "点击进入资产分析阶段",
+        "needGenerate": "请先生成TTS音频"
+    },
+    "voiceDesign": {
+        "presets": {
+            "maleBroadcaster": "男播音",
+            "gentleFemale": "温柔女",
+            "matureMale": "成熟男",
+            "livelyFemale": "活泼女",
+            "intellectualFemale": "知性女",
+            "narrator": "旁白"
+        },
+        "presetsPrompts": {
+            "maleBroadcaster": "沉稳的中年男性播音员，音色低沉浑厚，语速平稳，吐字清晰",
+            "gentleFemale": "温柔甜美的年轻女性，声音清脆悦耳，语调轻柔",
+            "matureMale": "成熟稳重的男性，声音富有磁性和感染力",
+            "livelyFemale": "活泼开朗的少女，声音甜美可爱，充满活力",
+            "intellectualFemale": "知性优雅的女性，声音清晰悦耳，语调平和",
+            "narrator": "富有感情的叙述者，声音温暖有故事感"
+        },
+        "defaultPreviewText": "你好，很高兴认识你。这是AI为你专属设计的声音，让我来为你展示它的特点。无论是温柔的对话，还是激动的讲述，我都能完美呈现。希望你喜欢这个声音，让我们一起创造精彩的内容吧。",
+        "pleaseSelectStyle": "请输入或选择声音风格",
+        "designVoiceFor": "为「{speaker}」设计AI声音",
+        "hasExistingVoice": "已有声音",
+        "selectStyle": "选择声音风格：",
+        "orCustomDescription": "或自定义描述：",
+        "describePlaceholder": "描述声音特征：年龄、性别、音色、语调...",
+        "editPreviewText": "修改预览文本",
+        "generate3Schemes": "🎨 生成 3 个声音方案",
+        "generating3Schemes": "正在生成 3 个声音方案...",
+        "estimatedTime": "预计 15-30 秒",
+        "selectScheme": "选择声音方案：",
+        "schemeN": "方案 {n}",
+        "regenerate": "🔄 重新生成",
+        "confirmUse": "✓ 确认使用",
+        "confirmReplace": "确认替换声音？",
+        "replaceWarning": "的原有声音，不可撤回",
+        "confirmReplaceBtn": "确认替换",
+        "noVoiceGenerated": "未能生成任何声音",
+        "generationError": "生成声音失败",
+        "generateFailed": "生成第 {n} 个声音失败"
+    }
+}

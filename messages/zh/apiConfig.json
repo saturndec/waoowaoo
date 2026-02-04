@@ -1,0 +1,70 @@
+{
+  "title": "API 配置",
+  "saving": "保存中...",
+  "saved": "已保存",
+  "saveFailed": "保存失败",
+  "connected": "已连接",
+  "notConfigured": "未配置 Key",
+  "configure": "配置",
+  "connect": "连接",
+  "capability": "能力",
+  "default": "默认",
+  "delete": "删除",
+  "cancel": "取消",
+  "save": "保存",
+  "noModelsForProvider": "该厂商暂无配置模型",
+  "defaultModels": "默认模型配置",
+  "textDefault": "文本模型",
+  "characterDefault": "角色模型",
+  "locationDefault": "场景模型",
+  "storyboardDefault": "分镜模型",
+  "editDefault": "修图模型",
+  "videoDefault": "视频模型",
+  "selectDefault": "请选择",
+  "providerPool": "厂商资源池",
+  "otherProviders": "其他配置",
+  "audioAndLipsync": "语音与唇形同步",
+  "configureApiKey": "配置 API Key",
+  "enterApiKey": "请输入 API Key",
+  "tabs": {
+    "llm": "文本模型",
+    "image": "图片模型",
+    "video": "视频模型",
+    "other": "其他"
+  },
+  "sections": {
+    "llmApiKeys": "文本模型 API Keys",
+    "imageApiKeys": "图片模型 API Keys",
+    "videoApiKeys": "视频模型 API Keys",
+    "audioApiKey": "音色设计模型 API Key",
+    "lipsyncApiKey": "唇形同步 API Key"
+  },
+  "defaultModel": {
+    "title": "默认模型",
+    "hint": "新建项目和资产库将使用此默认配置",
+    "notSelected": "未选择",
+    "analysis": "分析模型",
+    "image": "图片生成",
+    "video": "视频生成",
+    "resolution": "图片分辨率"
+  },
+  "viewTutorial": "查看教程",
+  "tutorial": {
+    "button": "开通教程",
+    "title": "开通教程",
+    "subtitle": "按照以下步骤完成配置",
+    "close": "我知道了",
+    "openLink": "点击打开",
+    "steps": {
+      "ark_step1": "进入火山引擎控制台，开通 API Key",
+      "ark_step2": "在模型管理页面，点击右上角「一键开通所有模型」",
+      "openrouter_step1": "进入 OpenRouter 平台，创建 API Key（必须选择带有图像功能的模型）",
+      "fal_step1": "进入 FAL 平台，创建 API Key",
+      "google_step1": "进入 Google AI Studio，创建 API Key",
+      "minimax_step1": "进入 MiniMax 平台，获取 API Key",
+      "vidu_step1": "进入 Vidu 平台，点击「新建 API Key」",
+      "grsai_step1": "支持兼容 Gemini 官方格式的第三方 API",
+      "qwen_step1": "进入阿里云百炼平台，获取 API Key"
+    }
+  }
+}

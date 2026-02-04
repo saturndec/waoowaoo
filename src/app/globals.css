@@ -1,0 +1,379 @@
+@import "tailwindcss";
+
+:root {
+  --background: #ffffff;
+  --foreground: #171717;
+
+  /* 设计系统 - 颜色 */
+  --bg-primary: #f5f5f7;
+  /* 浅灰背景 */
+  --bg-card: #ffffff;
+  /* 卡片白色 */
+  --bg-glass: rgba(255, 255, 255, 0.7);
+  /* 玻璃态背景 */
+
+  /* 设计系统 - 阴影 */
+  --shadow-card: 0 2px 8px rgba(0, 0, 0, 0.04);
+  --shadow-card-hover: 0 4px 16px rgba(0, 0, 0, 0.08);
+  --shadow-glass: 0 4px 12px rgba(0, 0, 0, 0.05);
+
+  /* 设计系统 - 圆角 */
+  --radius-card: 16px;
+  --radius-button: 12px;
+  --radius-input: 10px;
+
+  /* 设计系统 - 模糊 */
+  --blur-glass: 12px;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+  /* UI/UX Pro Max typography */
+  --font-heading: var(--font-heading);
+  --font-body: var(--font-body);
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
+}
+
+/* 可复用组件类 */
+.card-base {
+  background: var(--bg-card);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-card);
+  transition: box-shadow 0.3s ease;
+}
+
+.card-base:hover {
+  box-shadow: var(--shadow-card-hover);
+}
+
+.glass-nav {
+  background: var(--bg-glass);
+  backdrop-filter: blur(var(--blur-glass));
+  -webkit-backdrop-filter: blur(var(--blur-glass));
+  box-shadow: var(--shadow-glass);
+}
+
+.btn-base {
+  border-radius: var(--radius-button);
+  transition: all 0.3s ease;
+}
+
+.input-base {
+  border-radius: var(--radius-input);
+  transition: all 0.2s ease;
+}
+
+/* 液体流动动画 */
+@keyframes float {
+
+  0%,
+  100% {
+    transform: translateY(0px) translateX(0px) scale(1);
+    opacity: 0.6;
+  }
+
+  25% {
+    transform: translateY(-40px) translateX(30px) scale(1.1);
+    opacity: 0.8;
+  }
+
+  50% {
+    transform: translateY(-20px) translateX(-20px) scale(0.9);
+    opacity: 0.7;
+  }
+
+  75% {
+    transform: translateY(30px) translateX(40px) scale(1.05);
+    opacity: 0.9;
+  }
+}
+
+@keyframes float-delayed {
+
+  0%,
+  100% {
+    transform: translateY(0px) translateX(0px) scale(1);
+    opacity: 0.5;
+  }
+
+  25% {
+    transform: translateY(50px) translateX(-40px) scale(0.85);
+    opacity: 0.7;
+  }
+
+  50% {
+    transform: translateY(-30px) translateX(60px) scale(1.2);
+    opacity: 0.6;
+  }
+
+  75% {
+    transform: translateY(20px) translateX(-30px) scale(0.95);
+    opacity: 0.8;
+  }
+}
+
+@keyframes float-slow {
+
+  0%,
+  100% {
+    transform: translateY(0px) translateX(0px) scale(1);
+    opacity: 0.4;
+  }
+
+  33% {
+    transform: translateY(-60px) translateX(50px) scale(1.3);
+    opacity: 0.7;
+  }
+
+  66% {
+    transform: translateY(40px) translateX(-60px) scale(0.8);
+    opacity: 0.6;
+  }
+}
+
+.animate-float {
+  animation: float 15s ease-in-out infinite;
+}
+
+.animate-float-delayed {
+  animation: float-delayed 18s ease-in-out infinite;
+  animation-delay: -3s;
+}
+
+.animate-float-slow {
+  animation: float-slow 20s ease-in-out infinite;
+  animation-delay: -6s;
+}
+
+/* 测试页面动画 - 增强版 */
+@keyframes float-1 {
+
+  0%,
+  100% {
+    transform: translateY(0px) translateX(0px) scale(1) rotate(0deg);
+    opacity: 0.6;
+  }
+
+  25% {
+    transform: translateY(-120px) translateX(80px) scale(1.3) rotate(5deg);
+    opacity: 0.8;
+  }
+
+  50% {
+    transform: translateY(-60px) translateX(-90px) scale(0.7) rotate(-3deg);
+    opacity: 0.7;
+  }
+
+  75% {
+    transform: translateY(100px) translateX(110px) scale(1.1) rotate(8deg);
+    opacity: 0.9;
+  }
+}
+
+@keyframes float-2 {
+
+  0%,
+  100% {
+    transform: translateY(0px) translateX(0px) scale(1) rotate(0deg);
+    opacity: 0.5;
+  }
+
+  20% {
+    transform: translateY(80px) translateX(-70px) scale(0.8) rotate(-4deg);
+    opacity: 0.7;
+  }
+
+  40% {
+    transform: translateY(-90px) translateX(130px) scale(1.4) rotate(6deg);
+    opacity: 0.6;
+  }
+
+  60% {
+    transform: translateY(110px) translateX(-100px) scale(0.9) rotate(-7deg);
+    opacity: 0.8;
+  }
+
+  80% {
+    transform: translateY(-50px) translateX(90px) scale(1.2) rotate(3deg);
+    opacity: 0.7;
+  }
+}
+
+@keyframes float-3 {
+
+  0%,
+  100% {
+    transform: translateY(0px) translateX(0px) scale(1) rotate(0deg);
+    opacity: 0.4;
+  }
+
+  33% {
+    transform: translateY(-140px) translateX(120px) scale(1.5) rotate(10deg);
+    opacity: 0.8;
+  }
+
+  66% {
+    transform: translateY(90px) translateX(-140px) scale(0.6) rotate(-8deg);
+    opacity: 0.6;
+  }
+}
+
+.animate-float-1 {
+  animation: float-1 10s ease-in-out infinite;
+}
+
+.animate-float-2 {
+  animation: float-2 12s ease-in-out infinite;
+  animation-delay: -2s;
+}
+
+.animate-float-3 {
+  animation: float-3 14s ease-in-out infinite;
+  animation-delay: -4s;
+}
+
+/* Toast动画 */
+@keyframes slide-up {
+  from {
+    transform: translateY(100%);
+    opacity: 0;
+  }
+
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.animate-slide-up {
+  animation: slide-up 0.8s ease-out both;
+}
+
+/* 进度条动画 */
+@keyframes progress {
+  0% {
+    width: 0%;
+  }
+
+  100% {
+    width: 100%;
+  }
+}
+
+.animate-progress {
+  animation: progress 2s ease-in-out infinite;
+}
+
+/* 确认对话框动画 */
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes scale-in {
+  from {
+    transform: scale(0.95);
+    opacity: 0;
+  }
+
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.animate-fade-in {
+  animation: fade-in 0.6s ease-out both;
+}
+
+.animate-scale-in {
+  animation: scale-in 0.6s ease-out both;
+}
+
+/* 竖向文字 */
+.writing-vertical {
+  writing-mode: vertical-rl;
+  text-orientation: mixed;
+}
+
+/* 渐变动画 */
+@keyframes gradient-x {
+  0% {
+    background-position: 0% 50%;
+  }
+
+  50% {
+    background-position: 100% 50%;
+  }
+
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+.animate-gradient-x {
+  background-size: 200% auto;
+  animation: gradient-x 3s linear infinite;
+}
+
+@keyframes float-slow {
+
+  0%,
+  100% {
+    transform: translate(0, 0);
+  }
+
+  50% {
+    transform: translate(20px, 20px);
+  }
+}
+
+@keyframes float-delayed {
+
+  0%,
+  100% {
+    transform: translate(0, 0);
+  }
+
+  50% {
+    transform: translate(-20px, 20px);
+  }
+}
+
+.animate-float-slow {
+  animation: float-slow 8s ease-in-out infinite;
+}
+
+.animate-float-delayed {
+  animation: float-delayed 10s ease-in-out infinite;
+  animation-delay: 2s;
+}
+
+@keyframes pulse-slow {
+
+  0%,
+  100% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0.5;
+  }
+}
+
+.animate-pulse-slow {
+  animation: pulse-slow 8s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}

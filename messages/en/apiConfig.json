@@ -1,0 +1,70 @@
+{
+  "title": "API Configuration",
+  "saving": "Saving...",
+  "saved": "Saved",
+  "saveFailed": "Save failed",
+  "connected": "Connected",
+  "notConfigured": "Not configured",
+  "configure": "Configure",
+  "connect": "Connect",
+  "capability": " Models",
+  "default": "Default",
+  "delete": "Delete",
+  "cancel": "Cancel",
+  "save": "Save",
+  "noModelsForProvider": "No models configured for this provider",
+  "defaultModels": "Default Model Configuration",
+  "textDefault": "Text Model",
+  "characterDefault": "Character Model",
+  "locationDefault": "Location Model",
+  "storyboardDefault": "Storyboard Model",
+  "editDefault": "Edit Model",
+  "videoDefault": "Video Model",
+  "selectDefault": "Select",
+  "providerPool": "Provider Pool",
+  "otherProviders": "Other Settings",
+  "audioAndLipsync": "Audio & Lip Sync",
+  "configureApiKey": "Configure API Key",
+  "enterApiKey": "Enter API Key",
+  "tabs": {
+    "llm": "Text Models",
+    "image": "Image Models",
+    "video": "Video Models",
+    "other": "Other"
+  },
+  "sections": {
+    "llmApiKeys": "Text Model API Keys",
+    "imageApiKeys": "Image Model API Keys",
+    "videoApiKeys": "Video Model API Keys",
+    "audioApiKey": "Timbre Design Model API Key",
+    "lipsyncApiKey": "Lip Sync API Key"
+  },
+  "defaultModel": {
+    "title": "Default Model",
+    "hint": "New projects and Asset Hub will use this default configuration",
+    "notSelected": "Not selected",
+    "analysis": "Analysis Model",
+    "image": "Image Generation",
+    "video": "Video Generation",
+    "resolution": "Image Resolution"
+  },
+  "viewTutorial": "View Tutorial",
+  "tutorial": {
+    "button": "Tutorial",
+    "title": "Setup Guide",
+    "subtitle": "Follow these steps to complete the configuration",
+    "close": "Got it",
+    "openLink": "Open link",
+    "steps": {
+      "ark_step1": "Go to the Volcano Engine console to create an API Key",
+      "ark_step2": "On the model management page, click 'Enable All Models' button in the top right corner",
+      "openrouter_step1": "Go to OpenRouter platform and create an API Key (must select models with image capabilities)",
+      "fal_step1": "Go to FAL platform and create an API Key",
+      "google_step1": "Go to Google AI Studio and create an API Key",
+      "minimax_step1": "Go to MiniMax platform and get an API Key",
+      "vidu_step1": "Go to the Vidu platform and click 'Create API Key'",
+      "grsai_step1": "Supports third-party APIs compatible with Gemini official format",
+      "qwen_step1": "Go to Alibaba Cloud Bailian platform and get an API Key"
+    }
+  }
+}

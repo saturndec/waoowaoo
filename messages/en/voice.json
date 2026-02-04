@@ -1,0 +1,198 @@
+{
+    "title": "Voice Lines",
+    "linesCount": "{count} lines total, ",
+    "audioGeneratedCount": "{count} audio generated",
+    "emotionPrompt": "Emotion Prompt",
+    "emotionPromptTip": "(Leave empty for auto-reference)",
+    "emotionPlaceholder": "e.g. laugh, English only...",
+    "emotionStrength": "Emotion Strength",
+    "flat": "Flat",
+    "intense": "Intense",
+    "generating": "Generating...",
+    "generateVoice": "🎙️ Generate Voice",
+    "toolbar": {
+        "back": "← Back",
+        "analyzeLines": "Analyze Lines",
+        "generateAll": "🎙️ Generate All Voices",
+        "downloadAll": "📥 Download Voices",
+        "generatingCount": "Generating ({count})",
+        "packing": "Packing...",
+        "stats": "{total} lines | {withVoice} with voice | {withAudio} generated",
+        "noDownload": "No voices to download",
+        "downloadCount": "Download {count} voices",
+        "uploadReferenceHint": "Please upload reference audio for all characters first"
+    },
+    "speakerVoice": {
+        "title": "Speaker Voice Status",
+        "hint": "Please upload reference audio for characters in Asset Library",
+        "linesCount": "{count} lines",
+        "noVoice": "No reference voice",
+        "configured": "✓ Configured",
+        "playVoice": "Play current voice",
+        "aiDesign": "🎤 AI Design Voice",
+        "aiDesignVoice": "🎤 AI Design Voice",
+        "redesign": "Redesign voice with AI",
+        "uploadAudio": "Upload audio",
+        "uploading": "Uploading",
+        "upload": "📁 Upload",
+        "microsoftVoice": "Microsoft Voice",
+        "microsoft": "🎤 MS",
+        "maleVoices": "Male",
+        "femaleVoices": "Female"
+    },
+    "embedded": {
+        "linesStats": "{total} lines · {audio} generated",
+        "reanalyze": "🔄 Re-analyze",
+        "analyzeLines": "🔍 Analyze Lines",
+        "reanalyzeHint": "Re-analyze lines and update shot matching",
+        "analyzeHint": "Extract lines from script",
+        "downloadVoice": "📥 Download Voices",
+        "generateAllVoice": "🎙️ Generate All Voices",
+        "pendingCount": "({count} pending)",
+        "generatingProgress": "Generating ({current}/{total})",
+        "generatingHint": "Generating...",
+        "noVoiceHint": "Please set voice for all characters above first",
+        "noLinesHint": "No lines to generate",
+        "allDoneHint": "All lines generated",
+        "generateHint": "Click to generate {count} pending voices",
+        "speakerVoiceStatus": "Speaker Voice Status",
+        "speakersCount": "{count}",
+        "listen": "Listen",
+        "listenVoice": "Listen to voice",
+        "reset": "Reset",
+        "resetDesign": "Redesign",
+        "aiDesign": "AI Design"
+    },
+    "lineCard": {
+        "generatingVoice": "Generating",
+        "speaker": "Speaker",
+        "speakerPlaceholder": "Speaker name",
+        "content": "Content",
+        "contentPlaceholder": "Line content",
+        "emotionConfigured": "Emotion set",
+        "emotionSettings": "Emotion Settings",
+        "voiceConfigured": "✓ Configured",
+        "needVoice": "Please set voice above",
+        "editLine": "Edit line",
+        "deleteLine": "Delete line",
+        "deleteAudio": "Delete audio"
+    },
+    "empty": {
+        "title": "No Voice Lines",
+        "description": "Extract lines and speakers from script",
+        "analyzeButton": "Analyze Lines",
+        "hint": "Please upload reference audio for characters in Asset Library first"
+    },
+    "confirm": {
+        "deleteLine": "Are you sure you want to delete this line?\n\n\"{content}\"\n\nThis action cannot be undone.",
+        "deleteAudio": "Are you sure you want to delete this audio?\n\n\"{content}\"\n\nThis action cannot be undone."
+    },
+    "errors": {
+        "saveFailed": "Save Failed",
+        "analyzeFailed": "Analysis Failed",
+        "generateFailed": "Generation Failed",
+        "batchFailed": "Batch Generation Failed",
+        "downloadFailed": "Download Failed",
+        "deleteFailed": "Delete Failed",
+        "deleteAudioFailed": "Delete Audio Failed",
+        "uploadFailed": "Upload Failed",
+        "voiceDesignFailed": "Voice Design Save Failed",
+        "emotionSaveFailed": "Emotion Settings Save Failed",
+        "voiceGenerateFailed": "Voice Generation Failed"
+    },
+    "alerts": {
+        "insufficientBalance": "💰 Insufficient Balance",
+        "insufficientBalanceMsg": "Account balance insufficient, please top up to continue",
+        "noLinesToGenerate": "No lines to generate (please upload reference audio for characters first)",
+        "generateComplete": "Complete: {success}/{total} successful",
+        "generateFailed": "{count} failed",
+        "speakerVoiceSet": "Reference audio set for {speaker}",
+        "speakerVoiceUploaded": "Reference audio uploaded for {speaker}",
+        "voiceDesignSet": "AI designed voice set for {speaker}"
+    },
+    "common": {
+        "loading": "Loading...",
+        "save": "Save",
+        "cancel": "Cancel",
+        "upload": "Upload",
+        "download": "Download",
+        "generate": "Generate",
+        "regenerate": "Regenerate"
+    },
+    "assets": {
+        "image": {
+            "uploadFailed": "Upload Failed"
+        },
+        "stage": {
+            "analyzing": "Analyzing..."
+        }
+    },
+    "smartImport": {
+        "errors": {
+            "analyzeFailed": "Analysis Failed"
+        }
+    },
+    "video": {
+        "panelCard": {
+            "play": "Play"
+        }
+    },
+    "tts": {
+        "generatedAudio": "Generated Audio",
+        "browserNotSupport": "Your browser does not support audio playback",
+        "audioDuration": "Audio Duration:",
+        "subtitleCount": "Subtitle Count:",
+        "noAudio": "No audio",
+        "srtPreview": "SRT Subtitle Preview",
+        "noSubtitle": "No subtitles",
+        "stats": "Generation Stats",
+        "minute": "min",
+        "second": "sec",
+        "items": "items",
+        "completed": "✓ Completed",
+        "regenerating": "Regenerating...",
+        "regenerateTTS": "Regenerate TTS",
+        "nextStep": "Next: Analyze Assets",
+        "readyTip": "Click to proceed to asset analysis",
+        "needGenerate": "Please generate TTS audio first"
+    },
+    "voiceDesign": {
+        "presets": {
+            "maleBroadcaster": "Male Broadcaster",
+            "gentleFemale": "Gentle Female",
+            "matureMale": "Mature Male",
+            "livelyFemale": "Lively Girl",
+            "intellectualFemale": "Intellectual Female",
+            "narrator": "Narrator"
+        },
+        "presetsPrompts": {
+            "maleBroadcaster": "Middle-aged male broadcaster with steady, deep voice, clear pronunciation",
+            "gentleFemale": "Gentle and sweet young woman with clear, melodious voice",
+            "matureMale": "Mature male with charismatic and expressive voice",
+            "livelyFemale": "Lively young girl with sweet, cute, energetic voice",
+            "intellectualFemale": "Elegant intellectual woman with clear, pleasant voice",
+            "narrator": "Emotional narrator with warm, storytelling voice"
+        },
+        "defaultPreviewText": "Hello, nice to meet you. This is your AI-designed exclusive voice. Let me demonstrate its features for you. Whether it's a gentle conversation or an excited narration, I can deliver it perfectly. I hope you enjoy this voice, let's create amazing content together.",
+        "pleaseSelectStyle": "Please enter or select a voice style",
+        "designVoiceFor": "Design AI Voice for \"{speaker}\"",
+        "hasExistingVoice": "Has voice",
+        "selectStyle": "Select voice style:",
+        "orCustomDescription": "Or custom description:",
+        "describePlaceholder": "Describe voice characteristics: age, gender, tone, pitch...",
+        "editPreviewText": "Edit preview text",
+        "generate3Schemes": "🎨 Generate 3 Voice Schemes",
+        "generating3Schemes": "Generating 3 voice schemes...",
+        "estimatedTime": "Est. 15-30 seconds",
+        "selectScheme": "Select voice scheme:",
+        "schemeN": "Scheme {n}",
+        "regenerate": "🔄 Regenerate",
+        "confirmUse": "✓ Confirm Use",
+        "confirmReplace": "Confirm Replace Voice?",
+        "replaceWarning": "'s original voice, irreversible",
+        "confirmReplaceBtn": "Confirm Replace",
+        "noVoiceGenerated": "No voice generated",
+        "generationError": "Voice generation failed",
+        "generateFailed": "Failed to generate voice {n}"
+    }
+}

@@ -1,0 +1,18 @@
+{
+  "storyboard": "分镜图",
+  "storyboard_candidate": "分镜候选",
+  "character": "角色图",
+  "location": "场景图",
+  "video": "视频",
+  "analyze": "分析",
+  "analyze_character": "角色分析",
+  "analyze_location": "场景分析",
+  "clips": "片段切割",
+  "storyboard_text_plan": "分镜规划",
+  "storyboard_text_detail": "分镜细节",
+  "tts": "语音合成",
+  "regenerate": "重生成",
+  "voice-generate": "配音生成",
+  "voice-design": "声音设计",
+  "lip-sync": "口型同步"
+}

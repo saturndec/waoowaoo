@@ -1,0 +1,28 @@
+{
+  "title": "waoowaoo",
+  "subtitle": "AI Film & TV Studio",
+  "tagline": "Inspire · Breakthrough · Waoo",
+  "description": "Spark inspiration, break through boundaries. waoowaoo makes every story shine brilliantly.",
+  "enterWorkspace": "Enter Workspace",
+  "getStarted": "Get Started",
+  "learnMore": "Learn More",
+  "features": {
+    "title": "Unleash Infinite Creativity",
+    "subtitle": "Full-process AI assistance, from script to final cut",
+    "character": {
+      "title": "Character Workshop",
+      "description": "Create unique anime characters with high consistency"
+    },
+    "storyboard": {
+      "title": "Smart Storyboard",
+      "description": "One-click text to storyboard, precise narrative control"
+    },
+    "world": {
+      "title": "World Building",
+      "description": "Immersive scene generation to build grand story backgrounds"
+    }
+  },
+  "footer": {
+    "copyright": "© 2026 waoowaoo AI. All rights reserved."
+  }
+}

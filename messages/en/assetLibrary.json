@@ -1,0 +1,14 @@
+{
+  "title": "Asset Library",
+  "button": "Assets",
+  "characters": "Characters",
+  "locations": "Locations",
+  "noCharacters": "No characters",
+  "noLocations": "No locations",
+  "addCharacter": "Add Character",
+  "addLocation": "Add Location",
+  "generateImage": "Generate Image",
+  "regenerateImage": "Regenerate",
+  "analyzeAssets": "Analyze Assets",
+  "analyzing": "Analyzing..."
+}

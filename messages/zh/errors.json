@@ -1,0 +1,19 @@
+{
+    "UNAUTHORIZED": "请先登录",
+    "FORBIDDEN": "没有权限访问",
+    "NOT_FOUND": "资源不存在",
+    "INSUFFICIENT_BALANCE": "API余额不足，请充值后重试",
+    "RATE_LIMIT": "请求过于频繁，请 {retryAfter} 秒后重试",
+    "QUOTA_EXCEEDED": "配额已用尽，请稍后重试",
+    "GENERATION_FAILED": "生成失败，请重试",
+    "GENERATION_TIMEOUT": "生成超时，请重试",
+    "SENSITIVE_CONTENT": "内容可能包含敏感信息",
+    "INVALID_PARAMS": "参数错误",
+    "MISSING_CONFIG": "请先完成模型配置",
+    "INTERNAL_ERROR": "服务器错误，请稍后重试",
+    "NETWORK_ERROR": "网络错误，请检查连接",
+    "EXTERNAL_ERROR": "外部服务暂时不可用，请稍后重试",
+    "TASK_NOT_READY": "任务正在处理中",
+    "NO_RESULT": "任务无结果",
+    "CONFLICT": "资源状态冲突"
+}

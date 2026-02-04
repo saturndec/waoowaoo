@@ -1,0 +1,28 @@
+{
+  "title": "waoowaoo",
+  "subtitle": "AI影视Studio",
+  "tagline": "灵感 · 突破 · 哇袄",
+  "description": "灵感迸发，创意突破，哇袄让每一个故事都精彩绽放。",
+  "enterWorkspace": "进入工作区",
+  "getStarted": "立即体验",
+  "learnMore": "了解更多",
+  "features": {
+    "title": "释放无限创造力",
+    "subtitle": "全流程 AI 辅助，从剧本到成片",
+    "character": {
+      "title": "角色工坊",
+      "description": "打造独一无二的动漫角色，保持高度一致性"
+    },
+    "storyboard": {
+      "title": "智能分镜",
+      "description": "文字一键转分镜，精准把控叙事节奏"
+    },
+    "world": {
+      "title": "世界构建",
+      "description": "沉浸式场景生成，构建宏大的故事背景"
+    }
+  },
+  "footer": {
+    "copyright": "© 2026 waoowaoo AI. All rights reserved."
+  }
+}

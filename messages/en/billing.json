@@ -1,0 +1,15 @@
+{
+  "transactionType": "Transaction Type",
+  "startDate": "Start Date",
+  "endDate": "End Date",
+  "all": "All",
+  "income": "💰 Income",
+  "expense": "💸 Expense",
+  "reset": "Reset",
+  "filter": "Filter",
+  "noRecords": "No records",
+  "accountRecharge": "Account Recharge",
+  "serviceConsumption": "Service Consumption",
+  "balance": "Balance",
+  "allTypes": "All Types"
+}

@@ -1,0 +1,70 @@
+{
+    "title": "剧本视图",
+    "scriptBreakdown": "剧本拆解",
+    "splitCount": "已拆分 {count} 个分镜",
+    "noClips": "暂无分镜，请先在故事视图生成",
+    "segment": {
+        "title": "片段 {index}",
+        "selected": "(选中)"
+    },
+    "inSceneAssets": "剧中资产",
+    "currentSelected": "当前选中: 片段 {number}",
+    "assetView": {
+        "allClips": "全部片段",
+        "viewingClip": "查看片段 {number}"
+    },
+    "asset": {
+        "generateCharacter": "点击生成形象 →",
+        "generateLocation": "点击生成场景 →",
+        "removeCharacterConfirm": "确定要从当前片段移除该角色吗？",
+        "removeLocationConfirm": "确定要从当前片段移除该场景吗？",
+        "removeFromClip": "从当前片段移除",
+        "noAudio": "无音频",
+        "playing": "播放中",
+        "listen": "试听",
+        "activeCharacters": "出场角色",
+        "activeLocations": "出场场景",
+        "selectCharacter": "选择要添加的角色/形象",
+        "selectLocation": "选择要添加的场景",
+        "loadingAssets": "加载资产中...",
+        "appearanceCount": "{count} 个形象",
+        "added": "已添加",
+        "primary": "主形象",
+        "subAppearance": "子形象",
+        "defaultAppearance": "初始形象",
+        "clickToRemove": "点击移除 {name}",
+        "clickToAdd": "点击添加 {name}"
+    },
+    "screenplay": {
+        "scene": "场景 {number}",
+        "location": "场景：",
+        "locationTime": "时间：",
+        "day": "日",
+        "night": "夜",
+        "dawn": "晨",
+        "dusk": "昏",
+        "dialogue": "对白",
+        "action": "动作",
+        "narration": "旁白",
+        "content": "原文内容",
+        "noContent": "暂无内容",
+        "clickToEdit": "点击编辑",
+        "interior": "内景",
+        "exterior": "外景",
+        "characters": "出场角色",
+        "noCharacter": "暂无角色信息",
+        "noLocation": "暂无出场场景",
+        "noCharacterInClip": "暂无出场角色"
+    },
+    "confirm": {
+        "removeCharacter": "确定要从当前片段移除该角色吗？",
+        "removeLocation": "确定要从当前片段移除该场景吗？"
+    },
+    "generate": {
+        "missingAssets": "还有 {count} 个资产未生成形象",
+        "missingAssetsTip": "请先在",
+        "missingAssetsTipLink": "中生成所有出场角色和场景的形象",
+        "generating": "正在生成画面...",
+        "startGenerate": "确认并开始绘制 →"
+    }
+}

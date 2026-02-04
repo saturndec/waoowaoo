@@ -1,0 +1,17 @@
+/* 重新生成卡片反馈动画 - 亮度提升效果 */
+
+@keyframes brightness-boost {
+
+    0%,
+    100% {
+        filter: brightness(1);
+    }
+
+    50% {
+        filter: brightness(1.08);
+    }
+}
+
+.animate-brightness-boost {
+    animation: brightness-boost 0.6s ease-out;
+}

@@ -1,0 +1,6 @@
+{
+    "title": "World & Character Settings",
+    "description": "Define global character appearances, scene styles, and environment descriptions",
+    "placeholder": "Example:\n【Protagonist】John, 25, short black hair, always wearing a faded denim jacket, melancholy eyes.\n【Heroine】Jane, 22, red twin tails, lively personality, likes to wear Lolita-style dresses.\n【Scene】Cyberpunk city in 2077, neon lights flashing, raining all year round...",
+    "hint": "💡 These settings will be inherited by all episodes as a reference for AI drawing."
+}

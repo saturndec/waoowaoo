@@ -1,0 +1,10 @@
+{
+  "globalAssets": "全局资产",
+  "createFailed": "创建失败",
+  "deleteFailed": "删除失败",
+  "renameFailed": "重命名失败",
+  "refreshFailed": "刷新失败",
+  "projectNotFound": "项目不存在",
+  "backToWorkspace": "返回工作区",
+  "episode": "剧集"
+}

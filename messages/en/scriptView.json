@@ -1,0 +1,70 @@
+{
+    "title": "Script View",
+    "scriptBreakdown": "Script Breakdown",
+    "splitCount": "{count} clips split",
+    "noClips": "No clips yet, please generate from story view",
+    "segment": {
+        "title": "Clip {index}",
+        "selected": "(Selected)"
+    },
+    "inSceneAssets": "In-Scene Assets",
+    "currentSelected": "Selected: Clip {number}",
+    "assetView": {
+        "allClips": "All Clips",
+        "viewingClip": "Viewing Clip {number}"
+    },
+    "asset": {
+        "generateCharacter": "Click to generate character →",
+        "generateLocation": "Click to generate location →",
+        "removeCharacterConfirm": "Are you sure you want to remove this character from current clip?",
+        "removeLocationConfirm": "Are you sure you want to remove this location from current clip?",
+        "removeFromClip": "Remove from current clip",
+        "noAudio": "No audio",
+        "playing": "Playing",
+        "listen": "Listen",
+        "activeCharacters": "Active Characters",
+        "activeLocations": "Active Locations",
+        "selectCharacter": "Select character/appearance to add",
+        "selectLocation": "Select location to add",
+        "loadingAssets": "Loading assets...",
+        "appearanceCount": "{count} appearances",
+        "added": "Added",
+        "primary": "Primary",
+        "subAppearance": "Sub appearance",
+        "defaultAppearance": "Default appearance",
+        "clickToRemove": "Click to remove {name}",
+        "clickToAdd": "Click to add {name}"
+    },
+    "screenplay": {
+        "scene": "Scene {number}",
+        "location": "Location:",
+        "locationTime": "Time:",
+        "day": "Day",
+        "night": "Night",
+        "dawn": "Dawn",
+        "dusk": "Dusk",
+        "dialogue": "Dialogue",
+        "action": "Action",
+        "narration": "Narration",
+        "content": "Original Content",
+        "noContent": "No content yet",
+        "clickToEdit": "Click to edit",
+        "interior": "INT",
+        "exterior": "EXT",
+        "characters": "Characters",
+        "noCharacter": "No character info",
+        "noLocation": "No active locations",
+        "noCharacterInClip": "No active characters"
+    },
+    "confirm": {
+        "removeCharacter": "Are you sure you want to remove this character from current clip?",
+        "removeLocation": "Are you sure you want to remove this location from current clip?"
+    },
+    "generate": {
+        "missingAssets": "{count} assets missing images",
+        "missingAssetsTip": "Please generate images for all characters and locations in",
+        "missingAssetsTipLink": "first",
+        "generating": "Generating...",
+        "startGenerate": "Confirm and Start Drawing →"
+    }
+}

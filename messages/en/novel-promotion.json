@@ -1,0 +1,110 @@
+{
+  "stages": {
+    "story": "Story",
+    "script": "Script",
+    "storyboard": "Storyboard",
+    "video": "Video",
+    "editor": "AI Editor",
+    "editorComingSoon": "Coming soon, follow us for updates"
+  },
+  "buttons": {
+    "assetLibrary": "Asset Library",
+    "settings": "Settings",
+    "refreshData": "Refresh Data"
+  },
+  "smartImport": {
+    "title": "Start Your Creative Journey",
+    "subtitle": "First, choose your creation method",
+    "manualCreate": {
+      "title": "Create from Episode 1",
+      "description": "Start from episode 1, suitable for episodic creation or single short videos",
+      "button": "Start Creating"
+    },
+    "smartImport": {
+      "title": "Smart Import Full Book",
+      "description": "Upload a complete novel or script, AI engine automatically recognizes chapter structure and splits into episodes.",
+      "button": "Import Now",
+      "recommended": "Recommended"
+    },
+    "upload": {
+      "title": "Upload Raw Material",
+      "subtitle": "AI engine is ready, automatic episode splitting and formatting",
+      "maxWords": "(Max 30,000 words)",
+      "textInput": "Enter Text Content",
+      "documentUpload": "Upload Full Document",
+      "placeholder": "Paste your novel chapters or script content here...",
+      "filePlaceholder": "File uploaded mode",
+      "clickUpload": "Click to upload document",
+      "clearTextFirst": "Please clear left text first",
+      "supportedFormats": "Supports Word, TXT formats",
+      "preview": "Preview",
+      "expandPreview": "Expand More",
+      "collapsePreview": "Collapse",
+      "deleteFile": "Delete File",
+      "startAnalysis": "Start Smart Analysis",
+      "back": "Back",
+      "words": "words"
+    },
+    "analyzing": {
+      "title": "AI is Analyzing Your Story",
+      "description": "Recognizing chapter structure, smart splitting in progress...",
+      "autoSave": "Will auto-save after analysis complete"
+    },
+    "preview": {
+      "title": "Smart Splitting Complete",
+      "episodeCount": "Automatically split into {count} episodes",
+      "totalWords": "Total {count} words",
+      "autoSaved": "✓ Auto-saved",
+      "reanalyze": "Re-analyze",
+      "confirm": "Confirm Complete",
+      "saving": "Saving...",
+      "episodeList": "Episode List",
+      "addEpisode": "Add Episode",
+      "averageWords": "Average per episode",
+      "episodeContent": "Episode Content",
+      "episodePlaceholder": "Enter episode title...",
+      "summaryPlaceholder": "Enter plot summary...",
+      "newEpisode": "New Episode",
+      "deleteEpisode": "Delete Episode",
+      "deleteConfirm": {
+        "title": "Confirm Delete",
+        "message": "Are you sure you want to delete \"{title}\"?",
+        "cancel": "Cancel",
+        "confirm": "Confirm Delete"
+      },
+      "tip": {
+        "title": "💡 Tip",
+        "content": "You can directly edit titles, summaries, and content. After clicking [Confirm Complete], episodes will be officially imported into the project"
+      }
+    },
+    "errors": {
+      "fileTooLarge": "File too large, please upload a file smaller than 10MB",
+      "docNotSupported": ".doc format not supported, please convert to .docx in Word",
+      "fileEmpty": "File content is empty",
+      "fileReadError": "File read failed, please try again",
+      "uploadFirst": "Please upload or paste content first",
+      "analyzeFailed": "Analysis failed",
+      "saveFailed": "Save failed"
+    },
+    "cancelConfirm": "Are you sure you want to cancel? Analyzed episodes will be cleared."
+  },
+  "storyInput": {
+    "currentEditing": "Currently editing: {name}",
+    "editingTip": "The following workflow is for this episode only. Switch episodes in the top left if needed",
+    "wordCount": "Word count:",
+    "assetLibraryTip": {
+      "title": "💡 Need custom characters and locations?",
+      "description": "Click the 「Asset Library」 button in the top right to upload asset setting documents or manually add characters/locations. AI will prioritize using settings from the asset library for analysis."
+    },
+    "videoRatio": "Video Ratio",
+    "visualStyle": "Visual Style",
+    "moreConfig": "💡 For more configuration options, click the 「⚙️ Settings」 button in the top right",
+    "narration": {
+      "title": "Enable Narration Voiceover",
+      "description": "Generate TTS voice narration to add commentary to your video"
+    },
+    "creating": "AI Creating...",
+    "ready": "✓ Configuration complete, ready for next step",
+    "pleaseInput": "Please enter script content first"
+  }
+}

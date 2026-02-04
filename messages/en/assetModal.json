@@ -1,0 +1,58 @@
+{
+    "character": {
+        "title": "New Character",
+        "name": "Character Name",
+        "namePlaceholder": "Enter character name",
+        "modeReference": "Reference Image",
+        "modeDescription": "Description",
+        "uploadReference": "Upload Reference",
+        "pasteHint": "Ctrl+V to paste",
+        "dropOrClick": "Click to upload or drag image",
+        "supportedFormats": "Supports JPG, PNG formats",
+        "nameRequired": "Please enter character name first to use reference conversion",
+        "convertToSheet": "Convert to standard character sheet",
+        "referenceTip": "Upload any character image, AI will generate a standard character sheet",
+        "description": "Character Description",
+        "descPlaceholder": "Enter character appearance description...",
+        "generationMode": "Generation Mode",
+        "directGenerate": "Direct Generate",
+        "extractPrompt": "Extract Prompt",
+        "directGenerateDesc": "Directly generate character sheet from reference (img2img)",
+        "extractPromptDesc": "Extract description from image first, then generate (txt2img)",
+        "maxReferenceImages": "Up to 5 reference images",
+        "selectedCount": "Selected {count}/5 images",
+        "extractDescription": "Extract Description",
+        "extracting": "Extracting...",
+        "extractedDescription": "Extracted Description (Editable)",
+        "reExtract": "Re-extract",
+        "editHint": "Edit the description, then click below to generate",
+        "generateFromDescription": "Generate from Description",
+        "textToImageTip": "Text-to-image mode: Generate from extracted description",
+        "pleaseExtractFirst": "Please extract character description first"
+    },
+    "location": {
+        "title": "New Location",
+        "name": "Location Name",
+        "namePlaceholder": "Enter location name",
+        "description": "Location Description",
+        "descPlaceholder": "Enter location description..."
+    },
+    "artStyle": {
+        "title": "Art Style"
+    },
+    "aiDesign": {
+        "title": "AI Design",
+        "placeholder": "Describe the character you want...",
+        "placeholderLocation": "Describe the scene atmosphere...",
+        "generating": "Designing...",
+        "generate": "Generate",
+        "tip": "Enter a simple description, AI will generate detailed settings"
+    },
+    "common": {
+        "creating": "Creating...",
+        "create": "Create",
+        "cancel": "Cancel",
+        "adding": "Adding...",
+        "add": "Add"
+    }
+}

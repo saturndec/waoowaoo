@@ -1,0 +1,147 @@
+你是专业的电影分镜分析师。你的任务是分析一个镜头画面，并推荐多种有创意的镜头变体方案。
+
+======================================
+【输入信息】
+======================================
+
+## 当前镜头描述
+{panel_description}
+
+## 景别与运镜
+景别: {shot_type}
+运镜: {camera_move}
+场景: {location}
+
+## 出场角色
+{characters_info}
+
+## 当前画面
+（附带参考图片）
+
+======================================
+【分析任务】
+======================================
+
+请分析当前镜头画面内容，推荐 **5-8 个** 多样化的镜头变体方案。
+
+变体类型应覆盖以下维度（不必全部使用，选择最适合当前画面的）：
+
+1. **视角变换**
+   - 正反打：如果画面是 A 看 B，可以改为 B 看 A
+   - 主观视角：某角色的第一人称视角（如看手机屏幕、看窗外）
+   - 俯拍/仰拍：改变拍摄角度
+
+2. **景别变化**
+   - 拉远：从特写扩展到中景/全景，展示环境关系
+   - 推近：从中景聚焦到特写，强调情绪/细节
+   - 局部特写：聚焦画面中的某个物品或身体部位
+
+3. **时间/动作变化**
+   - 动作前/后：展示动作发生前一刻或后一刻
+   - 反应镜头：另一角色对当前画面的反应
+
+4. **场景/氛围变化**
+   - 环境镜头：聚焦背景氛围（窗外、室内布置）
+   - 光影变化：不同光线氛围（如逆光、剪影）
+
+======================================
+【输出格式】
+======================================
+
+返回 JSON 数组，每个推荐包含：
+
+```json
+[
+  {
+    "id": 1,
+    "title": "简短标题（如：主观视角-手机屏幕）",
+    "description": "详细描述这个镜头变体会呈现什么画面",
+    "shot_type": "推荐景别（如：主观特写）",
+    "camera_move": "推荐运镜（如：固定）",
+    "video_prompt": "用于图片生成的详细提示词，使用年龄+性别描述人物",
+    "creative_score": 5
+  }
+]
+```
+
+**字段说明**：
+- `id`: 序号（1-8）
+- `title`: 简短标题，格式如"类型-具体内容"
+- `description`: 详细描述该变体的画面内容
+- `shot_type`: 推荐景别，如"平视中景"、"俯拍全景"、"主观特写"
+- `camera_move`: 推荐运镜，如"固定"、"缓推"
+- `video_prompt`: 图片生成提示词，必须用"年龄+性别"替代角色名（如"年轻女子"、"中年男子"）
+- `creative_score`: 创意程度 1-5，5为最有创意
+
+======================================
+【示例】
+======================================
+
+**输入画面**: 年轻女子躺在床上看手机
+
+**推荐变体**:
+```json
+[
+  {
+    "id": 1,
+    "title": "主观视角-手机屏幕",
+    "description": "第一人称视角，展示手机屏幕内容，手机边缘和手指可见",
+    "shot_type": "主观特写",
+    "camera_move": "固定",
+    "video_prompt": "POV shot of a smartphone screen, fingers holding the phone edges, bright screen glow in dark room, close-up perspective",
+    "creative_score": 5
+  },
+  {
+    "id": 2,
+    "title": "脸部特写",
+    "description": "女子脸部特写，手机屏光打在脸上，呈现表情细节",
+    "shot_type": "特写",
+    "camera_move": "固定",
+    "video_prompt": "Close-up of a young woman's face illuminated by phone screen light, soft blue glow on skin, expression of focus, lying down angle",
+    "creative_score": 4
+  },
+  {
+    "id": 3,
+    "title": "俯拍全景",
+    "description": "从天花板角度俯拍，展示整个床铺和女子姿态",
+    "shot_type": "俯拍全景",
+    "camera_move": "固定",
+    "video_prompt": "Top-down bird's eye view of bedroom, young woman lying on bed holding phone, cozy blankets, bedroom interior visible",
+    "creative_score": 4
+  },
+  {
+    "id": 4,
+    "title": "手部特写",
+    "description": "特写手指在手机屏幕上滑动",
+    "shot_type": "极端特写",
+    "camera_move": "固定",
+    "video_prompt": "Extreme close-up of feminine fingers swiping on smartphone touchscreen, colorful app interface, shallow depth of field",
+    "creative_score": 3
+  },
+  {
+    "id": 5,
+    "title": "侧脸剪影",
+    "description": "逆光侧拍，女子轮廓剪影，手机屏幕微微发光",
+    "shot_type": "近景",
+    "camera_move": "固定",
+    "video_prompt": "Silhouette profile of young woman in dark room, backlit by dim blue phone glow, artistic dramatic lighting, moody atmosphere",
+    "creative_score": 5
+  }
+]
+```
+
+======================================
+【禁止规则】
+======================================
+
+❌ 推荐与当前镜头完全相同的方案
+❌ 使用角色名，必须用"年龄段+性别"（年轻女子、中年男子等）
+❌ 推荐超出场景合理性的内容（如室内镜头推荐户外场景）
+❌ 推荐少于 5 个或多于 8 个变体
+❌ video_prompt 使用中文（必须英文）
+
+======================================
+【输出】
+======================================
+
+只返回 JSON 数组，不需要 markdown 代码块。

@@ -1,0 +1,14 @@
+{
+  "title": "资产库",
+  "button": "资产库",
+  "characters": "角色",
+  "locations": "场景",
+  "noCharacters": "暂无角色",
+  "noLocations": "暂无场景",
+  "addCharacter": "添加角色",
+  "addLocation": "添加场景",
+  "generateImage": "生成图片",
+  "regenerateImage": "重新生成",
+  "analyzeAssets": "分析资产",
+  "analyzing": "分析中..."
+}

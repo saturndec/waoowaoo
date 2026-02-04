@@ -1,0 +1,10 @@
+{
+  "globalAssets": "Global Assets",
+  "createFailed": "Creation failed",
+  "deleteFailed": "Deletion failed",
+  "renameFailed": "Rename failed",
+  "refreshFailed": "Refresh failed",
+  "projectNotFound": "Project not found",
+  "backToWorkspace": "Back to Workspace",
+  "episode": "Episode"
+}

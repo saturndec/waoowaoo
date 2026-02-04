@@ -1,0 +1,18 @@
+{
+    "selectCharacter": "从资产中心选择角色",
+    "selectLocation": "从资产中心选择场景",
+    "selectVoice": "从资产中心选择音色",
+    "searchPlaceholder": "搜索资产名称或文件夹...",
+    "noAssets": "资产中心暂无资产",
+    "createInAssetHub": "请先在资产中心创建角色/场景/音色",
+    "noSearchResults": "未找到匹配的资产",
+    "appearances": "个形象",
+    "images": "张图片",
+    "cancel": "取消",
+    "confirmCopy": "确认复制",
+    "copyFromGlobal": "从资产中心复制",
+    "copySuccess": "复制成功",
+    "copyFailed": "复制失败",
+    "preview": "试听",
+    "stop": "停止"
+}
