@@ -9,7 +9,7 @@ services:
       MYSQL_DATABASE: waoowaoo
       MYSQL_ROOT_HOST: "%"
     ports:
-      - "13306:3306"
+      - "${MYSQL_BIND_IP:-127.0.0.1}:13306:3306"
     volumes:
       - mysql_data:/var/lib/mysql
     command:
@@ -28,7 +28,7 @@ services:
     container_name: waoowaoo-redis
     restart: unless-stopped
     ports:
-      - "16379:6379"
+      - "${REDIS_BIND_IP:-127.0.0.1}:16379:6379"
     volumes:
       - redis_data:/data
     command: ["redis-server", "--appendonly", "yes"]
@@ -46,50 +46,51 @@ services:
     restart: unless-stopped
     environment:
       # 数据库（指向容器内部 MySQL，用服务名 mysql 而非 localhost）
-      DATABASE_URL: "mysql://root:waoowaoo123@mysql:3306/waoowaoo"
+      DATABASE_URL: "${DATABASE_URL:-mysql://root:waoowaoo123@mysql:3306/waoowaoo}"
       # Redis（指向容器内部 Redis，用服务名 redis）
-      REDIS_HOST: redis
-      REDIS_PORT: "6379"
-      REDIS_USERNAME: ""
-      REDIS_PASSWORD: ""
-      REDIS_TLS: ""
+      REDIS_HOST: "${REDIS_HOST:-redis}"
+      REDIS_PORT: "${REDIS_PORT:-6379}"
+      REDIS_USERNAME: "${REDIS_USERNAME:-}"
+      REDIS_PASSWORD: "${REDIS_PASSWORD:-}"
+      REDIS_TLS: "${REDIS_TLS:-}"
       # 存储：默认本地存储
-      STORAGE_TYPE: local
+      STORAGE_TYPE: "${STORAGE_TYPE:-local}"
       # 认证
-      NEXTAUTH_URL: "http://localhost:3000"
-      NEXTAUTH_SECRET: "waoowaoo-default-secret-2026"
+      NEXTAUTH_URL: "${NEXTAUTH_URL:-http://localhost:13000}"
+      NEXTAUTH_SECRET: "${NEXTAUTH_SECRET:-waoowaoo-default-secret-2026}"
       # 内部密钥
-      CRON_SECRET: "waoowaoo-docker-cron-secret"
-      INTERNAL_TASK_TOKEN: "waoowaoo-docker-task-token"
-      API_ENCRYPTION_KEY: "waoowaoo-opensource-fixed-key-2026"
+      CRON_SECRET: "${CRON_SECRET:-waoowaoo-docker-cron-secret}"
+      INTERNAL_TASK_TOKEN: "${INTERNAL_TASK_TOKEN:-waoowaoo-docker-task-token}"
+      API_ENCRYPTION_KEY: "${API_ENCRYPTION_KEY:-waoowaoo-opensource-fixed-key-2026}"
+      INTERNAL_TASK_API_BASE_URL: "${INTERNAL_TASK_API_BASE_URL:-http://127.0.0.1:3000}"
       # Worker 配置
-      WATCHDOG_INTERVAL_MS: "30000"
-      TASK_HEARTBEAT_TIMEOUT_MS: "90000"
-      QUEUE_CONCURRENCY_IMAGE: "50"
-      QUEUE_CONCURRENCY_VIDEO: "50"
-      QUEUE_CONCURRENCY_VOICE: "20"
-      QUEUE_CONCURRENCY_TEXT: "50"
+      WATCHDOG_INTERVAL_MS: "${WATCHDOG_INTERVAL_MS:-30000}"
+      TASK_HEARTBEAT_TIMEOUT_MS: "${TASK_HEARTBEAT_TIMEOUT_MS:-90000}"
+      QUEUE_CONCURRENCY_IMAGE: "${QUEUE_CONCURRENCY_IMAGE:-50}"
+      QUEUE_CONCURRENCY_VIDEO: "${QUEUE_CONCURRENCY_VIDEO:-50}"
+      QUEUE_CONCURRENCY_VOICE: "${QUEUE_CONCURRENCY_VOICE:-20}"
+      QUEUE_CONCURRENCY_TEXT: "${QUEUE_CONCURRENCY_TEXT:-50}"
       # Bull Board
-      BULL_BOARD_HOST: "0.0.0.0"
-      BULL_BOARD_PORT: "3010"
-      BULL_BOARD_BASE_PATH: "/admin/queues"
-      BULL_BOARD_USER: ""
-      BULL_BOARD_PASSWORD: ""
+      BULL_BOARD_HOST: "${BULL_BOARD_HOST:-0.0.0.0}"
+      BULL_BOARD_PORT: "${BULL_BOARD_PORT:-3010}"
+      BULL_BOARD_BASE_PATH: "${BULL_BOARD_BASE_PATH:-/admin/queues}"
+      BULL_BOARD_USER: "${BULL_BOARD_USER:-}"
+      BULL_BOARD_PASSWORD: "${BULL_BOARD_PASSWORD:-}"
       # 日志
-      LOG_UNIFIED_ENABLED: "true"
-      LOG_LEVEL: "INFO"
-      LOG_FORMAT: "json"
-      LOG_DEBUG_ENABLED: "false"
-      LOG_AUDIT_ENABLED: "true"
-      LOG_SERVICE: "waoowaoo"
-      LOG_REDACT_KEYS: "password,token,apiKey,apikey,authorization,cookie,secret,access_token,refresh_token"
+      LOG_UNIFIED_ENABLED: "${LOG_UNIFIED_ENABLED:-true}"
+      LOG_LEVEL: "${LOG_LEVEL:-INFO}"
+      LOG_FORMAT: "${LOG_FORMAT:-json}"
+      LOG_DEBUG_ENABLED: "${LOG_DEBUG_ENABLED:-false}"
+      LOG_AUDIT_ENABLED: "${LOG_AUDIT_ENABLED:-true}"
+      LOG_SERVICE: "${LOG_SERVICE:-waoowaoo}"
+      LOG_REDACT_KEYS: "${LOG_REDACT_KEYS:-password,token,apiKey,apikey,authorization,cookie,secret,access_token,refresh_token}"
       # 计费
-      BILLING_MODE: "SHADOW"
+      BILLING_MODE: "${BILLING_MODE:-SHADOW}"
       # 流式
-      LLM_STREAM_EPHEMERAL_ENABLED: "true"
+      LLM_STREAM_EPHEMERAL_ENABLED: "${LLM_STREAM_EPHEMERAL_ENABLED:-true}"
     ports:
-      - "13000:3000"
-      - "13010:3010"
+      - "${APP_BIND_IP:-127.0.0.1}:13000:3000"
+      - "${APP_BIND_IP:-127.0.0.1}:13010:3010"
     volumes:
       - ./data:/app/data
       - ./docker-logs:/app/logs
@@ -118,4 +119,3 @@ services:
 volumes:
   mysql_data:
   redis_data:
-

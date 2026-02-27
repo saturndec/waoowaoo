@@ -59,6 +59,19 @@ git fetch origin && git reset --hard origin/main
 docker compose down && docker compose up -d --build
 ```
 
+### 🌍 服务器一键部署（域名 + Caddy 自动反代）
+
+适用于 Linux 服务器（Debian/Ubuntu 可自动安装 Caddy）：
+
+```bash
+bash scripts/deploy-with-caddy.sh --domain your-domain.com --email you@example.com
+```
+
+部署完成后访问：
+
+- `https://your-domain.com`
+- `https://your-domain.com/admin/queues`
+
 ---
 
 ## 🚀 Quick Start
@@ -87,6 +100,19 @@ Visit [http://localhost:13000](http://localhost:13000) to get started!
 git fetch origin && git reset --hard origin/main
 docker compose down && docker compose up -d --build
 ```
+
+### 🌍 One-Click Server Deploy (Domain + Caddy Reverse Proxy)
+
+For Linux servers (Debian/Ubuntu can auto-install Caddy):
+
+```bash
+bash scripts/deploy-with-caddy.sh --domain your-domain.com --email you@example.com
+```
+
+After deployment:
+
+- `https://your-domain.com`
+- `https://your-domain.com/admin/queues`
 
 ---
 
