@@ -5,6 +5,7 @@ import { useLocale, useTranslations } from 'next-intl'
 import { GlassModalShell } from '@/components/ui/primitives'
 import { resolveTaskPresentationState } from '@/lib/task/presentation'
 import type { CapabilityValue } from '@/lib/model-config-contract'
+import { createProviderIdSuffix } from '@/lib/provider-id'
 import {
   encodeModelKey,
   getProviderDisplayName,
@@ -140,7 +141,7 @@ export function ApiConfigTabContainer() {
       return
     }
 
-    const uuid = crypto.randomUUID()
+    const uuid = createProviderIdSuffix()
     const providerId = `${newGeminiProvider.apiType}:${uuid}`
     const name = newGeminiProvider.name.trim()
     const baseUrl = newGeminiProvider.baseUrl.trim()
