@@ -12,6 +12,8 @@
 >
 > ⚠️ **Beta Notice**: This project is in early beta. It's currently solo-developed, so bugs and rough edges exist. We're iterating fast — feel free to open an Issue!
 
+<img width="1676" height="540" alt="chat" src="https://github.com/user-attachments/assets/30c6fcf6-b605-48da-a571-7b7aead3df8d" />
+
 一款基于 AI 技术的短剧/漫画视频制作工具，支持从小说文本自动生成分镜、角色、场景，并制作成完整视频。
 
 An AI-powered tool for creating short drama / comic videos — automatically generates storyboards, characters, and scenes from novel text, then assembles them into complete videos.
