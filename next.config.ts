@@ -10,6 +10,22 @@ const nextConfig: NextConfig = {
     'http://192.168.31.218:3000',
     'http://192.168.31.*:3000',
   ],
+  serverExternalPackages: [
+    'bullmq',
+    'ioredis',
+    'mysql2',
+    '@prisma/client',
+    'prisma',
+    'cos-nodejs-sdk-v5',
+    'remotion',
+    '@remotion/cli',
+    '@remotion/player',
+    'mammoth',
+    'archiver',
+    'jszip',
+    'bcryptjs',
+    'express',
+  ],
 };
 
 export default withNextIntl(nextConfig);
