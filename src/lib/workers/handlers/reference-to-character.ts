@@ -5,8 +5,8 @@ import { generateImage } from '@/lib/generator-api'
 import { queryFalStatus } from '@/lib/async-submit'
 import { fetchWithTimeoutAndRetry } from '@/lib/ark-api'
 import { getProviderConfig } from '@/lib/api-config'
+import { executeAiVisionStep } from '@/lib/ai-runtime'
 import { getUserModelConfig } from '@/lib/config-service'
-import { chatCompletionWithVision, getCompletionContent } from '@/lib/llm-client'
 import {
   CHARACTER_IMAGE_BANANA_RATIO,
   addCharacterPromptSuffix,
@@ -167,16 +167,17 @@ export async function handleReferenceToCharacterTask(job: Job<TaskJobData>) {
       stageLabel: '提取参考图描述',
       displayMode: 'detail',
     })
-    const completion = await chatCompletionWithVision(
-      job.data.userId,
-      analysisModel,
-      buildPrompt({
+    const completion = await executeAiVisionStep({
+      userId: job.data.userId,
+      model: analysisModel,
+      prompt: buildPrompt({
         promptId: PROMPT_IDS.CHARACTER_IMAGE_TO_DESCRIPTION,
         locale: job.data.locale,
       }),
-      allReferenceImages,
-      isProject ? { temperature: 0.3, projectId: job.data.projectId } : { temperature: 0.3 },
-    )
+      imageUrls: allReferenceImages,
+      temperature: 0.3,
+      ...(isProject ? { projectId: job.data.projectId } : {}),
+    })
     await assertTaskActive(job, 'reference_to_character_extract_done')
     await reportTaskProgress(job, 96, {
       stage: 'reference_to_character_extract_done',
@@ -185,7 +186,7 @@ export async function handleReferenceToCharacterTask(job: Job<TaskJobData>) {
     })
     return {
       success: true,
-      description: getCompletionContent(completion),
+      description: completion.text,
     }
   }
 
@@ -230,14 +231,15 @@ export async function handleReferenceToCharacterTask(job: Job<TaskJobData>) {
       promptId: PROMPT_IDS.CHARACTER_IMAGE_TO_DESCRIPTION,
       locale: job.data.locale,
     })
-    const completion = await chatCompletionWithVision(
-      job.data.userId,
-      analysisModel,
-      analysisPrompt,
-      allReferenceImages,
-      isProject ? { temperature: 0.3, projectId: job.data.projectId } : { temperature: 0.3 },
-    )
-    description = getCompletionContent(completion)
+    const completion = await executeAiVisionStep({
+      userId: job.data.userId,
+      model: analysisModel,
+      prompt: analysisPrompt,
+      imageUrls: allReferenceImages,
+      temperature: 0.3,
+      ...(isProject ? { projectId: job.data.projectId } : {}),
+    })
+    description = completion.text
   }
 
   const successfulCosKeys = imageResults.filter((item): item is string => Boolean(item))

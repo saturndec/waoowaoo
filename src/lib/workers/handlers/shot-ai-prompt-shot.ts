@@ -1,5 +1,4 @@
 import type { Job } from 'bullmq'
-import { getCompletionContent } from '@/lib/llm-client'
 import { reportTaskProgress } from '@/lib/workers/shared'
 import { assertTaskActive } from '@/lib/workers/utils'
 import type { TaskJobData } from '@/lib/task/types'
@@ -18,7 +17,7 @@ export async function handleModifyShotPromptTask(job: Job<TaskJobData>, payload:
   const currentVideoPrompt = readText(payload.currentVideoPrompt)
   const modifyInstruction = readRequiredString(payload.modifyInstruction, 'modifyInstruction')
   const referencedAssets = Array.isArray(payload.referencedAssets) ? payload.referencedAssets : []
-  const novelData = await resolveAnalysisModel(job.data.projectId)
+  const novelData = await resolveAnalysisModel(job.data.projectId, job.data.userId)
 
   const assetDescriptions = referencedAssets
     .map((asset) => {
@@ -51,7 +50,7 @@ export async function handleModifyShotPromptTask(job: Job<TaskJobData>, payload:
   })
   await assertTaskActive(job, 'ai_modify_shot_prompt_prepare')
 
-  const completion = await runShotPromptCompletion({
+  const responseText = await runShotPromptCompletion({
     job,
     model: novelData.analysisModel,
     prompt: finalPrompt,
@@ -62,7 +61,6 @@ export async function handleModifyShotPromptTask(job: Job<TaskJobData>, payload:
   })
   await assertTaskActive(job, 'ai_modify_shot_prompt_parse')
 
-  const responseText = getCompletionContent(completion)
   const parsed = parseShotPromptResponse(responseText)
 
   await reportTaskProgress(job, 96, {

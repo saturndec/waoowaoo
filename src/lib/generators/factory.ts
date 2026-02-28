@@ -9,8 +9,15 @@ import { ImageGenerator, VideoGenerator, AudioGenerator } from './base'
 import { FalBananaGenerator } from './fal'
 import { ArkSeedreamGenerator, ArkSeedanceVideoGenerator } from './ark'
 import { FalVideoGenerator } from './fal'
-import { GoogleGeminiImageGenerator, GoogleImagenGenerator, GoogleGeminiBatchImageGenerator, GeminiCompatibleImageGenerator } from './image'
+import {
+    GoogleGeminiImageGenerator,
+    GoogleImagenGenerator,
+    GoogleGeminiBatchImageGenerator,
+    GeminiCompatibleImageGenerator,
+    OpenAICompatibleImageGenerator,
+} from './image'
 import { GoogleVeoVideoGenerator } from './video/google'
+import { OpenAICompatibleVideoGenerator } from './video'
 import { QwenTTSGenerator } from './audio'
 import { MinimaxVideoGenerator } from './minimax'
 import { ViduVideoGenerator } from './vidu'
@@ -48,7 +55,7 @@ export function createImageGenerator(provider: string, modelId?: string): ImageG
         case 'gemini-compatible':
             return new GeminiCompatibleImageGenerator(actualModelId, provider)
         case 'openai-compatible':
-            throw new Error('PROVIDER_TYPE_UNSUPPORTED: openai-compatible only supports llm')
+            return new OpenAICompatibleImageGenerator(actualModelId, provider)
         default:
             throw new Error(`Unknown image generator provider: ${provider}`)
     }
@@ -73,7 +80,7 @@ export function createVideoGenerator(provider: string): VideoGenerator {
         case 'vidu':
             return new ViduVideoGenerator()
         case 'openai-compatible':
-            throw new Error('PROVIDER_TYPE_UNSUPPORTED: openai-compatible only supports llm')
+            return new OpenAICompatibleVideoGenerator(provider)
         default:
             throw new Error(`Unknown video generator provider: ${provider}`)
     }

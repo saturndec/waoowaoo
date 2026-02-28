@@ -9,6 +9,7 @@
 // Google 生成器保持原位置
 export { GoogleGeminiImageGenerator, GoogleImagenGenerator, GoogleGeminiBatchImageGenerator } from './google'
 export { GeminiCompatibleImageGenerator } from './gemini-compatible'
+export { OpenAICompatibleImageGenerator } from './openai-compatible'
 
 
 // 向后兼容：从合并文件重新导出

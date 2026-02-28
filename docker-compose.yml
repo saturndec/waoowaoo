@@ -84,7 +84,7 @@ services:
       LOG_SERVICE: "waoowaoo"
       LOG_REDACT_KEYS: "password,token,apiKey,apikey,authorization,cookie,secret,access_token,refresh_token"
       # 计费
-      BILLING_MODE: "SHADOW"
+      BILLING_MODE: "OFF"
       # 流式
       LLM_STREAM_EPHEMERAL_ENABLED: "true"
     ports:
@@ -118,4 +118,3 @@ services:
 volumes:
   mysql_data:
   redis_data:
-

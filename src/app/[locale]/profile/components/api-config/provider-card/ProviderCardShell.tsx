@@ -4,6 +4,7 @@ import type { ReactNode } from 'react'
 import type { ProviderCardProps, ProviderCardTranslator } from './types'
 import type { UseProviderCardStateResult } from './hooks/useProviderCardState'
 import { AppIcon } from '@/components/ui/icons'
+import { getProviderKey } from '../types'
 
 interface ProviderCardShellProps {
   provider: ProviderCardProps['provider']
@@ -13,6 +14,16 @@ interface ProviderCardShellProps {
   children: ReactNode
 }
 
+export function getCompatibilityLayerBadgeLabel(
+  providerId: string,
+  t: ProviderCardTranslator,
+): string | null {
+  const providerKey = getProviderKey(providerId)
+  if (providerKey === 'openai-compatible') return t('compatibilityLayerOpenAI')
+  if (providerKey === 'gemini-compatible') return t('compatibilityLayerGemini')
+  return null
+}
+
 export function ProviderCardShell({
   provider,
   onDeleteProvider,
@@ -20,6 +31,8 @@ export function ProviderCardShell({
   state,
   children,
 }: ProviderCardShellProps) {
+  const compatibilityLayerLabel = getCompatibilityLayerBadgeLabel(provider.id, t)
+
   return (
     <div className="glass-surface overflow-hidden rounded-2xl">
       <div className="flex items-center justify-between px-3.5 py-2.5">
@@ -28,6 +41,11 @@ export function ProviderCardShell({
             {provider.name.charAt(0)}
           </div>
           <h3 className="text-[15px] font-bold text-[var(--glass-text-primary)]">{provider.name}</h3>
+          {compatibilityLayerLabel && (
+            <span className="rounded-full border border-[var(--glass-stroke-base)] bg-[var(--glass-bg-muted)] px-2 py-0.5 text-[10px] font-semibold text-[var(--glass-text-secondary)]">
+              {compatibilityLayerLabel}
+            </span>
+          )}
           {provider.hasApiKey ? (
             <span className="h-1.5 w-1.5 rounded-full bg-[var(--glass-tone-success-fg)]" title={t('connected')}></span>
           ) : (

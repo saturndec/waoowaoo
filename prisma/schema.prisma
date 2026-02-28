@@ -418,6 +418,8 @@ model User {
   globalVoices       GlobalVoice[]
   tasks              Task[]
   taskEvents         TaskEvent[]
+  graphRuns          GraphRun[]
+  graphEvents        GraphEvent[]
 
   @@map("user")
 }
@@ -632,6 +634,148 @@ model TaskEvent {
   @@index([taskId])
   @@index([userId])
   @@map("task_events")
+}
+
+model GraphRun {
+  id                String             @id @default(uuid())
+  userId            String
+  projectId         String
+  episodeId         String?
+  workflowType      String
+  taskType          String?
+  taskId            String?            @unique
+  targetType        String
+  targetId          String
+  status            String             @default("queued")
+  input             Json?
+  output            Json?
+  errorCode         String?
+  errorMessage      String?            @db.Text
+  cancelRequestedAt DateTime?
+  queuedAt          DateTime           @default(now())
+  startedAt         DateTime?
+  finishedAt        DateTime?
+  lastSeq           Int                @default(0)
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
+  user              User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  steps             GraphStep[]
+  attempts          GraphStepAttempt[]
+  events            GraphEvent[]
+  checkpoints       GraphCheckpoint[]
+  artifacts         GraphArtifact[]
+
+  @@index([projectId, status])
+  @@index([userId, createdAt])
+  @@index([taskId])
+  @@index([targetType, targetId])
+  @@map("graph_runs")
+}
+
+model GraphStep {
+  id               String             @id @default(uuid())
+  runId            String
+  stepKey          String
+  stepTitle        String
+  status           String             @default("pending")
+  currentAttempt   Int                @default(0)
+  stepIndex        Int
+  stepTotal        Int
+  startedAt        DateTime?
+  finishedAt       DateTime?
+  lastErrorCode    String?
+  lastErrorMessage String?            @db.Text
+  createdAt        DateTime           @default(now())
+  updatedAt        DateTime           @updatedAt
+  run              GraphRun           @relation(fields: [runId], references: [id], onDelete: Cascade)
+  attempts         GraphStepAttempt[]
+
+  @@unique([runId, stepKey])
+  @@index([runId, status])
+  @@index([runId, stepIndex])
+  @@map("graph_steps")
+}
+
+model GraphStepAttempt {
+  id              String     @id @default(uuid())
+  runId           String
+  stepKey         String
+  attempt         Int
+  status          String     @default("pending")
+  provider        String?
+  modelKey        String?
+  inputHash       String?
+  input           Json?
+  outputText      String?    @db.Text
+  outputReasoning String?    @db.Text
+  usageJson       Json?
+  errorCode       String?
+  errorMessage    String?    @db.Text
+  startedAt       DateTime?
+  finishedAt      DateTime?
+  createdAt       DateTime   @default(now())
+  updatedAt       DateTime   @updatedAt
+  run             GraphRun   @relation(fields: [runId], references: [id], onDelete: Cascade)
+  step            GraphStep  @relation(fields: [runId, stepKey], references: [runId, stepKey], onDelete: Cascade)
+
+  @@unique([runId, stepKey, attempt])
+  @@index([runId, stepKey])
+  @@index([runId, createdAt])
+  @@map("graph_step_attempts")
+}
+
+model GraphEvent {
+  id        BigInt   @id @default(autoincrement())
+  runId     String
+  projectId String
+  userId    String
+  seq       Int
+  eventType String
+  stepKey   String?
+  attempt   Int?
+  lane      String?
+  payload   Json?
+  createdAt DateTime @default(now())
+  run       GraphRun @relation(fields: [runId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([runId, seq])
+  @@index([projectId, id])
+  @@index([runId, id])
+  @@index([userId, id])
+  @@map("graph_events")
+}
+
+model GraphCheckpoint {
+  id         String   @id @default(uuid())
+  runId      String
+  nodeKey    String
+  version    Int
+  stateJson  Json
+  stateBytes Int
+  createdAt  DateTime @default(now())
+  run        GraphRun @relation(fields: [runId], references: [id], onDelete: Cascade)
+
+  @@unique([runId, nodeKey, version])
+  @@index([runId, createdAt])
+  @@map("graph_checkpoints")
+}
+
+model GraphArtifact {
+  id          String   @id @default(uuid())
+  runId       String
+  stepKey     String?
+  artifactType String
+  refId       String
+  versionHash String?
+  payload     Json?
+  createdAt   DateTime @default(now())
+  run         GraphRun @relation(fields: [runId], references: [id], onDelete: Cascade)
+
+  @@index([runId])
+  @@index([runId, stepKey])
+  @@index([artifactType, refId])
+  @@map("graph_artifacts")
 }
 
 // ==================== 资产中心 ====================

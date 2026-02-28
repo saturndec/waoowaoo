@@ -1,4 +1,5 @@
 import { logInfo as _ulogInfo, logError as _ulogError } from '@/lib/logging/core'
+
 /**
  * 统一异步任务轮询模块
  * 
@@ -24,6 +25,7 @@ export interface PollResult {
     resultUrl?: string
     imageUrl?: string
     videoUrl?: string
+    downloadHeaders?: Record<string, string>
     error?: string
 }
 
@@ -40,10 +42,11 @@ function getErrorMessage(error: unknown): string {
  * 解析 externalId 获取 provider、type 和请求信息
  */
 export function parseExternalId(externalId: string): {
-    provider: 'FAL' | 'ARK' | 'GEMINI' | 'GOOGLE' | 'MINIMAX' | 'VIDU' | 'UNKNOWN'
+    provider: 'FAL' | 'ARK' | 'GEMINI' | 'GOOGLE' | 'MINIMAX' | 'VIDU' | 'OPENAI' | 'UNKNOWN'
     type: 'VIDEO' | 'IMAGE' | 'BATCH' | 'UNKNOWN'
     endpoint?: string
     requestId: string
+    providerToken?: string
 } {
     // 标准格式：PROVIDER:TYPE:...
     if (externalId.startsWith('FAL:')) {
@@ -138,9 +141,25 @@ export function parseExternalId(externalId: string): {
         }
     }
 
+    if (externalId.startsWith('OPENAI:')) {
+        const parts = externalId.split(':')
+        const type = parts[1]
+        const providerToken = parts[2]
+        const requestId = parts.slice(3).join(':')
+        if (type !== 'VIDEO' || !providerToken || !requestId) {
+            throw new Error(`无效 OPENAI externalId: "${externalId}"，应为 OPENAI:VIDEO:providerToken:videoId`)
+        }
+        return {
+            provider: 'OPENAI',
+            type: 'VIDEO',
+            providerToken,
+            requestId,
+        }
+    }
+
     throw new Error(
         `无法识别的 externalId 格式: "${externalId}". ` +
-        `支持的格式: FAL:TYPE:endpoint:requestId, ARK:TYPE:requestId, GEMINI:BATCH:batchName, GOOGLE:VIDEO:operationName, MINIMAX:TYPE:taskId, VIDU:TYPE:taskId`
+        `支持的格式: FAL:TYPE:endpoint:requestId, ARK:TYPE:requestId, GEMINI:BATCH:batchName, GOOGLE:VIDEO:operationName, MINIMAX:TYPE:taskId, VIDU:TYPE:taskId, OPENAI:VIDEO:providerToken:videoId`
     )
 }
 
@@ -172,9 +191,90 @@ export async function pollAsyncTask(
             return await pollMinimaxTask(parsed.requestId, userId)
         case 'VIDU':
             return await pollViduTask(parsed.requestId, userId)
+        case 'OPENAI':
+            return await pollOpenAIVideoTask(parsed.requestId, userId, parsed.providerToken)
         default:
             // 🔥 移除 fallback：未知 provider 直接抛出错误
             throw new Error(`未知的 Provider: ${parsed.provider}`)
+    }
+}
+
+function decodeProviderId(token: string): string {
+    try {
+        return Buffer.from(token, 'base64url').toString('utf8')
+    } catch {
+        throw new Error('OPENAI_PROVIDER_TOKEN_INVALID')
+    }
+}
+
+async function pollOpenAIVideoTask(
+    videoId: string,
+    userId: string,
+    providerToken?: string,
+): Promise<PollResult> {
+    if (!providerToken) {
+        throw new Error('OPENAI_PROVIDER_TOKEN_MISSING')
+    }
+    const providerId = decodeProviderId(providerToken)
+    const config = await getProviderConfig(userId, providerId)
+    if (!config.baseUrl) {
+        throw new Error(`PROVIDER_BASE_URL_MISSING: ${config.id}`)
+    }
+
+    // Use raw fetch instead of SDK to handle varying response formats across gateways
+    const baseUrl = config.baseUrl.replace(/\/+$/, '')
+    const pollUrl = `${baseUrl}/videos/${encodeURIComponent(videoId)}`
+    const response = await fetch(pollUrl, {
+        method: 'GET',
+        headers: { Authorization: `Bearer ${config.apiKey}` },
+    })
+
+    if (!response.ok) {
+        const text = await response.text().catch(() => '')
+        throw new Error(`OPENAI_VIDEO_POLL_FAILED: ${response.status} ${text.slice(0, 200)}`)
+    }
+
+    const task = await response.json() as Record<string, unknown>
+    const status = typeof task.status === 'string' ? task.status : ''
+
+    // Pending statuses: OpenAI uses "queued"/"in_progress", some gateways use "processing"
+    if (status === 'queued' || status === 'in_progress' || status === 'processing') {
+        return { status: 'pending' }
+    }
+
+    if (status === 'failed') {
+        const errorObj = task.error as Record<string, unknown> | undefined
+        const message = (typeof errorObj?.message === 'string' ? errorObj.message : '')
+            || (typeof task.error === 'string' ? task.error : '')
+            || `OpenAI video task failed: ${videoId}`
+        return { status: 'failed', error: message }
+    }
+
+    if (status !== 'completed') {
+        // Unknown status, treat as pending
+        return { status: 'pending' }
+    }
+
+    // Completed: prefer video_url from response body (some gateways provide it directly)
+    const videoUrl = typeof task.video_url === 'string' ? task.video_url.trim() : ''
+    if (videoUrl) {
+        return {
+            status: 'completed',
+            videoUrl,
+            resultUrl: videoUrl,
+        }
+    }
+
+    // Fallback: OpenAI standard /videos/:id/content endpoint
+    const taskId = typeof task.id === 'string' ? task.id : videoId
+    const contentUrl = `${baseUrl}/videos/${encodeURIComponent(taskId)}/content`
+    return {
+        status: 'completed',
+        videoUrl: contentUrl,
+        resultUrl: contentUrl,
+        downloadHeaders: {
+            Authorization: `Bearer ${config.apiKey}`,
+        },
     }
 }
 
@@ -499,16 +599,23 @@ async function queryViduTaskStatus(
  * 创建标准格式的 externalId
  */
 export function formatExternalId(
-    provider: 'FAL' | 'ARK' | 'GEMINI' | 'GOOGLE' | 'MINIMAX' | 'VIDU',
+    provider: 'FAL' | 'ARK' | 'GEMINI' | 'GOOGLE' | 'MINIMAX' | 'VIDU' | 'OPENAI',
     type: 'VIDEO' | 'IMAGE' | 'BATCH',
     requestId: string,
-    endpoint?: string
+    endpoint?: string,
+    providerToken?: string,
 ): string {
     if (provider === 'FAL') {
         if (!endpoint) {
             throw new Error('FAL externalId requires endpoint')
         }
         return `FAL:${type}:${endpoint}:${requestId}`
+    }
+    if (provider === 'OPENAI') {
+        if (!providerToken) {
+            throw new Error('OPENAI externalId requires providerToken')
+        }
+        return `OPENAI:${type}:${providerToken}:${requestId}`
     }
     return `${provider}:${type}:${requestId}`
 }

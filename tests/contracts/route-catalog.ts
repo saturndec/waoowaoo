@@ -128,6 +128,10 @@ const ROUTE_FILES = [
   'src/app/api/projects/[projectId]/data/route.ts',
   'src/app/api/projects/[projectId]/route.ts',
   'src/app/api/projects/route.ts',
+  'src/app/api/runs/[runId]/cancel/route.ts',
+  'src/app/api/runs/[runId]/events/route.ts',
+  'src/app/api/runs/[runId]/route.ts',
+  'src/app/api/runs/route.ts',
   'src/app/api/sse/route.ts',
   'src/app/api/system/boot-id/route.ts',
   'src/app/api/task-target-states/route.ts',
@@ -148,7 +152,13 @@ function resolveCategory(routeFile: string): RouteCategory {
   if (routeFile.startsWith('src/app/api/asset-hub/')) return 'asset-hub'
   if (routeFile.startsWith('src/app/api/novel-promotion/')) return 'novel-promotion'
   if (routeFile.startsWith('src/app/api/projects/')) return 'projects'
-  if (routeFile.startsWith('src/app/api/tasks/') || routeFile === 'src/app/api/task-target-states/route.ts') return 'tasks'
+  if (
+    routeFile.startsWith('src/app/api/tasks/')
+    || routeFile.startsWith('src/app/api/runs/')
+    || routeFile === 'src/app/api/task-target-states/route.ts'
+  ) {
+    return 'tasks'
+  }
   if (routeFile.startsWith('src/app/api/user/') || routeFile === 'src/app/api/user-preference/route.ts') return 'user'
   if (routeFile.startsWith('src/app/api/auth/')) return 'auth'
   if (routeFile.startsWith('src/app/api/system/')) return 'system'
@@ -192,6 +202,7 @@ function resolveContractGroup(routeFile: string): RouteContractGroup {
   if (routeFile.startsWith('src/app/api/novel-promotion/')) return 'crud-novel-promotion-routes'
   if (
     routeFile.startsWith('src/app/api/tasks/')
+    || routeFile.startsWith('src/app/api/runs/')
     || routeFile === 'src/app/api/task-target-states/route.ts'
     || routeFile === 'src/app/api/sse/route.ts'
   ) {

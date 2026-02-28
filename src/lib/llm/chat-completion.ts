@@ -17,6 +17,7 @@ import {
   getSystemPrompt,
   mapReasoningEffort,
 } from './utils'
+import { shouldUseOpenAIReasoningProviderOptions } from './reasoning-capability'
 import {
   _ulogError,
   _ulogWarn,
@@ -239,11 +240,11 @@ export async function chatCompletion(
         })
         // 只有原生 OpenAI 推理模型才支持 forceReasoning/reasoningEffort
         // gemini-compatible 等 OAI-compat 提供商传这些参数会导致空响应
-        const isNativeOpenAIReasoning =
-          resolvedModelId.startsWith('o1') ||
-          resolvedModelId.startsWith('o3') ||
-          resolvedModelId.includes('deepseek-r') ||
-          resolvedModelId.includes('deepseek-reasoner')
+        const isNativeOpenAIReasoning = shouldUseOpenAIReasoningProviderOptions({
+          providerKey,
+          providerApiMode: config.apiMode,
+          modelId: resolvedModelId,
+        })
         const aiSdkProviderOptions = reasoning && isNativeOpenAIReasoning
           ? {
             openai: {

@@ -170,6 +170,9 @@ export function applyRunStreamEvent(prev: RunState | null, event: RunStreamEvent
   if (event.event === 'run.start') {
     const nextStatus = normalizeRunStatus(event.status)
     base.status = lockForwardRunStatus(base.status, nextStatus === 'idle' ? 'running' : nextStatus)
+    if (event.payload && typeof event.payload === 'object') {
+      base.payload = event.payload
+    }
     return base
   }
 

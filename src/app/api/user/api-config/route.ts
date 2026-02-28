@@ -30,7 +30,7 @@ import {
 } from '@/lib/model-pricing/catalog'
 import { getBillingMode } from '@/lib/billing/mode'
 
-type ApiModeType = 'gemini-sdk'
+type ApiModeType = 'gemini-sdk' | 'openai-official'
 type DefaultModelField =
   | 'analysisModel'
   | 'characterModel'
@@ -48,9 +48,20 @@ interface StoredProvider {
   apiMode?: ApiModeType
 }
 
+interface StoredModelLlmCustomPricing {
+  inputPerMillion?: number
+  outputPerMillion?: number
+}
+
+interface StoredModelMediaCustomPricing {
+  basePrice?: number
+  optionPrices?: Record<string, Record<string, number>>
+}
+
 interface StoredModelCustomPricing {
-  input?: number
-  output?: number
+  llm?: StoredModelLlmCustomPricing
+  image?: StoredModelMediaCustomPricing
+  video?: StoredModelMediaCustomPricing
 }
 
 interface StoredModel {
@@ -138,6 +149,7 @@ const DEFAULT_LIPSYNC_MODEL_KEY = composeModelKey('fal', 'fal-ai/kling-video/lip
 const PRICING_PROVIDER_ALIASES: Readonly<Record<string, string>> = {
   'gemini-compatible': 'google',
 }
+const OPTIONAL_PRICING_PROVIDER_KEYS = new Set(['openai-compatible', 'gemini-compatible'])
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return !!value && typeof value === 'object' && !Array.isArray(value)
@@ -295,17 +307,48 @@ function withDisplayPricing(model: StoredModel, map: PricingDisplayMap): StoredM
   if (!display) {
     // Derive display from user custom pricing if available
     if (model.customPricing) {
-      if (typeof model.customPricing.input === 'number' && typeof model.customPricing.output === 'number') {
-        const minPrice = Math.min(model.customPricing.input, model.customPricing.output)
-        const maxPrice = Math.max(model.customPricing.input, model.customPricing.output)
+      const llmPricing = model.customPricing.llm
+      if (typeof llmPricing?.inputPerMillion === 'number' && typeof llmPricing.outputPerMillion === 'number') {
+        const minPrice = Math.min(llmPricing.inputPerMillion, llmPricing.outputPerMillion)
+        const maxPrice = Math.max(llmPricing.inputPerMillion, llmPricing.outputPerMillion)
         return {
           ...model,
           price: minPrice,
           priceMin: minPrice,
           priceMax: maxPrice,
           priceLabel: `${formatPriceAmount(minPrice)}~${formatPriceAmount(maxPrice)}`,
-          priceInput: model.customPricing.input,
-          priceOutput: model.customPricing.output,
+          priceInput: llmPricing.inputPerMillion,
+          priceOutput: llmPricing.outputPerMillion,
+        }
+      }
+
+      const mediaPricing = model.type === 'image'
+        ? model.customPricing.image
+        : model.type === 'video'
+          ? model.customPricing.video
+          : undefined
+      if (mediaPricing) {
+        const basePrice = typeof mediaPricing.basePrice === 'number' ? mediaPricing.basePrice : 0
+        let minExtra = 0
+        let maxExtra = 0
+        if (mediaPricing.optionPrices) {
+          for (const optionMap of Object.values(mediaPricing.optionPrices)) {
+            const values = Object.values(optionMap).filter((value) => Number.isFinite(value))
+            if (values.length === 0) continue
+            minExtra += Math.min(...values)
+            maxExtra += Math.max(...values)
+          }
+        }
+        const minPrice = basePrice + minExtra
+        const maxPrice = basePrice + maxExtra
+        return {
+          ...model,
+          price: minPrice,
+          priceMin: minPrice,
+          priceMax: maxPrice,
+          priceLabel: minPrice === maxPrice
+            ? formatPriceAmount(minPrice)
+            : `${formatPriceAmount(minPrice)}~${formatPriceAmount(maxPrice)}`,
         }
       }
     }
@@ -345,7 +388,7 @@ function isUnifiedModelType(value: unknown): value is UnifiedModelType {
 }
 
 function isApiMode(value: unknown): value is ApiModeType {
-  return value === 'gemini-sdk'
+  return value === 'gemini-sdk' || value === 'openai-official'
 }
 
 function resolveProviderByIdOrKey(providers: StoredProvider[], providerId: string): StoredProvider | null {
@@ -380,7 +423,198 @@ function withBuiltinCapabilities(model: StoredModel): StoredModel {
   }
 }
 
-function normalizeStoredModel(raw: unknown, index: number): StoredModel {
+function readNonNegativeNumber(value: unknown): number | undefined {
+  if (typeof value !== 'number' || !Number.isFinite(value) || value < 0) {
+    return undefined
+  }
+  return value
+}
+
+function parseNonNegativeNumberStrict(value: unknown, field: string): number | undefined {
+  if (value === undefined || value === null) return undefined
+  const parsed = readNonNegativeNumber(value)
+  if (parsed !== undefined) return parsed
+  throw new ApiError('INVALID_PARAMS', {
+    code: 'MODEL_CUSTOM_PRICING_INVALID',
+    field,
+  })
+}
+
+function validateAllowedObjectKeys(
+  raw: Record<string, unknown>,
+  allowed: readonly string[],
+  field: string,
+) {
+  const allowedSet = new Set(allowed)
+  for (const key of Object.keys(raw)) {
+    if (allowedSet.has(key)) continue
+    throw new ApiError('INVALID_PARAMS', {
+      code: 'MODEL_CUSTOM_PRICING_INVALID',
+      field: `${field}.${key}`,
+    })
+  }
+}
+
+function normalizeOptionPrices(
+  raw: unknown,
+  options?: { strict?: boolean; field?: string },
+): Record<string, Record<string, number>> | undefined {
+  if (raw === undefined || raw === null) return undefined
+  if (!isRecord(raw)) {
+    if (options?.strict) {
+      throw new ApiError('INVALID_PARAMS', {
+        code: 'MODEL_CUSTOM_PRICING_INVALID',
+        field: options.field || 'models.customPricing.optionPrices',
+      })
+    }
+    return undefined
+  }
+
+  const normalized: Record<string, Record<string, number>> = {}
+  for (const [field, rawFieldPricing] of Object.entries(raw)) {
+    if (!isRecord(rawFieldPricing)) {
+      if (options?.strict) {
+        throw new ApiError('INVALID_PARAMS', {
+          code: 'MODEL_CUSTOM_PRICING_INVALID',
+          field: options.field ? `${options.field}.${field}` : `models.customPricing.optionPrices.${field}`,
+        })
+      }
+      continue
+    }
+    const fieldPricing: Record<string, number> = {}
+    for (const [optionValue, rawAmount] of Object.entries(rawFieldPricing)) {
+      const amount = options?.strict
+        ? parseNonNegativeNumberStrict(
+          rawAmount,
+          options.field
+            ? `${options.field}.${field}.${optionValue}`
+            : `models.customPricing.optionPrices.${field}.${optionValue}`,
+        )
+        : readNonNegativeNumber(rawAmount)
+      if (amount === undefined) continue
+      fieldPricing[optionValue] = amount
+    }
+    if (Object.keys(fieldPricing).length > 0) {
+      normalized[field] = fieldPricing
+    }
+  }
+
+  return Object.keys(normalized).length > 0 ? normalized : undefined
+}
+
+function normalizeMediaCustomPricing(
+  raw: unknown,
+  options?: { strict?: boolean; field?: string },
+): StoredModelMediaCustomPricing | undefined {
+  if (raw === undefined || raw === null) return undefined
+  if (!isRecord(raw)) {
+    if (options?.strict) {
+      throw new ApiError('INVALID_PARAMS', {
+        code: 'MODEL_CUSTOM_PRICING_INVALID',
+        field: options.field || 'models.customPricing',
+      })
+    }
+    return undefined
+  }
+  if (options?.strict) {
+    validateAllowedObjectKeys(raw, ['basePrice', 'optionPrices'], options.field || 'models.customPricing')
+  }
+  const basePrice = options?.strict
+    ? parseNonNegativeNumberStrict(raw.basePrice, options.field ? `${options.field}.basePrice` : 'models.customPricing.basePrice')
+    : readNonNegativeNumber(raw.basePrice)
+  const optionPrices = normalizeOptionPrices(raw.optionPrices, {
+    strict: options?.strict,
+    field: options?.field ? `${options.field}.optionPrices` : 'models.customPricing.optionPrices',
+  })
+  if (basePrice === undefined && optionPrices === undefined) return undefined
+
+  return {
+    ...(basePrice !== undefined ? { basePrice } : {}),
+    ...(optionPrices ? { optionPrices } : {}),
+  }
+}
+
+function normalizeCustomPricing(
+  raw: unknown,
+  options?: { strict?: boolean; field?: string },
+): StoredModelCustomPricing | undefined {
+  if (raw === undefined || raw === null) return undefined
+  if (!isRecord(raw)) {
+    if (options?.strict) {
+      throw new ApiError('INVALID_PARAMS', {
+        code: 'MODEL_CUSTOM_PRICING_INVALID',
+        field: options.field || 'models.customPricing',
+      })
+    }
+    return undefined
+  }
+  if (options?.strict) {
+    validateAllowedObjectKeys(raw, ['llm', 'image', 'video', 'input', 'output'], options.field || 'models.customPricing')
+  }
+
+  const llmRaw = isRecord(raw.llm) ? raw.llm : raw
+  if (options?.strict && raw.llm !== undefined && !isRecord(raw.llm)) {
+    throw new ApiError('INVALID_PARAMS', {
+      code: 'MODEL_CUSTOM_PRICING_INVALID',
+      field: options.field ? `${options.field}.llm` : 'models.customPricing.llm',
+    })
+  }
+  if (options?.strict && isRecord(raw.llm)) {
+    validateAllowedObjectKeys(raw.llm, ['inputPerMillion', 'outputPerMillion'], options.field ? `${options.field}.llm` : 'models.customPricing.llm')
+  }
+  const inputPerMillion = options?.strict
+    ? parseNonNegativeNumberStrict(llmRaw.inputPerMillion, options.field ? `${options.field}.llm.inputPerMillion` : 'models.customPricing.llm.inputPerMillion')
+    : readNonNegativeNumber(llmRaw.inputPerMillion)
+  const outputPerMillion = options?.strict
+    ? parseNonNegativeNumberStrict(llmRaw.outputPerMillion, options.field ? `${options.field}.llm.outputPerMillion` : 'models.customPricing.llm.outputPerMillion')
+    : readNonNegativeNumber(llmRaw.outputPerMillion)
+  // Legacy bridge: migrate old shape { input, output } into llm.*
+  const legacyInput = options?.strict
+    ? parseNonNegativeNumberStrict((raw as Record<string, unknown>).input, options.field ? `${options.field}.input` : 'models.customPricing.input')
+    : readNonNegativeNumber((raw as Record<string, unknown>).input)
+  const legacyOutput = options?.strict
+    ? parseNonNegativeNumberStrict((raw as Record<string, unknown>).output, options.field ? `${options.field}.output` : 'models.customPricing.output')
+    : readNonNegativeNumber((raw as Record<string, unknown>).output)
+  const llm = (inputPerMillion !== undefined || outputPerMillion !== undefined || legacyInput !== undefined || legacyOutput !== undefined)
+    ? {
+      ...(inputPerMillion !== undefined ? { inputPerMillion } : {}),
+      ...(outputPerMillion !== undefined ? { outputPerMillion } : {}),
+      ...(inputPerMillion === undefined && legacyInput !== undefined ? { inputPerMillion: legacyInput } : {}),
+      ...(outputPerMillion === undefined && legacyOutput !== undefined ? { outputPerMillion: legacyOutput } : {}),
+    }
+    : undefined
+  if (
+    options?.strict
+    && llm
+    && (
+      typeof llm.inputPerMillion !== 'number'
+      || typeof llm.outputPerMillion !== 'number'
+    )
+  ) {
+    throw new ApiError('INVALID_PARAMS', {
+      code: 'MODEL_CUSTOM_PRICING_INVALID',
+      field: options.field ? `${options.field}.llm` : 'models.customPricing.llm',
+    })
+  }
+
+  const image = normalizeMediaCustomPricing(raw.image, {
+    strict: options?.strict,
+    field: options?.field ? `${options.field}.image` : 'models.customPricing.image',
+  })
+  const video = normalizeMediaCustomPricing(raw.video, {
+    strict: options?.strict,
+    field: options?.field ? `${options.field}.video` : 'models.customPricing.video',
+  })
+
+  if (!llm && !image && !video) return undefined
+  return {
+    ...(llm ? { llm } : {}),
+    ...(image ? { image } : {}),
+    ...(video ? { video } : {}),
+  }
+}
+
+function normalizeStoredModel(raw: unknown, index: number, options?: { strictCustomPricing?: boolean }): StoredModel {
   if (!isRecord(raw)) {
     throw new ApiError('INVALID_PARAMS', {
       code: 'MODEL_PAYLOAD_INVALID',
@@ -420,19 +654,10 @@ function normalizeStoredModel(raw: unknown, index: number): StoredModel {
 
   const modelName = readTrimmedString(raw.name) || modelId
 
-  // Parse optional user-defined custom pricing
-  let customPricing: StoredModelCustomPricing | undefined
-  if (isRecord(raw.customPricing)) {
-    const cp = raw.customPricing
-    const inputPrice = typeof cp.input === 'number' && Number.isFinite(cp.input) && cp.input >= 0 ? cp.input : undefined
-    const outputPrice = typeof cp.output === 'number' && Number.isFinite(cp.output) && cp.output >= 0 ? cp.output : undefined
-    if (inputPrice !== undefined || outputPrice !== undefined) {
-      customPricing = {
-        ...(inputPrice !== undefined ? { input: inputPrice } : {}),
-        ...(outputPrice !== undefined ? { output: outputPrice } : {}),
-      }
-    }
-  }
+  const customPricing = normalizeCustomPricing(raw.customPricing, {
+    strict: options?.strictCustomPricing,
+    field: `models[${index}].customPricing`,
+  })
 
   return {
     modelId,
@@ -507,7 +732,7 @@ function normalizeModelList(rawModels: unknown): StoredModel[] {
     })
   }
 
-  return rawModels.map((item, index) => normalizeStoredModel(item, index))
+  return rawModels.map((item, index) => normalizeStoredModel(item, index, { strictCustomPricing: true }))
 }
 
 function validateModelProviderConsistency(models: StoredModel[], providers: StoredProvider[]) {
@@ -530,17 +755,51 @@ function validateModelProviderTypeSupport(models: StoredModel[], providers: Stor
     if (!matchedProvider) continue
 
     const providerKey = getProviderKey(matchedProvider.id)
-    if (providerKey === 'openai-compatible' && model.type !== 'llm') {
-      throw new ApiError('INVALID_PARAMS', {
-        code: 'MODEL_PROVIDER_TYPE_UNSUPPORTED',
-        field: `models[${index}].type`,
-      })
-    }
     if (model.type === 'lipsync' && providerKey !== 'fal' && providerKey !== 'vidu') {
       throw new ApiError('INVALID_PARAMS', {
         code: 'MODEL_PROVIDER_TYPE_UNSUPPORTED',
         field: `models[${index}].provider`,
       })
+    }
+  }
+}
+
+function validateCustomPricingCapabilityMappings(models: StoredModel[]) {
+  for (let index = 0; index < models.length; index += 1) {
+    const model = models[index]
+    if (model.type !== 'image' && model.type !== 'video') continue
+
+    const mediaPricing = model.type === 'image'
+      ? model.customPricing?.image
+      : model.customPricing?.video
+    const optionPrices = mediaPricing?.optionPrices
+    if (!optionPrices || Object.keys(optionPrices).length === 0) continue
+
+    const context = resolveBuiltinModelContext(model.type, model.modelKey)
+    if (!context) {
+      throw new ApiError('INVALID_PARAMS', {
+        code: 'CAPABILITY_MODEL_UNSUPPORTED',
+        field: `models[${index}].customPricing.${model.type}.optionPrices`,
+      })
+    }
+
+    const optionFields = getCapabilityOptionFields(model.type, context.capabilities)
+    for (const [field, optionMap] of Object.entries(optionPrices)) {
+      const allowedValues = optionFields[field]
+      if (!allowedValues) {
+        throw new ApiError('INVALID_PARAMS', {
+          code: 'CAPABILITY_FIELD_INVALID',
+          field: `models[${index}].customPricing.${model.type}.optionPrices.${field}`,
+        })
+      }
+      for (const optionValue of Object.keys(optionMap)) {
+        if (allowedValues.includes(optionValue)) continue
+        throw new ApiError('INVALID_PARAMS', {
+          code: 'CAPABILITY_VALUE_NOT_ALLOWED',
+          field: `models[${index}].customPricing.${model.type}.optionPrices.${field}.${optionValue}`,
+          allowedValues,
+        })
+      }
     }
   }
 }
@@ -554,7 +813,27 @@ function hasBuiltinPricingForModel(apiType: PricingApiType, provider: string, mo
 
 function hasCustomPricingForType(model: StoredModel): boolean {
   if (!model.customPricing) return false
-  return typeof model.customPricing.input === 'number' && typeof model.customPricing.output === 'number'
+  if (model.type === 'llm') {
+    return (
+      typeof model.customPricing.llm?.inputPerMillion === 'number'
+      && typeof model.customPricing.llm?.outputPerMillion === 'number'
+    )
+  }
+  if (model.type === 'image') {
+    const imagePricing = model.customPricing.image
+    return (
+      typeof imagePricing?.basePrice === 'number'
+      || (isRecord(imagePricing?.optionPrices) && Object.keys(imagePricing.optionPrices).length > 0)
+    )
+  }
+  if (model.type === 'video') {
+    const videoPricing = model.customPricing.video
+    return (
+      typeof videoPricing?.basePrice === 'number'
+      || (isRecord(videoPricing?.optionPrices) && Object.keys(videoPricing.optionPrices).length > 0)
+    )
+  }
+  return false
 }
 
 function validateBillableModelPricing(models: StoredModel[]) {
@@ -565,6 +844,7 @@ function validateBillableModelPricing(models: StoredModel[]) {
 
     // Skip validation if user provided custom pricing
     if (hasCustomPricingForType(model)) continue
+    if (OPTIONAL_PRICING_PROVIDER_KEYS.has(getProviderKey(model.provider))) continue
 
     if (!hasBuiltinPricingForModel(apiType, model.provider, model.modelId)) {
       throw new ApiError('INVALID_PARAMS', {
@@ -943,7 +1223,7 @@ export const GET = apiHandler(async () => {
     : sanitizeDefaultModelsForBilling(rawDefaults)
   const capabilityDefaults = sanitizeCapabilitySelectionsAgainstModels(
     parseStoredCapabilitySelections(pref?.capabilityDefaults, 'capabilityDefaults'),
-    models,
+    [...models, ...disabledPresets],
   )
 
   return NextResponse.json({
@@ -985,6 +1265,7 @@ export const PUT = apiHandler(async (request: NextRequest) => {
   if (normalizedModels !== undefined) {
     validateModelProviderConsistency(normalizedModels, providerSourceForValidation)
     validateModelProviderTypeSupport(normalizedModels, providerSourceForValidation)
+    validateCustomPricingCapabilityMappings(normalizedModels)
     if (billingMode !== 'OFF') {
       validateBillableModelPricing(normalizedModels)
     }

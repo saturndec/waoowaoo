@@ -27,8 +27,11 @@ export interface ProviderCardProps {
 export interface ModelFormState {
   name: string
   modelId: string
-  priceInput?: string   // LLM 输入 token 单价（用户输入字符串）
-  priceOutput?: string  // LLM 输出 token 单价
+  enableCustomPricing?: boolean
+  priceInput?: string
+  priceOutput?: string
+  basePrice?: string
+  optionPricesJson?: string
 }
 
 export type ProviderCardModelType = 'llm' | 'image' | 'video' | 'audio'

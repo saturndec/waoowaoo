@@ -105,7 +105,15 @@ function parseJSONObject(responseText: string): Record<string, unknown> {
     cleaned = cleaned.slice(firstBrace, lastBrace + 1)
   }
 
-  return JSON.parse(cleaned) as Record<string, unknown>
+  try {
+    return JSON.parse(cleaned) as Record<string, unknown>
+  } catch { /* continue */ }
+
+  try {
+    return JSON.parse(escapeControlCharsInJsonStrings(cleaned)) as Record<string, unknown>
+  } catch { /* continue */ }
+
+  return JSON.parse(fixUnescapedQuotesInJson(cleaned)) as Record<string, unknown>
 }
 
 function parseClipArray(responseText: string): Record<string, unknown>[] {
@@ -116,12 +124,18 @@ function parseClipArray(responseText: string): Record<string, unknown>[] {
     .replace(/\s*```$/g, '')
     .trim()
 
+  // Try parsing as array with progressive repair
   const firstBracket = cleaned.indexOf('[')
   const lastBracket = cleaned.lastIndexOf(']')
   if (firstBracket !== -1 && lastBracket !== -1 && lastBracket > firstBracket) {
-    const parsed = JSON.parse(cleaned.slice(firstBracket, lastBracket + 1))
-    if (Array.isArray(parsed)) {
-      return parsed.filter((item): item is Record<string, unknown> => !!item && typeof item === 'object')
+    const arrayStr = cleaned.slice(firstBracket, lastBracket + 1)
+    for (const repair of [identity, escapeControlCharsInJsonStrings, fixUnescapedQuotesInJson]) {
+      try {
+        const parsed = JSON.parse(repair(arrayStr))
+        if (Array.isArray(parsed)) {
+          return parsed.filter((item): item is Record<string, unknown> => !!item && typeof item === 'object')
+        }
+      } catch { /* try next repair */ }
     }
   }
 
@@ -133,6 +147,8 @@ function parseClipArray(responseText: string): Record<string, unknown>[] {
 
   throw new Error('Invalid clip JSON format')
 }
+
+function identity<T>(v: T): T { return v }
 
 function escapeControlCharsInJsonStrings(input: string): string {
   let out = ''
@@ -184,6 +200,75 @@ function escapeControlCharsInJsonStrings(input: string): string {
   return out
 }
 
+/**
+ * Attempt to fix unescaped double quotes inside JSON string values.
+ *
+ * The LLM sometimes converts Chinese curly quotes ("") to straight ASCII
+ * double quotes (") inside a JSON string value without escaping them.
+ * This produces invalid JSON such as:
+ *   "text":"六耳嚣张地说，"弼马温，我是来取代你的""
+ *                        ^ unescaped quote
+ *
+ * Strategy: walk char-by-char tracking JSON string boundaries.  When we
+ * encounter a `"` that would *close* the current string but the character
+ * after it is NOT a valid JSON structural char (`,`, `}`, `]`, `:`, or
+ * whitespace), it is almost certainly a stray interior quote and we
+ * replace it with the Chinese fullwidth left/right quote `"\u201D`.
+ */
+function fixUnescapedQuotesInJson(input: string): string {
+  const structuralAfterString = new Set([',', '}', ']', ':', ' ', '\t', '\n', '\r'])
+  let out = ''
+  let inString = false
+  let escaped = false
+
+  for (let i = 0; i < input.length; i++) {
+    const ch = input[i]
+
+    if (!inString) {
+      if (ch === '"') inString = true
+      out += ch
+      continue
+    }
+
+    // Inside a JSON string
+    if (escaped) {
+      out += ch
+      escaped = false
+      continue
+    }
+    if (ch === '\\') {
+      out += ch
+      escaped = true
+      continue
+    }
+
+    if (ch === '"') {
+      // Is this the real closing quote, or a stray interior quote?
+      const next = input[i + 1]
+      if (next === undefined || structuralAfterString.has(next)) {
+        // Legitimate closing quote
+        inString = false
+        out += ch
+      } else {
+        // Stray interior quote – replace with Chinese quote
+        out += '\u201C'
+      }
+      continue
+    }
+
+    // Control character escaping (same as escapeControlCharsInJsonStrings)
+    if (ch === '\n') { out += '\\n'; continue }
+    if (ch === '\r') { out += '\\r'; continue }
+    if (ch === '\t') { out += '\\t'; continue }
+    const code = ch.charCodeAt(0)
+    if (code < 0x20) { out += `\\u${code.toString(16).padStart(4, '0')}`; continue }
+
+    out += ch
+  }
+
+  return out
+}
+
 function parseScreenplayObject(responseText: string): Record<string, unknown> {
   let cleaned = responseText.trim()
   cleaned = cleaned
@@ -198,11 +283,18 @@ function parseScreenplayObject(responseText: string): Record<string, unknown> {
     cleaned = cleaned.slice(firstBrace, lastBrace + 1)
   }
 
+  // Level 1: direct parse
   try {
     return JSON.parse(cleaned) as Record<string, unknown>
-  } catch {
+  } catch { /* continue */ }
+
+  // Level 2: escape control characters
+  try {
     return JSON.parse(escapeControlCharsInJsonStrings(cleaned)) as Record<string, unknown>
-  }
+  } catch { /* continue */ }
+
+  // Level 3: fix unescaped interior double quotes + control chars
+  return JSON.parse(fixUnescapedQuotesInJson(cleaned)) as Record<string, unknown>
 }
 
 function asString(value: unknown): string {
@@ -429,7 +521,8 @@ export async function runStoryToScriptOrchestrator(
 
   for (let attempt = 1; attempt <= MAX_SPLIT_BOUNDARY_ATTEMPTS; attempt += 1) {
     const splitMeta: StoryToScriptStepMeta = {
-      stepId: attempt === 1 ? 'split_clips' : `split_clips_retry_${attempt}`,
+      stepId: 'split_clips',
+      stepAttempt: attempt,
       stepTitle: 'progress.streamStep.splitClips',
       stepIndex: 1,
       stepTotal: 1,

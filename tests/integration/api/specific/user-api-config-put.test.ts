@@ -16,7 +16,7 @@ type SavedProvider = {
   name: string
   baseUrl?: string
   apiKey?: string
-  apiMode?: 'gemini-sdk'
+  apiMode?: 'gemini-sdk' | 'openai-official'
 }
 
 const prismaMock = vi.hoisted(() => ({
@@ -216,5 +216,156 @@ describe('api specific - user api-config PUT provider uniqueness', () => {
     const res = await route.PUT(req)
     expect(res.status).toBe(400)
     expect(prismaMock.userPreference.upsert).not.toHaveBeenCalled()
+  })
+
+  it('accepts openai-compatible provider image/video models', async () => {
+    installAuthMocks()
+    mockAuthenticated('user-1')
+    const route = await import('@/app/api/user/api-config/route')
+
+    const req = buildMockRequest({
+      path: '/api/user/api-config',
+      method: 'PUT',
+      body: {
+        providers: [
+          {
+            id: 'openai-compatible:oa-1',
+            name: 'OpenAI Node',
+            baseUrl: 'https://oa.test/v1',
+            apiKey: 'oa-key',
+            apiMode: 'openai-official',
+          },
+        ],
+        models: [
+          {
+            type: 'image',
+            provider: 'openai-compatible:oa-1',
+            modelId: 'gpt-image-1',
+            modelKey: 'openai-compatible:oa-1::gpt-image-1',
+            name: 'Image Model',
+          },
+          {
+            type: 'video',
+            provider: 'openai-compatible:oa-1',
+            modelId: 'sora-2',
+            modelKey: 'openai-compatible:oa-1::sora-2',
+            name: 'Video Model',
+          },
+        ],
+      },
+    })
+
+    const res = await route.PUT(req)
+    expect(res.status).toBe(200)
+    expect(prismaMock.userPreference.upsert).toHaveBeenCalledTimes(1)
+  })
+
+  it('rejects invalid custom pricing structure', async () => {
+    installAuthMocks()
+    mockAuthenticated('user-1')
+    const route = await import('@/app/api/user/api-config/route')
+
+    const req = buildMockRequest({
+      path: '/api/user/api-config',
+      method: 'PUT',
+      body: {
+        providers: [
+          { id: 'openai-compatible:oa-1', name: 'OpenAI Node', baseUrl: 'https://oa.test/v1', apiKey: 'oa-key' },
+        ],
+        models: [
+          {
+            type: 'image',
+            provider: 'openai-compatible:oa-1',
+            modelId: 'gpt-image-1',
+            modelKey: 'openai-compatible:oa-1::gpt-image-1',
+            name: 'Image Model',
+            customPricing: {
+              image: {
+                basePrice: -1,
+              },
+            },
+          },
+        ],
+      },
+    })
+
+    const res = await route.PUT(req)
+    expect(res.status).toBe(400)
+    expect(prismaMock.userPreference.upsert).not.toHaveBeenCalled()
+  })
+
+  it('rejects custom pricing option mappings with unsupported capability values', async () => {
+    installAuthMocks()
+    mockAuthenticated('user-1')
+    const route = await import('@/app/api/user/api-config/route')
+
+    const req = buildMockRequest({
+      path: '/api/user/api-config',
+      method: 'PUT',
+      body: {
+        providers: [
+          { id: 'ark', name: 'Volcengine Ark', apiKey: 'ark-key' },
+        ],
+        models: [
+          {
+            type: 'video',
+            provider: 'ark',
+            modelId: 'doubao-seedance-1-0-pro-fast-251015',
+            modelKey: 'ark::doubao-seedance-1-0-pro-fast-251015',
+            name: 'Ark Video',
+            customPricing: {
+              video: {
+                basePrice: 0.5,
+                optionPrices: {
+                  resolution: {
+                    '2k': 1.2,
+                  },
+                },
+              },
+            },
+          },
+        ],
+      },
+    })
+
+    const res = await route.PUT(req)
+    expect(res.status).toBe(400)
+    expect(prismaMock.userPreference.upsert).not.toHaveBeenCalled()
+  })
+
+  it('maps legacy customPricing input/output to llm pricing on GET', async () => {
+    installAuthMocks()
+    mockAuthenticated('user-1')
+    prismaMock.userPreference.findUnique.mockResolvedValue({
+      customProviders: JSON.stringify([
+        { id: 'openai-compatible:oa-1', name: 'OpenAI', baseUrl: 'https://oa.test/v1', apiKey: 'enc:key' },
+      ]),
+      customModels: JSON.stringify([
+        {
+          type: 'llm',
+          provider: 'openai-compatible:oa-1',
+          modelId: 'gpt-4.1-mini',
+          modelKey: 'openai-compatible:oa-1::gpt-4.1-mini',
+          name: 'GPT',
+          customPricing: {
+            input: 2.5,
+            output: 5.5,
+          },
+        },
+      ]),
+    })
+    const route = await import('@/app/api/user/api-config/route')
+
+    const req = buildMockRequest({
+      path: '/api/user/api-config',
+      method: 'GET',
+    })
+
+    const res = await route.GET(req)
+    expect(res.status).toBe(200)
+    const json = await res.json() as { models?: Array<{ customPricing?: { llm?: { inputPerMillion?: number; outputPerMillion?: number } } }> }
+    const model = Array.isArray(json.models) ? json.models[0] : null
+    expect(model?.customPricing?.llm?.inputPerMillion).toBe(2.5)
+    expect(model?.customPricing?.llm?.outputPerMillion).toBe(5.5)
   })
 })

@@ -2,10 +2,6 @@ import type { Job } from 'bullmq'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { TASK_TYPE, type TaskJobData } from '@/lib/task/types'
 
-const llmMock = vi.hoisted(() => ({
-  getCompletionContent: vi.fn(),
-}))
-
 const persistMock = vi.hoisted(() => ({
   resolveAnalysisModel: vi.fn(),
 }))
@@ -16,7 +12,6 @@ const runtimeMock = vi.hoisted(() => ({
   assertTaskActive: vi.fn(async () => undefined),
 }))
 
-vi.mock('@/lib/llm-client', () => llmMock)
 vi.mock('@/lib/workers/handlers/shot-ai-persist', () => persistMock)
 vi.mock('@/lib/workers/handlers/shot-ai-prompt-runtime', () => ({
   runShotPromptCompletion: runtimeMock.runShotPromptCompletion,
@@ -54,8 +49,7 @@ describe('worker shot-ai-prompt-appearance behavior', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     persistMock.resolveAnalysisModel.mockResolvedValue({ id: 'np-1', analysisModel: 'llm::analysis' })
-    runtimeMock.runShotPromptCompletion.mockResolvedValue({ id: 'completion-1' })
-    llmMock.getCompletionContent.mockReturnValue('{"prompt":"updated appearance description"}')
+    runtimeMock.runShotPromptCompletion.mockResolvedValue('{"prompt":"updated appearance description"}')
   })
 
   it('missing characterId -> explicit error', async () => {

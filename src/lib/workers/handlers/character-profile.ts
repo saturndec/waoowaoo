@@ -1,6 +1,6 @@
 import type { Job } from 'bullmq'
 import { prisma } from '@/lib/prisma'
-import { chatCompletion, getCompletionContent } from '@/lib/llm-client'
+import { executeAiTextStep } from '@/lib/ai-runtime'
 import { encodeImageUrls } from '@/lib/contracts/image-urls-contract'
 import { validateProfileData, stringifyProfileData } from '@/types/character-profile'
 import { withInternalLLMStreamCallbacks } from '@/lib/llm-observe/internal-stream-context'
@@ -89,25 +89,25 @@ async function handleConfirmProfile(
   const completion = await withInternalLLMStreamCallbacks(
     streamCallbacks,
     async () =>
-      await chatCompletion(
-        job.data.userId,
-        project.novelPromotionData!.analysisModel!,
-        [{ role: 'user', content: promptTemplate }],
-        {
-          temperature: 0.7,
-          projectId: job.data.projectId,
-          action: 'generate_character_visual',
-          streamStepId: 'character_profile_confirm',
-          streamStepTitle: '角色档案确认',
-          streamStepIndex: 1,
-          streamStepTotal: 1,
+      await executeAiTextStep({
+        userId: job.data.userId,
+        model: project.novelPromotionData!.analysisModel!,
+        messages: [{ role: 'user', content: promptTemplate }],
+        temperature: 0.7,
+        projectId: job.data.projectId,
+        action: 'generate_character_visual',
+        meta: {
+          stepId: 'character_profile_confirm',
+          stepTitle: '角色档案确认',
+          stepIndex: 1,
+          stepTotal: 1,
         },
-      ),
+      }),
   )
   await streamCallbacks.flush()
   await assertTaskActive(job, 'character_profile_confirm_parse')
 
-  const responseText = getCompletionContent(completion)
+  const responseText = completion.text
   const visualData = parseVisualResponse(responseText)
   const visualCharacters = Array.isArray(visualData.characters)
     ? (visualData.characters as Array<AnyObj>)

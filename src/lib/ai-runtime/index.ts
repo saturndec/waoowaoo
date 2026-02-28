@@ -1,4 +1,4 @@
-export { executeAiTextStep } from './client'
+export { executeAiTextStep, executeAiVisionStep } from './client'
 export { toAiRuntimeError } from './errors'
 export type {
   AiRuntimeError,

@@ -15,13 +15,24 @@ export interface Provider {
     baseUrl?: string
     apiKey?: string
     hasApiKey?: boolean
-    apiMode?: 'gemini-sdk'  // API 模式：gemini-sdk（默认）
+    apiMode?: 'gemini-sdk' | 'openai-official'
 }
 
-// 用户自定义定价（用于内置目录中没有的模型，如 OpenRouter）
+export interface LlmCustomPricing {
+    inputPerMillion?: number
+    outputPerMillion?: number
+}
+
+export interface MediaCustomPricing {
+    basePrice?: number
+    optionPrices?: Record<string, Record<string, number>>
+}
+
+// 用户自定义定价 V2（能力参数可定价）
 export interface CustomModelPricing {
-    input?: number     // LLM 输入 token 单价（每百万 token）
-    output?: number    // LLM 输出 token 单价（每百万 token）
+    llm?: LlmCustomPricing
+    image?: MediaCustomPricing
+    video?: MediaCustomPricing
 }
 
 // 模型接口

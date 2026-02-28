@@ -262,6 +262,30 @@ describe('billing/service', () => {
       expect(enforceInfo.freezeId).toBe('freeze_task_1')
     })
 
+    it('prepareTaskBilling tolerates unknown text model pricing in SHADOW mode', async () => {
+      modeMock.getBillingMode.mockResolvedValueOnce('SHADOW')
+      const unknownTextInfo = buildTaskInfo({
+        taskType: 'story_to_script_run',
+        apiType: 'text',
+        model: 'gpt-5.2',
+        quantity: 2400,
+        unit: 'token',
+        maxFrozenCost: 0,
+        action: 'story_to_script_run',
+      })
+
+      const shadow = await prepareTaskBilling({
+        id: 'task_shadow_unknown_text_model',
+        userId: 'u1',
+        projectId: 'p1',
+        billingInfo: unknownTextInfo,
+      })
+
+      const shadowInfo = shadow as Extract<TaskBillingInfo, { billable: true }>
+      expect(shadowInfo.status).toBe('skipped')
+      expect(shadowInfo.maxFrozenCost).toBe(0)
+    })
+
     it('prepareTaskBilling throws InsufficientBalanceError when ENFORCE freeze fails', async () => {
       modeMock.getBillingMode.mockResolvedValue('ENFORCE')
       ledgerMock.freezeBalance.mockResolvedValue(null)
@@ -298,6 +322,58 @@ describe('billing/service', () => {
       const offInfo = offSettled as Extract<TaskBillingInfo, { billable: true }>
       expect(offInfo.status).toBe('settled')
       expect(offInfo.chargedCost).toBe(0)
+    })
+
+    it('settleTaskBilling does not fail OFF snapshot when text usage model pricing is unknown', async () => {
+      const settled = await settleTaskBilling({
+        id: 'task_off_unknown_usage_model',
+        userId: 'u1',
+        projectId: 'p1',
+        billingInfo: buildTaskInfo({
+          taskType: 'story_to_script_run',
+          apiType: 'text',
+          model: 'gpt-5.2',
+          quantity: 2400,
+          unit: 'token',
+          maxFrozenCost: 0,
+          action: 'story_to_script_run',
+          modeSnapshot: 'OFF',
+          status: 'quoted',
+        }),
+      }, {
+        textUsage: [{ model: 'gpt-5.2', inputTokens: 1200, outputTokens: 800 }],
+      })
+
+      const settledInfo = settled as Extract<TaskBillingInfo, { billable: true }>
+      expect(settledInfo.status).toBe('settled')
+      expect(settledInfo.chargedCost).toBe(0)
+      expect(ledgerMock.recordShadowUsage).not.toHaveBeenCalled()
+    })
+
+    it('settleTaskBilling skips SHADOW settlement when text model pricing is unknown', async () => {
+      const settled = await settleTaskBilling({
+        id: 'task_shadow_unknown_usage_model',
+        userId: 'u1',
+        projectId: 'p1',
+        billingInfo: buildTaskInfo({
+          taskType: 'story_to_script_run',
+          apiType: 'text',
+          model: 'gpt-5.2',
+          quantity: 2400,
+          unit: 'token',
+          maxFrozenCost: 0,
+          action: 'story_to_script_run',
+          modeSnapshot: 'SHADOW',
+          status: 'quoted',
+        }),
+      }, {
+        textUsage: [{ model: 'gpt-5.2', inputTokens: 1200, outputTokens: 800 }],
+      })
+
+      const settledInfo = settled as Extract<TaskBillingInfo, { billable: true }>
+      expect(settledInfo.status).toBe('settled')
+      expect(settledInfo.chargedCost).toBe(0)
+      expect(ledgerMock.recordShadowUsage).not.toHaveBeenCalled()
     })
 
     it('settleTaskBilling handles ENFORCE success/failure branches', async () => {

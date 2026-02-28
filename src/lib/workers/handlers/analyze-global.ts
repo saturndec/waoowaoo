@@ -1,6 +1,6 @@
 import type { Job } from 'bullmq'
 import { prisma } from '@/lib/prisma'
-import { chatCompletion, getCompletionContent } from '@/lib/llm-client'
+import { executeAiTextStep } from '@/lib/ai-runtime'
 import { withInternalLLMStreamCallbacks } from '@/lib/llm-observe/internal-stream-context'
 import { reportTaskProgress } from '@/lib/workers/shared'
 import { assertTaskActive } from '@/lib/workers/utils'
@@ -17,6 +17,7 @@ import {
 } from './analyze-global-parse'
 import { buildAnalyzeGlobalPrompts, loadAnalyzeGlobalPromptTemplates } from './analyze-global-prompt'
 import { createAnalyzeGlobalStats, persistAnalyzeGlobalChunk } from './analyze-global-persist'
+import { resolveAnalysisModel } from './resolve-analysis-model'
 
 export async function handleAnalyzeGlobalTask(job: Job<TaskJobData>) {
   const projectId = job.data.projectId
@@ -52,9 +53,11 @@ export async function handleAnalyzeGlobalTask(job: Job<TaskJobData>) {
   if (!novelData) {
     throw new Error('Novel promotion data not found')
   }
-  if (!novelData.analysisModel) {
-    throw new Error('请先在项目设置中配置分析模型')
-  }
+
+  const analysisModel = await resolveAnalysisModel({
+    userId: job.data.userId,
+    projectAnalysisModel: novelData.analysisModel,
+  })
 
   let allContent = ''
   if (readText(novelData.globalAssetText).trim()) {
@@ -123,39 +126,39 @@ export async function handleAnalyzeGlobalTask(job: Job<TaskJobData>) {
         streamCallbacks,
         async () =>
           await Promise.all([
-            chatCompletion(
-              job.data.userId,
-              novelData.analysisModel!,
-              [{ role: 'user', content: characterPrompt }],
-              {
-                temperature: 0.7,
-                projectId,
-                action: 'analyze_global_characters',
-                streamStepId: `analyze_global_characters_${i + 1}`,
-                streamStepTitle: `角色分析 ${i + 1}/${chunks.length}`,
-                streamStepIndex: i + 1,
-                streamStepTotal: chunks.length,
+            executeAiTextStep({
+              userId: job.data.userId,
+              model: analysisModel,
+              messages: [{ role: 'user', content: characterPrompt }],
+              temperature: 0.7,
+              projectId,
+              action: 'analyze_global_characters',
+              meta: {
+                stepId: `analyze_global_characters_${i + 1}`,
+                stepTitle: `角色分析 ${i + 1}/${chunks.length}`,
+                stepIndex: i + 1,
+                stepTotal: chunks.length,
               },
-            ),
-            chatCompletion(
-              job.data.userId,
-              novelData.analysisModel!,
-              [{ role: 'user', content: locationPrompt }],
-              {
-                temperature: 0.7,
-                projectId,
-                action: 'analyze_global_locations',
-                streamStepId: `analyze_global_locations_${i + 1}`,
-                streamStepTitle: `场景分析 ${i + 1}/${chunks.length}`,
-                streamStepIndex: i + 1,
-                streamStepTotal: chunks.length,
+            }),
+            executeAiTextStep({
+              userId: job.data.userId,
+              model: analysisModel,
+              messages: [{ role: 'user', content: locationPrompt }],
+              temperature: 0.7,
+              projectId,
+              action: 'analyze_global_locations',
+              meta: {
+                stepId: `analyze_global_locations_${i + 1}`,
+                stepTitle: `场景分析 ${i + 1}/${chunks.length}`,
+                stepIndex: i + 1,
+                stepTotal: chunks.length,
               },
-            ),
+            }),
           ]),
       )
 
-      const characterResponse = getCompletionContent(characterCompletion)
-      const locationResponse = getCompletionContent(locationCompletion)
+      const characterResponse = characterCompletion.text
+      const locationResponse = locationCompletion.text
       const charactersData = safeParseCharactersResponse(characterResponse)
       const locationsData = safeParseLocationsResponse(locationResponse)
 

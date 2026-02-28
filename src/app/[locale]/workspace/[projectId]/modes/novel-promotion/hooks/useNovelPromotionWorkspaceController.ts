@@ -33,7 +33,7 @@ export function useNovelPromotionWorkspaceController({
 
   const searchParams = useSearchParams()
   const router = useRouter()
-  const { onRefresh, subscribeTaskEvents } = useWorkspaceProvider()
+  const { onRefresh } = useWorkspaceProvider()
 
   const projectSnapshot = useWorkspaceProjectSnapshot({ project, episode, urlStage })
   const { currentStage, episodeStoryboards, ...projectSection } = projectSnapshot
@@ -99,7 +99,6 @@ export function useNovelPromotionWorkspaceController({
     onUpdateConfig: configActions.handleUpdateConfig,
     onStageChange: configActions.handleStageChange,
     onOpenAssetLibrary: assetLibrary.openAssetLibrary,
-    subscribeTaskEvents,
   })
 
   const videoActions = useWorkspaceVideoActions({

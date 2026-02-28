@@ -1,16 +1,18 @@
 import type { Job } from 'bullmq'
 import { prisma } from '@/lib/prisma'
-import { chatCompletion, getCompletionParts } from '@/lib/llm-client'
+import { executeAiTextStep } from '@/lib/ai-runtime'
 import { resolveProjectModelCapabilityGenerationOptions } from '@/lib/config-service'
 import { withInternalLLMStreamCallbacks } from '@/lib/llm-observe/internal-stream-context'
 import { logAIAnalysis } from '@/lib/logging/semantic'
 import { onProjectNameAvailable } from '@/lib/logging/file-writer'
 import { reportTaskProgress } from '@/lib/workers/shared'
 import { assertTaskActive } from '@/lib/workers/utils'
+import { executePipelineGraph, type GraphExecutorState } from '@/lib/run-runtime/graph-executor'
 import {
   runStoryToScriptOrchestrator,
   type StoryToScriptStepMeta,
   type StoryToScriptStepOutput,
+  type StoryToScriptOrchestratorResult,
 } from '@/lib/novel-promotion/story-to-script/orchestrator'
 import { createWorkerLLMStreamCallbacks, createWorkerLLMStreamContext } from './llm-stream'
 import type { TaskJobData } from '@/lib/task/types'
@@ -25,6 +27,7 @@ import {
   resolveClipRecordId,
 } from './story-to-script-helpers'
 import { getPromptTemplate, PROMPT_IDS } from '@/lib/prompt-i18n'
+import { resolveAnalysisModel } from './resolve-analysis-model'
 
 function isReasoningEffort(value: unknown): value is 'minimal' | 'low' | 'medium' | 'high' {
   return value === 'minimal' || value === 'low' || value === 'medium' || value === 'high'
@@ -86,10 +89,11 @@ export async function handleStoryToScriptTask(job: Job<TaskJobData>) {
     throw new Error('Episode not found')
   }
 
-  const model = inputModel || novelData.analysisModel || ''
-  if (!model) {
-    throw new Error('analysisModel is not configured')
-  }
+  const model = await resolveAnalysisModel({
+    userId: job.data.userId,
+    inputModel,
+    projectAnalysisModel: novelData.analysisModel,
+  })
   const llmCapabilityOptions = await resolveProjectModelCapabilityGenerationOptions({
     projectId,
     userId: job.data.userId,
@@ -149,25 +153,17 @@ export async function handleStoryToScriptTask(job: Job<TaskJobData>) {
       model,
     })
 
-    const completion = await chatCompletion(
-      job.data.userId,
+    const output = await executeAiTextStep({
+      userId: job.data.userId,
       model,
-      [{ role: 'user', content: prompt }],
-      {
-        temperature,
-        reasoning,
-        reasoningEffort,
-        projectId,
-        action,
-        streamStepId: meta.stepId,
-        streamStepAttempt: meta.stepAttempt || 1,
-        streamStepTitle: meta.stepTitle,
-        streamStepIndex: meta.stepIndex,
-        streamStepTotal: meta.stepTotal,
-      },
-    )
-
-    const parts = getCompletionParts(completion)
+      messages: [{ role: 'user', content: prompt }],
+      projectId,
+      action,
+      meta,
+      temperature,
+      reasoning,
+      reasoningEffort,
+    })
 
     // Log AI response output (full raw text included for debugging)
     logAIAnalysis(job.data.userId, 'worker', projectId, project.name, {
@@ -175,45 +171,95 @@ export async function handleStoryToScriptTask(job: Job<TaskJobData>) {
       output: {
         stepId: meta.stepId,
         stepTitle: meta.stepTitle,
-        rawText: parts.text,
-        textLength: parts.text.length,
-        reasoningLength: parts.reasoning.length,
+        rawText: output.text,
+        textLength: output.text.length,
+        reasoningLength: output.reasoning.length,
       },
       model,
     })
 
     return {
-      text: parts.text,
-      reasoning: parts.reasoning,
+      text: output.text,
+      reasoning: output.reasoning,
     }
   }
 
-  const result = await (async () => {
+  let result: StoryToScriptOrchestratorResult | null = null
+  const payloadMeta = typeof payload.meta === 'object' && payload.meta !== null
+    ? (payload.meta as AnyObj)
+    : {}
+  const runId = typeof payload.runId === 'string' && payload.runId.trim()
+    ? payload.runId.trim()
+    : (typeof payloadMeta.runId === 'string' ? payloadMeta.runId.trim() : '')
+  if (!runId) {
+    throw new Error('runId is required for story_to_script pipeline')
+  }
+
+  type StoryToScriptGraphState = GraphExecutorState & {
+    orchestratorResult: StoryToScriptOrchestratorResult | null
+  }
+  const initialState: StoryToScriptGraphState = {
+    refs: {},
+    meta: {},
+    orchestratorResult: null,
+  }
+
+  const pipelineState = await (async () => {
     try {
       return await withInternalLLMStreamCallbacks(
         callbacks,
         async () =>
-          await runStoryToScriptOrchestrator({
-            content,
-            baseCharacters: (novelData.characters || []).map((item) => item.name),
-            baseLocations: (novelData.locations || []).map((item) => item.name),
-            baseCharacterIntroductions: (novelData.characters || []).map((item) => ({
-              name: item.name,
-              introduction: item.introduction || '',
-            })),
-            promptTemplates: {
-              characterPromptTemplate,
-              locationPromptTemplate,
-              clipPromptTemplate,
-              screenplayPromptTemplate,
-            },
-            runStep,
+          await executePipelineGraph({
+            runId,
+            projectId,
+            userId: job.data.userId,
+            state: initialState,
+            nodes: [
+              {
+                key: 'story_to_script_orchestrator',
+                title: 'story_to_script_orchestrator',
+                maxAttempts: 2,
+                timeoutMs: 1000 * 60 * 15,
+                run: async (context) => {
+                  const orchestratorResult = await runStoryToScriptOrchestrator({
+                    content,
+                    baseCharacters: (novelData.characters || []).map((item) => item.name),
+                    baseLocations: (novelData.locations || []).map((item) => item.name),
+                    baseCharacterIntroductions: (novelData.characters || []).map((item) => ({
+                      name: item.name,
+                      introduction: item.introduction || '',
+                    })),
+                    promptTemplates: {
+                      characterPromptTemplate,
+                      locationPromptTemplate,
+                      clipPromptTemplate,
+                      screenplayPromptTemplate,
+                    },
+                    runStep,
+                  })
+
+                  context.state.orchestratorResult = orchestratorResult
+                  return {
+                    output: {
+                      clipCount: orchestratorResult.summary.clipCount,
+                      screenplaySuccessCount: orchestratorResult.summary.screenplaySuccessCount,
+                      screenplayFailedCount: orchestratorResult.summary.screenplayFailedCount,
+                    },
+                  }
+                },
+              },
+            ],
           }),
       )
     } finally {
       await callbacks.flush()
     }
   })()
+
+  result = pipelineState.orchestratorResult
+  if (!result) {
+    throw new Error('story_to_script orchestrator produced no result')
+  }
 
   if (result.summary.screenplayFailedCount > 0) {
     const failed = result.screenplayResults.filter((item) => !item.success)

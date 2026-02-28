@@ -1,6 +1,6 @@
 import type { Job } from 'bullmq'
 import { prisma } from '@/lib/prisma'
-import { chatCompletion, getCompletionContent } from '@/lib/llm-client'
+import { executeAiTextStep } from '@/lib/ai-runtime'
 import { withInternalLLMStreamCallbacks } from '@/lib/llm-observe/internal-stream-context'
 import { buildCharactersIntroduction } from '@/lib/constants'
 import { createClipContentMatcher } from '@/lib/novel-promotion/story-to-script/clip-matching'
@@ -9,6 +9,7 @@ import { assertTaskActive } from '@/lib/workers/utils'
 import { createWorkerLLMStreamCallbacks, createWorkerLLMStreamContext } from './llm-stream'
 import type { TaskJobData } from '@/lib/task/types'
 import { buildPrompt, PROMPT_IDS } from '@/lib/prompt-i18n'
+import { resolveAnalysisModel } from './resolve-analysis-model'
 
 function parseClipArrayResponse(responseText: string): Array<Record<string, unknown>> {
   let cleaned = responseText.trim()
@@ -76,9 +77,11 @@ export async function handleClipsBuildTask(job: Job<TaskJobData>) {
   if (!novelData) {
     throw new Error('Novel promotion data not found')
   }
-  if (!novelData.analysisModel) {
-    throw new Error('analysisModel is not configured')
-  }
+  const analysisModel = await resolveAnalysisModel({
+    userId: job.data.userId,
+    inputModel: payload.model,
+    projectAnalysisModel: novelData.analysisModel,
+  })
 
   const episode = await prisma.novelPromotionEpisode.findUnique({
     where: { id: episodeId },
@@ -144,22 +147,23 @@ export async function handleClipsBuildTask(job: Job<TaskJobData>) {
       const completion = await withInternalLLMStreamCallbacks(
         streamCallbacks,
         async () =>
-          await chatCompletion(
-            job.data.userId,
-            novelData.analysisModel!,
-            [{ role: 'user', content: promptTemplate }],
-            {
-              projectId,
-              action: 'split_clips',
-              streamStepId: attempt === 1 ? 'split_clips' : `split_clips_retry_${attempt}`,
-              streamStepTitle: '片段切分',
-              streamStepIndex: 1,
-              streamStepTotal: 1,
+          await executeAiTextStep({
+            userId: job.data.userId,
+            model: analysisModel,
+            messages: [{ role: 'user', content: promptTemplate }],
+            projectId,
+            action: 'split_clips',
+            meta: {
+              stepId: 'split_clips',
+              stepAttempt: attempt,
+              stepTitle: '片段切分',
+              stepIndex: 1,
+              stepTotal: 1,
             },
-          ),
+          }),
       )
 
-      const responseText = getCompletionContent(completion)
+      const responseText = completion.text
       if (!responseText) {
         lastBoundaryError = new Error('No response from AI')
         continue

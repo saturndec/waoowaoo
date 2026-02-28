@@ -1,7 +1,7 @@
 'use client'
 
 import { useRunStreamState, type RunResult } from './useRunStreamState'
-import { TASK_STATUS, TASK_TYPE } from '@/lib/task/types'
+import { TASK_TYPE } from '@/lib/task/types'
 
 export type StoryToScriptRunParams = {
   episodeId: string
@@ -25,33 +25,32 @@ export function useStoryToScriptRunStream({ projectId, episodeId }: UseStoryToSc
     endpoint: (pid) => `/api/novel-promotion/${pid}/story-to-script-stream`,
     storageKeyPrefix: 'novel-promotion:story-to-script-run',
     storageScopeKey: episodeId || undefined,
-    eventSourceMode: 'external',
-    acceptedTaskTypes: [TASK_TYPE.STORY_TO_SCRIPT_RUN],
-    resolveActiveTaskId: async ({ projectId: pid, storageScopeKey }) => {
+    resolveActiveRunId: async ({ projectId: pid, storageScopeKey }) => {
       if (!storageScopeKey) return null
       const search = new URLSearchParams({
         projectId: pid,
-        targetType: 'episode',
+        workflowType: TASK_TYPE.STORY_TO_SCRIPT_RUN,
+        targetType: 'NovelPromotionEpisode',
         targetId: storageScopeKey,
+        episodeId: storageScopeKey,
         limit: '20',
       })
-      search.append('type', TASK_TYPE.STORY_TO_SCRIPT_RUN)
-      search.append('status', TASK_STATUS.QUEUED)
-      search.append('status', TASK_STATUS.PROCESSING)
+      search.append('status', 'queued')
+      search.append('status', 'running')
+      search.append('status', 'canceling')
       search.set('_v', '2')
-      const response = await fetch(`/api/tasks?${search.toString()}`, {
+      const response = await fetch(`/api/runs?${search.toString()}`, {
         method: 'GET',
         cache: 'no-store',
       })
       if (!response.ok) return null
       const data = await response.json().catch(() => null)
-      const tasks = data && typeof data === 'object' && Array.isArray((data as { tasks?: unknown[] }).tasks)
-        ? (data as { tasks: Array<{ id?: unknown }> }).tasks
+      const runs = data && typeof data === 'object' && Array.isArray((data as { runs?: unknown[] }).runs)
+        ? (data as { runs: Array<{ id?: unknown; targetType?: unknown; targetId?: unknown; status?: unknown }> }).runs
         : []
-      for (const task of tasks) {
-        if (task && typeof task.id === 'string' && task.id) {
-          return task.id
-        }
+      for (const run of runs) {
+        if (!run || typeof run.id !== 'string' || !run.id) continue
+        return run.id
       }
       return null
     },

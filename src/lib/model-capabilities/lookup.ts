@@ -260,6 +260,12 @@ export function resolveGenerationOptionsForModel(input: {
   const runtime = input.runtimeSelections
 
   const selection = mergeSelectionRecords(defaults, overrides, runtime)
+
+  // Custom model not in built-in catalog: skip validation, pass through selections directly
+  if (input.capabilities === undefined) {
+    return { options: { ...selection }, issues: [] }
+  }
+
   const issues = validateCapabilitySelectionForModel({
     modelKey: input.modelKey,
     modelType: input.modelType,

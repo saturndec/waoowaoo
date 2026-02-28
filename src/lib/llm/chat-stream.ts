@@ -1,5 +1,5 @@
 import OpenAI from 'openai'
-import { streamText } from 'ai'
+import { generateText, streamText, type ModelMessage } from 'ai'
 import { createOpenAI } from '@ai-sdk/openai'
 import { GoogleGenAI } from '@google/genai'
 import {
@@ -31,6 +31,7 @@ import {
 } from './runtime-shared'
 import { getCompletionParts } from './completion-parts'
 import { withStreamChunkTimeout } from './stream-timeout'
+import { shouldUseOpenAIReasoningProviderOptions } from './reasoning-capability'
 
 type GoogleModelClient = {
   generateContentStream?: (params: unknown) => Promise<unknown>
@@ -342,13 +343,11 @@ export async function chatCompletionStream(
         })
         // 只有确定是支持 OpenAI 推理参数的提供商（如 OpenAI 官方、deepseek-r1 等）才传 reasoning provider options
         // gemini-compatible / 其他 OAI-compat 提供商不支持 forceReasoning/reasoningEffort，会导致空响应
-        const isNativeOpenAIReasoning =
-          providerName === 'openai' ||
-          providerName.startsWith('openai-') ||
-          resolvedModelId.startsWith('o1') ||
-          resolvedModelId.startsWith('o3') ||
-          resolvedModelId.includes('deepseek-r') ||
-          resolvedModelId.includes('deepseek-reasoner')
+        const isNativeOpenAIReasoning = shouldUseOpenAIReasoningProviderOptions({
+          providerKey,
+          providerApiMode: config.apiMode,
+          modelId: resolvedModelId,
+        })
         const aiSdkProviderOptions = (options.reasoning ?? true) && isNativeOpenAIReasoning
           ? {
             openai: {
@@ -490,7 +489,74 @@ export async function chatCompletionStream(
           }
         } catch { }
 
-        const usage = await Promise.resolve(aiStreamResult.usage).catch(() => null)
+        let usage = await Promise.resolve(aiStreamResult.usage).catch(() => null)
+
+        // 显式回退：仅当“强制推理参数”模式返回空文本时，重试一次无推理 provider options 请求。
+        if (!finalText && aiSdkProviderOptions) {
+          llmLogger.warn({
+            audit: false,
+            action: 'llm.stream.reasoning_fallback',
+            message: '[LLM] empty stream with reasoning options, retrying once without provider reasoning options',
+            userId,
+            projectId,
+            provider: providerName,
+            details: {
+              model: { id: resolvedModelId, key: selection.modelKey },
+              action: options.action ?? null,
+              finishReason: sdkFinishReason ?? streamFinishReason ?? 'unknown',
+            },
+          })
+
+          try {
+            const fallbackResult = await generateText({
+              model: aiOpenAI.chat(resolvedModelId),
+              system: getSystemPrompt(messages),
+              messages: getConversationMessages(messages) as ModelMessage[],
+              temperature: options.temperature ?? 0.7,
+              maxRetries: options.maxRetries ?? 2,
+            })
+            const fallbackReasoning = fallbackResult.reasoningText || ''
+            const fallbackText = fallbackResult.text || ''
+            const fallbackUsage = fallbackResult.usage || fallbackResult.totalUsage
+
+            if (fallbackReasoning) {
+              emitStreamChunk(callbacks, streamStep, {
+                kind: 'reasoning',
+                delta: fallbackReasoning,
+                seq,
+                lane: 'reasoning',
+              })
+              seq += 1
+            }
+            if (fallbackText) {
+              emitStreamChunk(callbacks, streamStep, {
+                kind: 'text',
+                delta: fallbackText,
+                seq,
+                lane: 'main',
+              })
+              seq += 1
+            }
+
+            if (fallbackReasoning) finalReasoning = fallbackReasoning
+            if (fallbackText) finalText = fallbackText
+            if (fallbackUsage) usage = fallbackUsage
+          } catch (fallbackError) {
+            llmLogger.warn({
+              audit: false,
+              action: 'llm.stream.reasoning_fallback_failed',
+              message: '[LLM] fallback without reasoning options failed',
+              userId,
+              projectId,
+              provider: providerName,
+              details: {
+                model: { id: resolvedModelId, key: selection.modelKey },
+                action: options.action ?? null,
+                error: fallbackError instanceof Error ? fallbackError.message : String(fallbackError),
+              },
+            })
+          }
+        }
 
         // 空响应诊断日志：当文本为空时记录详细信息并抛出可重试错误
         if (!finalText) {

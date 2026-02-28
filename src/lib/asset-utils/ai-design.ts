@@ -4,7 +4,7 @@ import { logError as _ulogError } from '@/lib/logging/core'
  * 统一处理 Asset Hub 和 Novel Promotion 的 AI 设计逻辑
  */
 
-import { chatCompletion, getCompletionContent } from '@/lib/llm-client'
+import { executeAiTextStep } from '@/lib/ai-runtime'
 import { withTextBilling } from '@/lib/billing'
 import { buildPrompt, PROMPT_IDS } from '@/lib/prompt-i18n'
 import type { Locale } from '@/i18n/routing'
@@ -78,12 +78,21 @@ export async function aiDesign(options: AIDesignOptions): Promise<AIDesignResult
     const action = assetType === 'character' ? 'ai_design_character' : 'ai_design_location'
     const maxInputTokens = Math.max(1200, Math.ceil(finalPrompt.length * 1.2))
     const maxOutputTokens = 1200
-    const runCompletion = async () => await chatCompletion(
+    const runCompletion = async () =>
+        await executeAiTextStep({
             userId,
-            analysisModel,
-            [{ role: 'user', content: finalPrompt }],
-            { temperature: 0.7, projectId, action }
-        )
+            model: analysisModel,
+            messages: [{ role: 'user', content: finalPrompt }],
+            temperature: 0.7,
+            projectId,
+            action,
+            meta: {
+                stepId: action,
+                stepTitle: assetType === 'character' ? '角色设计' : '场景设计',
+                stepIndex: 1,
+                stepTotal: 1,
+            },
+        })
     const completion = skipBilling
         ? await runCompletion()
         : await withTextBilling(
@@ -95,7 +104,7 @@ export async function aiDesign(options: AIDesignOptions): Promise<AIDesignResult
             runCompletion,
         )
 
-    const aiResponse = getCompletionContent(completion)
+    const aiResponse = completion.text
 
     if (!aiResponse) {
         return { success: false, error: 'AI返回内容为空' }

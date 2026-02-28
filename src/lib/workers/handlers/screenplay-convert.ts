@@ -1,6 +1,6 @@
 import type { Job } from 'bullmq'
 import { prisma } from '@/lib/prisma'
-import { chatCompletion, getCompletionContent } from '@/lib/llm-client'
+import { executeAiTextStep } from '@/lib/ai-runtime'
 import { withInternalLLMStreamCallbacks } from '@/lib/llm-observe/internal-stream-context'
 import { buildCharactersIntroduction } from '@/lib/constants'
 import { TaskTerminatedError } from '@/lib/task/errors'
@@ -16,6 +16,7 @@ import {
   readText,
 } from './screenplay-convert-helpers'
 import { getPromptTemplate, PROMPT_IDS } from '@/lib/prompt-i18n'
+import { resolveAnalysisModel } from './resolve-analysis-model'
 
 const MAX_SCREENPLAY_ATTEMPTS = 2
 
@@ -52,9 +53,11 @@ export async function handleScreenplayConvertTask(job: Job<TaskJobData>) {
   if (!novelData) {
     throw new Error('Novel promotion data not found')
   }
-  if (!novelData.analysisModel) {
-    throw new Error('analysisModel is not configured')
-  }
+  const analysisModel = await resolveAnalysisModel({
+    userId: job.data.userId,
+    inputModel: payload.model,
+    projectAnalysisModel: novelData.analysisModel,
+  })
 
   const episode = await prisma.novelPromotionEpisode.findUnique({
     where: { id: episodeId },
@@ -133,7 +136,7 @@ export async function handleScreenplayConvertTask(job: Job<TaskJobData>) {
       logAIAnalysis(job.data.userId, 'worker', projectId, project.name, {
         action: `SCREENPLAY_CONVERT_PROMPT`,
         input: { stepId, stepTitle, prompt },
-        model: novelData.analysisModel,
+        model: analysisModel,
       })
 
       let screenplayStored = false
@@ -145,27 +148,28 @@ export async function handleScreenplayConvertTask(job: Job<TaskJobData>) {
               return await withInternalLLMStreamCallbacks(
                 streamCallbacks,
                 async () =>
-                  await chatCompletion(
-                    job.data.userId,
-                    novelData.analysisModel!,
-                    [{ role: 'user', content: prompt }],
-                    {
-                      reasoning: true,
-                      projectId,
-                      action: 'screenplay_conversion',
-                      streamStepId: attempt === 1 ? stepId : `${stepId}_retry_${attempt}`,
-                      streamStepTitle: stepTitle,
-                      streamStepIndex: stepIndex,
-                      streamStepTotal: total,
+                  await executeAiTextStep({
+                    userId: job.data.userId,
+                    model: analysisModel,
+                    messages: [{ role: 'user', content: prompt }],
+                    reasoning: true,
+                    projectId,
+                    action: 'screenplay_conversion',
+                    meta: {
+                      stepId,
+                      stepAttempt: attempt,
+                      stepTitle,
+                      stepIndex,
+                      stepTotal: total,
                     },
-                  ),
+                  }),
               )
             } finally {
               await streamCallbacks.flush()
             }
           })()
 
-          const responseText = getCompletionContent(completion)
+          const responseText = completion.text
           if (!responseText || !responseText.trim()) {
             throw new Error('AI returned empty response')
           }
@@ -180,7 +184,7 @@ export async function handleScreenplayConvertTask(job: Job<TaskJobData>) {
               rawText: responseText,
               textLength: responseText.length,
             },
-            model: novelData.analysisModel,
+            model: analysisModel,
           })
 
           const screenplay = parseScreenplayPayload(responseText)

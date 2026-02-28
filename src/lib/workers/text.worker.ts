@@ -1,7 +1,7 @@
 import { Worker, type Job } from 'bullmq'
 import { prisma } from '@/lib/prisma'
 import { queueRedis } from '@/lib/redis'
-import { chatCompletion, getCompletionContent } from '@/lib/llm-client'
+import { executeAiTextStep } from '@/lib/ai-runtime'
 import { withInternalLLMStreamCallbacks, type InternalLLMStreamCallbacks } from '@/lib/llm-observe/internal-stream-context'
 import type { LLMStreamKind } from '@/lib/llm-observe/types'
 import { QUEUE_NAME } from '@/lib/task/queues'
@@ -424,7 +424,8 @@ async function handleInsertPanelTask(job: Job<TaskJobData>) {
 
   const nextPanel = storyboard.panels.find((panel) => panel.panelIndex === prevPanel.panelIndex + 1)
   const projectModels = await getProjectModelConfig(job.data.projectId, job.data.userId)
-  if (!projectModels.analysisModel) throw new Error('Analysis model not configured')
+  const analysisModel = projectModels.analysisModel
+  if (!analysisModel) throw new Error('Analysis model not configured')
 
   const projectData = await prisma.novelPromotionProject.findUnique({
     where: { projectId: job.data.projectId },
@@ -520,16 +521,24 @@ async function handleInsertPanelTask(job: Job<TaskJobData>) {
   const completion = await withInternalLLMStreamCallbacks(
     insertPanelCallbacks,
     async () =>
-      await chatCompletion(
-        job.data.userId,
-        projectModels.analysisModel,
-        [{ role: 'user', content: prompt }],
-        { reasoning: true, projectId: job.data.projectId, action: 'insert_panel' },
-      ),
+      await executeAiTextStep({
+        userId: job.data.userId,
+        model: analysisModel,
+        messages: [{ role: 'user', content: prompt }],
+        reasoning: true,
+        projectId: job.data.projectId,
+        action: 'insert_panel',
+        meta: {
+          stepId: 'insert_panel',
+          stepTitle: '插入分镜',
+          stepIndex: 1,
+          stepTotal: 1,
+        },
+      }),
   )
   await insertPanelCallbacks.flush()
 
-  const responseText = getCompletionContent(completion)
+  const responseText = completion.text
   if (!responseText) throw new Error('Insert panel completion empty')
 
   const generatedPanel = parseJsonObjectResponse(responseText)

@@ -55,9 +55,7 @@ export type UseRunStreamStateOptions<TParams> = {
   endpoint: (projectId: string) => string
   storageKeyPrefix: string
   storageScopeKey?: string
-  eventSourceMode?: 'internal' | 'external'
-  acceptedTaskTypes?: string[]
   buildRequestBody: (params: TParams) => Record<string, unknown>
   validateParams?: (params: TParams) => void
-  resolveActiveTaskId?: (context: { projectId: string; storageScopeKey?: string }) => Promise<string | null>
+  resolveActiveRunId?: (context: { projectId: string; storageScopeKey?: string }) => Promise<string | null>
 }

@@ -19,7 +19,7 @@ import {
 } from './image-task-handler-shared'
 import { encodeImageUrls } from '@/lib/contracts/image-urls-contract'
 import { PRIMARY_APPEARANCE_INDEX } from '@/lib/constants'
-import { chatCompletionWithVision, getCompletionContent } from '@/lib/llm-client'
+import { executeAiVisionStep } from '@/lib/ai-runtime'
 import { buildPrompt, PROMPT_IDS } from '@/lib/prompt-i18n'
 import { createScopedLogger } from '@/lib/logging/core'
 
@@ -138,14 +138,14 @@ export async function handleAssetHubModifyTask(job: Job<TaskJobData>) {
       try {
         const analysisModel = userModels.analysisModel
         if (analysisModel) {
-          const completion = await chatCompletionWithVision(
+          const completion = await executeAiVisionStep({
             userId,
-            analysisModel,
-            buildPrompt({ promptId: PROMPT_IDS.CHARACTER_IMAGE_TO_DESCRIPTION, locale: job.data.locale }),
-            normalizedExtras,
-            { temperature: 0.3 },
-          )
-          extractedDescription = getCompletionContent(completion) || undefined
+            model: analysisModel,
+            prompt: buildPrompt({ promptId: PROMPT_IDS.CHARACTER_IMAGE_TO_DESCRIPTION, locale: job.data.locale }),
+            imageUrls: normalizedExtras,
+            temperature: 0.3,
+          })
+          extractedDescription = completion.text || undefined
         }
       } catch (err) {
         logger.warn({ message: '资产库参考图描述提取失败', details: { error: String(err) } })

@@ -22,7 +22,7 @@ import {
   pickFirstString,
   resolveNovelData,
 } from './image-task-handler-shared'
-import { chatCompletionWithVision, getCompletionContent } from '@/lib/llm-client'
+import { executeAiVisionStep } from '@/lib/ai-runtime'
 import { buildPrompt, PROMPT_IDS } from '@/lib/prompt-i18n'
 import { createScopedLogger } from '@/lib/logging/core'
 
@@ -114,14 +114,15 @@ export async function handleModifyAssetImageTask(job: Job<TaskJobData>) {
         const userModels = await getUserModels(job.data.userId)
         const analysisModel = userModels.analysisModel
         if (analysisModel) {
-          const completion = await chatCompletionWithVision(
-            job.data.userId,
-            analysisModel,
-            buildPrompt({ promptId: PROMPT_IDS.CHARACTER_IMAGE_TO_DESCRIPTION, locale: job.data.locale }),
-            normalizedExtras,
-            { temperature: 0.3, projectId: job.data.projectId },
-          )
-          extractedDescription = getCompletionContent(completion) || undefined
+          const completion = await executeAiVisionStep({
+            userId: job.data.userId,
+            model: analysisModel,
+            prompt: buildPrompt({ promptId: PROMPT_IDS.CHARACTER_IMAGE_TO_DESCRIPTION, locale: job.data.locale }),
+            imageUrls: normalizedExtras,
+            temperature: 0.3,
+            projectId: job.data.projectId,
+          })
+          extractedDescription = completion.text || undefined
         }
       } catch (err) {
         logger.warn({ message: '参考图描述提取失败，不影响改图结果', details: { error: String(err) } })

@@ -1,6 +1,6 @@
 import type { Job } from 'bullmq'
 import { prisma } from '@/lib/prisma'
-import { chatCompletion, getCompletionContent } from '@/lib/llm-client'
+import { executeAiTextStep } from '@/lib/ai-runtime'
 import { withInternalLLMStreamCallbacks } from '@/lib/llm-observe/internal-stream-context'
 import { buildCharactersIntroduction } from '@/lib/constants'
 import { reportTaskProgress } from '@/lib/workers/shared'
@@ -13,6 +13,7 @@ import {
   type VoiceLinePayload,
 } from './voice-analyze-helpers'
 import { buildPrompt, PROMPT_IDS } from '@/lib/prompt-i18n'
+import { resolveAnalysisModel } from './resolve-analysis-model'
 
 const MAX_VOICE_ANALYZE_ATTEMPTS = 2
 
@@ -81,10 +82,11 @@ export async function handleVoiceAnalyzeTask(job: Job<TaskJobData>) {
     throw new Error('No novel text to analyze')
   }
 
-  const analysisModel = novelPromotionData.analysisModel
-  if (!analysisModel) {
-    throw new Error('analysisModel is not configured')
-  }
+  const analysisModel = await resolveAnalysisModel({
+    userId: job.data.userId,
+    inputModel: payload.model,
+    projectAnalysisModel: novelPromotionData.analysisModel,
+  })
 
   const charactersLibName = novelPromotionData.characters.length > 0
     ? novelPromotionData.characters.map((c) => c.name).join('、')
@@ -139,22 +141,23 @@ export async function handleVoiceAnalyzeTask(job: Job<TaskJobData>) {
         const completion = await withInternalLLMStreamCallbacks(
           streamCallbacks,
           async () =>
-            await chatCompletion(
-              job.data.userId,
-              analysisModel,
-              [{ role: 'user', content: promptTemplate }],
-              {
-                projectId,
-                action: 'voice_analyze',
-                streamStepId: attempt === 1 ? 'voice_analyze' : `voice_analyze_retry_${attempt}`,
-                streamStepTitle: '台词分析',
-                streamStepIndex: 1,
-                streamStepTotal: 1,
+            await executeAiTextStep({
+              userId: job.data.userId,
+              model: analysisModel,
+              messages: [{ role: 'user', content: promptTemplate }],
+              projectId,
+              action: 'voice_analyze',
+              meta: {
+                stepId: 'voice_analyze',
+                stepAttempt: attempt,
+                stepTitle: '台词分析',
+                stepIndex: 1,
+                stepTotal: 1,
               },
-            ),
+            }),
         )
 
-        const responseText = getCompletionContent(completion)
+        const responseText = completion.text
         if (!responseText) {
           throw new Error('No response from AI')
         }

@@ -61,6 +61,32 @@ const typeLabel = (type: ProviderCardModelType, t: ProviderCardTranslator) => {
 
 const MODEL_TYPES: readonly ProviderCardModelType[] = ['llm', 'image', 'video', 'audio']
 
+export function getAddableModelTypesForProvider(providerId: string): ProviderCardModelType[] {
+  const providerKey = getProviderKey(providerId)
+  if (providerKey === 'openai-compatible') return ['llm', 'image', 'video']
+  return ['llm', 'image', 'video', 'audio']
+}
+
+function shouldShowDefaultTabs(providerId: string): boolean {
+  const providerKey = getProviderKey(providerId)
+  return providerKey === 'openai-compatible' || providerKey === 'gemini-compatible'
+}
+
+export function getVisibleModelTypesForProvider(
+  providerId: string,
+  groupedModels: Partial<Record<ProviderCardModelType, CustomModel[]>>,
+): ProviderCardModelType[] {
+  const shouldShowAllTabs = shouldShowDefaultTabs(providerId)
+  if (shouldShowAllTabs) {
+    return getAddableModelTypesForProvider(providerId)
+  }
+
+  return MODEL_TYPES.filter((type) => {
+    const modelsOfType = groupedModels[type]
+    return Array.isArray(modelsOfType) && modelsOfType.length > 0
+  })
+}
+
 function formatPriceAmount(amount: number): string {
   const fixed = amount.toFixed(4)
   const normalized = fixed.replace(/\.?0+$/, '')
@@ -100,62 +126,146 @@ export function ProviderAdvancedFields({
   state,
 }: ProviderAdvancedFieldsProps) {
   const providerKey = getProviderKey(provider.id)
-  const addableModelTypes = new Set<ProviderCardModelType>(
-    providerKey === 'openai-compatible'
-      ? ['llm']
-      : ['llm', 'image', 'video', 'audio'],
-  )
-  const typesWithModels = useMemo(
-    () =>
-      MODEL_TYPES.filter((type) => {
-        const modelsOfType = state.groupedModels[type]
-        return Array.isArray(modelsOfType) && modelsOfType.length > 0
-      }),
-    [state.groupedModels],
+  const addableModelTypes = new Set<ProviderCardModelType>(getAddableModelTypesForProvider(provider.id))
+  const visibleTypes = useMemo(
+    () => getVisibleModelTypesForProvider(provider.id, state.groupedModels),
+    [provider.id, state.groupedModels],
   )
   const [activeType, setActiveType] = useState<ProviderCardModelType | null>(
-    typesWithModels[0] ?? null,
+    visibleTypes[0] ?? null,
   )
-  const activeTypeSignature = typesWithModels.join('|')
+  const activeTypeSignature = visibleTypes.join('|')
 
   useEffect(() => {
-    if (typesWithModels.length === 0) {
+    if (visibleTypes.length === 0) {
       setActiveType(null)
       return
     }
-    if (!activeType || !typesWithModels.includes(activeType)) {
-      setActiveType(typesWithModels[0])
+    if (!activeType || !visibleTypes.includes(activeType)) {
+      setActiveType(visibleTypes[0])
     }
-  }, [activeType, activeTypeSignature, typesWithModels])
+  }, [activeType, activeTypeSignature, visibleTypes])
 
-  const currentType = activeType ?? typesWithModels[0] ?? null
+  const currentType = activeType ?? visibleTypes[0] ?? null
   const currentModels = currentType ? (state.groupedModels[currentType] ?? []) : []
   const shouldShowAddButton =
     !!currentType
     && addableModelTypes.has(currentType)
     && state.showAddForm !== currentType
-  const defaultAddType: ProviderCardModelType = (
-    providerKey === 'openrouter' || providerKey === 'openai-compatible'
-  ) ? 'llm' : 'image'
+  const defaultAddType: ProviderCardModelType = providerKey === 'openrouter' ? 'llm' : 'image'
+  const useTabbedLayout = state.hasModels || shouldShowDefaultTabs(provider.id)
 
-  return state.hasModels ? (
+  const renderCustomPricingEditor = (targetType: ProviderCardModelType | null) => {
+    if (!state.needsCustomPricing || !targetType) return null
+
+    const enabled = state.newModel.enableCustomPricing === true
+    const renderInputs = () => {
+      if (!enabled) return null
+
+      if (targetType === 'llm') {
+        return (
+          <div className="mt-2 grid grid-cols-1 gap-2 md:grid-cols-2">
+            <input
+              type="number"
+              step="0.01"
+              min="0"
+              value={state.newModel.priceInput ?? ''}
+              onChange={(event) =>
+                state.setNewModel({ ...state.newModel, priceInput: event.target.value })
+              }
+              placeholder={t('pricingInputLabel')}
+              className="glass-input-base px-3 py-1.5 text-[12px] font-mono"
+            />
+            <input
+              type="number"
+              step="0.01"
+              min="0"
+              value={state.newModel.priceOutput ?? ''}
+              onChange={(event) =>
+                state.setNewModel({ ...state.newModel, priceOutput: event.target.value })
+              }
+              placeholder={t('pricingOutputLabel')}
+              className="glass-input-base px-3 py-1.5 text-[12px] font-mono"
+            />
+            <span className="shrink-0 text-[11px] text-[var(--glass-text-tertiary)]">¥/M tokens</span>
+          </div>
+        )
+      }
+
+      if (targetType === 'image' || targetType === 'video') {
+        return (
+          <div className="mt-2 space-y-2">
+            <input
+              type="number"
+              step="0.0001"
+              min="0"
+              value={state.newModel.basePrice ?? ''}
+              onChange={(event) =>
+                state.setNewModel({ ...state.newModel, basePrice: event.target.value })
+              }
+              placeholder={t('pricingBasePriceLabel')}
+              className="glass-input-base w-full px-3 py-1.5 text-[12px] font-mono"
+            />
+            <textarea
+              value={state.newModel.optionPricesJson ?? ''}
+              onChange={(event) =>
+                state.setNewModel({ ...state.newModel, optionPricesJson: event.target.value })
+              }
+              placeholder={t('pricingOptionPricesPlaceholder')}
+              className="glass-input-base min-h-[84px] w-full resize-y px-3 py-2 text-[12px] font-mono"
+            />
+          </div>
+        )
+      }
+
+      return null
+    }
+
+    return (
+      <div className="mt-2.5 rounded-lg bg-[var(--glass-bg-muted)] px-2 py-2">
+        <label className="flex items-center gap-2">
+          <button
+            onClick={() =>
+              state.setNewModel({
+                ...state.newModel,
+                enableCustomPricing: !enabled,
+              })
+            }
+            className="glass-check-mini"
+            data-active={enabled}
+            type="button"
+          >
+            {enabled && (
+              <AppIcon name="checkSm" className="h-2.5 w-2.5 text-white" />
+            )}
+          </button>
+          <span className="text-xs font-medium text-[var(--glass-text-secondary)]">
+            {t('pricingEnableCustom')}
+          </span>
+        </label>
+        {renderInputs()}
+      </div>
+    )
+  }
+
+  return useTabbedLayout ? (
     <div className="space-y-2.5 p-3">
       <div className="rounded-lg p-0.5" style={{ background: 'rgba(0,0,0,0.04)' }}>
         <div
           className="relative grid gap-1"
-          style={{ gridTemplateColumns: `repeat(${Math.max(1, typesWithModels.length)}, minmax(0, 1fr))` }}
+          style={{ gridTemplateColumns: `repeat(${Math.max(1, visibleTypes.length)}, minmax(0, 1fr))` }}
         >
-          {typesWithModels.length > 0 && currentType && (
+          {visibleTypes.length > 0 && currentType && (
             <div
               className="absolute bottom-0.5 top-0.5 rounded-md bg-white transition-transform duration-200"
               style={{
                 boxShadow: '0 1px 4px rgba(0,0,0,0.15), 0 0 0 0.5px rgba(0,0,0,0.06)',
-                width: `calc(100% / ${typesWithModels.length})`,
-                transform: `translateX(${Math.max(0, typesWithModels.indexOf(currentType)) * 100}%)`,
+                width: `calc(100% / ${visibleTypes.length})`,
+                transform: `translateX(${Math.max(0, visibleTypes.indexOf(currentType)) * 100}%)`,
               }}
             />
           )}
-          {typesWithModels.map((type) => (
+          {visibleTypes.map((type) => (
             <button
               key={type}
               onClick={() => setActiveType(type)}
@@ -231,33 +341,7 @@ export function ProviderAdvancedFields({
               {t('save')}
             </button>
           </div>
-          {state.needsCustomPricing && (
-            <div className="mt-2 flex items-center gap-2">
-              <input
-                type="number"
-                step="0.01"
-                min="0"
-                value={state.newModel.priceInput ?? ''}
-                onChange={(event) =>
-                  state.setNewModel({ ...state.newModel, priceInput: event.target.value })
-                }
-                placeholder={t('pricingInputLabel')}
-                className="glass-input-base flex-1 px-3 py-1.5 text-[12px] font-mono"
-              />
-              <input
-                type="number"
-                step="0.01"
-                min="0"
-                value={state.newModel.priceOutput ?? ''}
-                onChange={(event) =>
-                  state.setNewModel({ ...state.newModel, priceOutput: event.target.value })
-                }
-                placeholder={t('pricingOutputLabel')}
-                className="glass-input-base flex-1 px-3 py-1.5 text-[12px] font-mono"
-              />
-              <span className="shrink-0 text-[11px] text-[var(--glass-text-tertiary)]">¥/M tokens</span>
-            </div>
-          )}
+          {renderCustomPricingEditor(currentType)}
           {currentType === 'video' && provider.id === 'ark' && (
             <div className="mt-2.5 flex items-center gap-2 rounded-lg bg-[var(--glass-bg-muted)] px-2 py-2">
               <button
@@ -345,33 +429,7 @@ export function ProviderAdvancedFields({
               {t('save')}
             </button>
           </div>
-          {state.needsCustomPricing && state.showAddForm && (
-            <div className="mt-2 flex items-center gap-2">
-              <input
-                type="number"
-                step="0.01"
-                min="0"
-                value={state.newModel.priceInput ?? ''}
-                onChange={(event) =>
-                  state.setNewModel({ ...state.newModel, priceInput: event.target.value })
-                }
-                placeholder={t('pricingInputLabel')}
-                className="glass-input-base flex-1 px-3 py-1.5 text-[12px] font-mono"
-              />
-              <input
-                type="number"
-                step="0.01"
-                min="0"
-                value={state.newModel.priceOutput ?? ''}
-                onChange={(event) =>
-                  state.setNewModel({ ...state.newModel, priceOutput: event.target.value })
-                }
-                placeholder={t('pricingOutputLabel')}
-                className="glass-input-base flex-1 px-3 py-1.5 text-[12px] font-mono"
-              />
-              <span className="shrink-0 text-[11px] text-[var(--glass-text-tertiary)]">¥/M tokens</span>
-            </div>
-          )}
+          {renderCustomPricingEditor(state.showAddForm)}
         </div>
       )}
     </div>

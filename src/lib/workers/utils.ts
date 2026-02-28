@@ -123,7 +123,7 @@ export async function waitExternalResult(
           externalId,
         },
       })
-      return { url, status }
+      return { url, status, ...(status.downloadHeaders ? { downloadHeaders: status.downloadHeaders } : {}) }
     }
 
     if (status.status === 'failed') {
@@ -291,7 +291,7 @@ export async function resolveVideoSourceFromGeneration(
     }
     pollProgress?: { start?: number; end?: number }
   },
-): Promise<string> {
+): Promise<{ url: string; downloadHeaders?: Record<string, string> }> {
   const logger = scopedWorkerUtilLogger(job, 'worker.video.generate_source')
   const startedAt = Date.now()
 
@@ -311,7 +311,10 @@ export async function resolveVideoSourceFromGeneration(
       durationMs: Date.now() - startedAt,
       details: { externalId: resumeExternalId },
     })
-    return polled.url
+    return {
+      url: polled.url,
+      ...(polled.downloadHeaders ? { downloadHeaders: polled.downloadHeaders } : {}),
+    }
   }
 
   logger.info({
@@ -370,7 +373,7 @@ export async function resolveVideoSourceFromGeneration(
       message: 'video source generation completed',
       durationMs: Date.now() - startedAt,
     })
-    return result.videoUrl
+    return { url: result.videoUrl }
   }
 
   const externalId = normalizeExternalId(result, 'VIDEO')
@@ -389,7 +392,10 @@ export async function resolveVideoSourceFromGeneration(
       externalId,
     },
   })
-  return polled.url
+  return {
+    url: polled.url,
+    ...(polled.downloadHeaders ? { downloadHeaders: polled.downloadHeaders } : {}),
+  }
 }
 
 export async function resolveLipSyncVideoSource(

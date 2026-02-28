@@ -10,3 +10,4 @@
 export { FalVideoGenerator } from '../fal'
 export { ArkSeedanceVideoGenerator, ArkVideoGenerator } from '../ark'
 export { GoogleVeoVideoGenerator } from './google'
+export { OpenAICompatibleVideoGenerator } from './openai-compatible'

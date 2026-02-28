@@ -78,6 +78,7 @@
     "migrate:image-urls-contract": "tsx scripts/migrate-image-urls-contract.ts",
     "migrate:model-config-contract": "tsx scripts/migrations/migrate-model-config-contract.ts",
     "migrate:capability-selections": "tsx scripts/migrations/migrate-capability-selections.ts",
+    "migrate:custom-pricing-v2": "tsx scripts/migrations/migrate-custom-pricing-v2.ts",
     "backup:media-safety": "tsx scripts/media-safety-backup.ts",
     "backup:media-restore-dry-run": "tsx scripts/media-restore-dry-run.ts",
     "media:backfill-refs": "tsx scripts/media-backfill-refs.ts",

@@ -26,7 +26,7 @@ const utilsMock = vi.hoisted(() => ({
   assertTaskActive: vi.fn(async () => undefined),
   getProjectModels: vi.fn(async () => ({ videoRatio: '16:9' })),
   resolveLipSyncVideoSource: vi.fn(async () => 'https://provider.example/lipsync.mp4'),
-  resolveVideoSourceFromGeneration: vi.fn(async () => 'https://provider.example/video.mp4'),
+  resolveVideoSourceFromGeneration: vi.fn(async () => ({ url: 'https://provider.example/video.mp4' })),
   toSignedUrlIfCos: vi.fn((url: string | null) => (url ? `https://signed.example/${url}` : null)),
   uploadVideoSourceToCos: vi.fn(async () => 'cos/lip-sync/video.mp4'),
 }))
@@ -44,7 +44,9 @@ const prismaMock = vi.hoisted(() => ({
 
 vi.mock('bullmq', () => ({
   Queue: class {
-    constructor(_name: string) {}
+    constructor(name: string) {
+      void name
+    }
 
     async add() {
       return { id: 'job-1' }
@@ -55,7 +57,8 @@ vi.mock('bullmq', () => ({
     }
   },
   Worker: class {
-    constructor(_name: string, processor: WorkerProcessor) {
+    constructor(name: string, processor: WorkerProcessor) {
+      void name
       workerState.processor = processor
     }
   },
@@ -140,6 +143,40 @@ describe('worker video processor behavior', () => {
     })
 
     await expect(processor!(job)).rejects.toThrow('VIDEO_MODEL_REQUIRED: payload.videoModel is required')
+  })
+
+  it('VIDEO_PANEL: 透传异步轮询返回的下载头到 COS 上传', async () => {
+    const processor = workerState.processor
+    expect(processor).toBeTruthy()
+
+    utilsMock.resolveVideoSourceFromGeneration.mockResolvedValueOnce({
+      url: 'https://provider.example/video.mp4',
+      downloadHeaders: {
+        Authorization: 'Bearer oa-key',
+      },
+    })
+
+    const job = buildJob({
+      type: TASK_TYPE.VIDEO_PANEL,
+      payload: {
+        videoModel: 'openai-compatible:oa-1::sora-2',
+        generationOptions: {
+          duration: 8,
+          resolution: '720p',
+        },
+      },
+    })
+
+    await processor!(job)
+
+    expect(utilsMock.uploadVideoSourceToCos).toHaveBeenCalledWith(
+      'https://provider.example/video.mp4',
+      'panel-video',
+      'panel-1',
+      {
+        Authorization: 'Bearer oa-key',
+      },
+    )
   })
 
   it('LIP_SYNC: 缺少 panel 时显式失败', async () => {

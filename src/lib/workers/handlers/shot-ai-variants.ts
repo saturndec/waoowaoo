@@ -1,7 +1,7 @@
 import type { Job } from 'bullmq'
 import { prisma } from '@/lib/prisma'
 import { getSignedUrl } from '@/lib/cos'
-import { chatCompletionWithVision, getCompletionContent } from '@/lib/llm-client'
+import { executeAiVisionStep } from '@/lib/ai-runtime'
 import { withInternalLLMStreamCallbacks } from '@/lib/llm-observe/internal-stream-context'
 import { reportTaskProgress } from '@/lib/workers/shared'
 import { assertTaskActive } from '@/lib/workers/utils'
@@ -58,7 +58,7 @@ function parsePanelCharacters(value: string | null): string {
 
 export async function handleAnalyzeShotVariantsTask(job: Job<TaskJobData>, payload: AnyObj) {
   const panelId = readRequiredString(payload.panelId, 'panelId')
-  const novelData = await resolveAnalysisModel(job.data.projectId)
+  const novelData = await resolveAnalysisModel(job.data.projectId, job.data.userId)
   const panel = await prisma.novelPromotionPanel.findUnique({
     where: { id: panelId },
     select: {
@@ -101,34 +101,34 @@ export async function handleAnalyzeShotVariantsTask(job: Job<TaskJobData>, paylo
 
   const streamContext = createWorkerLLMStreamContext(job, 'analyze_shot_variants')
   const streamCallbacks = createWorkerLLMStreamCallbacks(job, streamContext)
-  const completion = await (async () => {
+  const responseText = await (async () => {
     try {
-      return await withInternalLLMStreamCallbacks(
+      const result = await withInternalLLMStreamCallbacks(
         streamCallbacks,
         async () =>
-          await chatCompletionWithVision(
-            job.data.userId,
-            novelData.analysisModel,
+          await executeAiVisionStep({
+            userId: job.data.userId,
+            model: novelData.analysisModel,
             prompt,
-            [imageUrl],
-            {
-              reasoning: true,
-              projectId: job.data.projectId,
-              action: 'analyze_shot_variants',
-              streamStepId: 'analyze_shot_variants',
-              streamStepTitle: '镜头变体分析',
-              streamStepIndex: 1,
-              streamStepTotal: 1,
+            imageUrls: [imageUrl],
+            reasoning: true,
+            projectId: job.data.projectId,
+            action: 'analyze_shot_variants',
+            meta: {
+              stepId: 'analyze_shot_variants',
+              stepTitle: '镜头变体分析',
+              stepIndex: 1,
+              stepTotal: 1,
             },
-          ),
+          }),
       )
+      return result.text
     } finally {
       await streamCallbacks.flush()
     }
   })()
   await assertTaskActive(job, 'analyze_shot_variants_parse')
 
-  const responseText = getCompletionContent(completion)
   const suggestions = parseJsonArrayResponse(responseText)
   if (!Array.isArray(suggestions) || suggestions.length < 3) {
     throw new Error('生成的变体数量不足')

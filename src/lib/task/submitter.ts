@@ -8,16 +8,28 @@ import {
   markTaskFailed,
   rollbackTaskBillingForTask,
   updateTaskBillingInfo,
+  updateTaskPayload,
 } from './service'
 import { TASK_EVENT_TYPE, type TaskBillingInfo, type TaskType } from './types'
 import { buildDefaultTaskBillingInfo, isBillableTaskType, InsufficientBalanceError, prepareTaskBilling } from '@/lib/billing'
 import { ApiError } from '@/lib/api-errors'
 import { getTaskFlowMeta } from '@/lib/llm-observe/stage-pipeline'
 import type { Locale } from '@/i18n/routing'
+import { attachTaskToRun, createRun } from '@/lib/run-runtime/service'
+import { isAiTaskType, workflowTypeFromTaskType } from '@/lib/run-runtime/workflow'
 
 export function toObject(value: unknown): Record<string, unknown> {
   if (!value || typeof value !== 'object' || Array.isArray(value)) return {}
   return value as Record<string, unknown>
+}
+
+function resolveRunIdFromPayload(payload: unknown): string | null {
+  const obj = toObject(payload)
+  const runId = typeof obj.runId === 'string' ? obj.runId.trim() : ''
+  if (runId) return runId
+  const meta = toObject(obj.meta)
+  const runIdFromMeta = typeof meta.runId === 'string' ? meta.runId.trim() : ''
+  return runIdFromMeta || null
 }
 
 export function normalizeTaskPayload(type: TaskType, payload?: Record<string, unknown> | null) {
@@ -121,6 +133,31 @@ export async function submitTask(params: {
     maxAttempts: params.maxAttempts,
     billingInfo: resolvedBillingInfo || null,
   })
+  let runId = resolveRunIdFromPayload(task.payload)
+  if (!deduped && isAiTaskType(params.type)) {
+    const run = await createRun({
+      userId: params.userId,
+      projectId: params.projectId,
+      episodeId: params.episodeId || null,
+      workflowType: workflowTypeFromTaskType(params.type),
+      taskType: params.type,
+      taskId: task.id,
+      targetType: params.targetType,
+      targetId: params.targetId,
+      input: normalizedPayload,
+    })
+    runId = run.id
+    const payloadWithRunId = {
+      ...normalizedPayload,
+      runId,
+      meta: {
+        ...toObject(normalizedPayload.meta),
+        runId,
+      },
+    }
+    await updateTaskPayload(task.id, payloadWithRunId)
+    await attachTaskToRun(run.id, task.id)
+  }
 
   let preparedBillingInfo = (task.billingInfo || resolvedBillingInfo || null) as TaskBillingInfo | null
   if (!deduped && isBillableTaskType(params.type) && (!computedBillingInfo || !computedBillingInfo.billable)) {
@@ -156,6 +193,16 @@ export async function submitTask(params: {
   }
 
   if (!deduped) {
+    const payloadForEvent = runId
+      ? {
+          ...normalizedPayload,
+          runId,
+          meta: {
+            ...toObject(normalizedPayload.meta),
+            runId,
+          },
+        }
+      : normalizedPayload
     await publishTaskEvent({
       taskId: task.id,
       projectId: params.projectId,
@@ -166,7 +213,7 @@ export async function submitTask(params: {
       targetId: params.targetId,
       episodeId: params.episodeId || null,
       payload: {
-        ...normalizedPayload,
+        ...payloadForEvent,
         billing: preparedBillingInfo || null,
         trace: {
           requestId: params.requestId || null,
@@ -195,7 +242,16 @@ export async function submitTask(params: {
         episodeId: params.episodeId || null,
         targetType: params.targetType,
         targetId: params.targetId,
-        payload: normalizedPayload,
+        payload: runId
+          ? {
+              ...normalizedPayload,
+              runId,
+              meta: {
+                ...toObject(normalizedPayload.meta),
+                runId,
+              },
+            }
+          : normalizedPayload,
         billingInfo: preparedBillingInfo || null,
         userId: params.userId,
         trace: {
@@ -272,6 +328,7 @@ export async function submitTask(params: {
     success: true,
     async: true,
     taskId: task.id,
+    runId,
     status: task.status,
     deduped,
   }

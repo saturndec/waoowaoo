@@ -205,10 +205,13 @@ export class OpenAICompatibleImageGenerator extends BaseImageGenerator {
       'responseFormat',
       'outputFormat',
     ])
+    // Filter out unknown options silently — custom models may pass extra params
+    // (e.g. aspectRatio from project config) that don't apply to OpenAI-compatible APIs
+    const filteredOptions: Record<string, unknown> = {}
     for (const [key, value] of Object.entries(options)) {
       if (value === undefined) continue
-      if (!allowedOptionKeys.has(key)) {
-        throw new Error(`OPENAI_COMPATIBLE_IMAGE_OPTION_UNSUPPORTED: ${key}`)
+      if (allowedOptionKeys.has(key)) {
+        filteredOptions[key] = value
       }
     }
 

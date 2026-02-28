@@ -114,6 +114,87 @@ describe('billing/cost', () => {
     })).toThrow('Unsupported video capability pricing')
   })
 
+  it('prefers builtin image pricing over custom pricing when builtin exists', () => {
+    const builtin = calcImage('banana', 1)
+    const withCustom = calcImage('banana', 1, undefined, {
+      image: {
+        basePrice: 99,
+      },
+    })
+    expect(withCustom).toBeCloseTo(builtin, 8)
+  })
+
+  it('uses custom image option pricing for unknown models', () => {
+    const cost = calcImage(
+      'openai-compatible:oa-1::gpt-image-1',
+      2,
+      {
+        resolution: '1024x1024',
+        quality: 'high',
+      },
+      {
+        image: {
+          basePrice: 0.2,
+          optionPrices: {
+            resolution: {
+              '1024x1024': 0.05,
+            },
+            quality: {
+              high: 0.1,
+            },
+          },
+        },
+      },
+    )
+    expect(cost).toBeCloseTo((0.2 + 0.05 + 0.1) * 2, 8)
+  })
+
+  it('uses custom video option pricing for unknown models', () => {
+    const cost = calcVideo(
+      'openai-compatible:oa-1::sora-2',
+      '720p',
+      1,
+      {
+        resolution: '720x1280',
+        duration: 8,
+      },
+      {
+        video: {
+          basePrice: 0.8,
+          optionPrices: {
+            resolution: {
+              '720x1280': 0.2,
+            },
+            duration: {
+              '8': 0.4,
+            },
+          },
+        },
+      },
+    )
+    expect(cost).toBeCloseTo(1.4, 8)
+  })
+
+  it('fails explicitly when selected custom option price is missing', () => {
+    expect(() => calcVideo(
+      'openai-compatible:oa-1::sora-2',
+      '720p',
+      1,
+      {
+        resolution: '1792x1024',
+      },
+      {
+        video: {
+          optionPrices: {
+            resolution: {
+              '720x1280': 0.2,
+            },
+          },
+        },
+      },
+    )).toThrow('No custom video price matched')
+  })
+
   it('returns deterministic fixed costs for call-based APIs', () => {
     expect(calcVoiceDesign()).toBeGreaterThan(0)
     expect(calcLipSync()).toBeGreaterThan(0)

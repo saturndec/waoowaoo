@@ -66,6 +66,21 @@ function isCapabilityValue(value: unknown): value is CapabilityValue {
   return typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean'
 }
 
+function extractCapabilityFieldsFromModel(
+  capabilities: Record<string, unknown> | undefined,
+  modelType: string,
+): Array<{ field: string; options: CapabilityValue[] }> {
+  if (!capabilities) return []
+  const namespace = capabilities[modelType]
+  if (!isRecord(namespace)) return []
+  return Object.entries(namespace)
+    .filter(([key, value]) => key.endsWith('Options') && Array.isArray(value) && value.every(isCapabilityValue) && value.length > 0)
+    .map(([key, value]) => ({
+      field: key.slice(0, -'Options'.length),
+      options: value as CapabilityValue[],
+    }))
+}
+
 function parseBySample(input: string, sample: CapabilityValue): CapabilityValue {
   if (typeof sample === 'number') return Number(input)
   if (typeof sample === 'boolean') return input === 'true'
@@ -153,6 +168,7 @@ export function ApiConfigTabContainer() {
       name,
       baseUrl,
       apiKey,
+      apiMode: newGeminiProvider.apiType === 'openai-compatible' ? 'openai-official' : 'gemini-sdk',
     })
 
     setNewGeminiProvider({
@@ -261,7 +277,15 @@ export function ApiConfigTabContainer() {
                           providerName: opt.providerName || getProviderDisplayName(opt.provider, locale),
                         }))}
                         value={normalizedKey || undefined}
-                        onModelChange={(v) => updateDefaultModel(card.field, v, capabilityFields)}
+                        onModelChange={(newModelKey) => {
+                          // 用新模型的 capabilities 计算 fields，而不是旧模型的
+                          const newModel = options.find((opt) => opt.modelKey === newModelKey)
+                          const newCapFields = extractCapabilityFieldsFromModel(
+                            newModel?.capabilities as Record<string, unknown> | undefined,
+                            card.modelType,
+                          )
+                          updateDefaultModel(card.field, newModelKey, newCapFields)
+                        }}
                         capabilityFields={capabilityFields.map((d) => ({
                           ...d,
                           label: toCapabilityFieldLabel(d.field),

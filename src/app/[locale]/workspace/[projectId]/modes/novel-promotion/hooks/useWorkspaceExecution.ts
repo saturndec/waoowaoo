@@ -1,13 +1,12 @@
 'use client'
 
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useMemo, useState } from 'react'
 import { logInfo as _ulogInfo } from '@/lib/logging/core'
 import {
   useAnalyzeProjectAssets,
   useScriptToStoryboardRunStream,
   useStoryToScriptRunStream,
 } from '@/lib/query/hooks'
-import type { SSEEvent } from '@/lib/task/types'
 
 interface UseWorkspaceExecutionParams {
   projectId: string
@@ -19,7 +18,6 @@ interface UseWorkspaceExecutionParams {
   onUpdateConfig: (key: string, value: unknown) => Promise<void>
   onStageChange: (stage: string) => void
   onOpenAssetLibrary: (focusCharacterId?: string | null, refreshAssets?: boolean) => void
-  subscribeTaskEvents: (listener: (event: SSEEvent) => void) => () => void
 }
 
 function isAbortError(err: unknown): boolean {
@@ -42,7 +40,6 @@ export function useWorkspaceExecution({
   onUpdateConfig,
   onStageChange,
   onOpenAssetLibrary,
-  subscribeTaskEvents,
 }: UseWorkspaceExecutionParams) {
   const analyzeProjectAssetsMutation = useAnalyzeProjectAssets(projectId)
 
@@ -56,20 +53,6 @@ export function useWorkspaceExecution({
 
   const storyToScriptStream = useStoryToScriptRunStream({ projectId, episodeId })
   const scriptToStoryboardStream = useScriptToStoryboardRunStream({ projectId, episodeId })
-
-  const storyToScriptIngestRef = useRef(storyToScriptStream.ingestTaskEvent)
-  const scriptToStoryboardIngestRef = useRef(scriptToStoryboardStream.ingestTaskEvent)
-  useEffect(() => {
-    storyToScriptIngestRef.current = storyToScriptStream.ingestTaskEvent
-    scriptToStoryboardIngestRef.current = scriptToStoryboardStream.ingestTaskEvent
-  }, [scriptToStoryboardStream.ingestTaskEvent, storyToScriptStream.ingestTaskEvent])
-
-  const handleRunStreamSSEEvent = useCallback((event: SSEEvent) => {
-    storyToScriptIngestRef.current(event)
-    scriptToStoryboardIngestRef.current(event)
-  }, [])
-
-  useEffect(() => subscribeTaskEvents(handleRunStreamSSEEvent), [handleRunStreamSSEEvent, subscribeTaskEvents])
 
   const handleGenerateTTS = useCallback(async () => {
     _ulogInfo('[NovelPromotionWorkspace] TTS is disabled, skip generate request')

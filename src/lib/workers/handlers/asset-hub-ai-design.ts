@@ -36,7 +36,7 @@ export async function handleAssetHubAIDesignTask(job: Job<TaskJobData>) {
       : null
   const analysisModel = analysisModelFromPayload || userConfig.analysisModel || ''
   if (!analysisModel) {
-    throw new Error('analysisModel is not configured')
+    throw new Error('ANALYSIS_MODEL_NOT_CONFIGURED: 请先在设置页面配置分析模型')
   }
 
   await reportTaskProgress(job, 25, {

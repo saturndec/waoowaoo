@@ -39,7 +39,7 @@ interface CustomProvider {
   name: string
   baseUrl?: string
   apiKey?: string
-  apiMode?: 'gemini-sdk'
+  apiMode?: 'gemini-sdk' | 'openai-official'
 }
 
 function normalizeProviderBaseUrl(providerId: string, rawBaseUrl?: string): string | undefined {
@@ -120,7 +120,7 @@ function parseCustomProviders(rawProviders: string | null | undefined): CustomPr
     }
 
     const apiModeRaw = raw.apiMode
-    const apiMode = apiModeRaw === 'gemini-sdk'
+    const apiMode = apiModeRaw === 'gemini-sdk' || apiModeRaw === 'openai-official'
       ? apiModeRaw
       : undefined
 
@@ -307,7 +307,7 @@ export interface ProviderConfig {
   name: string
   apiKey: string
   baseUrl?: string
-  apiMode?: 'gemini-sdk'
+  apiMode?: 'gemini-sdk' | 'openai-official'
 }
 
 export async function getProviderConfig(userId: string, providerId: string): Promise<ProviderConfig> {

@@ -47,6 +47,27 @@ const runScriptToStoryboardOrchestratorMock = vi.hoisted(() =>
     },
   })),
 )
+const graphExecutorMock = vi.hoisted(() => ({
+  executePipelineGraph: vi.fn(async (input: {
+    runId: string
+    projectId: string
+    userId: string
+    state: Record<string, unknown>
+    nodes: Array<{ key: string; run: (ctx: Record<string, unknown>) => Promise<unknown> }>
+  }) => {
+    for (const node of input.nodes) {
+      await node.run({
+        runId: input.runId,
+        projectId: input.projectId,
+        userId: input.userId,
+        nodeKey: node.key,
+        attempt: 1,
+        state: input.state,
+      })
+    }
+    return input.state
+  }),
+}))
 
 const parseVoiceLinesJsonMock = vi.hoisted(() => vi.fn())
 const persistStoryboardsAndPanelsMock = vi.hoisted(() => vi.fn())
@@ -73,6 +94,7 @@ vi.mock('@/lib/prisma', () => ({ prisma: prismaMock }))
 vi.mock('@/lib/llm-client', () => ({
   chatCompletion: chatCompletionMock,
   getCompletionParts: getCompletionPartsMock,
+  getCompletionContent: vi.fn(() => 'voice lines json'),
 }))
 
 vi.mock('@/lib/config-service', () => ({
@@ -114,6 +136,9 @@ vi.mock('@/lib/novel-promotion/script-to-storyboard/orchestrator', () => ({
       this.rawText = rawText
     }
   },
+}))
+vi.mock('@/lib/run-runtime/graph-executor', () => ({
+  executePipelineGraph: graphExecutorMock.executePipelineGraph,
 }))
 
 vi.mock('@/lib/workers/handlers/llm-stream', () => ({
@@ -159,6 +184,18 @@ vi.mock('@/lib/workers/handlers/script-to-storyboard-helpers', () => ({
 import { handleScriptToStoryboardTask } from '@/lib/workers/handlers/script-to-storyboard'
 
 function buildJob(payload: Record<string, unknown>, episodeId: string | null = 'episode-1'): Job<TaskJobData> {
+  const runId = typeof payload.runId === 'string' && payload.runId.trim() ? payload.runId.trim() : 'run-test-storyboard'
+  const payloadMeta = payload.meta && typeof payload.meta === 'object' && !Array.isArray(payload.meta)
+    ? (payload.meta as Record<string, unknown>)
+    : {}
+  const normalizedPayload: Record<string, unknown> = {
+    ...payload,
+    runId,
+    meta: {
+      ...payloadMeta,
+      runId,
+    },
+  }
   return {
     data: {
       taskId: 'task-1',
@@ -168,7 +205,7 @@ function buildJob(payload: Record<string, unknown>, episodeId: string | null = '
       episodeId,
       targetType: 'NovelPromotionEpisode',
       targetId: 'episode-1',
-      payload,
+      payload: normalizedPayload,
       userId: 'user-1',
     },
   } as unknown as Job<TaskJobData>

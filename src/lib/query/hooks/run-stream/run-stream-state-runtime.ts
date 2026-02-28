@@ -1,32 +1,13 @@
 'use client'
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import type {
-  RunStreamEvent,
-} from '@/lib/novel-promotion/run-stream/types'
-import { type SSEEvent } from '@/lib/task/types'
-import {
-  mapTaskSSEEventToRunEvents,
-  toObject,
-  toTerminalRunResult,
-} from './event-parser'
-import {
-  applyRunStreamEvent,
-} from './state-machine'
-import {
-  clearRunSnapshot,
-  loadRunSnapshot,
-  saveRunSnapshot,
-} from './snapshot'
-import { pollTaskTerminalState } from './task-terminal-poll'
+import type { RunStreamEvent } from '@/lib/novel-promotion/run-stream/types'
+import { applyRunStreamEvent } from './state-machine'
+import { clearRunSnapshot, loadRunSnapshot, saveRunSnapshot } from './snapshot'
 import { subscribeRecoveredRun } from './recovered-run-subscription'
 import { executeRunRequest } from './run-request-executor'
 import { deriveRunStreamView } from './run-stream-view'
-import type {
-  RunResult,
-  RunState,
-  UseRunStreamStateOptions,
-} from './types'
+import type { RunResult, RunState, UseRunStreamStateOptions } from './types'
 
 export type {
   RunResult,
@@ -37,10 +18,6 @@ export type {
 
 const TERMINAL_CLEANUP_MS = 15_000
 const TASK_STREAM_TIMEOUT_MS = 1000 * 60 * 30
-
-// Module-level guard: prevents repeated resolveActiveTaskId probes even if
-// React unmounts / remounts the hook (e.g. StrictMode, HMR, layout shifts).
-// Entries expire after 60 s so a genuine page navigation re-probes.
 const PROBE_COOLDOWN_MS = 60_000
 const probedScopes = new Map<string, number>()
 
@@ -50,11 +27,9 @@ export function useRunStreamState<TParams>(options: UseRunStreamStateOptions<TPa
     endpoint,
     storageKeyPrefix,
     storageScopeKey,
-    eventSourceMode = 'internal',
-    acceptedTaskTypes,
     buildRequestBody,
     validateParams,
-    resolveActiveTaskId,
+    resolveActiveRunId,
   } = options
   const [runState, setRunState] = useState<RunState | null>(null)
   const runStateRef = useRef<RunState | null>(null)
@@ -64,7 +39,7 @@ export function useRunStreamState<TParams>(options: UseRunStreamStateOptions<TPa
   const abortRef = useRef<AbortController | null>(null)
   const finalResultRef = useRef<RunResult | null>(null)
   const hydratedStorageKeyRef = useRef<string | null>(null)
-  const resolveActiveTaskIdRef = useRef(resolveActiveTaskId)
+  const resolveActiveRunIdRef = useRef(resolveActiveRunId)
   const storageKey = useMemo(() => {
     if (storageScopeKey) {
       return `${storageKeyPrefix}:${projectId}:${storageScopeKey}`
@@ -76,62 +51,13 @@ export function useRunStreamState<TParams>(options: UseRunStreamStateOptions<TPa
     setRunState((prev) => applyRunStreamEvent(prev, event))
   }, [])
 
-  const applyAndCapture = useCallback((streamEvent: RunStreamEvent) => {
-    if (!streamEvent.runId) return
-    applyEvent(streamEvent)
-    const terminalResult = toTerminalRunResult(streamEvent)
-    if (terminalResult) {
-      finalResultRef.current = terminalResult
-    }
-  }, [applyEvent])
-
-  const ingestTaskEvent = useCallback((taskEvent: SSEEvent) => {
-    if (!taskEvent || typeof taskEvent.taskId !== 'string' || !taskEvent.taskId) return
-    if (
-      Array.isArray(acceptedTaskTypes) &&
-      acceptedTaskTypes.length > 0 &&
-      (typeof taskEvent.taskType !== 'string' || !acceptedTaskTypes.includes(taskEvent.taskType))
-    ) {
-      return
-    }
-
-    const payload = toObject(taskEvent.payload)
-    const eventEpisodeId =
-      typeof taskEvent.episodeId === 'string'
-        ? taskEvent.episodeId
-        : typeof payload.episodeId === 'string'
-          ? payload.episodeId
-          : null
-    const activeRun = runStateRef.current
-    if (storageScopeKey && !eventEpisodeId && !activeRun?.runId) return
-    if (storageScopeKey && eventEpisodeId && eventEpisodeId !== storageScopeKey) return
-
-    if (
-      activeRun &&
-      activeRun.status === 'running' &&
-      activeRun.runId &&
-      taskEvent.taskId !== activeRun.runId
-    ) {
-      return
-    }
-
-    const runEvents = mapTaskSSEEventToRunEvents(taskEvent)
-    for (const runEvent of runEvents) {
-      applyAndCapture(runEvent)
-    }
-  }, [acceptedTaskTypes, applyAndCapture, storageScopeKey])
-
   useEffect(() => {
     runStateRef.current = runState
   }, [runState])
 
   useEffect(() => {
-    resolveActiveTaskIdRef.current = resolveActiveTaskId
-  }, [resolveActiveTaskId])
-
-  const pollTaskTerminalStateFn = useCallback(async (taskId: string): Promise<RunResult | null> => {
-    return await pollTaskTerminalState({ taskId, applyAndCapture })
-  }, [applyAndCapture])
+    resolveActiveRunIdRef.current = resolveActiveRunId
+  }, [resolveActiveRunId])
 
   useEffect(() => {
     if (!projectId) return
@@ -145,33 +71,29 @@ export function useRunStreamState<TParams>(options: UseRunStreamStateOptions<TPa
     }
   }, [projectId, storageKey])
 
-  // Probe for active task only ONCE per storageKey (module-level guard).
-  // After the initial probe, all updates come through SSE.
   useEffect(() => {
-    if (!projectId || !resolveActiveTaskIdRef.current) return
+    if (!projectId || !resolveActiveRunIdRef.current) return
 
-    // Module-level guard: skip if probed recently
     const lastProbed = probedScopes.get(storageKey)
     if (lastProbed && Date.now() - lastProbed < PROBE_COOLDOWN_MS) return
     probedScopes.set(storageKey, Date.now())
 
-    // If there's already state (e.g. from snapshot hydration), skip probe
     if (runStateRef.current) return
     const existingSnapshot = loadRunSnapshot(storageKey)
     if (existingSnapshot) return
 
     let cancelled = false
     void (async () => {
-      const activeTaskId = await resolveActiveTaskIdRef.current?.({
+      const activeRunId = await resolveActiveRunIdRef.current?.({
         projectId,
         storageScopeKey,
       }).catch(() => null)
-      if (cancelled || !activeTaskId) return
+      if (cancelled || !activeRunId) return
       const now = Date.now()
       setRunState((prev) => {
         if (prev) return prev
         return {
-          runId: activeTaskId,
+          runId: activeRunId,
           status: 'running',
           startedAt: now,
           updatedAt: now,
@@ -195,31 +117,24 @@ export function useRunStreamState<TParams>(options: UseRunStreamStateOptions<TPa
 
   useEffect(() => {
     if (!projectId || !isRecoveredRunning || isLiveRunning) return
-    const taskId = runState?.runId || ''
-    if (!taskId || runState?.status !== 'running') return
+    const runId = runState?.runId || ''
+    if (!runId || runState?.status !== 'running') return
 
     return subscribeRecoveredRun({
-      projectId,
-      storageScopeKey,
-      taskId,
-      eventSourceMode,
+      runId,
       taskStreamTimeoutMs: TASK_STREAM_TIMEOUT_MS,
-      applyAndCapture,
-      pollTaskTerminalState: pollTaskTerminalStateFn,
+      applyAndCapture: applyEvent,
       onSettled: () => {
         setIsRecoveredRunning(false)
       },
     })
   }, [
-    applyAndCapture,
-    eventSourceMode,
+    applyEvent,
     isLiveRunning,
     isRecoveredRunning,
-    pollTaskTerminalStateFn,
     projectId,
     runState?.runId,
     runState?.status,
-    storageScopeKey,
   ])
 
   useEffect(() => {
@@ -255,14 +170,11 @@ export function useRunStreamState<TParams>(options: UseRunStreamStateOptions<TPa
       try {
         const requestBody = buildRequestBody(params)
         return await executeRunRequest({
-          projectId,
           endpointUrl: endpoint(projectId),
           requestBody,
           controller,
-          eventSourceMode,
           taskStreamTimeoutMs: TASK_STREAM_TIMEOUT_MS,
-          applyAndCapture,
-          pollTaskTerminalState: pollTaskTerminalStateFn,
+          applyAndCapture: applyEvent,
           finalResultRef,
         })
       } finally {
@@ -273,29 +185,27 @@ export function useRunStreamState<TParams>(options: UseRunStreamStateOptions<TPa
       }
     },
     [
-      applyAndCapture,
+      applyEvent,
       buildRequestBody,
       endpoint,
-      eventSourceMode,
-      pollTaskTerminalStateFn,
       projectId,
       validateParams,
     ],
   )
 
   const stop = useCallback(() => {
-    const runningTaskId = runState?.status === 'running' ? runState.runId : ''
-    if (runningTaskId) {
+    const runningRunId = runState?.status === 'running' ? runState.runId : ''
+    if (runningRunId) {
+      void fetch(`/api/runs/${runningRunId}/cancel`, {
+        method: 'POST',
+      }).catch(() => null)
       applyEvent({
-        runId: runningTaskId,
+        runId: runningRunId,
         event: 'run.error',
         ts: new Date().toISOString(),
         status: 'failed',
         message: 'aborted',
       })
-      void fetch(`/api/tasks/${runningTaskId}`, {
-        method: 'DELETE',
-      }).catch(() => null)
     }
     abortRef.current?.abort()
     abortRef.current = null
@@ -362,7 +272,6 @@ export function useRunStreamState<TParams>(options: UseRunStreamStateOptions<TPa
     outputText: view.outputText,
     overallProgress: view.overallProgress,
     activeMessage: view.activeMessage,
-    ingestTaskEvent,
     run,
     stop,
     reset,

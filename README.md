@@ -12,6 +12,8 @@
 >
 > ⚠️ **Beta Notice**: This project is in early beta. It's currently solo-developed, so bugs and rough edges exist. We're iterating fast — feel free to open an Issue!
 
+<img width="1676" height="540" alt="chat" src="https://github.com/user-attachments/assets/30c6fcf6-b605-48da-a571-7b7aead3df8d" />
+
 一款基于 AI 技术的短剧/漫画视频制作工具，支持从小说文本自动生成分镜、角色、场景，并制作成完整视频。
 
 An AI-powered tool for creating short drama / comic videos — automatically generates storyboards, characters, and scenes from novel text, then assembles them into complete videos.
@@ -53,7 +55,7 @@ docker compose up -d
 ### 🔄 更新到最新版本
 
 ```bash
-git fetch origin && git reset --hard origin/main
+git pull
 docker compose down && docker compose up -d --build
 ```
 
@@ -82,7 +84,7 @@ Visit [http://localhost:13000](http://localhost:13000) to get started!
 ### 🔄 Updating to the Latest Version
 
 ```bash
-git fetch origin && git reset --hard origin/main
+git pull
 docker compose down && docker compose up -d --build
 ```
 
@@ -108,12 +110,8 @@ After launching, go to **Settings** to configure your AI service API keys. A bui
 
 ---
 
-## 🤝 反馈 / Feedback
-
-暂不接受 Pull Request，如有问题或建议，欢迎提交 [Issue](https://github.com/saturndec/waoowaoo/issues)！
-
-Pull Requests are not accepted at this time. For bugs or suggestions, please open an [Issue](https://github.com/saturndec/waoowaoo/issues).
-
----
-
 **Made with ❤️ by waoowaoo team**
+
+## Star History
+
+[![Star History Chart](https://api.star-history.com/svg?repos=waoowaooAI/waoowaoo&type=Date)](https://star-history.com/#waoowaooAI/waoowaoo&Date)

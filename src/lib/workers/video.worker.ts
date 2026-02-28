@@ -134,7 +134,7 @@ async function generateVideoForPanel(
     }
   }
 
-  const videoSource = await resolveVideoSourceFromGeneration(job, {
+  const generatedVideo = await resolveVideoSourceFromGeneration(job, {
     userId: job.data.userId,
     modelId: model,
     imageUrl: sourceImageBase64,
@@ -149,7 +149,10 @@ async function generateVideoForPanel(
   })
 
   let downloadHeaders: Record<string, string> | undefined
-  if (typeof videoSource === 'string') {
+  const videoSource = generatedVideo.url
+  if (generatedVideo.downloadHeaders) {
+    downloadHeaders = generatedVideo.downloadHeaders
+  } else if (typeof videoSource === 'string') {
     const parsedModel = parseModelKeyStrict(model)
     const isGoogleDownloadUrl = videoSource.includes('generativelanguage.googleapis.com/')
       && videoSource.includes('/files/')

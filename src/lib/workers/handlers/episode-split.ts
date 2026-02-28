@@ -1,6 +1,6 @@
 import type { Job } from 'bullmq'
 import { prisma } from '@/lib/prisma'
-import { chatCompletion, getCompletionContent } from '@/lib/llm-client'
+import { executeAiTextStep } from '@/lib/ai-runtime'
 import { countWords } from '@/lib/word-count'
 import { withInternalLLMStreamCallbacks } from '@/lib/llm-observe/internal-stream-context'
 import { reportTaskProgress } from '@/lib/workers/shared'
@@ -140,25 +140,26 @@ export async function handleEpisodeSplitTask(job: Job<TaskJobData>) {
         const completion = await withInternalLLMStreamCallbacks(
           streamCallbacks,
           async () =>
-            await chatCompletion(
-              job.data.userId,
-              analysisModel,
-              [{ role: 'user', content: prompt }],
-              {
-                temperature: 0.3,
-                reasoning: true,
-                reasoningEffort: 'high',
-                projectId,
-                action: 'episode_split',
-                streamStepId: attempt === 1 ? 'episode_split' : `episode_split_retry_${attempt}`,
-                streamStepTitle: '智能分集',
-                streamStepIndex: 1,
-                streamStepTotal: 1,
+            await executeAiTextStep({
+              userId: job.data.userId,
+              model: analysisModel,
+              messages: [{ role: 'user', content: prompt }],
+              temperature: 0.3,
+              reasoning: true,
+              reasoningEffort: 'high',
+              projectId,
+              action: 'episode_split',
+              meta: {
+                stepId: 'episode_split',
+                stepAttempt: attempt,
+                stepTitle: '智能分集',
+                stepIndex: 1,
+                stepTotal: 1,
               },
-            ),
+            }),
         )
 
-        const aiResponse = getCompletionContent(completion)
+        const aiResponse = completion.text
         if (!aiResponse) {
           throw new Error('AI 返回为空')
         }

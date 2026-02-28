@@ -24,13 +24,6 @@ All notable changes to this project will be documented in this file.
 
 ---
 
-## [v0.2.1] - 2026-02-28
-
-### 🐛 修复
-- 修复 AI 生成内容语言不跟随网站语言设置的问题
-- 修复前端 API 请求未携带 Accept-Language header 导致 locale 回退到浏览器默认语言
----
-
 ## [v0.1] - 2026-02-27
 
 ### 🎉 首次发布

@@ -36,6 +36,22 @@ export type MarkupCategory = keyof typeof MARKUP
 export type ApiType = 'text' | 'image' | 'video' | 'voice' | 'voice-design' | 'lip-sync'
 export type UsageUnit = 'token' | 'image' | 'video' | 'second' | 'call'
 
+export interface LlmCustomPricing {
+  inputPerMillion?: number
+  outputPerMillion?: number
+}
+
+export interface MediaCustomPricing {
+  basePrice?: number
+  optionPrices?: Record<string, Record<string, number>>
+}
+
+export interface ModelCustomPricing {
+  llm?: LlmCustomPricing
+  image?: MediaCustomPricing
+  video?: MediaCustomPricing
+}
+
 const DEFAULT_VOICE_MODEL_ID = 'index-tts2'
 const DEFAULT_VOICE_DESIGN_MODEL_ID = 'qwen-voice-design'
 const DEFAULT_LIP_SYNC_MODEL_ID = 'kling'
@@ -261,30 +277,126 @@ export function calcText(
   model: string,
   inputTokens: number,
   outputTokens: number,
-  customPricing?: { input?: number; output?: number } | null,
+  customPricing?: ModelCustomPricing | null,
 ): number {
   const normalizedInput = Math.max(0, Number(inputTokens) || 0)
   const normalizedOutput = Math.max(0, Number(outputTokens) || 0)
 
-  const inputFallback = typeof customPricing?.input === 'number' ? customPricing.input : null
-  const outputFallback = typeof customPricing?.output === 'number' ? customPricing.output : null
+  const inputFallback = typeof customPricing?.llm?.inputPerMillion === 'number' ? customPricing.llm.inputPerMillion : null
+  const outputFallback = typeof customPricing?.llm?.outputPerMillion === 'number' ? customPricing.llm.outputPerMillion : null
   const inputUnitPrice = resolveTextUnitPrice(model, 'input', inputFallback)
   const outputUnitPrice = resolveTextUnitPrice(model, 'output', outputFallback)
   const rawCost = ((normalizedInput / 1_000_000) * inputUnitPrice) + ((normalizedOutput / 1_000_000) * outputUnitPrice)
   return rawCost * getMarkup('text')
 }
 
+function resolveCustomMediaPrice(input: {
+  apiType: 'image' | 'video'
+  model: string
+  selections: Record<string, CapabilityValue>
+  pricing?: MediaCustomPricing
+}): { status: 'none' } | { status: 'resolved'; amount: number } | { status: 'invalid'; field: string } {
+  if (!input.pricing) return { status: 'none' }
+
+  let hasAnyPricing = false
+  let amount = 0
+  if (typeof input.pricing.basePrice === 'number') {
+    hasAnyPricing = true
+    amount += input.pricing.basePrice
+  }
+
+  const optionPrices = input.pricing.optionPrices
+  if (optionPrices) {
+    for (const [field, rawOptionMap] of Object.entries(optionPrices)) {
+      const optionMap = rawOptionMap || {}
+      if (Object.keys(optionMap).length === 0) continue
+      hasAnyPricing = true
+
+      const selectionValue = input.selections[field]
+      if (selectionValue === undefined) continue
+      const selectionKey = String(selectionValue)
+      const delta = optionMap[selectionKey]
+      if (typeof delta !== 'number' || !Number.isFinite(delta) || delta < 0) {
+        return { status: 'invalid', field }
+      }
+      amount += delta
+    }
+  }
+
+  if (!hasAnyPricing) return { status: 'none' }
+  return { status: 'resolved', amount }
+}
+
 export function calcImage(
   model: string,
   count = 1,
   metadata?: Record<string, unknown>,
+  customPricing?: ModelCustomPricing | null,
 ): number {
   const selections = normalizeCapabilitySelections(metadata)
-  const unitPrice = resolveModelPriceStrict({
+  const resolved = resolveBuiltinPricing({
     apiType: 'image',
     model,
     selections,
   })
+  let unitPrice: number | null = null
+  if (resolved.status === 'resolved') {
+    unitPrice = resolved.amount
+  } else if (resolved.status === 'ambiguous_model') {
+    throw new BillingOperationError(
+      'BILLING_PRICING_MODEL_AMBIGUOUS',
+      `Ambiguous image pricing modelId: ${resolved.modelId}`,
+      {
+        apiType: 'image',
+        model,
+        modelId: resolved.modelId,
+        candidates: resolved.candidates.map((candidate) => `${candidate.provider}::${candidate.modelId}`),
+      },
+    )
+  }
+
+  if (unitPrice === null) {
+    const customResolved = resolveCustomMediaPrice({
+      apiType: 'image',
+      model,
+      selections,
+      pricing: customPricing?.image,
+    })
+    if (customResolved.status === 'resolved') {
+      unitPrice = customResolved.amount
+    } else if (customResolved.status === 'invalid') {
+      throw new BillingOperationError(
+        'BILLING_CAPABILITY_PRICE_NOT_FOUND',
+        `No custom image price matched for field ${customResolved.field}`,
+        { apiType: 'image', model, field: customResolved.field, selections },
+      )
+    }
+  }
+
+  if (unitPrice === null) {
+    if (resolved.status === 'missing_capability_match') {
+      throw new BillingOperationError(
+        'BILLING_CAPABILITY_PRICE_NOT_FOUND',
+        `No capability pricing tier matched for ${model}`,
+        {
+          apiType: 'image',
+          model,
+          selections,
+        },
+      )
+    }
+    const modelId = parseModelId(model)
+    throw new BillingOperationError(
+      'BILLING_UNKNOWN_MODEL',
+      `Unknown image model pricing: ${model}`,
+      {
+        apiType: 'image',
+        model,
+        modelId,
+      },
+    )
+  }
+
   const quantity = Math.max(0, Number(count) || 0)
   return unitPrice * quantity * getMarkup('image')
 }
@@ -294,6 +406,7 @@ export function calcVideo(
   resolution = '720p',
   count = 1,
   metadata?: Record<string, unknown>,
+  customPricing?: ModelCustomPricing | null,
 ): number {
   const selections = normalizeCapabilitySelections(metadata)
   if (
@@ -333,7 +446,68 @@ export function calcVideo(
       },
     )
   }
-  if (resolutionResult.status === 'not_configured') {
+  let unitPrice: number | null = null
+  if (resolutionResult.status === 'resolved') {
+    const resolvedEntry = resolutionResult.entry
+    const pricing = resolvedEntry && typeof resolvedEntry === 'object'
+      ? (resolvedEntry as { pricing?: { mode?: string; tiers?: Array<{ when?: { duration?: unknown } }> } }).pricing
+      : undefined
+    const hasDurationTier = pricing?.mode === 'capability'
+      && (pricing.tiers || []).some((tier) => typeof tier.when?.duration === 'number')
+    unitPrice = applyVideoDurationScaling({
+      amount: resolutionResult.amount,
+      model,
+      selections,
+      hasDurationTier,
+    })
+  }
+
+  if (unitPrice === null) {
+    const customResolved = resolveCustomMediaPrice({
+      apiType: 'video',
+      model,
+      selections,
+      pricing: customPricing?.video,
+    })
+    if (customResolved.status === 'resolved') {
+      unitPrice = customResolved.amount
+    } else if (customResolved.status === 'invalid') {
+      throw new BillingOperationError(
+        'BILLING_CAPABILITY_PRICE_NOT_FOUND',
+        `No custom video price matched for field ${customResolved.field}`,
+        { apiType: 'video', model, field: customResolved.field, selections },
+      )
+    }
+  }
+
+  if (unitPrice === null) {
+    if (resolutionResult.status === 'missing_capability_match') {
+      const pickedDuration = typeof selections.duration === 'number'
+        ? selections.duration
+        : null
+      const pickedResolution = selections.resolution as string
+      if (pickedDuration !== null) {
+        throw new BillingOperationError(
+          'BILLING_UNKNOWN_VIDEO_CAPABILITY_COMBINATION',
+          `Unsupported video capability pricing: resolution=${pickedResolution}, duration=${pickedDuration}`,
+          {
+            apiType: 'video',
+            model,
+            resolution: pickedResolution,
+            duration: pickedDuration,
+          },
+        )
+      }
+      throw new BillingOperationError(
+        'BILLING_UNKNOWN_VIDEO_RESOLUTION',
+        `Unsupported video resolution pricing: ${pickedResolution}`,
+        {
+          apiType: 'video',
+          model,
+          resolution: pickedResolution,
+        },
+      )
+    }
     const modelId = parseModelId(model)
     throw new BillingOperationError(
       'BILLING_UNKNOWN_MODEL',
@@ -345,46 +519,6 @@ export function calcVideo(
       },
     )
   }
-  if (resolutionResult.status === 'missing_capability_match') {
-    const pickedDuration = typeof selections.duration === 'number'
-      ? selections.duration
-      : null
-    const pickedResolution = selections.resolution as string
-    if (pickedDuration !== null) {
-      throw new BillingOperationError(
-        'BILLING_UNKNOWN_VIDEO_CAPABILITY_COMBINATION',
-        `Unsupported video capability pricing: resolution=${pickedResolution}, duration=${pickedDuration}`,
-        {
-          apiType: 'video',
-          model,
-          resolution: pickedResolution,
-          duration: pickedDuration,
-        },
-      )
-    }
-    throw new BillingOperationError(
-      'BILLING_UNKNOWN_VIDEO_RESOLUTION',
-      `Unsupported video resolution pricing: ${pickedResolution}`,
-      {
-        apiType: 'video',
-        model,
-        resolution: pickedResolution,
-      },
-    )
-  }
-
-  const resolvedEntry = 'entry' in resolutionResult
-    ? resolutionResult.entry
-    : null
-  const hasDurationTier = !!resolvedEntry
-    && resolvedEntry.pricing.mode === 'capability'
-    && (resolvedEntry.pricing.tiers || []).some((tier) => typeof tier.when.duration === 'number')
-  const unitPrice = applyVideoDurationScaling({
-    amount: resolutionResult.amount,
-    model,
-    selections,
-    hasDurationTier,
-  })
 
   const quantity = Math.max(0, Number(count) || 0)
   return unitPrice * quantity * getMarkup('video')

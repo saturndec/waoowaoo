@@ -6,7 +6,7 @@
  * 每个阶段失败后重试一次
  */
 
-import { chatCompletion, getCompletionContent } from '@/lib/llm-client'
+import { executeAiTextStep } from '@/lib/ai-runtime'
 import { logAIAnalysis } from '@/lib/logging/semantic'
 import { buildCharactersIntroduction } from '@/lib/constants'
 import type { Locale } from '@/i18n/routing'
@@ -322,14 +322,22 @@ export async function executePhase1(
 
     for (let attempt = 1; attempt <= 2; attempt++) {
         try {
-            const planCompletion = await chatCompletion(
-                session.user.id,
-                novelPromotionData.analysisModel,
-                [{ role: 'user', content: planPrompt }],
-                { reasoning: true, projectId, action: 'storyboard_phase1_plan' }
-            )
+            const planResult = await executeAiTextStep({
+                userId: session.user.id,
+                model: novelPromotionData.analysisModel,
+                messages: [{ role: 'user', content: planPrompt }],
+                reasoning: true,
+                projectId,
+                action: 'storyboard_phase1_plan',
+                meta: {
+                    stepId: 'storyboard_phase1_plan',
+                    stepTitle: '分镜规划',
+                    stepIndex: 1,
+                    stepTotal: 1,
+                },
+            })
 
-            const planResponseText = getCompletionContent(planCompletion)
+            const planResponseText = planResult.text
             if (!planResponseText) {
                 throw new Error(`Phase 1: 无响应 clip ${clipId}`)
             }
@@ -417,14 +425,22 @@ export async function executePhase2(
     // 失败后重试一次
     for (let attempt = 1; attempt <= 2; attempt++) {
         try {
-            const cinematographerCompletion = await chatCompletion(
-                session.user.id,
-                novelPromotionData.analysisModel,
-                [{ role: 'user', content: cinematographerPrompt }],
-                { reasoning: true, projectId, action: 'storyboard_phase2_cinematography' }
-            )
+            const cinematographerResult = await executeAiTextStep({
+                userId: session.user.id,
+                model: novelPromotionData.analysisModel,
+                messages: [{ role: 'user', content: cinematographerPrompt }],
+                reasoning: true,
+                projectId,
+                action: 'storyboard_phase2_cinematography',
+                meta: {
+                    stepId: 'storyboard_phase2_cinematography',
+                    stepTitle: '摄影规则',
+                    stepIndex: 1,
+                    stepTotal: 1,
+                },
+            })
 
-            const responseText = getCompletionContent(cinematographerCompletion)
+            const responseText = cinematographerResult.text
             if (!responseText) {
                 throw new Error(`Phase 2: 无响应 clip ${clipId}`)
             }
@@ -495,14 +511,22 @@ export async function executePhase2Acting(
     // 失败后重试一次
     for (let attempt = 1; attempt <= 2; attempt++) {
         try {
-            const actingCompletion = await chatCompletion(
-                session.user.id,
-                novelPromotionData.analysisModel,
-                [{ role: 'user', content: actingPrompt }],
-                { reasoning: true, projectId, action: 'storyboard_phase2_acting' }
-            )
+            const actingResult = await executeAiTextStep({
+                userId: session.user.id,
+                model: novelPromotionData.analysisModel,
+                messages: [{ role: 'user', content: actingPrompt }],
+                reasoning: true,
+                projectId,
+                action: 'storyboard_phase2_acting',
+                meta: {
+                    stepId: 'storyboard_phase2_acting',
+                    stepTitle: '演技指导',
+                    stepIndex: 1,
+                    stepTotal: 1,
+                },
+            })
 
-            const responseText = getCompletionContent(actingCompletion)
+            const responseText = actingResult.text
             if (!responseText) {
                 throw new Error(`Phase 2-Acting: 无响应 clip ${clipId}`)
             }
@@ -580,14 +604,22 @@ export async function executePhase3(
     // 失败后重试一次
     for (let attempt = 1; attempt <= 2; attempt++) {
         try {
-            const detailCompletion = await chatCompletion(
-                session.user.id,
-                novelPromotionData.analysisModel,
-                [{ role: 'user', content: detailPrompt }],
-                { reasoning: true, projectId, action: 'storyboard_phase3_detail' }
-            )
+            const detailResult = await executeAiTextStep({
+                userId: session.user.id,
+                model: novelPromotionData.analysisModel,
+                messages: [{ role: 'user', content: detailPrompt }],
+                reasoning: true,
+                projectId,
+                action: 'storyboard_phase3_detail',
+                meta: {
+                    stepId: 'storyboard_phase3_detail',
+                    stepTitle: '镜头细化',
+                    stepIndex: 1,
+                    stepTotal: 1,
+                },
+            })
 
-            const detailResponseText = getCompletionContent(detailCompletion)
+            const detailResponseText = detailResult.text
             if (!detailResponseText) {
                 throw new Error(`Phase 3: 无响应 clip ${clipId}`)
             }

@@ -253,12 +253,17 @@ export function SettingsModal({
      */
     const handleModelChange = (
         modelKey: string,
-        capabilityFieldsForModel: CapabilityFieldDefinition[],
+        modelOptions: ModelOption[],
+        namespace: 'llm' | 'image' | 'video',
         onModelChangeFn?: (v: string) => void,
     ) => {
         onModelChangeFn?.(modelKey)
         showSaved()
-        if (!onCapabilityOverridesChange || capabilityFieldsForModel.length === 0) return
+        if (!onCapabilityOverridesChange) return
+        // 用新选中的模型的 capabilities 计算 fields，而不是旧模型的
+        const newModel = modelOptions.find((m) => m.value === modelKey)
+        const capabilityFieldsForModel = extractCapabilityFields(newModel?.capabilities, namespace)
+        if (capabilityFieldsForModel.length === 0) return
         const nextOverrides: CapabilitySelections = { ...(capabilityOverrides || {}) }
         const existing = isRecord(nextOverrides[modelKey])
             ? { ...(nextOverrides[modelKey] as Record<string, CapabilityValue>) }
@@ -375,7 +380,7 @@ export function SettingsModal({
                                 <ModelCapabilityDropdown
                                     models={userModels.image}
                                     value={characterModel}
-                                    onModelChange={(v) => handleModelChange(v, characterCapabilityFields, onCharacterModelChange)}
+                                    onModelChange={(v) => handleModelChange(v, userModels.image, 'image', onCharacterModelChange)}
                                     capabilityFields={characterCapabilityFields}
                                     capabilityOverrides={selectedCharacterOverrides}
                                     onCapabilityChange={(field, rawValue, sample) => {
@@ -389,7 +394,7 @@ export function SettingsModal({
                                 <ModelCapabilityDropdown
                                     models={userModels.image}
                                     value={locationModel}
-                                    onModelChange={(v) => handleModelChange(v, locationCapabilityFields, onLocationModelChange)}
+                                    onModelChange={(v) => handleModelChange(v, userModels.image, 'image', onLocationModelChange)}
                                     capabilityFields={locationCapabilityFields}
                                     capabilityOverrides={selectedLocationOverrides}
                                     onCapabilityChange={(field, rawValue, sample) => {
@@ -403,7 +408,7 @@ export function SettingsModal({
                                 <ModelCapabilityDropdown
                                     models={userModels.image}
                                     value={imageModel}
-                                    onModelChange={(v) => handleModelChange(v, storyboardCapabilityFields, onImageModelChange)}
+                                    onModelChange={(v) => handleModelChange(v, userModels.image, 'image', onImageModelChange)}
                                     capabilityFields={storyboardCapabilityFields}
                                     capabilityOverrides={selectedStoryboardOverrides}
                                     onCapabilityChange={(field, rawValue, sample) => {
@@ -417,7 +422,7 @@ export function SettingsModal({
                                 <ModelCapabilityDropdown
                                     models={userModels.image}
                                     value={editModel}
-                                    onModelChange={(v) => handleModelChange(v, editCapabilityFields, onEditModelChange)}
+                                    onModelChange={(v) => handleModelChange(v, userModels.image, 'image', onEditModelChange)}
                                     capabilityFields={editCapabilityFields}
                                     capabilityOverrides={selectedEditOverrides}
                                     onCapabilityChange={(field, rawValue, sample) => {
@@ -431,7 +436,7 @@ export function SettingsModal({
                                 <ModelCapabilityDropdown
                                     models={userModels.video}
                                     value={videoModel}
-                                    onModelChange={(v) => handleModelChange(v, videoCapabilityFields, onVideoModelChange)}
+                                    onModelChange={(v) => handleModelChange(v, userModels.video, 'video', onVideoModelChange)}
                                     capabilityFields={videoCapabilityFields}
                                     capabilityOverrides={selectedVideoOverrides}
                                     onCapabilityChange={(field, rawValue, sample) => {
