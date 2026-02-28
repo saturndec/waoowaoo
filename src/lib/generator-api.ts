@@ -76,7 +76,7 @@ export async function generateVideo(
     }
 ): Promise<GenerateResult> {
     const selection = await resolveModelSelection(userId, modelKey, 'video')
-    const generator = createVideoGenerator(selection.provider)
+    const generator = createVideoGenerator(selection.provider, selection.modelId)
     _ulogInfo(`[generateVideo] resolved model selection: ${selection.modelKey}`)
 
     const { prompt, ...providerOptions } = options || {}
