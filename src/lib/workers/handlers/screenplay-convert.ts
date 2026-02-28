@@ -1,6 +1,7 @@
 import type { Job } from 'bullmq'
 import { prisma } from '@/lib/prisma'
 import { chatCompletion, getCompletionContent } from '@/lib/llm-client'
+import { getProjectModelConfig } from '@/lib/config-service'
 import { withInternalLLMStreamCallbacks } from '@/lib/llm-observe/internal-stream-context'
 import { buildCharactersIntroduction } from '@/lib/constants'
 import { TaskTerminatedError } from '@/lib/task/errors'
@@ -52,7 +53,10 @@ export async function handleScreenplayConvertTask(job: Job<TaskJobData>) {
   if (!novelData) {
     throw new Error('Novel promotion data not found')
   }
-  if (!novelData.analysisModel) {
+
+  const projectModelConfig = await getProjectModelConfig(projectId, job.data.userId)
+  const analysisModel = projectModelConfig.analysisModel
+  if (!analysisModel) {
     throw new Error('analysisModel is not configured')
   }
 
@@ -133,7 +137,7 @@ export async function handleScreenplayConvertTask(job: Job<TaskJobData>) {
       logAIAnalysis(job.data.userId, 'worker', projectId, project.name, {
         action: `SCREENPLAY_CONVERT_PROMPT`,
         input: { stepId, stepTitle, prompt },
-        model: novelData.analysisModel,
+        model: analysisModel,
       })
 
       let screenplayStored = false
@@ -147,7 +151,7 @@ export async function handleScreenplayConvertTask(job: Job<TaskJobData>) {
                 async () =>
                   await chatCompletion(
                     job.data.userId,
-                    novelData.analysisModel!,
+                    analysisModel,
                     [{ role: 'user', content: prompt }],
                     {
                       reasoning: true,
@@ -180,7 +184,7 @@ export async function handleScreenplayConvertTask(job: Job<TaskJobData>) {
               rawText: responseText,
               textLength: responseText.length,
             },
-            model: novelData.analysisModel,
+            model: analysisModel,
           })
 
           const screenplay = parseScreenplayPayload(responseText)

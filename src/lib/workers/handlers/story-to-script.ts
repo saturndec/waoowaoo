@@ -1,7 +1,7 @@
 import type { Job } from 'bullmq'
 import { prisma } from '@/lib/prisma'
 import { chatCompletion, getCompletionParts } from '@/lib/llm-client'
-import { resolveProjectModelCapabilityGenerationOptions } from '@/lib/config-service'
+import { getProjectModelConfig, resolveProjectModelCapabilityGenerationOptions } from '@/lib/config-service'
 import { withInternalLLMStreamCallbacks } from '@/lib/llm-observe/internal-stream-context'
 import { logAIAnalysis } from '@/lib/logging/semantic'
 import { onProjectNameAvailable } from '@/lib/logging/file-writer'
@@ -86,7 +86,8 @@ export async function handleStoryToScriptTask(job: Job<TaskJobData>) {
     throw new Error('Episode not found')
   }
 
-  const model = inputModel || novelData.analysisModel || ''
+  const projectModelConfig = await getProjectModelConfig(projectId, job.data.userId)
+  const model = inputModel || projectModelConfig.analysisModel || ''
   if (!model) {
     throw new Error('analysisModel is not configured')
   }

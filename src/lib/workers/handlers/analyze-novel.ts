@@ -1,6 +1,7 @@
 import type { Job } from 'bullmq'
 import { prisma } from '@/lib/prisma'
 import { chatCompletion, getCompletionContent } from '@/lib/llm-client'
+import { getProjectModelConfig } from '@/lib/config-service'
 import { withInternalLLMStreamCallbacks } from '@/lib/llm-observe/internal-stream-context'
 import { getArtStylePrompt, removeLocationPromptSuffix } from '@/lib/constants'
 import { reportTaskProgress } from '@/lib/workers/shared'
@@ -68,7 +69,10 @@ export async function handleAnalyzeNovelTask(job: Job<TaskJobData>) {
   if (!novelData) {
     throw new Error('Novel promotion data not found')
   }
-  if (!novelData.analysisModel) {
+
+  const projectModelConfig = await getProjectModelConfig(projectId, job.data.userId)
+  const analysisModel = projectModelConfig.analysisModel
+  if (!analysisModel) {
     throw new Error('analysisModel is not configured')
   }
 
@@ -126,7 +130,7 @@ export async function handleAnalyzeNovelTask(job: Job<TaskJobData>) {
           await Promise.all([
             chatCompletion(
               job.data.userId,
-              novelData.analysisModel!,
+              analysisModel,
               [{ role: 'user', content: characterPromptTemplate }],
               {
                 temperature: 0.7,
@@ -140,7 +144,7 @@ export async function handleAnalyzeNovelTask(job: Job<TaskJobData>) {
             ),
             chatCompletion(
               job.data.userId,
-              novelData.analysisModel!,
+              analysisModel,
               [{ role: 'user', content: locationPromptTemplate }],
               {
                 temperature: 0.7,

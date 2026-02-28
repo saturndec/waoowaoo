@@ -1,6 +1,7 @@
 import type { Job } from 'bullmq'
 import { prisma } from '@/lib/prisma'
 import { chatCompletion, getCompletionContent } from '@/lib/llm-client'
+import { getProjectModelConfig } from '@/lib/config-service'
 import { withInternalLLMStreamCallbacks } from '@/lib/llm-observe/internal-stream-context'
 import { buildCharactersIntroduction } from '@/lib/constants'
 import { reportTaskProgress } from '@/lib/workers/shared'
@@ -81,7 +82,8 @@ export async function handleVoiceAnalyzeTask(job: Job<TaskJobData>) {
     throw new Error('No novel text to analyze')
   }
 
-  const analysisModel = novelPromotionData.analysisModel
+  const projectModelConfig = await getProjectModelConfig(projectId, job.data.userId)
+  const analysisModel = projectModelConfig.analysisModel
   if (!analysisModel) {
     throw new Error('analysisModel is not configured')
   }

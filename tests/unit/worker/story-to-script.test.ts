@@ -15,6 +15,7 @@ const workerMock = vi.hoisted(() => ({
 }))
 
 const configMock = vi.hoisted(() => ({
+  getProjectModelConfig: vi.fn(async () => ({ analysisModel: 'llm::analysis-1' })),
   resolveProjectModelCapabilityGenerationOptions: vi.fn(async () => ({ reasoningEffort: 'high' })),
 }))
 
@@ -101,7 +102,7 @@ describe('worker story-to-script behavior', () => {
 
     prismaMock.novelPromotionProject.findUnique.mockResolvedValue({
       id: 'np-project-1',
-      analysisModel: 'llm::analysis-1',
+      analysisModel: null,
       characters: [{ id: 'char-1', name: 'Hero', introduction: 'hero intro' }],
       locations: [{ id: 'loc-1', name: 'Old Town', summary: 'town' }],
     })
@@ -186,5 +187,33 @@ describe('worker story-to-script behavior', () => {
 
     const job = buildJob({ episodeId: 'episode-1', content: 'input content' })
     await expect(handleStoryToScriptTask(job)).rejects.toThrow('STORY_TO_SCRIPT_PARTIAL_FAILED')
+  })
+
+  it('bug: analysisModel from UserPreference when NovelPromotionProject.analysisModel is null', async () => {
+    // Regression test: worker should use getProjectModelConfig which falls back to UserPreference
+    configMock.getProjectModelConfig.mockResolvedValueOnce({
+      analysisModel: 'llm::user-preference-model',
+    })
+
+    const job = buildJob({ episodeId: 'episode-1', content: 'input content' })
+    await handleStoryToScriptTask(job)
+
+    expect(configMock.getProjectModelConfig).toHaveBeenCalledWith('project-1', 'user-1')
+    expect(configMock.resolveProjectModelCapabilityGenerationOptions).toHaveBeenCalledWith({
+      projectId: 'project-1',
+      userId: 'user-1',
+      modelType: 'llm',
+      modelKey: 'llm::user-preference-model',
+    })
+  })
+
+  it('bug: analysisModel not configured -> explicit error', async () => {
+    // Regression test: should fail explicitly when no analysisModel is configured
+    configMock.getProjectModelConfig.mockResolvedValueOnce({
+      analysisModel: null,
+    })
+
+    const job = buildJob({ episodeId: 'episode-1', content: 'input content' })
+    await expect(handleStoryToScriptTask(job)).rejects.toThrow('analysisModel is not configured')
   })
 })

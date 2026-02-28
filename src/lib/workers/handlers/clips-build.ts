@@ -1,6 +1,7 @@
 import type { Job } from 'bullmq'
 import { prisma } from '@/lib/prisma'
 import { chatCompletion, getCompletionContent } from '@/lib/llm-client'
+import { getProjectModelConfig } from '@/lib/config-service'
 import { withInternalLLMStreamCallbacks } from '@/lib/llm-observe/internal-stream-context'
 import { buildCharactersIntroduction } from '@/lib/constants'
 import { createClipContentMatcher } from '@/lib/novel-promotion/story-to-script/clip-matching'
@@ -76,7 +77,10 @@ export async function handleClipsBuildTask(job: Job<TaskJobData>) {
   if (!novelData) {
     throw new Error('Novel promotion data not found')
   }
-  if (!novelData.analysisModel) {
+
+  const projectModelConfig = await getProjectModelConfig(projectId, job.data.userId)
+  const analysisModel = projectModelConfig.analysisModel
+  if (!analysisModel) {
     throw new Error('analysisModel is not configured')
   }
 
@@ -146,7 +150,7 @@ export async function handleClipsBuildTask(job: Job<TaskJobData>) {
         async () =>
           await chatCompletion(
             job.data.userId,
-            novelData.analysisModel!,
+            analysisModel,
             [{ role: 'user', content: promptTemplate }],
             {
               projectId,
