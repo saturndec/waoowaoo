@@ -15,6 +15,7 @@ import { QwenTTSGenerator } from './audio'
 import { MinimaxVideoGenerator } from './minimax'
 import { ViduVideoGenerator } from './vidu'
 import { getProviderKey } from '@/lib/api-config'
+import { OpenAICompatibleImageGenerator, OpenAICompatibleVideoGenerator } from './openai-compatible'
 
 /**
  * 根据 provider 创建图片生成器
@@ -48,7 +49,7 @@ export function createImageGenerator(provider: string, modelId?: string): ImageG
         case 'gemini-compatible':
             return new GeminiCompatibleImageGenerator(actualModelId, provider)
         case 'openai-compatible':
-            throw new Error('PROVIDER_TYPE_UNSUPPORTED: openai-compatible only supports llm')
+            return new OpenAICompatibleImageGenerator(actualModelId, provider)
         default:
             throw new Error(`Unknown image generator provider: ${provider}`)
     }
@@ -57,7 +58,14 @@ export function createImageGenerator(provider: string, modelId?: string): ImageG
 /**
  * 根据 provider 创建视频生成器
  */
-export function createVideoGenerator(provider: string): VideoGenerator {
+export function createVideoGenerator(provider: string, modelId?: string): VideoGenerator {
+    const normalizeModelId = (rawModelId?: string): string | undefined => {
+        if (!rawModelId) return rawModelId
+        const delimiterIndex = rawModelId.indexOf('::')
+        return delimiterIndex === -1 ? rawModelId : rawModelId.slice(delimiterIndex + 2)
+    }
+
+    const actualModelId = normalizeModelId(modelId)
     const providerKey = getProviderKey(provider).toLowerCase()
     switch (providerKey) {
         case 'fal':
@@ -73,7 +81,7 @@ export function createVideoGenerator(provider: string): VideoGenerator {
         case 'vidu':
             return new ViduVideoGenerator()
         case 'openai-compatible':
-            throw new Error('PROVIDER_TYPE_UNSUPPORTED: openai-compatible only supports llm')
+            return new OpenAICompatibleVideoGenerator(actualModelId, provider)
         default:
             throw new Error(`Unknown video generator provider: ${provider}`)
     }

@@ -69,14 +69,14 @@ export async function generateVideo(
         duration?: number
         fps?: number
         resolution?: string      // '720p' | '1080p'
-        aspectRatio?: string     // '16:9' | '9:16'
+        aspectRatio?: string     // '16:9' | '3:2' | '9:16'
         generateAudio?: boolean  // 仅 Seedance 1.5 Pro 支持
         lastFrameImageUrl?: string  // 首尾帧模式的尾帧图片
         [key: string]: string | number | boolean | undefined
     }
 ): Promise<GenerateResult> {
     const selection = await resolveModelSelection(userId, modelKey, 'video')
-    const generator = createVideoGenerator(selection.provider)
+    const generator = createVideoGenerator(selection.provider, selection.modelId)
     _ulogInfo(`[generateVideo] resolved model selection: ${selection.modelKey}`)
 
     const { prompt, ...providerOptions } = options || {}
