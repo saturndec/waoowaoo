@@ -100,18 +100,29 @@ export function ProviderAdvancedFields({
   state,
 }: ProviderAdvancedFieldsProps) {
   const providerKey = getProviderKey(provider.id)
-  const addableModelTypes = new Set<ProviderCardModelType>(
-    providerKey === 'openai-compatible'
+  const addableModelTypes = useMemo<readonly ProviderCardModelType[]>(
+    () => (providerKey === 'openrouter'
       ? ['llm']
-      : ['llm', 'image', 'video', 'audio'],
+      : ['llm', 'image', 'video', 'audio']),
+    [providerKey],
+  )
+  const addableModelTypeSet = useMemo(
+    () => new Set<ProviderCardModelType>(addableModelTypes),
+    [addableModelTypes],
   )
   const typesWithModels = useMemo(
-    () =>
-      MODEL_TYPES.filter((type) => {
+    () => {
+      // openai-compatible 是动态 OAI 兼容入口，允许先从空配置直接添加任意模型类型。
+      if (providerKey === 'openai-compatible') {
+        return [...addableModelTypes]
+      }
+
+      return MODEL_TYPES.filter((type) => {
         const modelsOfType = state.groupedModels[type]
         return Array.isArray(modelsOfType) && modelsOfType.length > 0
-      }),
-    [state.groupedModels],
+      })
+    },
+    [providerKey, state.groupedModels, addableModelTypes],
   )
   const [activeType, setActiveType] = useState<ProviderCardModelType | null>(
     typesWithModels[0] ?? null,
@@ -130,15 +141,16 @@ export function ProviderAdvancedFields({
 
   const currentType = activeType ?? typesWithModels[0] ?? null
   const currentModels = currentType ? (state.groupedModels[currentType] ?? []) : []
+  const hasTypeTabs = typesWithModels.length > 0
   const shouldShowAddButton =
     !!currentType
-    && addableModelTypes.has(currentType)
+    && addableModelTypeSet.has(currentType)
     && state.showAddForm !== currentType
   const defaultAddType: ProviderCardModelType = (
-    providerKey === 'openrouter' || providerKey === 'openai-compatible'
+    providerKey === 'openrouter'
   ) ? 'llm' : 'image'
 
-  return state.hasModels ? (
+  return hasTypeTabs ? (
     <div className="space-y-2.5 p-3">
       <div className="rounded-lg p-0.5" style={{ background: 'rgba(0,0,0,0.04)' }}>
         <div
@@ -192,7 +204,7 @@ export function ProviderAdvancedFields({
         </div>
       )}
 
-      {currentType && state.showAddForm === currentType && addableModelTypes.has(currentType) && (
+      {currentType && state.showAddForm === currentType && addableModelTypeSet.has(currentType) && (
         <div className="glass-surface-soft rounded-xl p-3">
           <div className="mb-2.5 flex items-center gap-2">
             <input

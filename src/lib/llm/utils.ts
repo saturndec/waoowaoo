@@ -1,5 +1,22 @@
 import type { ChatMessage } from './types'
 
+function extractThinkTaggedContent(raw: string): { text: string; reasoning: string } {
+    if (!raw) return { text: '', reasoning: '' }
+    const reasoningChunks: string[] = []
+    const textWithoutThink = raw.replace(
+        /<think(?:\s+[^>]*)?>([\s\S]*?)<\/think>/gi,
+        (_full: string, inner: string) => {
+            const trimmed = typeof inner === 'string' ? inner.trim() : ''
+            if (trimmed) reasoningChunks.push(trimmed)
+            return ''
+        },
+    )
+    return {
+        text: textWithoutThink.trim(),
+        reasoning: reasoningChunks.join('\n\n').trim(),
+    }
+}
+
 export function collectTextValue(value: unknown): string {
     if (!value) return ''
     if (typeof value === 'string') return value
@@ -20,10 +37,10 @@ export function collectTextValue(value: unknown): string {
 
 export function extractCompletionPartsFromContent(content: unknown): { text: string; reasoning: string } {
     if (typeof content === 'string') {
-        return { text: content, reasoning: '' }
+        return extractThinkTaggedContent(content)
     }
     if (!Array.isArray(content)) {
-        return { text: collectTextValue(content), reasoning: '' }
+        return extractThinkTaggedContent(collectTextValue(content))
     }
 
     let text = ''
@@ -50,7 +67,16 @@ export function extractCompletionPartsFromContent(content: unknown): { text: str
         }
     }
 
-    return { text, reasoning }
+    const normalized = extractThinkTaggedContent(text)
+    if (normalized.reasoning) {
+        if (!reasoning) {
+            reasoning = normalized.reasoning
+        } else if (!reasoning.includes(normalized.reasoning)) {
+            reasoning = `${reasoning}\n\n${normalized.reasoning}`.trim()
+        }
+    }
+
+    return { text: normalized.text, reasoning }
 }
 
 export function extractStreamDeltaParts(part: unknown): { textDelta: string; reasoningDelta: string } {

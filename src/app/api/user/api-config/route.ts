@@ -530,12 +530,6 @@ function validateModelProviderTypeSupport(models: StoredModel[], providers: Stor
     if (!matchedProvider) continue
 
     const providerKey = getProviderKey(matchedProvider.id)
-    if (providerKey === 'openai-compatible' && model.type !== 'llm') {
-      throw new ApiError('INVALID_PARAMS', {
-        code: 'MODEL_PROVIDER_TYPE_UNSUPPORTED',
-        field: `models[${index}].type`,
-      })
-    }
     if (model.type === 'lipsync' && providerKey !== 'fal' && providerKey !== 'vidu') {
       throw new ApiError('INVALID_PARAMS', {
         code: 'MODEL_PROVIDER_TYPE_UNSUPPORTED',
@@ -611,21 +605,37 @@ function normalizeDefaultModelsInput(rawDefaultModels: unknown): DefaultModelsPa
   return normalized
 }
 
-function validateDefaultModelPricing(defaultModels: DefaultModelsPayload) {
+function isDefaultModelPricedForBilling(
+  field: DefaultModelField,
+  parsedModelKey: { provider: string; modelId: string; modelKey: string },
+  models: StoredModel[],
+): boolean {
+  const apiType = DEFAULT_FIELD_TO_PRICING_API_TYPE[field]
+  if (hasBuiltinPricingForModel(apiType, parsedModelKey.provider, parsedModelKey.modelId)) {
+    return true
+  }
+
+  const matchedModel = models.find((model) => model.modelKey === parsedModelKey.modelKey)
+  if (!matchedModel) return false
+  const matchedApiType = BILLABLE_MODEL_TYPE_TO_PRICING_API_TYPE[matchedModel.type]
+  if (matchedApiType !== apiType) return false
+  return hasCustomPricingForType(matchedModel)
+}
+
+function validateDefaultModelPricing(defaultModels: DefaultModelsPayload, models: StoredModel[]) {
   for (const field of DEFAULT_MODEL_FIELDS) {
     const modelKey = defaultModels[field]
     if (!modelKey) continue
 
     const parsed = parseModelKeyStrict(modelKey)
     if (!parsed) continue
-    const apiType = DEFAULT_FIELD_TO_PRICING_API_TYPE[field]
 
-    if (!hasBuiltinPricingForModel(apiType, parsed.provider, parsed.modelId)) {
+    if (!isDefaultModelPricedForBilling(field, parsed, models)) {
       throw new ApiError('INVALID_PARAMS', {
         code: 'DEFAULT_MODEL_PRICING_NOT_CONFIGURED',
         field: `defaultModels.${field}`,
         modelKey: parsed.modelKey,
-        apiType,
+        apiType: DEFAULT_FIELD_TO_PRICING_API_TYPE[field],
       })
     }
   }
@@ -642,7 +652,7 @@ function sanitizeModelsForBilling(models: StoredModel[]): StoredModel[] {
   return models.filter((model) => isModelPricedForBilling(model))
 }
 
-function sanitizeDefaultModelsForBilling(defaultModels: DefaultModelsPayload): DefaultModelsPayload {
+function sanitizeDefaultModelsForBilling(defaultModels: DefaultModelsPayload, models: StoredModel[]): DefaultModelsPayload {
   const sanitized: DefaultModelsPayload = {}
 
   for (const field of DEFAULT_MODEL_FIELDS) {
@@ -660,8 +670,7 @@ function sanitizeDefaultModelsForBilling(defaultModels: DefaultModelsPayload): D
       continue
     }
 
-    const apiType = DEFAULT_FIELD_TO_PRICING_API_TYPE[field]
-    sanitized[field] = hasBuiltinPricingForModel(apiType, parsed.provider, parsed.modelId)
+    sanitized[field] = isDefaultModelPricedForBilling(field, parsed, models)
       ? parsed.modelKey
       : ''
   }
@@ -940,7 +949,7 @@ export const GET = apiHandler(async () => {
   }
   const defaultModels = billingMode === 'OFF'
     ? rawDefaults
-    : sanitizeDefaultModelsForBilling(rawDefaults)
+    : sanitizeDefaultModelsForBilling(rawDefaults, models)
   const capabilityDefaults = sanitizeCapabilitySelectionsAgainstModels(
     parseStoredCapabilitySelections(pref?.capabilityDefaults, 'capabilityDefaults'),
     models,
@@ -1019,7 +1028,8 @@ export const PUT = apiHandler(async (request: NextRequest) => {
 
   if (normalizedDefaults !== undefined) {
     if (billingMode !== 'OFF') {
-      validateDefaultModelPricing(normalizedDefaults)
+      const modelSource = normalizedModels ?? existingModels
+      validateDefaultModelPricing(normalizedDefaults, modelSource)
     }
     if (normalizedDefaults.analysisModel !== undefined) {
       updateData.analysisModel = normalizedDefaults.analysisModel || null
