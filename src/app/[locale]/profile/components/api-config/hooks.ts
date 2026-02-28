@@ -402,8 +402,8 @@ export function useProviders(): UseProvidersReturn {
 
     const addProvider = useCallback((provider: Omit<Provider, 'hasApiKey'>) => {
         setProviders(prev => {
-            const targetProviderKey = getProviderKey(provider.id).toLowerCase()
-            if (prev.some(p => getProviderKey(p.id).toLowerCase() === targetProviderKey)) {
+            const normalizedProviderId = provider.id.toLowerCase()
+            if (prev.some((p) => p.id.toLowerCase() === normalizedProviderId)) {
                 alert(t('providerIdExists'))
                 return prev
             }

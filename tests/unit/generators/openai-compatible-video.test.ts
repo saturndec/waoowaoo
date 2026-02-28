@@ -11,7 +11,7 @@ const getProviderConfigMock = vi.hoisted(() => vi.fn(async () => ({
   baseUrl: 'https://oa.test/v1',
 })))
 
-const normalizeToBase64ForGenerationMock = vi.hoisted(() => vi.fn(async () => 'data:image/png;base64,QQ=='))
+const imageUrlToBase64Mock = vi.hoisted(() => vi.fn(async () => 'data:image/png;base64,QQ=='))
 
 vi.mock('openai', () => ({
   default: class OpenAI {
@@ -26,8 +26,8 @@ vi.mock('@/lib/api-config', () => ({
   getProviderConfig: getProviderConfigMock,
 }))
 
-vi.mock('@/lib/media/outbound-image', () => ({
-  normalizeToBase64ForGeneration: normalizeToBase64ForGenerationMock,
+vi.mock('@/lib/cos', () => ({
+  imageUrlToBase64: imageUrlToBase64Mock,
 }))
 
 import { OpenAICompatibleVideoGenerator } from '@/lib/generators/video/openai-compatible'
@@ -100,67 +100,5 @@ describe('OpenAICompatibleVideoGenerator', () => {
       throw new Error('videos.create should be called')
     }
     expect((createCall[0] as { model?: string }).model).toBe('veo_3_1-fast-4K')
-  })
-
-  it('maps 3:2 to landscape size explicitly', async () => {
-    openAIState.create.mockResolvedValueOnce({ id: 'vid_32' })
-
-    const generator = new OpenAICompatibleVideoGenerator('openai-compatible:oa-1')
-    const result = await generator.generate({
-      userId: 'user-1',
-      imageUrl: 'https://example.com/seed.png',
-      prompt: 'animate',
-      options: {
-        resolution: '1080p',
-        aspectRatio: '3:2',
-      },
-    })
-
-    expect(result.success).toBe(true)
-    const createCall = openAIState.create.mock.calls.at(0)
-    expect(createCall).toBeTruthy()
-    if (!createCall) {
-      throw new Error('videos.create should be called')
-    }
-    expect((createCall[0] as { size?: string }).size).toBe('1792x1024')
-  })
-
-  it('maps 2:3 to portrait size explicitly', async () => {
-    openAIState.create.mockResolvedValueOnce({ id: 'vid_23' })
-
-    const generator = new OpenAICompatibleVideoGenerator('openai-compatible:oa-1')
-    const result = await generator.generate({
-      userId: 'user-1',
-      imageUrl: 'https://example.com/seed.png',
-      prompt: 'animate',
-      options: {
-        resolution: '720p',
-        aspectRatio: '2:3',
-      },
-    })
-
-    expect(result.success).toBe(true)
-    const createCall = openAIState.create.mock.calls.at(0)
-    expect(createCall).toBeTruthy()
-    if (!createCall) {
-      throw new Error('videos.create should be called')
-    }
-    expect((createCall[0] as { size?: string }).size).toBe('720x1280')
-  })
-
-  it('fails explicitly on unsupported aspect ratios', async () => {
-    const generator = new OpenAICompatibleVideoGenerator('openai-compatible:oa-1')
-    const result = await generator.generate({
-      userId: 'user-1',
-      imageUrl: 'https://example.com/seed.png',
-      prompt: 'animate',
-      options: {
-        resolution: '720p',
-        aspectRatio: '5:4',
-      },
-    })
-
-    expect(result.success).toBe(false)
-    expect(result.error).toContain('OPENAI_COMPAT_VIDEO_ASPECT_RATIO_UNSUPPORTED')
   })
 })

@@ -117,6 +117,6 @@ describe('OpenAICompatibleImageGenerator', () => {
     })
 
     expect(result.success).toBe(false)
-    expect(result.error).toContain('OPENAI_COMPAT_IMAGE_OPTION_UNSUPPORTED')
+    expect(result.error).toContain('OPENAI_COMPATIBLE_IMAGE_OPTION_UNSUPPORTED')
   })
 })

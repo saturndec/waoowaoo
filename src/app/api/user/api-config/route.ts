@@ -471,8 +471,8 @@ function normalizeProvidersInput(rawProviders: unknown): StoredProvider[] {
         field: `providers[${index}]`,
       })
     }
-    const providerKey = getProviderKey(id)
-    if (normalized.some((provider) => getProviderKey(provider.id) === providerKey)) {
+    const normalizedId = id.toLowerCase()
+    if (normalized.some((provider) => provider.id.toLowerCase() === normalizedId)) {
       throw new ApiError('INVALID_PARAMS', {
         code: 'PROVIDER_DUPLICATE',
         field: `providers[${index}].id`,
@@ -996,7 +996,7 @@ export const PUT = apiHandler(async (request: NextRequest) => {
 
   if (normalizedProviders !== undefined) {
     const providersToSave = normalizedProviders.map((provider) => {
-      const existing = resolveProviderByIdOrKey(existingProviders, provider.id)
+      const existing = existingProviders.find((candidate) => candidate.id === provider.id)
       let finalApiKey: string | undefined
       if (provider.apiKey === undefined) {
         finalApiKey = existing?.apiKey

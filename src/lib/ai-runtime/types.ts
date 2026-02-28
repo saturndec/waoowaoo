@@ -33,7 +33,7 @@ export type AiStepExecutionInput = {
   userId: string
   model: string
   messages: AiTextMessages
-  projectId?: string
+  projectId: string
   action: string
   meta: AiStepMeta
   temperature?: number
@@ -42,30 +42,6 @@ export type AiStepExecutionInput = {
 }
 
 export type AiStepExecutionResult = {
-  text: string
-  reasoning: string
-  usage: {
-    promptTokens: number
-    completionTokens: number
-    totalTokens: number
-  }
-  completion: OpenAI.Chat.Completions.ChatCompletion
-}
-
-export type AiVisionStepExecutionInput = {
-  userId: string
-  model: string
-  prompt: string
-  imageUrls: string[]
-  projectId?: string
-  action?: string
-  meta?: AiStepMeta
-  temperature?: number
-  reasoning?: boolean
-  reasoningEffort?: 'minimal' | 'low' | 'medium' | 'high'
-}
-
-export type AiVisionStepExecutionResult = {
   text: string
   reasoning: string
   usage: {

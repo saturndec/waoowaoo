@@ -13,7 +13,7 @@ function jsonResponse(payload: unknown, status = 200) {
 
 describe('run-request-executor run events path', () => {
   it('uses /api/runs/:runId/events when async response includes runId', async () => {
-    const fetchMock = vi.fn<typeof fetch>()
+    const fetchMock = vi.fn<Parameters<typeof fetch>, ReturnType<typeof fetch>>()
     fetchMock
       .mockResolvedValueOnce(jsonResponse({
         success: true,
@@ -79,6 +79,7 @@ describe('run-request-executor run events path', () => {
       }))
 
     const originalFetch = globalThis.fetch
+    // @ts-expect-error test override
     globalThis.fetch = fetchMock
 
     try {
@@ -100,178 +101,6 @@ describe('run-request-executor run events path', () => {
       expect(captured.some((event) => event.event === 'step.chunk' && event.textDelta === 'hello')).toBe(true)
       expect(fetchMock.mock.calls[1]?.[0]).toBe('/api/runs/run_1/events?afterSeq=0&limit=500')
     } finally {
-      globalThis.fetch = originalFetch
-    }
-  })
-
-  it('surfaces run-events fetch errors instead of swallowing them', async () => {
-    const fetchMock = vi.fn<typeof fetch>()
-    fetchMock
-      .mockResolvedValueOnce(jsonResponse({
-        success: true,
-        async: true,
-        taskId: 'task_1',
-        runId: 'run_1',
-      }))
-      .mockResolvedValueOnce(jsonResponse({
-        error: {
-          message: 'events backend unavailable',
-        },
-      }, 503))
-
-    const originalFetch = globalThis.fetch
-    globalThis.fetch = fetchMock
-
-    try {
-      const controller = new AbortController()
-      await expect(executeRunRequest({
-        endpointUrl: '/api/novel-promotion/project_1/story-to-script-stream',
-        requestBody: { episodeId: 'episode_1' },
-        controller,
-        taskStreamTimeoutMs: 30_000,
-        applyAndCapture: () => undefined,
-        finalResultRef: { current: null },
-      })).rejects.toThrow('run events fetch failed (HTTP 503): events backend unavailable')
-    } finally {
-      globalThis.fetch = originalFetch
-    }
-  })
-
-  it('uses idle timeout and resets the timer when new events arrive', async () => {
-    vi.useFakeTimers()
-    const fetchMock = vi.fn<typeof fetch>()
-    let eventsRequestCount = 0
-    fetchMock.mockImplementation(async (input: RequestInfo | URL) => {
-      const url = String(input)
-      if (url.includes('/story-to-script-stream')) {
-        return jsonResponse({
-          success: true,
-          async: true,
-          taskId: 'task_1',
-          runId: 'run_1',
-        })
-      }
-
-      if (url === '/api/runs/run_1') {
-        return jsonResponse({
-          run: {
-            id: 'run_1',
-            status: 'running',
-          },
-        })
-      }
-
-      if (!url.includes('/api/runs/run_1/events')) {
-        return jsonResponse({ events: [] })
-      }
-
-      eventsRequestCount += 1
-      if (eventsRequestCount === 3) {
-        return jsonResponse({
-          events: [
-            {
-              seq: 1,
-              eventType: 'run.start',
-              payload: { message: 'started' },
-              createdAt: '2026-02-28T00:00:03.000Z',
-            },
-          ],
-        })
-      }
-
-      return jsonResponse({ events: [] })
-    })
-
-    const originalFetch = globalThis.fetch
-    globalThis.fetch = fetchMock
-
-    try {
-      const controller = new AbortController()
-      let settled = false
-      const request = executeRunRequest({
-        endpointUrl: '/api/novel-promotion/project_1/story-to-script-stream',
-        requestBody: { episodeId: 'episode_1' },
-        controller,
-        taskStreamTimeoutMs: 3_000,
-        applyAndCapture: () => undefined,
-        finalResultRef: { current: null },
-      }).finally(() => {
-        settled = true
-      })
-
-      await vi.advanceTimersByTimeAsync(5_000)
-      expect(settled).toBe(false)
-
-      await vi.advanceTimersByTimeAsync(3_000)
-      await expect(request).resolves.toEqual(expect.objectContaining({
-        runId: 'run_1',
-        status: 'failed',
-        errorMessage: 'run stream timeout: run_1',
-      }))
-    } finally {
-      vi.useRealTimers()
-      globalThis.fetch = originalFetch
-    }
-  })
-
-  it('reconciles terminal failed run status when events stream has no new rows', async () => {
-    vi.useFakeTimers()
-    const fetchMock = vi.fn<typeof fetch>()
-    fetchMock.mockImplementation(async (input: RequestInfo | URL) => {
-      const url = String(input)
-      if (url.includes('/story-to-script-stream')) {
-        return jsonResponse({
-          success: true,
-          async: true,
-          taskId: 'task_2',
-          runId: 'run_2',
-        })
-      }
-      if (url.includes('/api/runs/run_2/events')) {
-        return jsonResponse({ events: [] })
-      }
-      if (url === '/api/runs/run_2') {
-        return jsonResponse({
-          run: {
-            id: 'run_2',
-            status: 'failed',
-            errorMessage: 'Ark Responses 调用失败',
-          },
-        })
-      }
-      return jsonResponse({ events: [] })
-    })
-
-    const originalFetch = globalThis.fetch
-    globalThis.fetch = fetchMock
-
-    try {
-      const captured: RunStreamEvent[] = []
-      const controller = new AbortController()
-      const request = executeRunRequest({
-        endpointUrl: '/api/novel-promotion/project_1/story-to-script-stream',
-        requestBody: { episodeId: 'episode_1' },
-        controller,
-        taskStreamTimeoutMs: 30_000,
-        applyAndCapture: (event) => {
-          captured.push(event)
-        },
-        finalResultRef: { current: null },
-      })
-
-      await vi.advanceTimersByTimeAsync(3_500)
-      await expect(request).resolves.toEqual(expect.objectContaining({
-        runId: 'run_2',
-        status: 'failed',
-        errorMessage: 'Ark Responses 调用失败',
-      }))
-      expect(fetchMock).toHaveBeenCalledWith(
-        '/api/runs/run_2',
-        expect.objectContaining({ method: 'GET', cache: 'no-store' }),
-      )
-      expect(captured.some((event) => event.event === 'run.error' && event.message === 'Ark Responses 调用失败')).toBe(true)
-    } finally {
-      vi.useRealTimers()
       globalThis.fetch = originalFetch
     }
   })

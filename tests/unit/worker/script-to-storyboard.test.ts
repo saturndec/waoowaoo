@@ -17,6 +17,9 @@ const reportTaskProgressMock = vi.hoisted(() => vi.fn(async () => undefined))
 const assertTaskActiveMock = vi.hoisted(() => vi.fn(async () => undefined))
 const chatCompletionMock = vi.hoisted(() => vi.fn(async () => ({ responseId: 'resp-1' })))
 const getCompletionPartsMock = vi.hoisted(() => vi.fn(() => ({ text: 'voice lines json', reasoning: '' })))
+const withInternalLLMStreamCallbacksMock = vi.hoisted(() =>
+  vi.fn(async (_callbacks: unknown, fn: () => Promise<unknown>) => await fn()),
+)
 const resolveProjectModelCapabilityGenerationOptionsMock = vi.hoisted(() =>
   vi.fn(async () => ({ reasoningEffort: 'high' })),
 )
@@ -77,7 +80,7 @@ vi.mock('@/lib/config-service', () => ({
 }))
 
 vi.mock('@/lib/llm-observe/internal-stream-context', () => ({
-  withInternalLLMStreamCallbacks: vi.fn(async (_callbacks: unknown, fn: () => Promise<unknown>) => await fn()),
+  withInternalLLMStreamCallbacks: withInternalLLMStreamCallbacksMock,
 }))
 
 vi.mock('@/lib/logging/semantic', () => ({
@@ -293,5 +296,26 @@ describe('worker script-to-storyboard behavior', () => {
     }))
     expect(chatCompletionMock).toHaveBeenCalledTimes(2)
     expect(parseVoiceLinesJsonMock).toHaveBeenCalledTimes(2)
+    expect(withInternalLLMStreamCallbacksMock).toHaveBeenCalledTimes(3)
+    expect(chatCompletionMock.mock.calls[0]?.[3]).toEqual(expect.objectContaining({
+      action: 'voice_analyze',
+      streamStepId: 'voice_analyze',
+      streamStepAttempt: 1,
+    }))
+    expect(chatCompletionMock.mock.calls[1]?.[3]).toEqual(expect.objectContaining({
+      action: 'voice_analyze',
+      streamStepId: 'voice_analyze',
+      streamStepAttempt: 2,
+    }))
+    expect(reportTaskProgressMock).toHaveBeenCalledWith(
+      job,
+      84,
+      expect.objectContaining({
+        stage: 'script_to_storyboard_step',
+        stepId: 'voice_analyze',
+        stepAttempt: 2,
+        message: '台词分析失败，准备重试 (2/2)',
+      }),
+    )
   })
 })

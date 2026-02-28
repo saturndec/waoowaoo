@@ -30,6 +30,7 @@ import {
 import { buildPrompt, getPromptTemplate, PROMPT_IDS } from '@/lib/prompt-i18n'
 
 type AnyObj = Record<string, unknown>
+const MAX_VOICE_ANALYZE_ATTEMPTS = 2
 
 function isReasoningEffort(value: unknown): value is 'minimal' | 'low' | 'medium' | 'high' {
   return value === 'minimal' || value === 'low' || value === 'medium' || value === 'high'
@@ -128,7 +129,7 @@ export async function handleScriptToStoryboardTask(job: Job<TaskJobData>) {
   ): Promise<ScriptToStoryboardStepOutput> => {
     void _maxOutputTokens
     await assertTaskActive(job, `script_to_storyboard_step:${meta.stepId}`)
-    const progress = 15 + Math.min(55, Math.floor((meta.stepIndex / Math.max(1, meta.stepTotal)) * 55))
+    const progress = 15 + Math.min(70, Math.floor((meta.stepIndex / Math.max(1, meta.stepTotal)) * 70))
     await reportTaskProgress(job, progress, {
       stage: 'script_to_storyboard_step',
       stageLabel: 'progress.stage.scriptToStoryboardStep',
@@ -269,24 +270,41 @@ export async function handleScriptToStoryboardTask(job: Job<TaskJobData>) {
     stepIndex: orchestratorResult.summary.totalStepCount,
     stepTotal: orchestratorResult.summary.totalStepCount,
   }
-  for (let voiceAttempt = 1; voiceAttempt <= 2; voiceAttempt++) {
-    const meta = voiceAttempt === 1
-      ? voiceStepMeta
-      : {
+  try {
+    for (let voiceAttempt = 1; voiceAttempt <= MAX_VOICE_ANALYZE_ATTEMPTS; voiceAttempt++) {
+      const meta: ScriptToStoryboardStepMeta = {
         ...voiceStepMeta,
-        stepId: `voice_analyze_r${voiceAttempt}`,
-        stepTitle: voiceStepMeta.stepTitle,
+        stepAttempt: voiceAttempt,
       }
-    try {
-      const voiceOutput = await runStep(meta, voicePrompt, 'voice_analyze', 2600)
-      voiceLineRows = parseVoiceLinesJson(voiceOutput.text)
-      break
-    } catch (error) {
-      if (error instanceof TaskTerminatedError) {
-        throw error
+      try {
+        const voiceOutput = await withInternalLLMStreamCallbacks(
+          callbacks,
+          async () => await runStep(meta, voicePrompt, 'voice_analyze', 2600),
+        )
+        voiceLineRows = parseVoiceLinesJson(voiceOutput.text)
+        break
+      } catch (error) {
+        if (error instanceof TaskTerminatedError) {
+          throw error
+        }
+        voiceLastError = error instanceof Error ? error : new Error(String(error))
+        if (voiceAttempt < MAX_VOICE_ANALYZE_ATTEMPTS) {
+          await reportTaskProgress(job, 84, {
+            stage: 'script_to_storyboard_step',
+            stageLabel: 'progress.stage.scriptToStoryboardStep',
+            displayMode: 'detail',
+            message: `台词分析失败，准备重试 (${voiceAttempt + 1}/${MAX_VOICE_ANALYZE_ATTEMPTS})`,
+            stepId: voiceStepMeta.stepId,
+            stepAttempt: voiceAttempt + 1,
+            stepTitle: voiceStepMeta.stepTitle,
+            stepIndex: voiceStepMeta.stepIndex,
+            stepTotal: voiceStepMeta.stepTotal,
+          })
+        }
       }
-      voiceLastError = error instanceof Error ? error : new Error(String(error))
     }
+  } finally {
+    await callbacks.flush()
   }
   if (!voiceLineRows) {
     throw voiceLastError!

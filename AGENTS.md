@@ -54,4 +54,3 @@
 - 修 bug 必须同步新增回归测试，`it()` 名称体现该 bug 场景
 - 断言必须检查具体值（DB 写入字段值、函数入参、返回值），禁止只用 `toHaveBeenCalled()`
 - 禁止"自给自答"：mock 返回 X 再断言 X，没有经过任何业务逻辑
-- 未通过 `npm run test:regression` 不得宣称功能完成

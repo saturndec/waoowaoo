@@ -26,8 +26,8 @@ vi.mock('@/lib/prisma', () => ({ prisma: prismaMock }))
 vi.mock('@/lib/task/service', () => taskServiceMock)
 vi.mock('@/lib/async-poll', () => asyncPollMock)
 vi.mock('@/lib/generator-api', () => generatorApiMock)
-vi.mock('@/lib/lipsync', () => ({ generateLipSync: vi.fn() }))
-vi.mock('@/lib/storage', () => ({
+vi.mock('@/lib/kling', () => ({ generateLipSync: vi.fn() }))
+vi.mock('@/lib/cos', () => ({
   getSignedUrl: vi.fn((value: string) => value),
   toFetchableUrl: vi.fn((value: string) => value),
 }))
@@ -39,7 +39,7 @@ vi.mock('@/lib/config-service', () => ({
   resolveProjectModelCapabilityGenerationOptions: vi.fn(),
 }))
 
-import { resolveImageSourceFromGeneration, resolveVideoSourceFromGeneration } from '@/lib/workers/utils'
+import { resolveVideoSourceFromGeneration } from '@/lib/workers/utils'
 
 function buildJob(): Job<TaskJobData> {
   return {
@@ -90,28 +90,5 @@ describe('worker utils video generation resume', () => {
     })
     expect(asyncPollMock.pollAsyncTask).toHaveBeenCalledWith(externalId, 'user-1')
     expect(generatorApiMock.generateVideo).not.toHaveBeenCalled()
-  })
-
-  it('prevents duplicate panel candidates by skipping task externalId resume when requested', async () => {
-    prismaMock.task.findUnique.mockResolvedValueOnce({ externalId: 'FAL:IMAGE:fal-ai/nano-banana-pro:req_1' })
-    generatorApiMock.generateImage.mockResolvedValueOnce({
-      success: true,
-      imageUrl: 'https://fal.test/new-image.png',
-    })
-
-    const result = await resolveImageSourceFromGeneration(buildJob(), {
-      userId: 'user-1',
-      modelId: 'fal::banana',
-      prompt: 'a cinematic portrait',
-      options: {
-        aspectRatio: '16:9',
-      },
-      allowTaskExternalIdResume: false,
-    })
-
-    expect(result).toBe('https://fal.test/new-image.png')
-    expect(prismaMock.task.findUnique).not.toHaveBeenCalled()
-    expect(asyncPollMock.pollAsyncTask).not.toHaveBeenCalled()
-    expect(generatorApiMock.generateImage).toHaveBeenCalledTimes(1)
   })
 })

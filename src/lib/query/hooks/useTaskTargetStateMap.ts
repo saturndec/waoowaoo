@@ -5,6 +5,7 @@ import { useQuery } from '@tanstack/react-query'
 import { queryKeys } from '../keys'
 import type { TaskIntent } from '@/lib/task/intent'
 import type { TaskTargetOverlayMap } from '../task-target-overlay'
+import { createScopedLogger } from '@/lib/logging/core'
 
 export type TaskTargetStateQuery = {
   targetType: string
@@ -45,6 +46,15 @@ type TaskTargetStateBatch = {
 const TARGET_STATE_BATCH_WINDOW_MS = 120
 const TARGET_STATE_CHUNK_SIZE = 500
 const pendingTaskTargetStateBatches = new Map<string, TaskTargetStateBatch>()
+const mergeTraceSignatureByKey = new Map<string, string>()
+const taskTargetStateLogger = createScopedLogger({
+  module: 'query.use-task-target-state-map',
+})
+
+function traceFrontend(event: string, details: Record<string, unknown>) {
+  if (typeof window === 'undefined') return
+  console.info(`[FE_TASK_TRACE] ${event}`, details)
+}
 
 function stateKey(targetType: string, targetId: string) {
   return `${targetType}:${targetId}`
@@ -91,6 +101,72 @@ function buildIdleState(target: TaskTargetStateQuery): TaskTargetState {
     lastError: null,
     updatedAt: null,
   }
+}
+
+function matchesTaskTypeWhitelist(
+  whitelist: string[] | undefined,
+  runningTaskType: string | null,
+): boolean {
+  if (!whitelist || whitelist.length === 0) return true
+  if (!runningTaskType) return true
+  const normalized = runningTaskType.toLowerCase()
+  return whitelist.some((type) => type.toLowerCase() === normalized)
+}
+
+function shouldTraceMergeTarget(targetType: string) {
+  return targetType === 'NovelPromotionPanel'
+}
+
+function logMergeDecision(params: {
+  projectId: string | null | undefined
+  key: string
+  decision:
+  | 'overlay_applied'
+  | 'overlay_expired'
+  | 'overlay_phase_ignored'
+  | 'overlay_task_type_mismatch'
+  | 'server_processing_authoritative'
+  runtimePhase: string | null
+  runtimeTaskId: string | null
+  runtimeTaskType: string | null
+  currentPhase: string | null
+  whitelist: string[]
+}) {
+  const signature = [
+    params.decision,
+    params.runtimePhase || '',
+    params.runtimeTaskId || '',
+    params.runtimeTaskType || '',
+    params.currentPhase || '',
+    params.whitelist.join(','),
+  ].join('|')
+  const last = mergeTraceSignatureByKey.get(params.key)
+  if (last === signature) return
+  mergeTraceSignatureByKey.set(params.key, signature)
+  taskTargetStateLogger.info({
+    action: 'task-state.merge.decision',
+    message: 'task state merge decision',
+    details: {
+      projectId: params.projectId || null,
+      key: params.key,
+      decision: params.decision,
+      runtimePhase: params.runtimePhase,
+      runtimeTaskId: params.runtimeTaskId,
+      runtimeTaskType: params.runtimeTaskType,
+      currentPhase: params.currentPhase,
+      whitelist: params.whitelist,
+    },
+  })
+  traceFrontend('task-state.merge.decision', {
+    projectId: params.projectId || null,
+    key: params.key,
+    decision: params.decision,
+    runtimePhase: params.runtimePhase,
+    runtimeTaskId: params.runtimeTaskId,
+    runtimeTaskType: params.runtimeTaskType,
+    currentPhase: params.currentPhase,
+    whitelist: params.whitelist,
+  })
 }
 
 /** 将数组分成固定大小的块 */
@@ -241,21 +317,72 @@ export function useTaskTargetStateMap(
       const key = stateKey(target.targetType, target.targetId)
       const runtime = overlay[key]
       if (!runtime) continue
-      if (runtime.expiresAt && runtime.expiresAt <= now) continue
-      if (runtime.phase !== 'queued' && runtime.phase !== 'processing') continue
+      if (runtime.expiresAt && runtime.expiresAt <= now) {
+        if (shouldTraceMergeTarget(target.targetType)) {
+          logMergeDecision({
+            projectId,
+            key,
+            decision: 'overlay_expired',
+            runtimePhase: runtime.phase,
+            runtimeTaskId: runtime.runningTaskId,
+            runtimeTaskType: runtime.runningTaskType,
+            currentPhase: map.get(key)?.phase || null,
+            whitelist: target.types || [],
+          })
+        }
+        continue
+      }
+      if (runtime.phase !== 'queued' && runtime.phase !== 'processing') {
+        if (shouldTraceMergeTarget(target.targetType)) {
+          logMergeDecision({
+            projectId,
+            key,
+            decision: 'overlay_phase_ignored',
+            runtimePhase: runtime.phase,
+            runtimeTaskId: runtime.runningTaskId,
+            runtimeTaskType: runtime.runningTaskType,
+            currentPhase: map.get(key)?.phase || null,
+            whitelist: target.types || [],
+          })
+        }
+        continue
+      }
       // Skip overlay if the target has a types whitelist and the task type doesn't match
-      if (
-        target.types?.length &&
-        runtime.runningTaskType &&
-        !target.types.includes(runtime.runningTaskType)
-      ) continue
+      if (!matchesTaskTypeWhitelist(target.types, runtime.runningTaskType)) {
+        if (shouldTraceMergeTarget(target.targetType)) {
+          logMergeDecision({
+            projectId,
+            key,
+            decision: 'overlay_task_type_mismatch',
+            runtimePhase: runtime.phase,
+            runtimeTaskId: runtime.runningTaskId,
+            runtimeTaskType: runtime.runningTaskType,
+            currentPhase: map.get(key)?.phase || null,
+            whitelist: target.types || [],
+          })
+        }
+        continue
+      }
 
       const current = map.get(key)
-      if (
-        current &&
-        current.phase !== 'idle' &&
-        current.phase !== 'queued'
-      ) continue
+      if (current) {
+        // Server-side processing state is authoritative.
+        if (current.phase === 'processing') {
+          if (shouldTraceMergeTarget(target.targetType)) {
+            logMergeDecision({
+              projectId,
+              key,
+              decision: 'server_processing_authoritative',
+              runtimePhase: runtime.phase,
+              runtimeTaskId: runtime.runningTaskId,
+              runtimeTaskType: runtime.runningTaskType,
+              currentPhase: current.phase,
+              whitelist: target.types || [],
+            })
+          }
+          continue
+        }
+      }
       map.set(key, {
         ...(current || buildIdleState(target)),
         ...runtime,
@@ -264,6 +391,18 @@ export function useTaskTargetStateMap(
         targetId: target.targetId,
         lastError: null,
       })
+      if (shouldTraceMergeTarget(target.targetType)) {
+        logMergeDecision({
+          projectId,
+          key,
+          decision: 'overlay_applied',
+          runtimePhase: runtime.phase,
+          runtimeTaskId: runtime.runningTaskId,
+          runtimeTaskType: runtime.runningTaskType,
+          currentPhase: current?.phase || null,
+          whitelist: target.types || [],
+        })
+      }
     }
     return map
   }, [normalizedTargets, overlayQuery.data, query.data])

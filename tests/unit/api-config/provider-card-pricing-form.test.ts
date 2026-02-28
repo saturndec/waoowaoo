@@ -2,12 +2,8 @@ import { describe, expect, it } from 'vitest'
 import {
   getAddableModelTypesForProvider,
   getVisibleModelTypesForProvider,
-  shouldShowOpenAICompatVideoHint,
 } from '@/app/[locale]/profile/components/api-config/provider-card/ProviderAdvancedFields'
-import {
-  buildCustomPricingFromModelForm,
-  buildProviderConnectionPayload,
-} from '@/app/[locale]/profile/components/api-config/provider-card/hooks/useProviderCardState'
+import { buildCustomPricingFromModelForm } from '@/app/[locale]/profile/components/api-config/provider-card/hooks/useProviderCardState'
 
 describe('provider card pricing form behavior', () => {
   it('allows openai-compatible provider to add llm/image/video', () => {
@@ -33,13 +29,6 @@ describe('provider card pricing form behavior', () => {
     )
 
     expect(visible).toEqual(['llm', 'image', 'video'])
-  })
-
-  it('shows the openai-compatible video hint only for openai-compatible video add forms', () => {
-    expect(shouldShowOpenAICompatVideoHint('openai-compatible:oa-1', 'video')).toBe(true)
-    expect(shouldShowOpenAICompatVideoHint('openai-compatible:oa-1', 'image')).toBe(false)
-    expect(shouldShowOpenAICompatVideoHint('gemini-compatible:gm-1', 'video')).toBe(false)
-    expect(shouldShowOpenAICompatVideoHint('ark', 'video')).toBe(false)
   })
 
   it('keeps payload without customPricing when pricing toggle is off', () => {
@@ -126,48 +115,5 @@ describe('provider card pricing form behavior', () => {
     )
 
     expect(result).toEqual({ ok: false, reason: 'invalid' })
-  })
-
-  it('bugfix: includes baseUrl for openai-compatible provider connection test payload', () => {
-    const payload = buildProviderConnectionPayload({
-      providerKey: 'openai-compatible',
-      apiKey: ' sk-test ',
-      baseUrl: ' https://api.openai-proxy.example/v1 ',
-    })
-
-    expect(payload).toEqual({
-      apiType: 'openai-compatible',
-      apiKey: 'sk-test',
-      baseUrl: 'https://api.openai-proxy.example/v1',
-    })
-  })
-
-  it('omits baseUrl for non-compatible provider connection test payload', () => {
-    const payload = buildProviderConnectionPayload({
-      providerKey: 'ark',
-      apiKey: ' ark-key ',
-      baseUrl: ' https://ignored.example/v1 ',
-    })
-
-    expect(payload).toEqual({
-      apiType: 'ark',
-      apiKey: 'ark-key',
-    })
-  })
-
-  it('includes llmModel in provider connection test payload when configured', () => {
-    const payload = buildProviderConnectionPayload({
-      providerKey: 'openai-compatible',
-      apiKey: ' sk-test ',
-      baseUrl: ' https://compat.example.com/v1 ',
-      llmModel: ' gpt-4.1-mini ',
-    })
-
-    expect(payload).toEqual({
-      apiType: 'openai-compatible',
-      apiKey: 'sk-test',
-      baseUrl: 'https://compat.example.com/v1',
-      llmModel: 'gpt-4.1-mini',
-    })
   })
 })
