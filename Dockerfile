@@ -1,12 +1,15 @@
+# pin Node version for reproducible builds
+ARG NODE_VERSION=20.19.2
+
 # ==================== Stage 1: Dependencies ====================
-FROM node:20-alpine AS deps
+FROM node:${NODE_VERSION}-alpine AS deps
 WORKDIR /app
 
 COPY package.json package-lock.json ./
 RUN npm ci
 
 # ==================== Stage 2: Build ====================
-FROM node:20-alpine AS builder
+FROM node:${NODE_VERSION}-alpine AS builder
 WORKDIR /app
 
 COPY --from=deps /app/node_modules ./node_modules
@@ -16,7 +19,7 @@ COPY . .
 RUN npm run build
 
 # ==================== Stage 3: Production ====================
-FROM node:20-alpine AS runner
+FROM node:${NODE_VERSION}-alpine AS runner
 WORKDIR /app
 
 ENV NODE_ENV=production
