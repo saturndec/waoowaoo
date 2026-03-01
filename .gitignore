@@ -72,3 +72,4 @@ certificates
 
 # local temporary snapshots for old-version verification
 .tmp-old-snapshot-*/
+.ace-tool/

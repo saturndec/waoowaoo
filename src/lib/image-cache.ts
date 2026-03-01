@@ -202,7 +202,11 @@ export async function preloadImagesParallel(
  */
 function cleanupExpiredCache() {
     const before = imageCache.size
-    imageCache.purgeStale()
+    if (typeof imageCache.purgeStale === 'function') {
+        imageCache.purgeStale()
+    } else if (typeof (imageCache as unknown as { prune: () => void }).prune === 'function') {
+        (imageCache as unknown as { prune: () => void }).prune()
+    }
     const cleaned = before - imageCache.size
 
     if (cleaned > 0) {

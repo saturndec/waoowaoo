@@ -1,4 +1,11 @@
 import 'dotenv/config'
+import { setGlobalDispatcher, EnvHttpProxyAgent } from 'undici'
+
+// Enable HTTP_PROXY / HTTPS_PROXY for Node.js native fetch
+if (process.env.HTTPS_PROXY || process.env.HTTP_PROXY) {
+  setGlobalDispatcher(new EnvHttpProxyAgent())
+}
+
 import { logInfo as _ulogInfo, logError as _ulogError } from '@/lib/logging/core'
 import { createImageWorker } from './image.worker'
 import { createVideoWorker } from './video.worker'
