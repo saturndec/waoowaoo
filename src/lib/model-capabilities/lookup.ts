@@ -258,6 +258,13 @@ export function resolveGenerationOptionsForModel(input: {
   const defaults = pickSelectionForModel(input.capabilityDefaults, input.modelKey)
   const overrides = pickSelectionForModel(input.capabilityOverrides, input.modelKey)
   const runtime = input.runtimeSelections
+  const optionFields = getCapabilityOptionFields(input.modelType, input.capabilities)
+
+  // Models without *Options capability fields should not block generation.
+  // This keeps runtime/default selections harmless for non-configurable models.
+  if (Object.keys(optionFields).length === 0) {
+    return { options: {}, issues: [] }
+  }
 
   const selection = mergeSelectionRecords(defaults, overrides, runtime)
   const issues = validateCapabilitySelectionForModel({
@@ -272,7 +279,6 @@ export function resolveGenerationOptionsForModel(input: {
     return { options: {}, issues }
   }
 
-  const optionFields = getCapabilityOptionFields(input.modelType, input.capabilities)
   const options: Record<string, CapabilityValue> = {}
   for (const field of Object.keys(optionFields)) {
     const value = selection[field]

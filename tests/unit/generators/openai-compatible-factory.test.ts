@@ -2,10 +2,12 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 const getProviderConfigMock = vi.hoisted(() => vi.fn())
 const imagesGenerateMock = vi.hoisted(() => vi.fn())
+const imagesEditMock = vi.hoisted(() => vi.fn())
 const videosCreateMock = vi.hoisted(() => vi.fn())
 const openAIConstructorMock = vi.hoisted(() => vi.fn(() => ({
   images: {
     generate: imagesGenerateMock,
+    edit: imagesEditMock,
   },
   videos: {
     create: videosCreateMock,
@@ -95,6 +97,25 @@ describe('openai-compatible media generators via factory', () => {
     }))
 
     imagesGenerateMock.mockResolvedValueOnce({
+      data: [{ url: 'https://cdn.example.com/image-9-16.png' }],
+    })
+
+    const verticalRatioResult = await generator.generate({
+      userId: 'user-1',
+      prompt: 'draw a vertical poster',
+      options: { aspectRatio: '9:16' },
+    })
+
+    expect(verticalRatioResult.success).toBe(true)
+    expect(verticalRatioResult.imageUrl).toBe('https://cdn.example.com/image-9-16.png')
+    expect(imagesGenerateMock).toHaveBeenLastCalledWith(expect.objectContaining({
+      model: 'gpt-image-1',
+      prompt: 'draw a vertical poster',
+      size: '1024x1536',
+      response_format: 'b64_json',
+    }))
+
+    imagesGenerateMock.mockResolvedValueOnce({
       data: [{ b64_json: 'ZmFrZS1iYXNlNjQ=' }],
     })
 
@@ -106,6 +127,37 @@ describe('openai-compatible media generators via factory', () => {
     expect(base64Result.success).toBe(true)
     expect(base64Result.imageBase64).toBe('ZmFrZS1iYXNlNjQ=')
     expect(base64Result.imageUrl).toBe('data:image/png;base64,ZmFrZS1iYXNlNjQ=')
+  })
+
+  it('openai-compatible image generator should use edit endpoint when references exist', async () => {
+    const { OpenAICompatibleImageGenerator } = await import('@/lib/generators/openai-compatible')
+    const generator = new OpenAICompatibleImageGenerator('gpt-image-1', 'openai-compatible:custom')
+
+    imagesEditMock.mockResolvedValueOnce({
+      data: [{ url: 'https://cdn.example.com/image-edited.png' }],
+    })
+
+    const editedResult = await generator.generate({
+      userId: 'user-1',
+      prompt: 'edit the character pose',
+      referenceImages: ['/api/files/source-panel.png', 'https://cdn.example.com/reference.png'],
+      options: { aspectRatio: '4:3' },
+    })
+
+    expect(editedResult.success).toBe(true)
+    expect(editedResult.imageUrl).toBe('https://cdn.example.com/image-edited.png')
+    expect(imagesGenerateMock).not.toHaveBeenCalled()
+    expect(imagesEditMock).toHaveBeenCalledTimes(1)
+    expect(imagesEditMock).toHaveBeenLastCalledWith(expect.objectContaining({
+      model: 'gpt-image-1',
+      prompt: 'edit the character pose',
+      size: '1536x1024',
+      response_format: 'b64_json',
+      image: [
+        'http://localhost:3000/api/files/source-panel.png',
+        'https://cdn.example.com/reference.png',
+      ],
+    }))
   })
 
   it('openai-compatible video generator should parse html/url response', async () => {
