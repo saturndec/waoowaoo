@@ -1,5 +1,6 @@
 import { logInfo as _ulogInfo, logError as _ulogError } from '@/lib/logging/core'
 import Redis from 'ioredis'
+import type { ConnectionOptions } from 'bullmq'
 
 type RedisSingleton = {
   app?: Redis
@@ -64,6 +65,7 @@ if (!globalForRedis.__waoowaooRedis) {
 
 export const redis = singleton.app || (singleton.app = createAppRedis())
 export const queueRedis = singleton.queue || (singleton.queue = createQueueRedis())
+export const queueConnection = queueRedis as unknown as ConnectionOptions
 
 export function createSubscriber() {
   const client = new Redis({

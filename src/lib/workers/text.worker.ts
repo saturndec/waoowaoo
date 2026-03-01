@@ -1,6 +1,6 @@
 import { Worker, type Job } from 'bullmq'
 import { prisma } from '@/lib/prisma'
-import { queueRedis } from '@/lib/redis'
+import { queueConnection } from '@/lib/redis'
 import { executeAiTextStep } from '@/lib/ai-runtime'
 import { withInternalLLMStreamCallbacks, type InternalLLMStreamCallbacks } from '@/lib/llm-observe/internal-stream-context'
 import type { LLMStreamKind } from '@/lib/llm-observe/types'
@@ -659,7 +659,7 @@ export function createTextWorker() {
     QUEUE_NAME.TEXT,
     async (job) => await withTaskLifecycle(job, processTextTask),
     {
-      connection: queueRedis,
+      connection: queueConnection,
       concurrency: Number.parseInt(process.env.QUEUE_CONCURRENCY_TEXT || '10', 10) || 10,
     },
   )
