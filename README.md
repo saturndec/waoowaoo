@@ -1,4 +1,4 @@
-
+# **🚀 探索 AI 影视的下一代创作流 | [立即加入 waoowaoo在线网页版内测候补](https://www.waoowaoo.com/)**
 <p align="center">
   <img src="public/banner.png" alt="waoowaoo" width="600">
 </p>
