@@ -12,12 +12,91 @@ import { ART_STYLES, VIDEO_RATIOS } from '@/lib/constants'
 import TaskStatusInline from '@/components/task/TaskStatusInline'
 import { resolveTaskPresentationState } from '@/lib/task/presentation'
 import { AppIcon, RatioPreviewIcon } from '@/components/ui/icons'
+import type { Locale } from '@/i18n/routing'
+
+const LANGUAGE_OPTIONS: { value: Locale; label: string }[] = [
+  { value: 'zh', label: '简体中文' },
+  { value: 'en', label: 'English' },
+]
 
 /**
  * RatioIcon - 比例预览图标组件
  */
 function RatioIcon({ ratio, size = 24, selected = false }: { ratio: string; size?: number; selected?: boolean }) {
   return <RatioPreviewIcon ratio={ratio} size={size} selected={selected} />
+}
+
+/**
+ * LanguageSelector - 语言选择下拉组件
+ */
+function LanguageSelector({
+  value,
+  onChange,
+  options,
+  tLabel,
+}: {
+  value: string
+  onChange: (value: string) => void
+  options: { value: string; label: string }[]
+  tLabel: string
+}) {
+  const [isOpen, setIsOpen] = useState(false)
+  const dropdownRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setIsOpen(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [])
+
+  const selectedOption = options.find(o => o.value === value)
+
+  return (
+    <div className="relative" ref={dropdownRef}>
+      {/* 触发按钮 */}
+      <button
+        type="button"
+        onClick={() => setIsOpen(!isOpen)}
+        className="glass-input-base px-3 py-2.5 flex w-full items-center justify-between gap-2 cursor-pointer transition-colors"
+      >
+        <span className="text-sm text-[var(--glass-text-primary)] font-medium">{selectedOption?.label || tLabel}</span>
+        <AppIcon name="chevronDown" className={`w-4 h-4 text-[var(--glass-text-tertiary)] transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+      </button>
+
+      {/* 下拉面板 */}
+      {isOpen && (
+        <div className="glass-surface-modal absolute z-50 mt-1 left-0 right-0 p-2 max-h-48 overflow-y-auto custom-scrollbar">
+          <div className="flex flex-col gap-1">
+            {options.map((option) => (
+              <button
+                key={option.value}
+                type="button"
+                onClick={() => {
+                  onChange(option.value)
+                  setIsOpen(false)
+                }}
+                className={`flex items-center gap-2 p-2 rounded-lg hover:bg-[var(--glass-bg-muted)]/70 transition-colors ${
+                  value === option.value
+                    ? 'bg-[var(--glass-tone-info-bg)] shadow-[0_0_0_1px_rgba(79,128,255,0.35)]'
+                    : ''
+                }`}
+              >
+                <span className={`text-sm ${
+                  value === option.value ? 'text-[var(--glass-tone-info-fg)] font-medium' : 'text-[var(--glass-text-secondary)]'
+                }`}>
+                  {option.label}
+                </span>
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  )
 }
 
 /**
@@ -176,9 +255,11 @@ interface NovelInputStageProps {
   // 旁白开关
   enableNarration?: boolean
   onEnableNarrationChange?: (enabled: boolean) => void
-  // 配置项 - 比例与风格
+  // 配置项 - 语言、比例与风格
+  locale?: string
   videoRatio?: string
   artStyle?: string
+  onLocaleChange?: (value: string) => void
   onVideoRatioChange?: (value: string) => void
   onArtStyleChange?: (value: string) => void
 }
@@ -192,8 +273,10 @@ export default function NovelInputStage({
   isSwitchingStage = false,
   enableNarration = false,
   onEnableNarrationChange,
+  locale = 'zh',
   videoRatio = '9:16',
   artStyle = 'american-comic',
+  onLocaleChange,
   onVideoRatioChange,
   onArtStyleChange
 }: NovelInputStageProps) {
@@ -267,7 +350,18 @@ AI 将根据您的文本智能分析：
 
       {/* 画面比例与视觉风格配置 */}
       <div className="glass-surface p-6 relative z-10">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {/* 生成语言 */}
+          <div className="space-y-3">
+            <h3 className="text-sm font-semibold text-[var(--glass-text-muted)] tracking-[0.01em]">{t("storyInput.language")}</h3>
+            <LanguageSelector
+              value={locale}
+              onChange={(value) => onLocaleChange?.(value)}
+              options={LANGUAGE_OPTIONS}
+              tLabel="生成语言"
+            />
+          </div>
+
           {/* 画面比例 */}
           <div className="space-y-3">
             <h3 className="text-sm font-semibold text-[var(--glass-text-muted)] tracking-[0.01em]">{t("storyInput.videoRatio")}</h3>

@@ -15,8 +15,10 @@ export default function ConfigStage() {
       onNovelTextChange={runtime.onNovelTextChange}
       isSubmittingTask={runtime.isSubmittingTTS}
       isSwitchingStage={runtime.isTransitioning}
+      locale={runtime.locale}
       videoRatio={runtime.videoRatio ?? undefined}
       artStyle={runtime.artStyle ?? undefined}
+      onLocaleChange={runtime.onLocaleChange}
       onVideoRatioChange={runtime.onVideoRatioChange}
       onArtStyleChange={runtime.onArtStyleChange}
       onNext={runtime.onRunStoryToScript}

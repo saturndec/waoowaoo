@@ -11,6 +11,7 @@ interface UseWorkspaceStageRuntimeParams {
   isSubmittingTTS: boolean
   isTransitioning: boolean
   isConfirmingAssets: boolean
+  locale: string
   videoRatio: string | undefined
   artStyle: string | undefined
   videoModel: string | undefined
@@ -59,6 +60,7 @@ export function useWorkspaceStageRuntime({
   isSubmittingTTS,
   isTransitioning,
   isConfirmingAssets,
+  locale,
   videoRatio,
   artStyle,
   videoModel,
@@ -87,12 +89,14 @@ export function useWorkspaceStageRuntime({
     isSubmittingTTS,
     isTransitioning,
     isConfirmingAssets,
+    locale,
     videoRatio,
     artStyle,
     videoModel,
     capabilityOverrides,
     userVideoModels: resolvedUserVideoModels,
     onNovelTextChange: (value) => handleUpdateEpisode('novelText', value),
+    onLocaleChange: (value) => handleUpdateConfig('locale', value),
     onVideoRatioChange: (value) => handleUpdateConfig('videoRatio', value),
     onArtStyleChange: (value) => handleUpdateConfig('artStyle', value),
     onRunStoryToScript: () => runWithRebuildConfirm('storyToScript', runStoryToScriptFlow),
@@ -124,6 +128,7 @@ export function useWorkspaceStageRuntime({
     isConfirmingAssets,
     isSubmittingTTS,
     isTransitioning,
+    locale,
     openAssetLibrary,
     runScriptToStoryboardFlow,
     runStoryToScriptFlow,

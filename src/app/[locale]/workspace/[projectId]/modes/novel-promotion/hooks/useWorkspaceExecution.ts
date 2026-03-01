@@ -13,6 +13,7 @@ interface UseWorkspaceExecutionParams {
   episodeId?: string
   analysisModel?: string | null
   novelText: string
+  locale: string
   t: (key: string) => string
   onRefresh: (options?: { scope?: string; mode?: string }) => Promise<void>
   onUpdateConfig: (key: string, value: unknown) => Promise<void>
@@ -35,6 +36,7 @@ export function useWorkspaceExecution({
   episodeId,
   analysisModel,
   novelText,
+  locale,
   t,
   onRefresh,
   onUpdateConfig,
@@ -51,8 +53,8 @@ export function useWorkspaceExecution({
   const [storyToScriptConsoleMinimized, setStoryToScriptConsoleMinimized] = useState(false)
   const [scriptToStoryboardConsoleMinimized, setScriptToStoryboardConsoleMinimized] = useState(false)
 
-  const storyToScriptStream = useStoryToScriptRunStream({ projectId, episodeId })
-  const scriptToStoryboardStream = useScriptToStoryboardRunStream({ projectId, episodeId })
+  const storyToScriptStream = useStoryToScriptRunStream({ projectId, episodeId, locale })
+  const scriptToStoryboardStream = useScriptToStoryboardRunStream({ projectId, episodeId, locale })
 
   const handleGenerateTTS = useCallback(async () => {
     _ulogInfo('[NovelPromotionWorkspace] TTS is disabled, skip generate request')

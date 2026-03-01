@@ -268,7 +268,7 @@ export const PATCH = apiHandler(async (
 
   const allowedProjectFields = [
     'analysisModel', 'characterModel', 'locationModel', 'storyboardModel',
-    'editModel', 'videoModel', 'videoRatio', 'artStyle',
+    'editModel', 'videoModel', 'videoRatio', 'artStyle', 'locale',
     'ttsRate', 'lipSyncEnabled', 'lipSyncMode', 'capabilityOverrides',
   ] as const
 
@@ -299,7 +299,7 @@ export const PATCH = apiHandler(async (
   // 同步更新用户偏好配置（配置字段）
   const preferenceFields = [
     'analysisModel', 'characterModel', 'locationModel', 'storyboardModel',
-    'editModel', 'videoModel', 'videoRatio', 'artStyle', 'ttsRate',
+    'editModel', 'videoModel', 'videoRatio', 'artStyle', 'locale', 'ttsRate',
   ] as const
   const preferenceUpdate: Record<string, unknown> = {}
   for (const field of preferenceFields) {

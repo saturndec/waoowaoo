@@ -17,9 +17,10 @@ export type StoryToScriptRunResult = RunResult
 type UseStoryToScriptRunStreamOptions = {
   projectId: string
   episodeId?: string | null
+  locale: string
 }
 
-export function useStoryToScriptRunStream({ projectId, episodeId }: UseStoryToScriptRunStreamOptions) {
+export function useStoryToScriptRunStream({ projectId, episodeId, locale }: UseStoryToScriptRunStreamOptions) {
   return useRunStreamState<StoryToScriptRunParams>({
     projectId,
     endpoint: (pid) => `/api/novel-promotion/${pid}/story-to-script-stream`,
@@ -71,6 +72,10 @@ export function useStoryToScriptRunStream({ projectId, episodeId }: UseStoryToSc
       reasoningEffort: params.reasoningEffort,
       async: true,
       displayMode: 'detail',
+      locale,
+      meta: {
+        locale,
+      },
     }),
   })
 }

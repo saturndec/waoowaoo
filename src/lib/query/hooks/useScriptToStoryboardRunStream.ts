@@ -16,9 +16,10 @@ export type ScriptToStoryboardRunResult = RunResult
 type UseScriptToStoryboardRunStreamOptions = {
   projectId: string
   episodeId?: string | null
+  locale: string
 }
 
-export function useScriptToStoryboardRunStream({ projectId, episodeId }: UseScriptToStoryboardRunStreamOptions) {
+export function useScriptToStoryboardRunStream({ projectId, episodeId, locale }: UseScriptToStoryboardRunStreamOptions) {
   return useRunStreamState<ScriptToStoryboardRunParams>({
     projectId,
     endpoint: (pid) => `/api/novel-promotion/${pid}/script-to-storyboard-stream`,
@@ -66,6 +67,10 @@ export function useScriptToStoryboardRunStream({ projectId, episodeId }: UseScri
       reasoningEffort: params.reasoningEffort,
       async: true,
       displayMode: 'detail',
+      locale,
+      meta: {
+        locale,
+      },
     }),
   })
 }

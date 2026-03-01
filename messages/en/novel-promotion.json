@@ -97,6 +97,7 @@
       "title": "Need custom characters and locations?",
       "description": "Click the 「Asset Library」 button in the top right to upload asset setting documents or manually add characters/locations. AI will prioritize using settings from the asset library for analysis."
     },
+    "language": "Generation Language",
     "videoRatio": "Video Ratio",
     "visualStyle": "Visual Style",
     "moreConfig": "For more configuration options, click the 「 Settings」 button in the top right",

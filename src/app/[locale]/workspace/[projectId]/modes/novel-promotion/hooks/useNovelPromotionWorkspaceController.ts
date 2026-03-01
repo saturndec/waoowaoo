@@ -2,7 +2,7 @@
 
 import { logInfo as _ulogInfo } from '@/lib/logging/core'
 import { useEffect, useState } from 'react'
-import { useSearchParams, useRouter } from 'next/navigation'
+import { useSearchParams, useRouter, useParams } from 'next/navigation'
 import { useTranslations } from 'next-intl'
 import { resolveTaskPresentationState } from '@/lib/task/presentation'
 import { useWorkspaceProvider } from '../WorkspaceProvider'
@@ -33,7 +33,10 @@ export function useNovelPromotionWorkspaceController({
 
   const searchParams = useSearchParams()
   const router = useRouter()
+  const params = useParams<{ locale?: string }>()
   const { onRefresh } = useWorkspaceProvider()
+
+  const locale = params?.locale ?? 'zh'
 
   const projectSnapshot = useWorkspaceProjectSnapshot({ project, episode, urlStage })
   const { currentStage, episodeStoryboards, ...projectSection } = projectSnapshot
@@ -94,6 +97,7 @@ export function useNovelPromotionWorkspaceController({
     episodeId,
     analysisModel: projectSnapshot.analysisModel,
     novelText: projectSnapshot.novelText,
+    locale,
     t,
     onRefresh,
     onUpdateConfig: configActions.handleUpdateConfig,
@@ -128,6 +132,7 @@ export function useNovelPromotionWorkspaceController({
     isSubmittingTTS: execution.isSubmittingTTS,
     isTransitioning: execution.isTransitioning,
     isConfirmingAssets: execution.isConfirmingAssets,
+    locale,
     videoRatio: projectSnapshot.videoRatio,
     artStyle: projectSnapshot.artStyle,
     videoModel: projectSnapshot.videoModel,

@@ -3,6 +3,7 @@ import { requireProjectAuth, isErrorResponse } from '@/lib/api-auth'
 import { apiHandler, ApiError } from '@/lib/api-errors'
 import { TASK_TYPE } from '@/lib/task/types'
 import { maybeSubmitLLMTask } from '@/lib/llm-observe/route-task'
+import { resolveTaskLocale } from '@/lib/task/resolve-locale'
 
 export const runtime = 'nodejs'
 
@@ -14,6 +15,10 @@ export const POST = apiHandler(async (
   const body = await request.json().catch(() => ({}))
   const episodeId = typeof body?.episodeId === 'string' ? body.episodeId.trim() : ''
   const content = typeof body?.content === 'string' ? body.content.trim() : ''
+
+  // 🌐 记录当前传递的语言
+  const locale = resolveTaskLocale(request, body)
+  console.log(`[story-to-script] locale: ${locale || 'zh (default)'}`)
 
   if (!episodeId) {
     throw new ApiError('INVALID_PARAMS')

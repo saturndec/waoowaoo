@@ -7,6 +7,7 @@ import {
   requestJsonWithError,
   requestTaskResponseWithError,
 } from './mutation-shared'
+import { getPageLocale } from './mutation-shared'
 
 export function useAnalyzeProjectGlobalAssets(projectId: string) {
     const queryClient = useQueryClient()
@@ -19,7 +20,7 @@ export function useAnalyzeProjectGlobalAssets(projectId: string) {
                 `/api/novel-promotion/${projectId}/analyze-global`,
                 {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: { 'Content-Type': 'application/json', 'Accept-Language': getPageLocale() },
                     body: JSON.stringify({ async: true }),
                 },
                 'Failed to analyze global assets',
@@ -119,7 +120,7 @@ export function useAnalyzeProjectAssets(projectId: string) {
                 `/api/novel-promotion/${projectId}/analyze`,
                 {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: { 'Content-Type': 'application/json', 'Accept-Language': getPageLocale() },
                     body: JSON.stringify({ episodeId, async: true }),
                 },
                 'Failed to analyze assets',

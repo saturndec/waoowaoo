@@ -19,12 +19,14 @@ export interface WorkspaceStageRuntimeValue {
   isSubmittingTTS: boolean
   isTransitioning: boolean
   isConfirmingAssets: boolean
+  locale: string
   videoRatio: string | null | undefined
   artStyle: string | null | undefined
   videoModel: string | null | undefined
   capabilityOverrides: CapabilitySelections
   userVideoModels: WorkspaceStageVideoModelOption[]
   onNovelTextChange: (value: string) => Promise<void>
+  onLocaleChange: (value: string) => Promise<void>
   onVideoRatioChange: (value: string) => Promise<void>
   onArtStyleChange: (value: string) => Promise<void>
   onRunStoryToScript: () => Promise<void>
