@@ -90,6 +90,33 @@ docker compose down && docker compose up -d --build
 
 ---
 
+## ☁️ Zeabur 部署（模板） / Deploy on Zeabur (Template in Code)
+
+本仓库提供 `zeabur.yaml`（Template in Code），可在 Zeabur 一键拉起 **MySQL + Redis + App**。
+
+部署（不需要模板码）：
+
+```bash
+npx zeabur@latest template deploy -f zeabur.yaml
+```
+
+可选：如果你想生成 “Deploy on Zeabur” 按钮链接（本次不实际创建）：
+
+```bash
+npx zeabur@latest template create -f zeabur.yaml
+```
+
+命令输出会包含模板页面地址（形如 `https://zeabur.com/templates/<code>`），你可以自行把按钮加到 README。
+
+部署后：
+
+- 打开你的站点 URL
+- 注册：`/auth/signup`
+- 登录：`/auth/signin`
+- API Key 配置：`/profile`
+
+---
+
 ## 🔧 API 配置 / API Configuration
 
 启动后进入**设置中心**配置 AI 服务的 API Key，内置配置教程。

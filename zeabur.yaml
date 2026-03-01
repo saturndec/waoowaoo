@@ -1,0 +1,220 @@
+# yaml-language-server: $schema=https://schema.zeabur.app/template.json
+apiVersion: zeabur.com/v1
+kind: Template
+metadata:
+  name: waoowaoo
+spec:
+  description: Next.js + MySQL + Redis (BullMQ) short drama / comic video studio
+  tags:
+    - Next.js
+    - MySQL
+    - Redis
+    - BullMQ
+  variables:
+    - key: APP_DOMAIN
+      type: DOMAIN
+      name: App Domain
+      description: Public domain for the web app (used for NEXTAUTH_URL)
+  readme: |-
+    # waoowaoo (Zeabur)
+
+    ## After deployment
+    - Web: `/`
+    - Sign up: `/auth/signup`
+    - Sign in: `/auth/signin`
+    - Profile (API keys): `/profile`
+
+    ## Persistence
+    - Uploads/data: `/app/data`
+    - Logs: `/app/logs`
+
+    ## Notes
+    - Bull Board runs on port 3010 and is protected with Basic Auth (`BULL_BOARD_USER` / `BULL_BOARD_PASSWORD`).
+  services:
+    - name: mysql
+      template: PREBUILT
+      spec:
+        source:
+          image: mysql:8.0
+        ports:
+          - id: database
+            port: 3306
+            type: TCP
+        volumes:
+          - id: data
+            dir: /var/lib/mysql
+        instructions:
+          - title: Command to connect to your MySQL
+            content: mysqlsh --sql --host=${PORT_FORWARDED_HOSTNAME} --port=${DATABASE_PORT_FORWARDED_PORT} --user=${MYSQL_USERNAME} --password=${MYSQL_PASSWORD} --schema=${MYSQL_DATABASE}
+          - title: MySQL username
+            content: ${MYSQL_USERNAME}
+          - title: MySQL password
+            content: ${MYSQL_PASSWORD}
+          - title: MySQL database
+            content: ${MYSQL_DATABASE}
+          - title: MySQL host
+            content: ${PORT_FORWARDED_HOSTNAME}
+          - title: MySQL port
+            content: ${DATABASE_PORT_FORWARDED_PORT}
+        env:
+          MYSQL_DATABASE:
+            default: waoowaoo
+            expose: true
+          MYSQL_HOST:
+            default: ${CONTAINER_HOSTNAME}
+            expose: true
+          MYSQL_PORT:
+            default: ${DATABASE_PORT}
+            expose: true
+          MYSQL_USERNAME:
+            default: root
+            expose: true
+          MYSQL_ROOT_PASSWORD:
+            default: ${PASSWORD}
+          MYSQL_PASSWORD:
+            default: ${MYSQL_ROOT_PASSWORD}
+            expose: true
+          MYSQL_ROOT_HOST:
+            default: "%"
+        configs:
+          - path: /etc/my.cnf
+            template: |
+              [mysqld]
+              default-authentication-plugin=mysql_native_password
+              host-cache-size=0
+              skip-name-resolve
+              datadir=/var/lib/mysql
+              socket=/var/run/mysqld/mysqld.sock
+              secure-file-priv=/var/lib/mysql-files
+              user=mysql
+              max_allowed_packet=10M
+              performance_schema=off
+
+              pid-file=/var/run/mysqld/mysqld.pid
+              [client]
+              socket=/var/run/mysqld/mysqld.sock
+
+              !includedir /etc/mysql/conf.d/
+            permission: null
+            envsubst: null
+
+    - name: redis
+      template: PREBUILT
+      spec:
+        source:
+          image: redis/redis-stack-server:latest
+        ports:
+          - id: database
+            port: 6379
+            type: TCP
+        volumes:
+          - id: data
+            dir: /data
+        instructions:
+          - title: Command to connect to your Redis
+            content: redis-cli -h ${PORT_FORWARDED_HOSTNAME} -p ${DATABASE_PORT_FORWARDED_PORT} -a ${REDIS_PASSWORD}
+          - title: Redis Connection String
+            content: redis://:${REDIS_PASSWORD}@${PORT_FORWARDED_HOSTNAME}:${DATABASE_PORT_FORWARDED_PORT}
+          - title: Redis password
+            content: ${REDIS_PASSWORD}
+          - title: Redis host
+            content: ${PORT_FORWARDED_HOSTNAME}
+          - title: Redis port
+            content: ${DATABASE_PORT_FORWARDED_PORT}
+        env:
+          CONFFILE:
+            default: /etc/redis-stack.conf
+          REDIS_ARGS:
+            default: --requirepass ${REDIS_PASSWORD}
+          REDIS_CONNECTION_STRING:
+            default: redis://:${REDIS_PASSWORD}@${REDIS_HOST}:${REDIS_PORT}
+            expose: true
+          REDIS_HOST:
+            default: ${CONTAINER_HOSTNAME}
+            expose: true
+          REDIS_PASSWORD:
+            default: ${PASSWORD}
+            expose: true
+          REDIS_PORT:
+            default: ${DATABASE_PORT}
+            expose: true
+        configs:
+          - path: /etc/redis-stack.conf
+            template: |
+              port 6379
+              daemonize no
+            permission: null
+            envsubst: null
+
+    - name: app
+      template: GIT
+      dependencies:
+        - mysql
+        - redis
+      domainKey: APP_DOMAIN
+      spec:
+        source:
+          source: GITHUB
+          repo: 1169175033
+          branch: main
+          rootDirectory: /
+        ports:
+          - id: web
+            port: 3000
+            type: HTTP
+        volumes:
+          - id: data
+            dir: /app/data
+          - id: logs
+            dir: /app/logs
+        env:
+          PORT:
+            default: "3000"
+          NEXTAUTH_URL:
+            default: https://${APP_DOMAIN}
+          NEXTAUTH_SECRET:
+            default: ${PASSWORD}
+          INTERNAL_TASK_TOKEN:
+            default: ${PASSWORD}
+          API_ENCRYPTION_KEY:
+            default: ${PASSWORD}
+          STORAGE_TYPE:
+            default: local
+          DATABASE_URL:
+            default: mysql://${MYSQL_USERNAME}:${MYSQL_PASSWORD}@${MYSQL_HOST}:${MYSQL_PORT}/${MYSQL_DATABASE}
+          REDIS_HOST:
+            default: ${REDIS_HOST}
+          REDIS_PORT:
+            default: ${REDIS_PORT}
+          REDIS_USERNAME:
+            default: ""
+          REDIS_PASSWORD:
+            default: ${REDIS_PASSWORD}
+          REDIS_TLS:
+            default: "false"
+          BULL_BOARD_HOST:
+            default: 0.0.0.0
+          BULL_BOARD_PORT:
+            default: "3010"
+          BULL_BOARD_BASE_PATH:
+            default: /admin/queues
+          BULL_BOARD_USER:
+            default: admin
+          BULL_BOARD_PASSWORD:
+            default: ${PASSWORD}
+        init:
+          - id: prisma-db-push
+            command:
+              - sh
+              - -c
+              - npx prisma db push --skip-generate
+            volumes:
+              - id: data
+                mountPath: /app/data
+              - id: logs
+                mountPath: /app/logs
+        healthCheck:
+          type: HTTP
+          port: web
+          http:
+            path: /

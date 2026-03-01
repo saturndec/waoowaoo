@@ -1,0 +1,63 @@
+name: Sync Upstream Main
+
+on:
+  schedule:
+    - cron: "0 0 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  sync-main:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout fork main
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+          token: ${{ github.token }}
+
+      - name: Configure git identity
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+      - name: Sync with upstream main
+        env:
+          UPSTREAM_REPO: waoowaooAI/waoowaoo
+        run: |
+          set -euo pipefail
+
+          if git remote get-url upstream >/dev/null 2>&1; then
+            git remote set-url upstream "https://github.com/${UPSTREAM_REPO}.git"
+          else
+            git remote add upstream "https://github.com/${UPSTREAM_REPO}.git"
+          fi
+
+          git fetch upstream main --prune
+
+          local_sha="$(git rev-parse HEAD)"
+          upstream_sha="$(git rev-parse upstream/main)"
+
+          git checkout main
+          git reset --hard upstream/main
+          after_sha="$(git rev-parse HEAD)"
+
+          git push origin main --force
+
+          {
+            echo "## Upstream Sync Result"
+            echo ""
+            echo "- Local before: \`${local_sha}\`"
+            echo "- Upstream target: \`${upstream_sha}\`"
+            echo "- Local after: \`${after_sha}\`"
+            echo ""
+            if [ "${local_sha}" = "${upstream_sha}" ]; then
+              echo "No-op: fork/main was already in sync with upstream/main."
+            else
+              echo "Updated: fork/main was force-synced to upstream/main."
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"
