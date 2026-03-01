@@ -32,6 +32,21 @@ function readLocaleFromPayload(body?: unknown): Locale | null {
 }
 
 function readLocaleFromHeader(request: NextRequest): Locale | null {
+  // 优先读取前端显式传递的自定义头
+  const appLocale = request.headers.get('x-app-locale') || ''
+  if (appLocale) {
+    const resolved = normalizeCandidate(appLocale)
+    if (resolved) return resolved
+  }
+
+  // 读取 next-intl 设置的 NEXT_LOCALE cookie（跟随用户在网站上选择的语言）
+  const cookieLocale = request.cookies.get('NEXT_LOCALE')?.value || ''
+  if (cookieLocale) {
+    const resolved = normalizeCandidate(cookieLocale)
+    if (resolved) return resolved
+  }
+
+  // 最后 fallback 到浏览器 Accept-Language
   const raw = request.headers.get('accept-language') || ''
   if (!raw) return null
   const first = raw.split(',')[0]?.trim() || ''

@@ -19,7 +19,7 @@ export function useRegenerateProjectPanelImage(projectId: string) {
         mutationFn: async ({ panelId, count }: { panelId: string; count?: number }) => {
             const res = await fetch(`/api/novel-promotion/${projectId}/regenerate-panel-image`, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json', 'Accept-Language': getPageLocale() },
+                headers: { 'Content-Type': 'application/json', 'X-App-Locale': getPageLocale() },
                 body: JSON.stringify({ panelId, count: count ?? 1 }),
             })
             if (!res.ok) {
@@ -98,7 +98,7 @@ export function useDownloadProjectImages(projectId: string) {
     return useMutation({
         mutationFn: async ({ episodeId }: { episodeId: string }) => {
             const response = await fetch(`/api/novel-promotion/${projectId}/download-images?episodeId=${episodeId}`, {
-                headers: { 'Accept-Language': getPageLocale() },
+                headers: { 'X-App-Locale': getPageLocale() },
             })
             if (!response.ok) {
                 const error = await response.json().catch(() => ({}))

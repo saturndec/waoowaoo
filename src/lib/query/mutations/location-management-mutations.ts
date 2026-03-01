@@ -112,7 +112,7 @@ export function useUpdateProjectLocationName(projectId: string) {
             try {
                 await fetch(`/api/novel-promotion/${projectId}/update-asset-label`, {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json', 'Accept-Language': getPageLocale() },
+                    headers: { 'Content-Type': 'application/json', 'X-App-Locale': getPageLocale() },
                     body: JSON.stringify({
                         type: 'location',
                         id: locationId,
@@ -283,7 +283,7 @@ export function useBatchGenerateLocationImages(projectId: string) {
                 locationIds.map(locationId =>
                     fetch(`/api/novel-promotion/${projectId}/generate-image`, {
                         method: 'POST',
-                        headers: { 'Content-Type': 'application/json', 'Accept-Language': getPageLocale() },
+                        headers: { 'Content-Type': 'application/json', 'X-App-Locale': getPageLocale() },
                         body: JSON.stringify({
                             type: 'location',
                             id: locationId

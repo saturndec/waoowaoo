@@ -188,7 +188,7 @@ export function useBatchGenerateCharacterImages(projectId: string) {
                 items.map(item =>
                     fetch(`/api/novel-promotion/${projectId}/generate-image`, {
                         method: 'POST',
-                        headers: { 'Content-Type': 'application/json', 'Accept-Language': getPageLocale() },
+                        headers: { 'Content-Type': 'application/json', 'X-App-Locale': getPageLocale() },
                         body: JSON.stringify({
                             type: 'character',
                             id: item.characterId,

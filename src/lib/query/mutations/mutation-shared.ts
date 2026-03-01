@@ -8,12 +8,12 @@ export function getPageLocale(): string {
   return match?.[1] ?? 'zh'
 }
 
-/** 将 Accept-Language 注入到 RequestInit，已有则不覆盖 */
+/** 将 X-App-Locale 注入到 RequestInit，已有则不覆盖 */
 function mergeLocaleHeader(init?: RequestInit): RequestInit {
   const locale = getPageLocale()
   const headers = new Headers(init?.headers)
-  if (!headers.has('Accept-Language')) {
-    headers.set('Accept-Language', locale)
+  if (!headers.has('X-App-Locale')) {
+    headers.set('X-App-Locale', locale)
   }
   return { ...init, headers }
 }

@@ -368,7 +368,7 @@ export function useUpdateProjectCharacterName(projectId: string) {
             try {
                 await fetch(`/api/novel-promotion/${projectId}/update-asset-label`, {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json', 'Accept-Language': getPageLocale() },
+                    headers: { 'Content-Type': 'application/json', 'X-App-Locale': getPageLocale() },
                     body: JSON.stringify({
                         type: 'character',
                         id: characterId,

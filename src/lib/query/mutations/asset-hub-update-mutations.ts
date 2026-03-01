@@ -26,7 +26,7 @@ export function useUpdateCharacterName() {
       try {
         await fetch('/api/asset-hub/update-asset-label', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json', 'Accept-Language': getPageLocale() },
+          headers: { 'Content-Type': 'application/json', 'X-App-Locale': getPageLocale() },
           body: JSON.stringify({ type: 'character', id: characterId, newName: name }),
         })
       } catch (e) {
@@ -55,7 +55,7 @@ export function useUpdateLocationName() {
       try {
         await fetch('/api/asset-hub/update-asset-label', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json', 'Accept-Language': getPageLocale() },
+          headers: { 'Content-Type': 'application/json', 'X-App-Locale': getPageLocale() },
           body: JSON.stringify({ type: 'location', id: locationId, newName: name }),
         })
       } catch (e) {
