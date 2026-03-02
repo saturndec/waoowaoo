@@ -13,9 +13,17 @@ interface EnabledModelOption extends CustomModel {
   providerName: string
 }
 
+type EnabledModelType = 'llm' | 'image' | 'video' | 'audio' | 'lipsync'
+
+interface ApiConfigFilterState {
+  modelProviders: Provider[]
+  audioProviders: Provider[]
+  enabledModelsByType: Record<EnabledModelType, EnabledModelOption[]>
+}
+
 const DYNAMIC_PROVIDER_PREFIXES = ['gemini-compatible', 'openai-compatible']
 const ALWAYS_SHOW_PROVIDERS: string[] = []
-const MODEL_TYPES: Array<'llm' | 'image' | 'video' | 'lipsync'> = ['llm', 'image', 'video', 'lipsync']
+const MODEL_TYPES: EnabledModelType[] = ['llm', 'image', 'video', 'audio', 'lipsync']
 const MODEL_PROVIDER_KEYS = [
   'ark',
   'google',
@@ -23,13 +31,14 @@ const MODEL_PROVIDER_KEYS = [
   'minimax',
   'vidu',
   'fal',
+  'qwen',
   'gemini-compatible',
   'openai-compatible',
 ]
 const AUDIO_PROVIDER_KEYS = ['qwen']
 
-function isModelProviderType(type: CustomModel['type']): type is 'llm' | 'image' | 'video' | 'lipsync' {
-  return MODEL_TYPES.includes(type as 'llm' | 'image' | 'video' | 'lipsync')
+function isModelProviderType(type: CustomModel['type']): type is EnabledModelType {
+  return MODEL_TYPES.includes(type as EnabledModelType)
 }
 
 function hasProviderApiKey(provider: Provider | undefined): boolean {
@@ -39,89 +48,97 @@ function hasProviderApiKey(provider: Provider | undefined): boolean {
   return apiKey.length > 0
 }
 
-export function useApiConfigFilters({
+function isPresetProvider(providerId: string) {
+  return PRESET_PROVIDERS.some(
+    (provider) => provider.id === getProviderKey(providerId),
+  )
+}
+
+function createEmptyEnabledModelsByType(): Record<EnabledModelType, EnabledModelOption[]> {
+  return {
+    llm: [],
+    image: [],
+    video: [],
+    audio: [],
+    lipsync: [],
+  }
+}
+
+export function buildApiConfigFilterState({
   providers,
   models,
-}: UseApiConfigFiltersParams) {
-  const modelProviderKeys = useMemo(() => {
-    const keys = new Set<string>(MODEL_PROVIDER_KEYS)
-    models.forEach((model) => {
-      if (!isModelProviderType(model.type)) return
-      keys.add(getProviderKey(model.provider))
-    })
-    return keys
-  }, [models])
-  const audioProviderKeys = useMemo(() => {
-    const keys = new Set<string>(AUDIO_PROVIDER_KEYS)
-    models.forEach((model) => {
-      if (model.type !== 'audio') return
-      keys.add(getProviderKey(model.provider))
-    })
-    return keys
-  }, [models])
+}: UseApiConfigFiltersParams): ApiConfigFilterState {
+  const modelProviderKeys = new Set<string>(MODEL_PROVIDER_KEYS)
+  models.forEach((model) => {
+    if (!isModelProviderType(model.type)) return
+    modelProviderKeys.add(getProviderKey(model.provider))
+  })
 
-  const isPresetProvider = (providerId: string) => {
-    return PRESET_PROVIDERS.some(
-      (provider) => provider.id === getProviderKey(providerId),
+  const audioProviderKeys = new Set<string>(AUDIO_PROVIDER_KEYS)
+  models.forEach((model) => {
+    if (model.type !== 'audio') return
+    audioProviderKeys.add(getProviderKey(model.provider))
+  })
+
+  const modelProviders = providers.filter((provider) => {
+    const providerKey = getProviderKey(provider.id)
+    const isCustomProvider = !isPresetProvider(provider.id)
+    const isDynamicProvider =
+      DYNAMIC_PROVIDER_PREFIXES.includes(providerKey) && provider.id.includes(':')
+
+    return (
+      (isCustomProvider && modelProviderKeys.has(providerKey)) ||
+      modelProviderKeys.has(providerKey) ||
+      ALWAYS_SHOW_PROVIDERS.includes(providerKey) ||
+      isDynamicProvider
     )
-  }
+  })
+  const modelProviderIds = new Set(modelProviders.map((provider) => provider.id))
 
-  const modelProviders = useMemo(() => {
-    return providers.filter((provider) => {
-      const providerKey = getProviderKey(provider.id)
-      const isCustomProvider = !isPresetProvider(provider.id)
-      const isDynamicProvider =
-        DYNAMIC_PROVIDER_PREFIXES.includes(providerKey) && provider.id.includes(':')
+  const audioProviders = providers.filter((provider) => {
+    const providerKey = getProviderKey(provider.id)
+    if (providerKey === 'fal') return false
+    if (!audioProviderKeys.has(providerKey)) return false
+    // 避免与主提供商卡片重复展示（例如 qwen）
+    return !modelProviderIds.has(provider.id)
+  })
 
-      return (
-        (isCustomProvider && modelProviderKeys.has(providerKey)) ||
-        modelProviderKeys.has(providerKey) ||
-        ALWAYS_SHOW_PROVIDERS.includes(providerKey) ||
-        isDynamicProvider
-      )
+  const enabledModelsByType = createEmptyEnabledModelsByType()
+  const providersById = new Map(providers.map((provider) => [provider.id, provider] as const))
+
+  for (const model of models) {
+    if (!model.enabled) continue
+    if (!isModelProviderType(model.type)) continue
+    const provider = providersById.get(model.provider)
+    if (!hasProviderApiKey(provider)) continue
+
+    enabledModelsByType[model.type].push({
+      ...model,
+      providerName: provider?.name || model.provider,
     })
-  }, [modelProviderKeys, providers])
-
-  const audioProviders = useMemo(
-    () =>
-      providers.filter((provider) => {
-        const providerKey = getProviderKey(provider.id)
-        if (providerKey === 'fal') return false
-        return audioProviderKeys.has(providerKey)
-      }),
-    [audioProviderKeys, providers],
-  )
-
-  const enabledModelsByType = useMemo(() => {
-    const grouped: Record<'llm' | 'image' | 'video' | 'lipsync', EnabledModelOption[]> = {
-      llm: [],
-      image: [],
-      video: [],
-      lipsync: [],
-    }
-
-    const providersById = new Map(providers.map((provider) => [provider.id, provider] as const))
-
-    for (const model of models) {
-      if (!model.enabled) continue
-      if (!isModelProviderType(model.type)) continue
-      const provider = providersById.get(model.provider)
-      if (!hasProviderApiKey(provider)) continue
-
-      grouped[model.type].push({
-        ...model,
-        providerName: provider?.name || model.provider,
-      })
-    }
-
-    return grouped
-  }, [models, providers])
+  }
 
   return {
     modelProviders,
     audioProviders,
+    enabledModelsByType,
+  }
+}
+
+export function useApiConfigFilters({
+  providers,
+  models,
+}: UseApiConfigFiltersParams) {
+  const filterState = useMemo(
+    () => buildApiConfigFilterState({ providers, models }),
+    [models, providers],
+  )
+
+  return {
+    modelProviders: filterState.modelProviders,
+    audioProviders: filterState.audioProviders,
     getModelsForProvider: (providerId: string) =>
       models.filter((model) => model.provider === providerId),
-    getEnabledModelsByType: (type: 'llm' | 'image' | 'video' | 'lipsync') => enabledModelsByType[type],
+    getEnabledModelsByType: (type: EnabledModelType) => filterState.enabledModelsByType[type],
   }
 }

@@ -12,6 +12,8 @@ export interface VoiceDesignInput {
     voicePrompt: string
     /** 预览文本，用于生成预览音频 */
     previewText: string
+    /** 目标 TTS 模型，必须与后续合成保持一致 */
+    targetModel: string
     /** 可选的声音名称 */
     preferredName?: string
     /** 语言，默认 zh */
@@ -52,12 +54,19 @@ export async function createVoiceDesign(input: VoiceDesignInput, apiKey: string)
             error: '请配置阿里百炼 API Key'
         }
     }
+    if (!input.targetModel || !input.targetModel.trim()) {
+        return {
+            success: false,
+            error: '缺少目标语音模型（targetModel）'
+        }
+    }
+    const targetModel = input.targetModel.trim()
 
     const requestBody = {
         model: 'qwen-voice-design',
         input: {
             action: 'create',
-            target_model: 'qwen3-tts-vd-realtime-2025-12-16',
+            target_model: targetModel,
             voice_prompt: input.voicePrompt,
             preview_text: input.previewText,
             preferred_name: input.preferredName || 'custom_voice',

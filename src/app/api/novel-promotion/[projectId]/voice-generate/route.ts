@@ -19,16 +19,26 @@ type VoiceLineRow = {
 
 type CharacterRow = {
   name: string
+  voiceId: string | null
   customVoiceUrl: string | null
 }
 
+type SpeakerVoiceConfig = {
+  audioUrl?: string | null
+  voiceId?: string | null
+}
+
 function parseSpeakerVoices(raw: string | null | undefined) {
-  if (!raw) return {} as Record<string, { audioUrl?: string | null }>
-  const parsed = JSON.parse(raw)
-  if (!parsed || typeof parsed !== 'object') {
+  if (!raw) return {} as Record<string, SpeakerVoiceConfig>
+  try {
+    const parsed = JSON.parse(raw)
+    if (!parsed || typeof parsed !== 'object') {
+      throw new ApiError('INVALID_PARAMS')
+    }
+    return parsed as Record<string, SpeakerVoiceConfig>
+  } catch {
     throw new ApiError('INVALID_PARAMS')
   }
-  return parsed as Record<string, { audioUrl?: string | null }>
 }
 
 function matchCharacterBySpeaker(speaker: string, characters: CharacterRow[]) {
@@ -36,14 +46,15 @@ function matchCharacterBySpeaker(speaker: string, characters: CharacterRow[]) {
   return characters.find((character) => character.name.trim().toLowerCase() === normalizedSpeaker) || null
 }
 
-function getSpeakerVoiceUrl(
+function hasSpeakerVoiceBinding(
   speaker: string,
   characters: CharacterRow[],
-  speakerVoices: Record<string, { audioUrl?: string | null }>,
+  speakerVoices: Record<string, SpeakerVoiceConfig>,
 ) {
   const character = matchCharacterBySpeaker(speaker, characters)
-  if (character?.customVoiceUrl) return character.customVoiceUrl
-  return speakerVoices[speaker]?.audioUrl || null
+  if (character?.voiceId || character?.customVoiceUrl) return true
+  const speakerVoice = speakerVoices[speaker]
+  return !!speakerVoice?.voiceId || !!speakerVoice?.audioUrl
 }
 
 export const POST = apiHandler(async (
@@ -82,6 +93,7 @@ export const POST = apiHandler(async (
       characters: {
         select: {
           name: true,
+          voiceId: true,
           customVoiceUrl: true}}}})
   if (!projectData) {
     throw new ApiError('NOT_FOUND')
@@ -112,7 +124,7 @@ export const POST = apiHandler(async (
         id: true,
         speaker: true,
         content: true}})
-    voiceLines = allLines.filter((line) => !!getSpeakerVoiceUrl(line.speaker, characters, speakerVoices))
+    voiceLines = allLines.filter((line) => hasSpeakerVoiceBinding(line.speaker, characters, speakerVoices))
   } else {
     const line = await prisma.novelPromotionVoiceLine.findFirst({
       where: {
@@ -125,7 +137,7 @@ export const POST = apiHandler(async (
     if (!line) {
       throw new ApiError('NOT_FOUND')
     }
-    if (!getSpeakerVoiceUrl(line.speaker, characters, speakerVoices)) {
+    if (!hasSpeakerVoiceBinding(line.speaker, characters, speakerVoices)) {
       throw new ApiError('INVALID_PARAMS')
     }
     voiceLines = [line]

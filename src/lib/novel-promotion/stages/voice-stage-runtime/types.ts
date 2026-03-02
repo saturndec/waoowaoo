@@ -17,6 +17,7 @@ export interface VoiceLine {
 export interface Character {
   id: string
   name: string
+  voiceId?: string | null
   customVoiceUrl?: string | null
 }
 

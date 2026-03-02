@@ -112,8 +112,9 @@ export const PRESET_MODELS: PresetModel[] = [
     { modelId: 'fal-ai/kling-video/v3/standard/image-to-video', name: 'Kling 3 Standard', type: 'video', provider: 'fal' },
     { modelId: 'fal-ai/kling-video/v3/pro/image-to-video', name: 'Kling 3 Pro', type: 'video', provider: 'fal' },
 
-    // 音频模型
-    { modelId: 'fal-ai/index-tts-2/text-to-speech', name: 'IndexTTS 2', type: 'audio', provider: 'fal' },
+    // 音频模型（Qwen）
+    { modelId: 'qwen3-tts-vd-realtime-2026-01-15', name: 'Qwen3 TTS VD Realtime', type: 'audio', provider: 'qwen' },
+    { modelId: 'qwen3-tts-vc-realtime-2026-01-15', name: 'Qwen3 TTS VC Realtime', type: 'audio', provider: 'qwen' },
     // 口型同步模型
     { modelId: 'fal-ai/kling-video/lipsync/audio-to-video', name: 'Kling Lip Sync', type: 'lipsync', provider: 'fal' },
     { modelId: 'vidu-lipsync', name: 'Vidu Lip Sync', type: 'lipsync', provider: 'vidu' },

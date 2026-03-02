@@ -1,9 +1,10 @@
 import type { Job } from 'bullmq'
 import { createVoiceDesign, validatePreviewText, validateVoicePrompt, type VoiceDesignInput } from '@/lib/qwen-voice-design'
-import { getProviderConfig } from '@/lib/api-config'
+import { getProviderConfig, getProviderKey, resolveModelSelectionOrSingle } from '@/lib/api-config'
 import { reportTaskProgress } from '@/lib/workers/shared'
 import { assertTaskActive } from '@/lib/workers/utils'
 import { TASK_TYPE, type TaskJobData } from '@/lib/task/types'
+import { encodeQwenVoiceIdWithModel } from '@/lib/voice/qwen-voice-id'
 
 function readRequiredString(value: unknown, field: string): string {
   if (typeof value !== 'string' || !value.trim()) {
@@ -16,10 +17,17 @@ function readLanguage(value: unknown): 'zh' | 'en' {
   return value === 'en' ? 'en' : 'zh'
 }
 
+function readOptionalModelKey(value: unknown): string | undefined {
+  if (typeof value !== 'string') return undefined
+  const trimmed = value.trim()
+  return trimmed || undefined
+}
+
 export async function handleVoiceDesignTask(job: Job<TaskJobData>) {
   const payload = (job.data.payload || {}) as Record<string, unknown>
   const voicePrompt = readRequiredString(payload.voicePrompt, 'voicePrompt')
   const previewText = readRequiredString(payload.previewText, 'previewText')
+  const audioModel = readOptionalModelKey(payload.audioModel)
   const preferredName = typeof payload.preferredName === 'string' && payload.preferredName.trim()
     ? payload.preferredName.trim()
     : 'custom_voice'
@@ -41,10 +49,16 @@ export async function handleVoiceDesignTask(job: Job<TaskJobData>) {
   })
   await assertTaskActive(job, 'voice_design_submit')
 
-  const { apiKey } = await getProviderConfig(job.data.userId, 'qwen')
+  const audioSelection = await resolveModelSelectionOrSingle(job.data.userId, audioModel, 'audio')
+  const providerKey = getProviderKey(audioSelection.provider).toLowerCase()
+  if (providerKey !== 'qwen') {
+    throw new Error(`AUDIO_PROVIDER_UNSUPPORTED: ${audioSelection.provider}`)
+  }
+  const { apiKey } = await getProviderConfig(job.data.userId, audioSelection.provider)
   const input: VoiceDesignInput = {
     voicePrompt,
     previewText,
+    targetModel: audioSelection.modelId,
     preferredName,
     language,
   }
@@ -52,6 +66,12 @@ export async function handleVoiceDesignTask(job: Job<TaskJobData>) {
   if (!designed.success) {
     throw new Error(designed.error || '声音设计失败')
   }
+  const resolvedTargetModel = typeof designed.targetModel === 'string' && designed.targetModel.trim()
+    ? designed.targetModel.trim()
+    : audioSelection.modelId
+  const normalizedVoiceId = typeof designed.voiceId === 'string' && designed.voiceId.trim()
+    ? encodeQwenVoiceIdWithModel(designed.voiceId, resolvedTargetModel)
+    : designed.voiceId
 
   await reportTaskProgress(job, 96, {
     stage: 'voice_design_done',
@@ -61,8 +81,8 @@ export async function handleVoiceDesignTask(job: Job<TaskJobData>) {
 
   return {
     success: true,
-    voiceId: designed.voiceId,
-    targetModel: designed.targetModel,
+    voiceId: normalizedVoiceId,
+    targetModel: resolvedTargetModel,
     audioBase64: designed.audioBase64,
     sampleRate: designed.sampleRate,
     responseFormat: designed.responseFormat,

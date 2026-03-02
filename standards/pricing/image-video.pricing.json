@@ -5967,6 +5967,24 @@
     }
   },
   {
+    "apiType": "voice",
+    "provider": "qwen",
+    "modelId": "qwen3-tts-vd-realtime-2026-01-15",
+    "pricing": {
+      "mode": "flat",
+      "flatAmount": 0.0144
+    }
+  },
+  {
+    "apiType": "voice",
+    "provider": "qwen",
+    "modelId": "qwen3-tts-vc-realtime-2026-01-15",
+    "pricing": {
+      "mode": "flat",
+      "flatAmount": 0.0144
+    }
+  },
+  {
     "apiType": "voice-design",
     "provider": "system",
     "modelId": "qwen-voice-design",

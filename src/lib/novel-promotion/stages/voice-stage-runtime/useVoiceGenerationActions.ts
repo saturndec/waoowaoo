@@ -99,7 +99,13 @@ export function useVoiceGenerationActions({
     const linesToGenerate = voiceLines.filter((line) => {
       if (line.audioUrl) return false
       const character = speakerCharacterMap[line.speaker]
-      return !!character?.customVoiceUrl || !!speakerVoices[line.speaker]?.audioUrl
+      const speakerVoice = speakerVoices[line.speaker]
+      return (
+        !!character?.voiceId
+        || !!character?.customVoiceUrl
+        || !!speakerVoice?.voiceId
+        || !!speakerVoice?.audioUrl
+      )
     })
 
     if (linesToGenerate.length === 0) {

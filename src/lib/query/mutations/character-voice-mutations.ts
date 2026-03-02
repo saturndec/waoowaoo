@@ -41,7 +41,7 @@ export function useUpdateProjectCharacterVoiceSettings(projectId: string) {
             voiceId?: string
             customVoiceUrl?: string
         }) => {
-            return await requestJsonWithError(`/api/novel-promotion/${projectId}/character`, {
+            return await requestJsonWithError(`/api/novel-promotion/${projectId}/character-voice`, {
                 method: 'PATCH',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ characterId, voiceType, voiceId, customVoiceUrl }),

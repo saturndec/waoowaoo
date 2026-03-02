@@ -40,6 +40,13 @@ export function useVoiceSpeakerState({
     return null
   }, [speakerCharacterMap, speakerVoices])
 
+  const hasSpeakerVoice = useCallback((speaker: string): boolean => {
+    const character = speakerCharacterMap[speaker]
+    if (character?.voiceId || character?.customVoiceUrl) return true
+    const speakerVoice = speakerVoices[speaker]
+    return !!speakerVoice?.voiceId || !!speakerVoice?.audioUrl
+  }, [speakerCharacterMap, speakerVoices])
+
   const speakerStats = useMemo(() => {
     const stats: Record<string, number> = {}
     for (const line of voiceLines) {
@@ -61,16 +68,16 @@ export function useVoiceSpeakerState({
   }, [characters, projectSpeakers, voiceLines])
 
   const linesWithVoice = useMemo(() => (
-    voiceLines.filter((line) => !!getSpeakerVoiceUrl(line.speaker)).length
-  ), [getSpeakerVoiceUrl, voiceLines])
+    voiceLines.filter((line) => hasSpeakerVoice(line.speaker)).length
+  ), [hasSpeakerVoice, voiceLines])
 
   const linesWithAudio = useMemo(() => (
     voiceLines.filter((line) => !!line.audioUrl).length
   ), [voiceLines])
 
   const allSpeakersHaveVoice = useMemo(() => (
-    speakers.every((speaker) => !!getSpeakerVoiceUrl(speaker))
-  ), [getSpeakerVoiceUrl, speakers])
+    speakers.every((speaker) => hasSpeakerVoice(speaker))
+  ), [hasSpeakerVoice, speakers])
 
   return {
     speakerCharacterMap,
