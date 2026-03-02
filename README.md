@@ -135,6 +135,4 @@ This project is maintained by the core team. You're welcome to contribute by:
 
 ## Star History
 
-## Star History
-
 [![Star History Chart](https://api.star-history.com/svg?repos=waoowaooAI/waoowaoo&type=date&legend=top-left)](https://www.star-history.com/#waoowaooAI/waoowaoo&type=date&legend=top-left)
