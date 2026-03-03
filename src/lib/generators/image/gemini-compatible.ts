@@ -28,6 +28,98 @@ function getErrorMessage(error: unknown): string {
     return '未知错误'
 }
 
+const RATE_LIMIT_PATTERNS = [
+    'too many requests',
+    'rate limit',
+    'rate_limit',
+    'rate-limited',
+]
+const GEMINI_COMPATIBLE_REQUEST_TIMEOUT_MS = Number.parseInt(
+    process.env.GEMINI_COMPATIBLE_REQUEST_TIMEOUT_MS || '120000',
+    10,
+)
+
+function withTimeout<T>(promise: Promise<T>, timeoutMs: number): Promise<T> {
+    return new Promise<T>((resolve, reject) => {
+        const timer = setTimeout(() => {
+            reject(new Error(`GEMINI_COMPATIBLE_REQUEST_TIMEOUT: ${timeoutMs}ms`))
+        }, timeoutMs)
+
+        promise.then((value) => {
+            clearTimeout(timer)
+            resolve(value)
+        }).catch((error: unknown) => {
+            clearTimeout(timer)
+            reject(error)
+        })
+    })
+}
+
+function hasRateLimitSignal(lowerMessage: string, statusCode?: number): boolean {
+    if (statusCode === 429) return true
+    if (/\b429\b/.test(lowerMessage)) return true
+    return RATE_LIMIT_PATTERNS.some((pattern) => lowerMessage.includes(pattern))
+}
+
+export function mapGeminiCompatibleErrorToMessage(input: {
+    message: string
+    statusCode?: number
+    modelId: string
+}): string | null {
+    const lowerMessage = input.message.toLowerCase()
+
+    if (lowerMessage.includes('invalid url')
+        || lowerMessage.includes('/images/generations/v1beta/models')
+        || lowerMessage.includes(':generatecontent')) {
+        return 'Gemini 兼容服务 Base URL 配置错误，请填写服务根地址（不要包含 /images/generations 或 /v1beta/models）'
+    }
+
+    if (lowerMessage.includes('gemini_compatible_request_timeout')) {
+        return 'Gemini 兼容服务请求超时，请检查网络连通性或服务可用性后重试'
+    }
+
+    if (lowerMessage.includes('image_safety') || lowerMessage.includes('safety')
+        || lowerMessage.includes('sensitive') || lowerMessage.includes('blocked')
+        || lowerMessage.includes('policy_violation') || lowerMessage.includes('prohibited')
+        || lowerMessage.includes('moderation') || lowerMessage.includes('harm')) {
+        return '图片内容可能涉及敏感信息，请修改描述后重试'
+    }
+
+    if (lowerMessage.includes('insufficient') || lowerMessage.includes('402')
+        || lowerMessage.includes('credits')) {
+        return 'API 余额不足，请充值后重试'
+    }
+
+    if (lowerMessage.includes('401') || lowerMessage.includes('unauthorized')) {
+        return 'API Key 无效，请检查配置'
+    }
+
+    if (lowerMessage.includes('404') || lowerMessage.includes('not found')) {
+        return `模型 ${input.modelId} 不存在于服务端`
+    }
+
+    if (lowerMessage.includes('fetch failed') || lowerMessage.includes('sending request')
+        || lowerMessage.includes('econnreset')
+        || lowerMessage.includes('enotfound') || lowerMessage.includes('network')) {
+        return '网络请求失败，请检查网络连接或稍后重试'
+    }
+
+    if (lowerMessage.includes('empty_response') || lowerMessage.includes('empty response')
+        || lowerMessage.includes('no meaningful content')) {
+        return 'Gemini 未返回有效图片，内容可能被过滤或生成失败，请修改描述后重试'
+    }
+
+    if (hasRateLimitSignal(lowerMessage, input.statusCode)) {
+        return 'API 请求频率超限，请稍后重试'
+    }
+
+    if (lowerMessage.includes('quota') || lowerMessage.includes('billing hard limit')) {
+        return 'API 配额不足'
+    }
+
+    return null
+}
+
 export class GeminiCompatibleImageGenerator extends BaseImageGenerator {
     private modelId: string
     private providerId?: string
@@ -151,7 +243,7 @@ export class GeminiCompatibleImageGenerator extends BaseImageGenerator {
 
         try {
             // 调用 API（使用用户配置的模型名称）
-            const response = await ai.models.generateContent({
+            const response = await withTimeout(ai.models.generateContent({
                 model: this.modelId,
                 contents: [{ parts: contentParts }],
                 config: {
@@ -167,7 +259,7 @@ export class GeminiCompatibleImageGenerator extends BaseImageGenerator {
                         }
                         : {})
                 }
-            })
+            }), GEMINI_COMPATIBLE_REQUEST_TIMEOUT_MS)
 
             // 提取图片
             const candidate = response.candidates?.[0]
@@ -236,53 +328,13 @@ export class GeminiCompatibleImageGenerator extends BaseImageGenerator {
                 stack: error instanceof Error ? error.stack?.split('\n').slice(0, 3).join(' | ') : undefined,
             }))
 
-            // 处理常见错误（注意顺序：内容安全 > 余额 > 网络 > 429限流 > 其他）
-            const lowerMessage = message.toLowerCase()
-
-            // 1. 内容安全（优先于 429，因为代理可能将 IMAGE_SAFETY 包装为 429）
-            if (lowerMessage.includes('image_safety') || lowerMessage.includes('safety') ||
-                lowerMessage.includes('sensitive') || lowerMessage.includes('blocked') ||
-                lowerMessage.includes('policy_violation') || lowerMessage.includes('prohibited') ||
-                lowerMessage.includes('moderation') || lowerMessage.includes('harm')) {
-                throw new Error('图片内容可能涉及敏感信息，请修改描述后重试')
-            }
-
-            // 2. 余额/配额不足
-            if (lowerMessage.includes('insufficient') || lowerMessage.includes('402') ||
-                lowerMessage.includes('credits')) {
-                throw new Error('API 余额不足，请充值后重试')
-            }
-
-            // 3. 认证错误
-            if (lowerMessage.includes('401') || lowerMessage.includes('unauthorized')) {
-                throw new Error('API Key 无效，请检查配置')
-            }
-
-            // 4. 模型不存在
-            if (lowerMessage.includes('404') || lowerMessage.includes('not found')) {
-                throw new Error(`模型 ${this.modelId} 不存在于服务端`)
-            }
-
-            // 5. 网络错误
-            if (lowerMessage.includes('fetch failed') || lowerMessage.includes('econnreset') ||
-                lowerMessage.includes('enotfound') || lowerMessage.includes('network')) {
-                throw new Error('网络请求失败，请检查网络连接或稍后重试')
-            }
-
-            // 6. Gemini 空响应（代理将其包装为 429，但实际是内容生成失败/被过滤）
-            if (lowerMessage.includes('empty_response') || lowerMessage.includes('empty response') ||
-                lowerMessage.includes('no meaningful content')) {
-                throw new Error('Gemini 未返回有效图片，内容可能被过滤或生成失败，请修改描述后重试')
-            }
-
-            // 7. 429 限流（排除了已被上面捕获的 empty_response 和 safety 场景）
-            if (statusCode === 429 || lowerMessage.includes('rate') || lowerMessage.includes('too many request')) {
-                throw new Error('API 请求频率超限，请稍后重试')
-            }
-
-            // 8. 配额限制（通用）
-            if (lowerMessage.includes('quota') || lowerMessage.includes('limit')) {
-                throw new Error('API 配额不足')
+            const mappedMessage = mapGeminiCompatibleErrorToMessage({
+                message,
+                statusCode,
+                modelId: this.modelId,
+            })
+            if (mappedMessage) {
+                throw new Error(mappedMessage)
             }
 
             throw error

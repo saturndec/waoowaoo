@@ -6,7 +6,12 @@ import { resolveRequiredTaskLocale } from '@/lib/task/resolve-locale'
 import { TASK_TYPE } from '@/lib/task/types'
 import { buildDefaultTaskBillingInfo } from '@/lib/billing'
 import { withTaskUiPayload } from '@/lib/task/ui-payload'
-import { getProjectModelConfig, buildImageBillingPayload } from '@/lib/config-service'
+import {
+  getProjectModelConfig,
+  buildImageBillingPayload,
+  checkRequiredModels,
+  getMissingConfigError,
+} from '@/lib/config-service'
 import {
   hasCharacterAppearanceOutput,
   hasLocationImageOutput
@@ -60,6 +65,15 @@ export const POST = apiHandler(async (
   const imageModel = type === 'character'
     ? projectModelConfig.characterModel
     : projectModelConfig.locationModel
+  const requiredField = type === 'character' ? 'characterModel' : 'locationModel'
+  const missingFields = checkRequiredModels(projectModelConfig, [requiredField])
+  if (missingFields.length > 0) {
+    throw new ApiError('MISSING_CONFIG', {
+      reason: 'IMAGE_MODEL_NOT_CONFIGURED',
+      message: getMissingConfigError(missingFields),
+      missingFields,
+    })
+  }
 
   let billingPayload: Record<string, unknown>
   try {
@@ -71,7 +85,7 @@ export const POST = apiHandler(async (
     })
   } catch (err) {
     const message = err instanceof Error ? err.message : 'Image model capability not configured'
-    throw new ApiError('INVALID_PARAMS', { code: 'IMAGE_MODEL_CAPABILITY_NOT_CONFIGURED', message })
+    throw new ApiError('MISSING_CONFIG', { reason: 'IMAGE_MODEL_CAPABILITY_NOT_CONFIGURED', message })
   }
   const result = await submitTask({
     userId: session.user.id,

@@ -28,7 +28,9 @@ import {
   listBuiltinPricingCatalog,
   type PricingApiType,
 } from '@/lib/model-pricing/catalog'
+import { hasDefaultPricingFallback } from '@/lib/model-pricing/defaults'
 import { getBillingMode } from '@/lib/billing/mode'
+import { validateGeminiCompatibleBaseUrl } from '@/lib/provider-base-url'
 
 type ApiModeType = 'gemini-sdk'
 type DefaultModelField =
@@ -486,10 +488,22 @@ function normalizeProvidersInput(rawProviders: unknown): StoredProvider[] {
       })
     }
 
+    const normalizedBaseUrl = readTrimmedString(item.baseUrl) || undefined
+    if (providerKey === 'gemini-compatible' && normalizedBaseUrl) {
+      const validation = validateGeminiCompatibleBaseUrl(normalizedBaseUrl)
+      if (!validation.valid) {
+        throw new ApiError('INVALID_PARAMS', {
+          reason: 'PROVIDER_BASEURL_INVALID',
+          field: `providers[${index}].baseUrl`,
+          message: validation.message,
+        })
+      }
+    }
+
     normalized.push({
       id,
       name,
-      baseUrl: readTrimmedString(item.baseUrl) || undefined,
+      baseUrl: normalizedBaseUrl,
       apiKey: typeof item.apiKey === 'string' ? item.apiKey.trim() : undefined,
       apiMode: apiModeRaw,
     })
@@ -566,7 +580,7 @@ function validateBillableModelPricing(models: StoredModel[]) {
     // Skip validation if user provided custom pricing
     if (hasCustomPricingForType(model)) continue
 
-    if (!hasBuiltinPricingForModel(apiType, model.provider, model.modelId)) {
+    if (!hasBuiltinPricingForModel(apiType, model.provider, model.modelId) && !hasDefaultPricingFallback(apiType)) {
       throw new ApiError('INVALID_PARAMS', {
         code: 'MODEL_PRICING_NOT_CONFIGURED',
         field: `models[${index}].modelId`,
@@ -620,7 +634,7 @@ function validateDefaultModelPricing(defaultModels: DefaultModelsPayload) {
     if (!parsed) continue
     const apiType = DEFAULT_FIELD_TO_PRICING_API_TYPE[field]
 
-    if (!hasBuiltinPricingForModel(apiType, parsed.provider, parsed.modelId)) {
+    if (!hasBuiltinPricingForModel(apiType, parsed.provider, parsed.modelId) && !hasDefaultPricingFallback(apiType)) {
       throw new ApiError('INVALID_PARAMS', {
         code: 'DEFAULT_MODEL_PRICING_NOT_CONFIGURED',
         field: `defaultModels.${field}`,
@@ -635,7 +649,7 @@ function isModelPricedForBilling(model: StoredModel): boolean {
   const apiType = BILLABLE_MODEL_TYPE_TO_PRICING_API_TYPE[model.type]
   if (!apiType) return true
   if (hasCustomPricingForType(model)) return true
-  return hasBuiltinPricingForModel(apiType, model.provider, model.modelId)
+  return hasBuiltinPricingForModel(apiType, model.provider, model.modelId) || hasDefaultPricingFallback(apiType)
 }
 
 function sanitizeModelsForBilling(models: StoredModel[]): StoredModel[] {
@@ -662,6 +676,7 @@ function sanitizeDefaultModelsForBilling(defaultModels: DefaultModelsPayload): D
 
     const apiType = DEFAULT_FIELD_TO_PRICING_API_TYPE[field]
     sanitized[field] = hasBuiltinPricingForModel(apiType, parsed.provider, parsed.modelId)
+      || hasDefaultPricingFallback(apiType)
       ? parsed.modelKey
       : ''
   }

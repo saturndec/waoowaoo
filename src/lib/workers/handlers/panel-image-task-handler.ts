@@ -10,7 +10,10 @@ import {
   resolveImageSourceFromGeneration,
   uploadImageSourceToCos,
 } from '../utils'
-import { normalizeReferenceImagesForGeneration } from '@/lib/media/outbound-image'
+import {
+  normalizeReferenceImagesForGeneration,
+  type OutboundImageNormalizationIssue,
+} from '@/lib/media/outbound-image'
 import {
   AnyObj,
   clampCount,
@@ -150,6 +153,20 @@ function buildPanelPrompt(params: {
   })
 }
 
+function toLogError(error: unknown): { name: string; message: string; stack?: string } {
+  if (error instanceof Error) {
+    return {
+      name: error.name,
+      message: error.message,
+      stack: error.stack,
+    }
+  }
+  return {
+    name: 'UnknownError',
+    message: String(error),
+  }
+}
+
 export async function handlePanelImageTask(job: Job<TaskJobData>) {
   const payload = (job.data.payload || {}) as AnyObj
   const panelId = pickFirstString(payload.panelId, job.data.targetId)
@@ -166,10 +183,6 @@ export async function handlePanelImageTask(job: Job<TaskJobData>) {
   const modelKey = modelConfig.storyboardModel
   if (!modelKey) throw new Error('Storyboard model not configured')
 
-  const candidateCount = clampCount(payload.candidateCount ?? payload.count, 1, 4, 1)
-  const refs = await collectPanelReferenceImages(projectData, panel)
-  const normalizedRefs = await normalizeReferenceImagesForGeneration(refs)
-
   const logger = createScopedLogger({
     module: 'worker.panel-image',
     action: 'panel_image_generate',
@@ -178,6 +191,80 @@ export async function handlePanelImageTask(job: Job<TaskJobData>) {
     projectId: job.data.projectId,
     userId: job.data.userId,
   })
+
+  const candidateCount = clampCount(payload.candidateCount ?? payload.count, 1, 4, 1)
+  const refs = await collectPanelReferenceImages(projectData, panel)
+  const normalizationIssues: OutboundImageNormalizationIssue[] = []
+  logger.info({
+    message: 'panel reference image normalization started',
+    details: {
+      panelId,
+      referenceImagesRawCount: refs.length,
+      referenceImageCandidates: refs.map((ref, index) => ({
+        index,
+        valuePreview: ref.substring(0, 180),
+      })),
+    },
+  })
+  const normalizedRefs = await normalizeReferenceImagesForGeneration(refs, {
+    onIssue: (issue) => {
+      normalizationIssues.push({
+        index: issue.index,
+        input: issue.input,
+        code: issue.code,
+        stage: issue.stage,
+        message: issue.message,
+      })
+      logger.warn({
+        message: 'panel reference image normalization issue',
+        details: {
+          panelId,
+          issue: {
+            index: issue.index,
+            code: issue.code,
+            stage: issue.stage,
+            message: issue.message,
+            inputPreview: issue.input.substring(0, 180),
+          },
+        },
+      })
+    },
+    context: {
+      taskType: job.data.type,
+      panelId,
+      taskId: job.data.taskId,
+      projectId: job.data.projectId,
+      userId: job.data.userId,
+    },
+  }).catch((error: unknown) => {
+    logger.error({
+      message: 'panel reference image normalization failed',
+      errorCode: 'PANEL_REFERENCE_IMAGE_NORMALIZATION_FAILED',
+      retryable: false,
+      details: {
+        panelId,
+        modelKey,
+        referenceImagesRawCount: refs.length,
+        normalizationIssueCount: normalizationIssues.length,
+        normalizationIssues: normalizationIssues.map((issue) => ({
+          ...issue,
+          input: issue.input.substring(0, 180),
+        })),
+      },
+      error: toLogError(error),
+    })
+    throw error
+  })
+  logger.info({
+    message: 'panel reference image normalization completed',
+    details: {
+      panelId,
+      referenceImagesRawCount: refs.length,
+      referenceImagesNormalizedCount: normalizedRefs.length,
+      normalizationIssueCount: normalizationIssues.length,
+    },
+  })
+
   logger.info({
     message: 'panel image generation started',
     details: {
@@ -224,30 +311,94 @@ export async function handlePanelImageTask(job: Job<TaskJobData>) {
     message: 'panel image prompt resolved',
     details: {
       promptLength: prompt.length,
+      promptPreview: prompt.substring(0, 300),
     },
   })
 
   const candidates: string[] = []
 
   for (let i = 0; i < candidateCount; i++) {
+    const candidateIndex = i + 1
+    const candidateStartedAt = Date.now()
     await reportTaskProgress(job, 18 + Math.floor((i / Math.max(candidateCount, 1)) * 58), {
       stage: 'generate_panel_candidate',
       candidateIndex: i,
     })
 
-    const source = await resolveImageSourceFromGeneration(job, {
-      userId: job.data.userId,
-      modelId: modelKey,
-      prompt,
-      options: {
-        referenceImages: normalizedRefs,
-        aspectRatio,
+    logger.info({
+      message: 'panel candidate generation started',
+      details: {
+        panelId,
+        candidateIndex,
+        candidateCount,
+        referenceImagesCount: normalizedRefs.length,
       },
-      pollProgress: { start: 30, end: 90 },
     })
 
-    const cosKey = await uploadImageSourceToCos(source, 'panel-candidate', `${panel.id}-${i}`)
-    candidates.push(cosKey)
+    let source: string
+    try {
+      source = await resolveImageSourceFromGeneration(job, {
+        userId: job.data.userId,
+        modelId: modelKey,
+        prompt,
+        options: {
+          referenceImages: normalizedRefs,
+          aspectRatio,
+        },
+        pollProgress: { start: 30, end: 90 },
+      })
+      logger.info({
+        message: 'panel candidate source generated',
+        durationMs: Date.now() - candidateStartedAt,
+        details: {
+          panelId,
+          candidateIndex,
+          sourceType: source.startsWith('data:') ? 'data-url' : 'url',
+        },
+      })
+    } catch (error) {
+      logger.error({
+        message: 'panel candidate generation failed',
+        errorCode: 'PANEL_CANDIDATE_GENERATION_FAILED',
+        retryable: false,
+        durationMs: Date.now() - candidateStartedAt,
+        details: {
+          panelId,
+          candidateIndex,
+          candidateCount,
+          modelKey,
+        },
+        error: toLogError(error),
+      })
+      throw error
+    }
+
+    try {
+      const cosKey = await uploadImageSourceToCos(source, 'panel-candidate', `${panel.id}-${i}`)
+      candidates.push(cosKey)
+      logger.info({
+        message: 'panel candidate uploaded',
+        durationMs: Date.now() - candidateStartedAt,
+        details: {
+          panelId,
+          candidateIndex,
+          cosKeyPreview: cosKey.substring(0, 120),
+        },
+      })
+    } catch (error) {
+      logger.error({
+        message: 'panel candidate upload failed',
+        errorCode: 'PANEL_CANDIDATE_UPLOAD_FAILED',
+        retryable: false,
+        durationMs: Date.now() - candidateStartedAt,
+        details: {
+          panelId,
+          candidateIndex,
+        },
+        error: toLogError(error),
+      })
+      throw error
+    }
   }
 
   const isFirstGeneration = !panel.imageUrl
@@ -270,6 +421,16 @@ export async function handlePanelImageTask(job: Job<TaskJobData>) {
       },
     })
   }
+
+  logger.info({
+    message: 'panel image generation persisted',
+    details: {
+      panelId: panel.id,
+      isFirstGeneration,
+      candidateCount: candidates.length,
+      firstCandidatePreview: candidates[0]?.substring(0, 120) || null,
+    },
+  })
 
   return {
     panelId: panel.id,

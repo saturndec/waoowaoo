@@ -25,6 +25,11 @@ type DirectRouteCase = {
   expectedProjectId: string
 }
 
+const MODEL_FIELD_NAME: Record<'characterModel' | 'locationModel', string> = {
+  characterModel: '角色图像模型',
+  locationModel: '场景图像模型',
+}
+
 const authState = vi.hoisted<AuthState>(() => ({
   authenticated: true,
   projectMode: 'novel-promotion',
@@ -56,6 +61,19 @@ const configServiceMock = vi.hoisted(() => ({
   resolveProjectModelCapabilityGenerationOptions: vi.fn(async () => ({
     resolution: '1024x1024',
   })),
+  checkRequiredModels: vi.fn((
+    config: Partial<Record<'characterModel' | 'locationModel', string | null>>,
+    requiredFields: Array<'characterModel' | 'locationModel'>,
+  ) => requiredFields
+    .filter((field) => !config[field])
+    .map((field) => MODEL_FIELD_NAME[field])),
+  getMissingConfigError: vi.fn((missingFields: string[]) => {
+    if (missingFields.length === 0) return ''
+    if (missingFields.length === 1) {
+      return `请先在项目设置中配置"${missingFields[0]}"`
+    }
+    return `请先在项目设置中配置以下模型：${missingFields.join('、')}`
+  }),
 }))
 
 const hasOutputMock = vi.hoisted(() => ({
@@ -414,6 +432,14 @@ async function invokePostRoute(routeCase: DirectRouteCase): Promise<Response> {
   return await post(req, { params: Promise.resolve(routeCase.params || {}) })
 }
 
+function getDirectRouteCaseOrThrow(routeFile: string): DirectRouteCase {
+  const routeCase = DIRECT_CASES.find((item) => item.routeFile === routeFile)
+  if (!routeCase) {
+    throw new Error(`route case not found: ${routeFile}`)
+  }
+  return routeCase
+}
+
 describe('api contract - direct submit routes (behavior)', () => {
   beforeEach(() => {
     vi.clearAllMocks()
@@ -466,4 +492,121 @@ describe('api contract - direct submit routes (behavior)', () => {
       }
     })
   }
+
+  it('bugfix: generate-image character returns MISSING_CONFIG when characterModel is absent', async () => {
+    configServiceMock.getProjectModelConfig.mockResolvedValueOnce({
+      characterModel: null,
+      locationModel: 'img::location',
+      editModel: 'img::edit',
+      storyboardModel: 'img::storyboard',
+      analysisModel: 'llm::analysis',
+    })
+    const routeCase = getDirectRouteCaseOrThrow('src/app/api/novel-promotion/[projectId]/generate-image/route.ts')
+    const res = await invokePostRoute(routeCase)
+
+    expect(res.status).toBe(400)
+    expect(submitTaskMock).not.toHaveBeenCalled()
+    const json = await res.json() as { code?: string, message?: string }
+    expect(json.code).toBe('MISSING_CONFIG')
+    expect(json.message).toBe('请先在项目设置中配置"角色图像模型"')
+  })
+
+  it('bugfix: generate-image location returns MISSING_CONFIG when locationModel is absent', async () => {
+    configServiceMock.getProjectModelConfig.mockResolvedValueOnce({
+      characterModel: 'img::character',
+      locationModel: null,
+      editModel: 'img::edit',
+      storyboardModel: 'img::storyboard',
+      analysisModel: 'llm::analysis',
+    })
+    const routeCase = getDirectRouteCaseOrThrow('src/app/api/novel-promotion/[projectId]/generate-image/route.ts')
+    const res = await invokePostRoute({
+      ...routeCase,
+      body: { type: 'location', id: 'location-1' },
+    })
+
+    expect(res.status).toBe(400)
+    expect(submitTaskMock).not.toHaveBeenCalled()
+    const json = await res.json() as { code?: string, message?: string }
+    expect(json.code).toBe('MISSING_CONFIG')
+    expect(json.message).toBe('请先在项目设置中配置"场景图像模型"')
+  })
+
+  it('bugfix: regenerate-group character returns MISSING_CONFIG when characterModel is absent', async () => {
+    configServiceMock.getProjectModelConfig.mockResolvedValueOnce({
+      characterModel: null,
+      locationModel: 'img::location',
+      editModel: 'img::edit',
+      storyboardModel: 'img::storyboard',
+      analysisModel: 'llm::analysis',
+    })
+    const routeCase = getDirectRouteCaseOrThrow('src/app/api/novel-promotion/[projectId]/regenerate-group/route.ts')
+    const res = await invokePostRoute(routeCase)
+
+    expect(res.status).toBe(400)
+    expect(submitTaskMock).not.toHaveBeenCalled()
+    const json = await res.json() as { code?: string, message?: string }
+    expect(json.code).toBe('MISSING_CONFIG')
+    expect(json.message).toBe('请先在项目设置中配置"角色图像模型"')
+  })
+
+  it('bugfix: regenerate-group location returns MISSING_CONFIG when locationModel is absent', async () => {
+    configServiceMock.getProjectModelConfig.mockResolvedValueOnce({
+      characterModel: 'img::character',
+      locationModel: null,
+      editModel: 'img::edit',
+      storyboardModel: 'img::storyboard',
+      analysisModel: 'llm::analysis',
+    })
+    const routeCase = getDirectRouteCaseOrThrow('src/app/api/novel-promotion/[projectId]/regenerate-group/route.ts')
+    const res = await invokePostRoute({
+      ...routeCase,
+      body: { type: 'location', id: 'location-1' },
+    })
+
+    expect(res.status).toBe(400)
+    expect(submitTaskMock).not.toHaveBeenCalled()
+    const json = await res.json() as { code?: string, message?: string }
+    expect(json.code).toBe('MISSING_CONFIG')
+    expect(json.message).toBe('请先在项目设置中配置"场景图像模型"')
+  })
+
+  it('bugfix: regenerate-single-image character returns MISSING_CONFIG when characterModel is absent', async () => {
+    configServiceMock.getProjectModelConfig.mockResolvedValueOnce({
+      characterModel: null,
+      locationModel: 'img::location',
+      editModel: 'img::edit',
+      storyboardModel: 'img::storyboard',
+      analysisModel: 'llm::analysis',
+    })
+    const routeCase = getDirectRouteCaseOrThrow('src/app/api/novel-promotion/[projectId]/regenerate-single-image/route.ts')
+    const res = await invokePostRoute(routeCase)
+
+    expect(res.status).toBe(400)
+    expect(submitTaskMock).not.toHaveBeenCalled()
+    const json = await res.json() as { code?: string, message?: string }
+    expect(json.code).toBe('MISSING_CONFIG')
+    expect(json.message).toBe('请先在项目设置中配置"角色图像模型"')
+  })
+
+  it('bugfix: regenerate-single-image location returns MISSING_CONFIG when locationModel is absent', async () => {
+    configServiceMock.getProjectModelConfig.mockResolvedValueOnce({
+      characterModel: 'img::character',
+      locationModel: null,
+      editModel: 'img::edit',
+      storyboardModel: 'img::storyboard',
+      analysisModel: 'llm::analysis',
+    })
+    const routeCase = getDirectRouteCaseOrThrow('src/app/api/novel-promotion/[projectId]/regenerate-single-image/route.ts')
+    const res = await invokePostRoute({
+      ...routeCase,
+      body: { type: 'location', id: 'location-1', imageIndex: 0 },
+    })
+
+    expect(res.status).toBe(400)
+    expect(submitTaskMock).not.toHaveBeenCalled()
+    const json = await res.json() as { code?: string, message?: string }
+    expect(json.code).toBe('MISSING_CONFIG')
+    expect(json.message).toBe('请先在项目设置中配置"场景图像模型"')
+  })
 })

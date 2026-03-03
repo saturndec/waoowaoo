@@ -14,6 +14,7 @@ import {
   parseModelKeyStrict,
   type UnifiedModelType,
 } from './model-config-contract'
+import { validateGeminiCompatibleBaseUrl } from './provider-base-url'
 
 export interface CustomModel {
   modelId: string
@@ -45,7 +46,17 @@ interface CustomProvider {
 function normalizeProviderBaseUrl(providerId: string, rawBaseUrl?: string): string | undefined {
   const baseUrl = readTrimmedString(rawBaseUrl)
   if (!baseUrl) return undefined
-  if (getProviderKey(providerId) !== 'openai-compatible') return baseUrl
+  const providerKey = getProviderKey(providerId)
+
+  if (providerKey === 'gemini-compatible') {
+    const validation = validateGeminiCompatibleBaseUrl(baseUrl)
+    if (!validation.valid) {
+      throw new Error(`PROVIDER_BASE_URL_INVALID: ${providerId} ${validation.message || 'invalid baseUrl'}`)
+    }
+    return baseUrl
+  }
+
+  if (providerKey !== 'openai-compatible') return baseUrl
 
   try {
     const parsed = new URL(baseUrl)

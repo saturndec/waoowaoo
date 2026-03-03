@@ -29,20 +29,22 @@ const outboundMock = vi.hoisted(() => ({
   normalizeReferenceImagesForGeneration: vi.fn(async () => ['normalized-ref-1']),
 }))
 
+const scopedLoggerMock = vi.hoisted(() => ({
+  debug: vi.fn(),
+  info: vi.fn(),
+  warn: vi.fn(),
+  error: vi.fn(),
+  event: vi.fn(),
+  child: vi.fn(),
+}))
+
 vi.mock('@/lib/prisma', () => ({ prisma: prismaMock }))
 vi.mock('@/lib/workers/utils', () => utilsMock)
 vi.mock('@/lib/media/outbound-image', () => outboundMock)
 vi.mock('@/lib/workers/shared', () => ({ reportTaskProgress: vi.fn(async () => undefined) }))
 vi.mock('@/lib/logging/core', () => ({
   logInfo: vi.fn(),
-  createScopedLogger: vi.fn(() => ({
-    debug: vi.fn(),
-    info: vi.fn(),
-    warn: vi.fn(),
-    error: vi.fn(),
-    event: vi.fn(),
-    child: vi.fn(),
-  })),
+  createScopedLogger: vi.fn(() => scopedLoggerMock),
 }))
 vi.mock('@/lib/workers/handlers/image-task-handler-shared', async () => {
   const actual = await vi.importActual<typeof import('@/lib/workers/handlers/image-task-handler-shared')>(
@@ -133,6 +135,18 @@ describe('worker panel-image-task-handler behavior', () => {
         }),
       }),
     )
+    expect(outboundMock.normalizeReferenceImagesForGeneration).toHaveBeenCalledWith(
+      ['https://signed.example/ref-1.png'],
+      expect.objectContaining({
+        onIssue: expect.any(Function),
+        context: expect.objectContaining({
+          panelId: 'panel-1',
+          taskId: 'task-panel-image-1',
+          projectId: 'project-1',
+          userId: 'user-1',
+        }),
+      }),
+    )
 
     expect(prismaMock.novelPromotionPanel.update).toHaveBeenCalledWith({
       where: { id: 'panel-1' },
@@ -183,5 +197,58 @@ describe('worker panel-image-task-handler behavior', () => {
         candidateImages: JSON.stringify(['cos/panel-regenerated.png']),
       },
     })
+  })
+
+  it('bugfix: logs normalization issue details and fails explicitly when all references fail', async () => {
+    type NormalizeIssue = {
+      index: number
+      input: string
+      code: string
+      stage: string
+      message: string
+    }
+    type NormalizeOptions = {
+      onIssue?: (issue: NormalizeIssue) => void
+      context?: Record<string, unknown>
+    }
+    outboundMock.normalizeReferenceImagesForGeneration.mockImplementationOnce(
+      async (_inputs: string[], options?: NormalizeOptions) => {
+        options?.onIssue?.({
+          index: 0,
+          input: 'https://bad.example/ref-1.png',
+          code: 'OUTBOUND_IMAGE_FETCH_EXCEPTION',
+          stage: 'normalize_base64',
+          message: 'normalizeToBase64ForGeneration fetch exception',
+        })
+        throw new Error('all reference images failed to normalize')
+      },
+    )
+
+    const job = buildJob({ candidateCount: 1 })
+    await expect(handlePanelImageTask(job)).rejects.toThrow('all reference images failed to normalize')
+
+    expect(utilsMock.resolveImageSourceFromGeneration).not.toHaveBeenCalled()
+    expect(scopedLoggerMock.warn).toHaveBeenCalledWith(
+      expect.objectContaining({
+        message: 'panel reference image normalization issue',
+        details: expect.objectContaining({
+          panelId: 'panel-1',
+          issue: expect.objectContaining({
+            code: 'OUTBOUND_IMAGE_FETCH_EXCEPTION',
+            stage: 'normalize_base64',
+          }),
+        }),
+      }),
+    )
+    expect(scopedLoggerMock.error).toHaveBeenCalledWith(
+      expect.objectContaining({
+        message: 'panel reference image normalization failed',
+        errorCode: 'PANEL_REFERENCE_IMAGE_NORMALIZATION_FAILED',
+        details: expect.objectContaining({
+          panelId: 'panel-1',
+          normalizationIssueCount: 1,
+        }),
+      }),
+    )
   })
 })

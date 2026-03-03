@@ -97,6 +97,8 @@
         "tableView": "Table View",
         "shotTypeLabel": "Shot Type",
         "cameraMove": "Camera Move",
+        "duration": "Duration (s)",
+        "durationPlaceholder": "10",
         "sourceText": "Source Text",
         "sceneDescription": "Scene Description",
         "videoPrompt": "Video Prompt",

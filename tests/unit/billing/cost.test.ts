@@ -15,12 +15,12 @@ describe('billing/cost', () => {
     expect(cost).toBeCloseTo((3 + 15) * USD_TO_CNY, 8)
   })
 
-  it('throws when text model pricing is unknown', () => {
-    expect(() => calcText('unknown-model', 500_000, 250_000)).toThrow('Unknown text model pricing')
+  it('uses default fallback when text model pricing is unknown', () => {
+    expect(calcText('unknown-model', 500_000, 250_000)).toBeCloseTo(0.25, 8)
   })
 
-  it('throws when image model pricing is unknown', () => {
-    expect(() => calcImage('missing-image-model', 3)).toThrow('Unknown image model pricing')
+  it('uses default fallback when image model pricing is unknown', () => {
+    expect(calcImage('missing-image-model', 3)).toBeCloseTo(0.432, 8)
   })
 
   it('supports resolution-aware video pricing', () => {
@@ -29,7 +29,7 @@ describe('billing/cost', () => {
     expect(cost720).toBeCloseTo(0.86, 8)
     expect(cost1080).toBeCloseTo(2.06, 8)
     expect(() => calcVideo('doubao-seedance-1-0-pro-fast-251015', '2k', 1)).toThrow('Unsupported video resolution pricing')
-    expect(() => calcVideo('unknown-video-model', '720p', 1)).toThrow('Unknown video model pricing')
+    expect(calcVideo('unknown-video-model', '720p', 1)).toBeCloseTo(0.2, 8)
   })
 
   it('scales ark video pricing by selected duration when tiers omit duration', () => {
@@ -107,11 +107,11 @@ describe('billing/cost', () => {
     expect(hailuoNormal).toBeCloseTo(2.0, 8)
     expect(hailuoFirstLast).toBeCloseTo(4.0, 8)
     expect(t2v).toBeCloseTo(3.0, 8)
-    expect(() => calcVideo('minimax-hailuo-02', '512p', 1, {
+    expect(calcVideo('minimax-hailuo-02', '512p', 1, {
       generationMode: 'firstlastframe',
       resolution: '512p',
       duration: 6,
-    })).toThrow('Unsupported video capability pricing')
+    })).toBeCloseTo(0.2, 8)
   })
 
   it('returns deterministic fixed costs for call-based APIs', () => {

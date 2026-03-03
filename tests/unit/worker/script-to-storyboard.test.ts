@@ -294,4 +294,23 @@ describe('worker script-to-storyboard behavior', () => {
     expect(chatCompletionMock).toHaveBeenCalledTimes(2)
     expect(parseVoiceLinesJsonMock).toHaveBeenCalledTimes(2)
   })
+
+  it('bugfix: falls back to payload.analysisModel when project analysisModel is empty', async () => {
+    prismaMock.novelPromotionProject.findUnique.mockResolvedValueOnce({
+      id: 'np-project-1',
+      analysisModel: null,
+      characters: [{ id: 'char-1', name: 'Narrator' }],
+      locations: [{ id: 'loc-1', name: 'Office' }],
+    })
+
+    const job = buildJob({
+      episodeId: 'episode-1',
+      analysisModel: 'llm::analysis-from-payload',
+    })
+    await handleScriptToStoryboardTask(job)
+
+    expect(resolveProjectModelCapabilityGenerationOptionsMock).toHaveBeenCalledWith(expect.objectContaining({
+      modelKey: 'llm::analysis-from-payload',
+    }))
+  })
 })

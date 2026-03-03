@@ -37,6 +37,7 @@ export async function handleStoryToScriptTask(job: Job<TaskJobData>) {
   const episodeId = episodeIdRaw.trim()
   const contentRaw = asString(payload.content)
   const inputModel = asString(payload.model).trim()
+  const analysisModelFromPayload = asString(payload.analysisModel).trim()
   const reasoning = payload.reasoning !== false
   const requestedReasoningEffort = parseEffort(payload.reasoningEffort)
   const temperature = parseTemperature(payload.temperature)
@@ -86,7 +87,7 @@ export async function handleStoryToScriptTask(job: Job<TaskJobData>) {
     throw new Error('Episode not found')
   }
 
-  const model = inputModel || novelData.analysisModel || ''
+  const model = inputModel || analysisModelFromPayload || novelData.analysisModel || ''
   if (!model) {
     throw new Error('analysisModel is not configured')
   }

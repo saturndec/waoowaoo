@@ -1,8 +1,8 @@
 /**
  * Billing cost center.
  *
- * Pricing is resolved from unified pricing catalog only.
- * No implicit fallback to hardcoded model tables is allowed.
+ * Pricing is resolved from unified pricing catalog first.
+ * When catalog pricing is unavailable, use explicit default fallback pricing.
  */
 
 import { BillingOperationError } from './errors'
@@ -18,6 +18,7 @@ import {
 import { validateCapabilitySelectionForModel } from '@/lib/model-capabilities/lookup'
 import { resolveBuiltinPricing } from '@/lib/model-pricing/lookup'
 import type { PricingApiType } from '@/lib/model-pricing/catalog'
+import { resolveDefaultPricingFallback } from '@/lib/model-pricing/defaults'
 
 export const USD_TO_CNY = 7.2
 
@@ -90,21 +91,16 @@ function resolveModelPriceStrict(input: {
     )
   }
 
-  if (result.status === 'missing_capability_match') {
-    throw new BillingOperationError(
-      'BILLING_CAPABILITY_PRICE_NOT_FOUND',
-      `No capability pricing tier matched for ${input.model}`,
-      {
-        apiType: input.apiType,
-        model: input.model,
-        selections: input.selections || {},
-      },
-    )
-  }
-
   // Fallback to user custom pricing
   if (typeof input.customPricingFallback === 'number') {
     return input.customPricingFallback
+  }
+
+  if (result.status === 'missing_capability_match' || result.status === 'not_configured') {
+    return resolveDefaultPricingFallback({
+      apiType: input.apiType,
+      selections: input.selections,
+    })
   }
 
   const modelId = parseModelId(input.model)
@@ -334,43 +330,16 @@ export function calcVideo(
     )
   }
   if (resolutionResult.status === 'not_configured') {
-    const modelId = parseModelId(model)
-    throw new BillingOperationError(
-      'BILLING_UNKNOWN_MODEL',
-      `Unknown video model pricing: ${model}`,
-      {
-        apiType: 'video',
-        model,
-        modelId,
-      },
-    )
+    return resolveDefaultPricingFallback({
+      apiType: 'video',
+      selections,
+    }) * Math.max(0, Number(count) || 0) * getMarkup('video')
   }
   if (resolutionResult.status === 'missing_capability_match') {
-    const pickedDuration = typeof selections.duration === 'number'
-      ? selections.duration
-      : null
-    const pickedResolution = selections.resolution as string
-    if (pickedDuration !== null) {
-      throw new BillingOperationError(
-        'BILLING_UNKNOWN_VIDEO_CAPABILITY_COMBINATION',
-        `Unsupported video capability pricing: resolution=${pickedResolution}, duration=${pickedDuration}`,
-        {
-          apiType: 'video',
-          model,
-          resolution: pickedResolution,
-          duration: pickedDuration,
-        },
-      )
-    }
-    throw new BillingOperationError(
-      'BILLING_UNKNOWN_VIDEO_RESOLUTION',
-      `Unsupported video resolution pricing: ${pickedResolution}`,
-      {
-        apiType: 'video',
-        model,
-        resolution: pickedResolution,
-      },
-    )
+    return resolveDefaultPricingFallback({
+      apiType: 'video',
+      selections,
+    }) * Math.max(0, Number(count) || 0) * getMarkup('video')
   }
 
   const resolvedEntry = 'entry' in resolutionResult

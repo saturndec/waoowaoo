@@ -415,11 +415,24 @@ export async function runScriptToStoryboardOrchestrator(
         ),
       ])
 
+      // Backfill duration from planPanels when Phase 3 dropped the field
+      const planDurationByNumber = new Map<number, number>()
+      for (const p of planPanels) {
+        if (typeof p.panel_number === 'number' && typeof p.duration === 'number') {
+          planDurationByNumber.set(p.panel_number, p.duration)
+        }
+      }
+      const panelsWithDuration = filteredPhase3Panels.map((panel) => {
+        if (panel.duration != null || typeof panel.panel_number !== 'number') return panel
+        const planned = planDurationByNumber.get(panel.panel_number)
+        return planned != null ? { ...panel, duration: planned } : panel
+      })
+
       return {
         clipId: clip.id,
         clipIndex,
         finalPanels: mergePanelsWithRules({
-          finalPanels: filteredPhase3Panels,
+          finalPanels: panelsWithDuration,
           photographyRules,
           actingDirections,
         }),

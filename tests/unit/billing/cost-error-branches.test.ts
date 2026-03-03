@@ -39,12 +39,12 @@ describe('billing/cost error branches', () => {
     expect(() => calcImage('shared-model', 1)).toThrow('Ambiguous image pricing modelId')
   })
 
-  it('throws unknown model when catalog returns not_configured', () => {
+  it('uses fallback price when catalog returns not_configured', () => {
     lookupMock.resolveBuiltinPricing.mockReturnValue({
       status: 'not_configured',
     })
 
-    expect(() => calcImage('provider::missing-image-model', 1)).toThrow('Unknown image model pricing')
+    expect(calcImage('provider::missing-image-model', 1)).toBeCloseTo(0.144, 8)
   })
 
   it('normalizes invalid numeric inputs to zero before pricing', () => {

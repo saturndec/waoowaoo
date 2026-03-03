@@ -187,4 +187,30 @@ describe('worker story-to-script behavior', () => {
     const job = buildJob({ episodeId: 'episode-1', content: 'input content' })
     await expect(handleStoryToScriptTask(job)).rejects.toThrow('STORY_TO_SCRIPT_PARTIAL_FAILED')
   })
+
+  it('bugfix: falls back to payload.analysisModel when project analysisModel is empty', async () => {
+    prismaMock.novelPromotionProject.findUnique.mockResolvedValueOnce({
+      id: 'np-project-1',
+      analysisModel: null,
+      characters: [{ id: 'char-1', name: 'Hero', introduction: 'hero intro' }],
+      locations: [{ id: 'loc-1', name: 'Old Town', summary: 'town' }],
+    })
+    prismaMock.novelPromotionEpisode.findUnique.mockReset()
+    prismaMock.novelPromotionEpisode.findUnique.mockResolvedValue({
+      id: 'episode-1',
+      novelPromotionProjectId: 'np-project-1',
+      novelText: 'episode text',
+    })
+
+    const job = buildJob({
+      episodeId: 'episode-1',
+      content: 'input content',
+      analysisModel: 'llm::analysis-from-payload',
+    })
+    await handleStoryToScriptTask(job)
+
+    expect(configMock.resolveProjectModelCapabilityGenerationOptions).toHaveBeenCalledWith(expect.objectContaining({
+      modelKey: 'llm::analysis-from-payload',
+    }))
+  })
 })

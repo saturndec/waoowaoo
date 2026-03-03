@@ -150,7 +150,8 @@
     "characters": [{"name": "角色A", "appearance": "初始形象"}],
     "location": "办公室",
     "scene_type": "daily",
-    "source_text": "角色A对角色B说：你好"
+    "source_text": "角色A对角色B说：你好",
+    "duration": 8
   }
 ]
 
@@ -177,4 +178,5 @@
 9. panel_number、characters、location、scene_type保持不变
 10. description可以适当优化，但不要改变核心内容
 11. ⚠️ 必须保留输入分镜中的 source_text 字段，原样输出到结果中，不得遗漏或修改
+12. ⚠️ 必须保留输入分镜中的 duration 字段，原样输出到结果中，不得遗漏或修改
 

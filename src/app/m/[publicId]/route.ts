@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getSignedUrl, toFetchableUrl } from '@/lib/cos'
 import { getMediaObjectByPublicId } from '@/lib/media/service'
+import { createScopedLogger } from '@/lib/logging/core'
+import { getRequestId } from '@/lib/api-errors'
 
 export const runtime = 'nodejs'
 
@@ -9,17 +11,74 @@ function buildEtag(media: { sha256?: string | null; id: string; updatedAt?: stri
   return `W/"media-${media.id}-${media.updatedAt || '0'}"`
 }
 
+function toUrlLogMeta(url: string, base?: string): {
+  isRelative: boolean
+  origin: string | null
+  pathname: string | null
+} {
+  const isRelative = url.startsWith('/')
+  try {
+    const parsed = isRelative ? new URL(url, base) : new URL(url)
+    return {
+      isRelative,
+      origin: parsed.origin,
+      pathname: parsed.pathname,
+    }
+  } catch {
+    return {
+      isRelative,
+      origin: null,
+      pathname: null,
+    }
+  }
+}
+
+function toLogError(error: unknown): { name: string; message: string; stack?: string } {
+  if (error instanceof Error) {
+    return {
+      name: error.name,
+      message: error.message,
+      stack: error.stack,
+    }
+  }
+  return {
+    name: 'UnknownError',
+    message: String(error),
+  }
+}
+
 export async function GET(
   request: NextRequest,
   context: { params: Promise<{ publicId: string }> },
 ) {
   const { publicId } = await context.params
+  const logger = createScopedLogger({
+    module: 'api.media.public',
+    action: 'media.public.get',
+    requestId: getRequestId(request),
+  })
   const media = await getMediaObjectByPublicId(publicId)
+  const range = request.headers.get('range')
 
   if (!media) {
+    logger.warn({
+      message: 'public media not found',
+      details: {
+        publicId,
+      },
+    })
     return NextResponse.json({ error: 'Media not found' }, { status: 404 })
   }
   if (!media.storageKey) {
+    logger.error({
+      message: 'public media storage key missing',
+      errorCode: 'MEDIA_STORAGE_KEY_MISSING',
+      retryable: false,
+      details: {
+        publicId,
+        mediaId: media.id,
+      },
+    })
     return NextResponse.json({ error: 'Media storage key missing' }, { status: 500 })
   }
 
@@ -40,15 +99,60 @@ export async function GET(
     })
   }
 
-  const fetchUrl = toFetchableUrl(getSignedUrl(media.storageKey))
-  const range = request.headers.get('range')
-
-  const upstream = await fetch(fetchUrl, {
-    headers: range ? { Range: range } : undefined,
+  const signedUrl = getSignedUrl(media.storageKey)
+  const fetchUrl = signedUrl.startsWith('/')
+    ? new URL(signedUrl, request.nextUrl.origin).toString()
+    : toFetchableUrl(signedUrl)
+  logger.info({
+    message: 'public media upstream fetch started',
+    details: {
+      publicId,
+      mediaId: media.id,
+      mimeType: media.mimeType || null,
+      hasRange: Boolean(range),
+      storageKeyPrefix: media.storageKey.substring(0, 80),
+      signedUrl: toUrlLogMeta(signedUrl, request.nextUrl.origin),
+      fetchUrl: toUrlLogMeta(fetchUrl, request.nextUrl.origin),
+    },
   })
+
+  let upstream: Response
+  try {
+    upstream = await fetch(fetchUrl, {
+      headers: range ? { Range: range } : undefined,
+    })
+  } catch (error) {
+    logger.error({
+      message: 'public media upstream fetch failed',
+      errorCode: 'MEDIA_UPSTREAM_FETCH_FAILED',
+      retryable: true,
+      details: {
+        publicId,
+        mediaId: media.id,
+        hasRange: Boolean(range),
+        storageKeyPrefix: media.storageKey.substring(0, 80),
+        fetchUrl: toUrlLogMeta(fetchUrl, request.nextUrl.origin),
+      },
+      error: toLogError(error),
+    })
+    return NextResponse.json({ error: 'Failed to fetch media' }, { status: 502 })
+  }
 
   if (!upstream.ok) {
     const status = upstream.status === 404 ? 404 : 502
+    logger.error({
+      message: 'public media upstream returned non-ok status',
+      errorCode: 'MEDIA_UPSTREAM_BAD_STATUS',
+      retryable: status >= 500,
+      details: {
+        publicId,
+        mediaId: media.id,
+        upstreamStatus: upstream.status,
+        upstreamContentType: upstream.headers.get('content-type'),
+        upstreamContentRange: upstream.headers.get('content-range'),
+        upstreamRequestId: upstream.headers.get('x-cos-request-id'),
+      },
+    })
     return NextResponse.json({ error: 'Failed to fetch media' }, { status })
   }
 

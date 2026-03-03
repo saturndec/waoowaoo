@@ -41,6 +41,7 @@ export async function handleScriptToStoryboardTask(job: Job<TaskJobData>) {
   const episodeIdRaw = typeof payload.episodeId === 'string' ? payload.episodeId : (job.data.episodeId || '')
   const episodeId = episodeIdRaw.trim()
   const inputModel = typeof payload.model === 'string' ? payload.model.trim() : ''
+  const analysisModelFromPayload = typeof payload.analysisModel === 'string' ? payload.analysisModel.trim() : ''
   const reasoning = payload.reasoning !== false
   const requestedReasoningEffort = parseEffort(payload.reasoningEffort)
   const temperature = parseTemperature(payload.temperature)
@@ -92,7 +93,7 @@ export async function handleScriptToStoryboardTask(job: Job<TaskJobData>) {
     throw new Error('No clips found')
   }
 
-  const model = inputModel || novelData.analysisModel || ''
+  const model = inputModel || analysisModelFromPayload || novelData.analysisModel || ''
   if (!model) {
     throw new Error('analysisModel is not configured')
   }

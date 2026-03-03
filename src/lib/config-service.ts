@@ -14,7 +14,7 @@ import {
   parseModelKeyStrict,
 } from '@/lib/model-config-contract'
 import { findBuiltinCapabilities } from '@/lib/model-capabilities/catalog'
-import { resolveGenerationOptionsForModel } from '@/lib/model-capabilities/lookup'
+import { resolveGenerationOptionsForModel, getCapabilityOptionFields } from '@/lib/model-capabilities/lookup'
 
 export type ParsedModelKey = { provider: string, modelId: string }
 
@@ -93,6 +93,53 @@ function parseCapabilitySelections(raw: string | null | undefined): CapabilitySe
   }
 }
 
+function resolveCapabilityFieldLabel(field: string): string {
+  if (field === 'resolution') return '分辨率'
+  if (field === 'duration') return '时长'
+  if (field === 'generationMode') return '生成模式'
+  if (field === 'generateAudio') return '音频开关'
+  return field
+}
+
+function extractCapabilityFieldFromErrorMessage(message: string): string | null {
+  const requiredMatch = message.match(/field\s+([a-zA-Z0-9_]+)\s+is required/i)
+  if (requiredMatch?.[1]) return requiredMatch[1]
+
+  const pathMatch = message.match(/capabilities\.[^\s]+\.(\w+)/)
+  if (pathMatch?.[1]) return pathMatch[1]
+  return null
+}
+
+function normalizeImageCapabilityError(input: {
+  error: unknown
+  settingsScope: '项目设置' | '用户配置'
+}): Error & { code: string; message: string } {
+  const rawMessage = input.error instanceof Error ? input.error.message : 'Image model capability not configured'
+  const trimmed = rawMessage.trim()
+  let message = trimmed || 'Image model capability not configured'
+
+  if (trimmed.startsWith('CAPABILITY_REQUIRED:')) {
+    const field = extractCapabilityFieldFromErrorMessage(trimmed)
+    if (field) {
+      message = `请先在${input.settingsScope}中为所选图像模型配置"${resolveCapabilityFieldLabel(field)}"`
+    } else {
+      message = `请先在${input.settingsScope}中配置所选图像模型的必填能力参数`
+    }
+  } else if (trimmed.startsWith('CAPABILITY_VALUE_NOT_ALLOWED:')) {
+    const field = extractCapabilityFieldFromErrorMessage(trimmed)
+    if (field) {
+      message = `所选图像模型的"${resolveCapabilityFieldLabel(field)}"配置无效，请在${input.settingsScope}中重新选择`
+    } else {
+      message = `所选图像模型的能力参数配置无效，请在${input.settingsScope}中重新选择`
+    }
+  }
+
+  return Object.assign(new Error(message), {
+    code: 'IMAGE_MODEL_CAPABILITY_NOT_CONFIGURED',
+    message,
+  })
+}
+
 export interface ProjectModelConfig {
   analysisModel: string | null
   characterModel: string | null
@@ -130,11 +177,11 @@ export async function getProjectModelConfig(
 
   return {
     analysisModel: extractModelKey(projectData?.analysisModel) || extractModelKey(userPref?.analysisModel) || null,
-    characterModel: extractModelKey(projectData?.characterModel) || null,
-    locationModel: extractModelKey(projectData?.locationModel) || null,
-    storyboardModel: extractModelKey(projectData?.storyboardModel) || null,
-    editModel: extractModelKey(projectData?.editModel) || null,
-    videoModel: extractModelKey(projectData?.videoModel) || null,
+    characterModel: extractModelKey(projectData?.characterModel) || extractModelKey(userPref?.characterModel) || null,
+    locationModel: extractModelKey(projectData?.locationModel) || extractModelKey(userPref?.locationModel) || null,
+    storyboardModel: extractModelKey(projectData?.storyboardModel) || extractModelKey(userPref?.storyboardModel) || null,
+    editModel: extractModelKey(projectData?.editModel) || extractModelKey(userPref?.editModel) || null,
+    videoModel: extractModelKey(projectData?.videoModel) || extractModelKey(userPref?.videoModel) || null,
     videoRatio: projectData?.videoRatio || '16:9',
     artStyle: projectData?.artStyle || null,
     capabilityDefaults: parseCapabilitySelections(userPref?.capabilityDefaults),
@@ -174,11 +221,37 @@ export function resolveModelCapabilityGenerationOptions(input: {
   }
 
   const capabilities = findBuiltinCapabilities(input.modelType, parsed.provider, parsed.modelId)
+
+  // For non-LLM models, auto-fill missing capability fields from the first catalog option.
+  // This lets generation work without explicit user configuration (e.g. resolution not set yet).
+  // Priority: runtimeSelections > capabilityOverrides > capabilityDefaults > catalog fallback.
+  let effectiveDefaults = input.capabilityDefaults
+  if (input.modelType !== 'llm' && capabilities) {
+    const optionFields = getCapabilityOptionFields(input.modelType, capabilities)
+    const existingModelDefaults = input.capabilityDefaults?.[input.modelKey]
+    const existingModelOverrides = input.capabilityOverrides?.[input.modelKey]
+    const catalogFallbacks: Record<string, CapabilityValue> = {}
+    for (const [field, options] of Object.entries(optionFields)) {
+      if (!existingModelDefaults?.[field] && !existingModelOverrides?.[field] && options.length > 0) {
+        catalogFallbacks[field] = options[0]
+      }
+    }
+    if (Object.keys(catalogFallbacks).length > 0) {
+      effectiveDefaults = {
+        ...(input.capabilityDefaults || {}),
+        [input.modelKey]: {
+          ...catalogFallbacks,
+          ...(existingModelDefaults || {}),
+        },
+      }
+    }
+  }
+
   const resolved = resolveGenerationOptionsForModel({
     modelType: input.modelType,
     modelKey: input.modelKey,
     capabilities,
-    capabilityDefaults: input.capabilityDefaults,
+    capabilityDefaults: effectiveDefaults,
     capabilityOverrides: input.capabilityOverrides,
     runtimeSelections: input.runtimeSelections,
     requireAllFields: input.modelType !== 'llm',
@@ -273,8 +346,10 @@ export async function buildImageBillingPayload(input: {
       modelKey: imageModel,
     })
   } catch (err) {
-    const message = err instanceof Error ? err.message : 'Image model capability not configured'
-    throw Object.assign(new Error(message), { code: 'IMAGE_MODEL_CAPABILITY_NOT_CONFIGURED', message })
+    throw normalizeImageCapabilityError({
+      error: err,
+      settingsScope: '项目设置',
+    })
   }
 
   return {
@@ -305,8 +380,10 @@ export function buildImageBillingPayloadFromUserConfig(input: {
       capabilityDefaults: userModelConfig.capabilityDefaults,
     })
   } catch (err) {
-    const message = err instanceof Error ? err.message : 'Image model capability not configured'
-    throw Object.assign(new Error(message), { code: 'IMAGE_MODEL_CAPABILITY_NOT_CONFIGURED', message })
+    throw normalizeImageCapabilityError({
+      error: err,
+      settingsScope: '用户配置',
+    })
   }
 
   return {

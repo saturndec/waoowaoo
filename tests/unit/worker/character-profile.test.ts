@@ -171,4 +171,18 @@ describe('worker character-profile behavior', () => {
     })
     expect(prismaMock.characterAppearance.create).toHaveBeenCalledTimes(2)
   })
+
+  it('bugfix: confirm uses payload.analysisModel when resolving project model', async () => {
+    const job = buildJob(TASK_TYPE.CHARACTER_PROFILE_CONFIRM, {
+      characterId: 'character-1',
+      analysisModel: 'llm::analysis-from-payload',
+    })
+
+    await handleCharacterProfileTask(job)
+
+    expect(helperMock.resolveProjectModel).toHaveBeenCalledWith(
+      'project-1',
+      'llm::analysis-from-payload',
+    )
+  })
 })

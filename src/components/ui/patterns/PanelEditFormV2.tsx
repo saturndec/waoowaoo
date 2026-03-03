@@ -64,7 +64,7 @@ export default function PanelEditFormV2({
         </div>
       ) : null}
 
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
         <GlassField label={t('panel.shotTypeLabel')}>
           <GlassInput
             density="compact"
@@ -80,6 +80,21 @@ export default function PanelEditFormV2({
             value={panelData.cameraMove || ''}
             onChange={(event) => onUpdate({ cameraMove: event.target.value || null })}
             placeholder={t('panel.cameraMovePlaceholder')}
+          />
+        </GlassField>
+
+        <GlassField label={t('panel.duration')}>
+          <GlassInput
+            density="compact"
+            type="number"
+            min={1}
+            max={60}
+            value={panelData.duration ?? ''}
+            onChange={(event) => {
+              const val = event.target.value === '' ? null : parseInt(event.target.value, 10)
+              onUpdate({ duration: Number.isFinite(val) ? val : null })
+            }}
+            placeholder={t('panel.durationPlaceholder')}
           />
         </GlassField>
       </div>

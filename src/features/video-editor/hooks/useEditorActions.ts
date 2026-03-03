@@ -39,7 +39,7 @@ export function createProjectFromPanels(
         return {
             id: `clip_${panel.id || panel.storyboardId}_${panel.panelIndex ?? index}`,
             src: panel.videoUrl!,
-            durationInFrames: Math.round((panel.duration || 3) * 30), // 默认 3 秒，30fps
+            durationInFrames: Math.round((panel.duration || 10) * 30), // 默认 10 秒，30fps
             attachment: {
                 audio: matchedVoice?.audioUrl ? {
                     src: matchedVoice.audioUrl,

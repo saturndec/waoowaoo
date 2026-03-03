@@ -97,6 +97,8 @@
         "tableView": "表格视图",
         "shotTypeLabel": "镜头类型",
         "cameraMove": "镜头运动",
+        "duration": "时长(秒)",
+        "durationPlaceholder": "10",
         "sourceText": "对应原文",
         "sceneDescription": "画面描述",
         "videoPrompt": "视频提示词",

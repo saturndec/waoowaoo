@@ -28,7 +28,8 @@ async function handleConfirmProfile(
 ) {
   const suppressProgress = options.suppressProgress === true
   const characterId = readRequiredString(payload.characterId, 'characterId')
-  const project = await resolveProjectModel(job.data.projectId)
+  const payloadModel = readText(payload.model).trim() || readText(payload.analysisModel).trim()
+  const project = await resolveProjectModel(job.data.projectId, payloadModel)
 
   const character = await prisma.novelPromotionCharacter.findFirst({
     where: {
@@ -171,8 +172,9 @@ async function handleConfirmProfile(
   }
 }
 
-async function handleBatchConfirmProfile(job: Job<TaskJobData>) {
-  const project = await resolveProjectModel(job.data.projectId)
+async function handleBatchConfirmProfile(job: Job<TaskJobData>, payload: AnyObj) {
+  const payloadModel = readText(payload.model).trim() || readText(payload.analysisModel).trim()
+  const project = await resolveProjectModel(job.data.projectId, payloadModel)
 
   const unconfirmedCharacters = await prisma.novelPromotionCharacter.findMany({
     where: {
@@ -235,7 +237,7 @@ export async function handleCharacterProfileTask(job: Job<TaskJobData>) {
     case TASK_TYPE.CHARACTER_PROFILE_CONFIRM:
       return await handleConfirmProfile(job, payload)
     case TASK_TYPE.CHARACTER_PROFILE_BATCH_CONFIRM:
-      return await handleBatchConfirmProfile(job)
+      return await handleBatchConfirmProfile(job, payload)
     default:
       throw new Error(`Unsupported character profile task type: ${job.data.type}`)
   }
