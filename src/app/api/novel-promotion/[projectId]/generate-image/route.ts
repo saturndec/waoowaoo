@@ -65,6 +65,10 @@ export const POST = apiHandler(async (
     ? projectModelConfig.characterModel
     : projectModelConfig.locationModel
 
+  if (!imageModel) {
+    throw new ApiError('INVALID_PARAMS', { code: 'IMAGE_MODEL_CAPABILITY_NOT_CONFIGURED', message: 'Image model not configured for this project' })
+  }
+
   let billingPayload: Record<string, unknown>
   try {
     billingPayload = await buildImageBillingPayload({
