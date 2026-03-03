@@ -88,6 +88,68 @@ git pull
 docker compose down && docker compose up -d --build
 ```
 
+## 🖥️ 非 Docker 部署 / Non-Docker Deployment
+
+如果你不使用 Docker，而是自行安装 MySQL 与 Redis，请按以下步骤。  
+If you do not use Docker and run MySQL + Redis yourself, follow these steps.
+
+1. 🧰 安装运行环境 / Install runtime dependencies:
+   - Node.js：建议与镜像保持一致，使用 `20.x`（参考 `Dockerfile` 的 `node:20-alpine`）
+   - MySQL：`8.0`（参考 `docker-compose.yml` 的 `mysql:8.0`）
+   - Redis：`7.x`（参考 `docker-compose.yml` 的 `redis:7-alpine`）
+
+2. 📦 安装依赖 / Install dependencies（任选其一 / choose one）：
+
+```bash
+yarn install
+```
+
+```bash
+npm install
+```
+
+3. 🧾 复制环境变量模板并修改 / Copy `.env` template and edit:
+
+```bash
+cp .env.example .env
+```
+
+4. ⚙️ 修改 `.env` 必填配置 / Update required `.env` values:
+   - `DATABASE_URL="mysql://<user>:<password>@127.0.0.1:3306/waoowaoo"`
+   - `REDIS_HOST=127.0.0.1`
+   - `REDIS_PORT=6379`
+
+5. 🗄️ 创建数据库 / Create database in MySQL:
+
+```sql
+CREATE DATABASE IF NOT EXISTS waoowaoo CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+```
+
+6. 🧱 初始化数据库结构（Prisma 建表）/ Initialize database schema (Prisma):
+
+```bash
+npx prisma db push --skip-generate
+```
+
+```bash
+yarn prisma db push --skip-generate
+```
+
+7. 🚀 启动项目 / Start the app:
+
+```bash
+yarn dev
+```
+
+or:
+
+```bash
+npm run dev
+```
+
+> 💡 提示 / Note: 非 Docker 模式不会自动执行 `prisma db push`，如未初始化会出现数据库连接或表不存在错误。  
+> In non-Docker mode, `prisma db push` is not run automatically. Missing this step can cause DB connection or table-not-found errors.
+
 ---
 
 ## 🔧 API 配置 / API Configuration
