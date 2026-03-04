@@ -1,0 +1,41 @@
+{
+  "id": "profile-openai-poll-fixes",
+  "name": "profile-openai-poll-fixes",
+  "title": "修复个人中心宽度、OpenAI兼容模型自动获取与分集轮询卡死",
+  "description": "",
+  "status": "planning",
+  "dev_type": null,
+  "scope": null,
+  "priority": "P2",
+  "creator": "lz-freedom",
+  "assignee": "lz-freedom",
+  "createdAt": "2026-03-03",
+  "completedAt": null,
+  "branch": null,
+  "base_branch": "main",
+  "worktree_path": null,
+  "current_phase": 0,
+  "next_action": [
+    {
+      "phase": 1,
+      "action": "implement"
+    },
+    {
+      "phase": 2,
+      "action": "check"
+    },
+    {
+      "phase": 3,
+      "action": "finish"
+    },
+    {
+      "phase": 4,
+      "action": "create-pr"
+    }
+  ],
+  "commit": null,
+  "pr_url": null,
+  "subtasks": [],
+  "relatedFiles": [],
+  "notes": ""
+}

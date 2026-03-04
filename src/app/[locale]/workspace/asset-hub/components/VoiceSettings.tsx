@@ -10,6 +10,9 @@ import { useTranslations } from 'next-intl'
 import { shouldShowError } from '@/lib/error-utils'
 import { useUploadCharacterVoice } from '@/lib/query/mutations'
 import { AppIcon } from '@/components/ui/icons'
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import { Card } from '@/components/ui/card'
 
 interface VoiceSettingsProps {
     characterId: string
@@ -101,24 +104,25 @@ export default function VoiceSettings({
 
     // 紧凑模式样式
     const containerClass = compact
-        ? 'glass-surface-soft border border-[var(--glass-stroke-base)] rounded-xl p-3'
-        : 'mt-4 glass-surface-soft border border-[var(--glass-stroke-base)] rounded-xl p-4'
+        ? 'p-3'
+        : 'mt-4 p-4'
 
     const headerClass = compact
-        ? 'flex items-center gap-2 mb-2 pb-2 border-b'
-        : 'flex items-center gap-2 mb-3 pb-2 border-b'
+        ? 'mb-2 flex items-center gap-2 border-b pb-2'
+        : 'mb-3 flex items-center gap-2 border-b pb-2'
 
     const iconSize = compact ? 'w-5 h-5' : 'w-6 h-6'
     const innerIconSize = compact ? 'w-3 h-3' : 'w-3.5 h-3.5'
 
     return (
-        <div className={containerClass}>
-            <div className={`${headerClass} ${hasCustomVoice ? 'border-[var(--glass-stroke-base)]' : 'border-[var(--glass-stroke-warning)]'}`}>
-                <div className={`${iconSize} rounded-full flex items-center justify-center ${hasCustomVoice ? 'glass-chip glass-chip-neutral p-0' : 'glass-chip glass-chip-warning p-0'}`}>
-                    <AppIcon name="mic" className={`${innerIconSize} ${hasCustomVoice ? 'text-[var(--glass-text-secondary)]' : 'text-[var(--glass-tone-warning-fg)]'}`} />
+        <Card className={containerClass}>
+            <div className={`${headerClass} ${hasCustomVoice ? 'border-border' : 'border-amber-300'}`}>
+                <div className={`${iconSize} flex items-center justify-center rounded-full ${hasCustomVoice ? 'bg-muted text-muted-foreground' : 'bg-amber-100 text-amber-700'}`}>
+                    <AppIcon name="mic" className={innerIconSize} />
                 </div>
-                <span className={`text-${compact ? 'xs' : 'sm'} font-medium ${hasCustomVoice ? 'text-[var(--glass-text-secondary)]' : 'text-[var(--glass-tone-warning-fg)]'}`}>
-                    {t('voiceSettings.title')}{!hasCustomVoice && <span className="text-[var(--glass-tone-warning-fg)]">({t('voiceSettings.noVoice')})</span>}
+                <span className={`font-medium ${compact ? 'text-xs' : 'text-sm'} ${hasCustomVoice ? 'text-foreground' : 'text-amber-700'}`}>
+                    {t('voiceSettings.title')}
+                    {!hasCustomVoice && <span className="ml-1 text-amber-700">({t('voiceSettings.noVoice')})</span>}
                 </span>
             </div>
 
@@ -131,51 +135,55 @@ export default function VoiceSettings({
                 className="hidden"
             />
 
-            <div className="flex gap-2 w-full justify-center flex-wrap">
-                <button
+            <div className="flex w-full flex-wrap justify-center gap-2">
+                <Button
                     onClick={() => voiceFileInputRef.current?.click()}
                     disabled={uploadVoice.isPending}
-                    className="glass-btn-base glass-btn-secondary flex-1 min-w-[70px] px-2 py-1.5 rounded-lg text-xs font-medium transition-all relative group whitespace-nowrap"
+                    variant="outline"
+                    size="sm"
+                    className="h-8 min-w-[90px] flex-1 whitespace-nowrap text-xs"
                 >
                     <div className="flex items-center justify-center gap-1">
-                        {hasCustomVoice && <div className="w-1.5 h-1.5 bg-[var(--glass-tone-success-fg)] rounded-full flex-shrink-0"></div>}
+                        {hasCustomVoice && <Badge className="h-1.5 w-1.5 rounded-full p-0" />}
                         <span>{uploadVoice.isPending ? t('voiceSettings.uploading') : hasCustomVoice ? t('voiceSettings.uploaded') : t('voiceSettings.uploadAudio')}</span>
                     </div>
-                </button>
+                </Button>
 
                 {onVoiceDesign && (
-                    <button
+                    <Button
                         onClick={() => onVoiceDesign(characterId, characterName)}
-                        className="glass-btn-base glass-btn-tone-info flex-1 min-w-[70px] px-2 py-1.5 rounded-lg text-xs font-medium transition-all whitespace-nowrap"
+                        variant="secondary"
+                        size="sm"
+                        className="h-8 min-w-[90px] flex-1 whitespace-nowrap text-xs"
                     >
                         <div className="flex items-center justify-center gap-1">
                             <AppIcon name="bolt" className="w-3.5 h-3.5 flex-shrink-0" />
                             <span>{t('voiceSettings.aiDesign')}</span>
                         </div>
-                    </button>
+                    </Button>
                 )}
 
                 {onVoiceSelect && (
-                    <button
+                    <Button
                         onClick={() => onVoiceSelect(characterId)}
-                        className="glass-btn-base glass-btn-secondary flex-1 min-w-[70px] px-2 py-1.5 rounded-lg text-xs text-[var(--glass-tone-info-fg)] font-medium transition-all whitespace-nowrap"
+                        variant="outline"
+                        size="sm"
+                        className="h-8 min-w-[90px] flex-1 whitespace-nowrap text-xs"
                     >
                         <div className="flex items-center justify-center gap-1">
                             <AppIcon name="folderCards" className="w-3.5 h-3.5 flex-shrink-0" />
                             <span>{t('voiceSettings.voiceLibrary')}</span>
                         </div>
-                    </button>
+                    </Button>
                 )}
             </div>
 
             {/* 试听按钮 - 仅在有音频时显示 */}
             {hasCustomVoice && (
-                <button
+                <Button
                     onClick={handlePreviewVoice}
-                    className={`glass-btn-base w-full mt-2 px-3 py-2 border rounded-lg text-sm font-medium transition-all ${isPreviewingVoice
-                        ? 'glass-btn-tone-info border-[var(--glass-stroke-focus)]'
-                        : 'glass-btn-secondary text-[var(--glass-tone-info-fg)] border-[var(--glass-stroke-base)]'
-                        }`}
+                    variant={isPreviewingVoice ? 'default' : 'outline'}
+                    className="mt-2 h-9 w-full text-sm"
                 >
                     <div className="flex items-center justify-center gap-2">
                         {isPreviewingVoice ? (
@@ -185,8 +193,8 @@ export default function VoiceSettings({
                         )}
                         {isPreviewingVoice ? t('voiceSettings.pause') : t('voiceSettings.preview')}
                     </div>
-                </button>
+                </Button>
             )}
-        </div>
+        </Card>
     )
 }

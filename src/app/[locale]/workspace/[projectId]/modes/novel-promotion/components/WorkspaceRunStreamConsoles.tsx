@@ -2,6 +2,7 @@
 
 import LLMStageStreamCard, { type LLMStageViewItem } from '@/components/llm-console/LLMStageStreamCard'
 import { useTranslations } from 'next-intl'
+import { Button } from '@/components/ui/button'
 
 type RunStreamStep = {
   id: string
@@ -76,17 +77,18 @@ export default function WorkspaceRunStreamConsoles({
   return (
     <>
       {showStoryToScriptConsole && storyToScriptConsoleMinimized && (
-        <button
+        <Button
           type="button"
           onClick={() => onStoryToScriptMinimizedChange(false)}
-          className="fixed right-6 bottom-6 z-[120] glass-surface-modal rounded-2xl px-4 py-3 text-sm font-medium text-[var(--glass-tone-info-fg)]"
+          variant="secondary"
+          className="fixed bottom-6 right-6 z-[120] rounded-2xl px-4 py-3 text-sm font-medium"
         >
           {t('runConsole.storyToScriptRunning')}
-        </button>
+        </Button>
       )}
 
       {showStoryToScriptConsole && !storyToScriptConsoleMinimized && (
-        <div className="fixed inset-0 z-[120] glass-overlay backdrop-blur-sm">
+        <div className="fixed inset-0 z-[120] bg-black/45 backdrop-blur-sm">
           <div className="mx-auto mt-4 h-[calc(100vh-2rem)] w-[min(96vw,1400px)]">
             <LLMStageStreamCard
               title={storyToScriptCardTitle}
@@ -103,20 +105,22 @@ export default function WorkspaceRunStreamConsoles({
               errorMessage={storyToScriptStream.errorMessage}
               topRightAction={(
                 <div className="flex items-center gap-2">
-                  <button
+                  <Button
                     type="button"
                     onClick={storyToScriptStream.reset}
-                    className="glass-btn-base glass-btn-secondary rounded-lg px-3 py-1.5 text-xs"
+                    variant="secondary"
+                    size="sm"
                   >
                     {t('runConsole.stop')}
-                  </button>
-                  <button
+                  </Button>
+                  <Button
                     type="button"
                     onClick={() => onStoryToScriptMinimizedChange(true)}
-                    className="glass-btn-base glass-btn-secondary rounded-lg px-3 py-1.5 text-xs"
+                    variant="secondary"
+                    size="sm"
                   >
                     {t('runConsole.minimize')}
-                  </button>
+                  </Button>
                 </div>
               )}
             />
@@ -125,17 +129,18 @@ export default function WorkspaceRunStreamConsoles({
       )}
 
       {showScriptToStoryboardConsole && scriptToStoryboardConsoleMinimized && (
-        <button
+        <Button
           type="button"
           onClick={() => onScriptToStoryboardMinimizedChange(false)}
-          className="fixed right-6 bottom-20 z-[120] glass-surface-modal rounded-2xl px-4 py-3 text-sm font-medium text-[var(--glass-tone-info-fg)]"
+          variant="secondary"
+          className="fixed bottom-20 right-6 z-[120] rounded-2xl px-4 py-3 text-sm font-medium"
         >
           {t('runConsole.scriptToStoryboardRunning')}
-        </button>
+        </Button>
       )}
 
       {showScriptToStoryboardConsole && !scriptToStoryboardConsoleMinimized && (
-        <div className="fixed inset-0 z-[120] glass-overlay backdrop-blur-sm">
+        <div className="fixed inset-0 z-[120] bg-black/45 backdrop-blur-sm">
           <div className="mx-auto mt-4 h-[calc(100vh-2rem)] w-[min(96vw,1400px)]">
             <LLMStageStreamCard
               title={scriptToStoryboardCardTitle}
@@ -152,20 +157,22 @@ export default function WorkspaceRunStreamConsoles({
               errorMessage={scriptToStoryboardStream.errorMessage}
               topRightAction={(
                 <div className="flex items-center gap-2">
-                  <button
+                  <Button
                     type="button"
                     onClick={scriptToStoryboardStream.reset}
-                    className="glass-btn-base glass-btn-secondary rounded-lg px-3 py-1.5 text-xs"
+                    variant="secondary"
+                    size="sm"
                   >
                     {t('runConsole.stop')}
-                  </button>
-                  <button
+                  </Button>
+                  <Button
                     type="button"
                     onClick={() => onScriptToStoryboardMinimizedChange(true)}
-                    className="glass-btn-base glass-btn-secondary rounded-lg px-3 py-1.5 text-xs"
+                    variant="secondary"
+                    size="sm"
                   >
                     {t('runConsole.minimize')}
-                  </button>
+                  </Button>
                 </div>
               )}
             />

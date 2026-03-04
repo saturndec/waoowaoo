@@ -1,5 +1,22 @@
 # AGENTS.md
+<!-- TRELLIS:START -->
+# Trellis Instructions
 
+These instructions are for AI assistants working in this project.
+
+Use the `/trellis:start` command when starting a new session to:
+- Initialize your developer identity
+- Understand current project context
+- Read relevant guidelines
+
+Use `@/.trellis/` to learn:
+- Development workflow (`workflow.md`)
+- Project structure guidelines (`spec/`)
+- Developer workspace (`workspace/`)
+
+Keep this managed block so 'trellis update' can refresh the instructions.
+
+<!-- TRELLIS:END -->
 ## 适用范围
 - 本规范适用于本仓库的所有目录与文件。
 - 若下级目录存在新的 `AGENTS.md`，下级规范仅可补充，不可弱化本文件的强约束。
@@ -54,3 +71,4 @@
 - 修 bug 必须同步新增回归测试，`it()` 名称体现该 bug 场景
 - 断言必须检查具体值（DB 写入字段值、函数入参、返回值），禁止只用 `toHaveBeenCalled()`
 - 禁止"自给自答"：mock 返回 X 再断言 X，没有经过任何业务逻辑
+

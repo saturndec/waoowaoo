@@ -1,5 +1,6 @@
 import { createScopedLogger } from '@/lib/logging/core'
 import { addTaskJob } from './queues'
+import { getQueueByType, getQueueTypeByTaskType } from './queues'
 import { publishTaskEvent } from './publisher'
 import {
   createTask,
@@ -119,6 +120,34 @@ export async function submitTask(params: {
     ? buildDefaultTaskBillingInfo(params.type, normalizedPayload)
     : null
   const resolvedBillingInfo = computedBillingInfo || params.billingInfo || null
+  const shouldCheckWorkerAvailability =
+    process.env.NODE_ENV !== 'test'
+    && process.env.TASK_REQUIRE_ACTIVE_WORKER !== 'false'
+  if (shouldCheckWorkerAvailability) {
+    const queueType = getQueueTypeByTaskType(params.type)
+    const queue = getQueueByType(queueType)
+    const workers = await queue.getWorkers()
+    if (workers.length <= 0) {
+      logger.error({
+        action: 'task.submit.worker_unavailable',
+        message: 'no active queue workers',
+        details: {
+          queueType,
+          taskType: params.type,
+        },
+        errorCode: 'WORKER_UNAVAILABLE',
+        retryable: true,
+      })
+      throw new ApiError('WORKER_UNAVAILABLE', {
+        code: 'WORKER_UNAVAILABLE',
+        message: 'no active queue workers',
+        details: {
+          queueType,
+          taskType: params.type,
+        },
+      })
+    }
+  }
 
   const { task, deduped } = await createTask({
     userId: params.userId,

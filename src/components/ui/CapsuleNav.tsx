@@ -75,13 +75,13 @@ function NavItem({
                     ${disabled
                         ? 'cursor-not-allowed'
                         : active
-                            ? 'text-[var(--glass-tone-info-fg)]'
-                            : 'text-[var(--glass-text-tertiary)] hover:text-[var(--glass-text-primary)]'}
+                            ? 'text-primary'
+                            : 'text-muted-foreground hover:text-foreground'}
                     ${!disabled && 'active:scale-[0.98]'}
                 `}
             >
                 {disabled ? (
-                    <span className="text-base font-medium text-[var(--glass-text-tertiary)] opacity-80">
+                    <span className="text-base font-medium text-muted-foreground opacity-80">
                         {label}
                     </span>
                 ) : (
@@ -90,25 +90,25 @@ function NavItem({
                 {/* 底部指示条 */}
                 <span className={`absolute bottom-1.5 left-1/2 -translate-x-1/2 h-[3px] rounded-full transition-all duration-300 ease-out
                     ${active
-                        ? 'w-6 bg-gradient-to-r from-[var(--glass-accent-from)] to-[var(--glass-accent-to)] shadow-[0_2px_8px_var(--glass-accent-shadow-soft)]'
+                        ? 'w-6 bg-gradient-to-r from-primary to-primary shadow-[0_2px_8px_rgba(59,130,246,0.28)]'
                         : 'w-0 bg-transparent'
                     }`}
                 />
                 {status === 'ready' && !disabled && (
                     <span className={`absolute top-2 right-2 w-1.5 h-1.5 rounded-full transition-colors
-                        ${active ? 'bg-[var(--glass-tone-info-fg)]' : 'bg-[var(--glass-tone-success-fg)]'}`}
+                        ${active ? 'bg-[#1d4ed8]' : 'bg-[#15803d]'}`}
                     />
                 )}
                 {status === 'processing' && !disabled && (
-                    <span className="absolute top-2 right-2 w-1.5 h-1.5 rounded-full bg-[var(--glass-accent-from)] animate-pulse" />
+                    <span className="absolute top-2 right-2 w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
                 )}
             </button>
             {disabled && disabledLabel && (
                 <div className="absolute left-1/2 -translate-x-1/2 top-full mt-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-10">
-                    <div className="glass-surface-soft text-xs px-3 py-2 whitespace-nowrap text-[var(--glass-text-primary)]">
+                    <div className="rounded-xl border border-border bg-muted/30 text-xs px-3 py-2 whitespace-nowrap text-foreground">
                         {disabledLabel}
                     </div>
-                    <div className="absolute left-1/2 -translate-x-1/2 -top-1 w-2 h-2 bg-[var(--glass-bg-surface-strong)] rotate-45 border-l border-t border-[var(--glass-stroke-base)]" />
+                    <div className="absolute left-1/2 -translate-x-1/2 -top-1 w-2 h-2 bg-muted/40 rotate-45 border-l border-t border-border" />
                 </div>
             )}
         </div>
@@ -218,37 +218,37 @@ export function EpisodeSelector({
         <div className="fixed top-20 left-6 z-[60]" ref={menuRef}>
             <button
                 onClick={() => setIsOpen(!isOpen)}
-                className="glass-btn-base glass-btn-secondary flex items-center gap-3 px-4 py-3 transition-all group"
+                className="inline-flex items-center justify-center border border-input bg-background hover:bg-accent hover:text-accent-foreground flex items-center gap-3 px-4 py-3 transition-all group"
                 style={{ borderRadius: '1.5rem' }}
             >
-                <div className="glass-surface-soft flex h-10 w-10 items-center justify-center rounded-xl text-xs font-bold text-[var(--glass-tone-info-fg)]">
+                <div className="rounded-xl border border-border bg-muted/30 flex h-10 w-10 items-center justify-center rounded-xl text-xs font-bold text-primary">
                     {t('episode')}
                 </div>
                 <div className="flex flex-col items-start text-left mr-2">
-                    <span className="text-sm font-bold text-[var(--glass-text-primary)] line-clamp-1 max-w-[160px]">
+                    <span className="text-sm font-bold text-foreground line-clamp-1 max-w-[160px]">
                         {projectName || t('project')}
                     </span>
-                    <span className="text-sm text-[var(--glass-text-secondary)] line-clamp-1 max-w-[160px]">
+                    <span className="text-sm text-muted-foreground line-clamp-1 max-w-[160px]">
                         {currentEp.title}
                     </span>
                 </div>
-                <AppIcon name="chevronDown" className={`w-4 h-4 text-[var(--glass-text-tertiary)] transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+                <AppIcon name="chevronDown" className={`w-4 h-4 text-muted-foreground transition-transform ${isOpen ? 'rotate-180' : ''}`} />
             </button>
 
             {isOpen && (
-                <div className="glass-surface-modal absolute left-0 top-full mt-2 w-72 origin-top-left p-2 animate-fadeIn">
+                <div className="rounded-xl border border-border bg-card shadow-lg absolute left-0 top-full mt-2 w-72 origin-top-left p-2 animate-fadeIn">
                     <div className="max-h-[300px] overflow-y-auto custom-scrollbar space-y-1">
                         {episodes.map(ep => {
                             const statusColor = ep.status?.visual === 'ready'
-                                ? 'bg-[var(--glass-tone-success-fg)]'
+                                ? 'bg-[#15803d]'
                                 : ep.status?.script === 'ready'
-                                    ? 'bg-[var(--glass-accent-from)]'
-                                    : 'bg-[var(--glass-stroke-strong)]'
+                                    ? 'bg-primary'
+                                    : 'bg-[var(--border)]'
 
                             // 编辑模式
                             if (editingId === ep.id) {
                                 return (
-                                    <div key={ep.id} className="flex items-center gap-2 p-3 rounded-xl bg-[var(--glass-tone-info-bg)] border border-[var(--glass-stroke-focus)]">
+                                    <div key={ep.id} className="flex items-center gap-2 p-3 rounded-xl bg-primary/10 border border-primary/40">
                                         <div className={`w-2 h-10 rounded-full ${statusColor}`} />
                                         <input
                                             type="text"
@@ -262,7 +262,7 @@ export function EpisodeSelector({
                                                     setEditingId(null)
                                                 }
                                             }}
-                                            className="flex-1 px-2 py-1 text-sm border border-[var(--glass-stroke-focus)] rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--glass-focus-ring-strong)]"
+                                            className="flex-1 px-2 py-1 text-sm border border-primary/40 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50"
                                             autoFocus
                                         />
                                         <button
@@ -272,13 +272,13 @@ export function EpisodeSelector({
                                                 }
                                                 setEditingId(null)
                                             }}
-                                            className="w-7 h-7 rounded-lg bg-[var(--glass-accent-from)] text-white hover:bg-[var(--glass-accent-to)] flex items-center justify-center"
+                                            className="w-7 h-7 rounded-lg bg-primary text-white hover:bg-primary/90 flex items-center justify-center"
                                         >
                                             <AppIcon name="check" className="w-4 h-4" />
                                         </button>
                                         <button
                                             onClick={() => setEditingId(null)}
-                                            className="w-7 h-7 rounded-lg bg-[var(--glass-bg-muted)] text-[var(--glass-text-secondary)] hover:bg-[var(--glass-bg-surface-strong)] flex items-center justify-center"
+                                            className="w-7 h-7 rounded-lg bg-muted text-muted-foreground hover:bg-muted/40 flex items-center justify-center"
                                         >
                                             <AppIcon name="close" className="w-4 h-4" />
                                         </button>
@@ -289,8 +289,8 @@ export function EpisodeSelector({
                             // 删除确认模式
                             if (deletingId === ep.id) {
                                 return (
-                                    <div key={ep.id} className="flex items-center gap-2 p-3 rounded-xl bg-[var(--glass-tone-danger-bg)] border border-[var(--glass-tone-danger-fg)]/30">
-                                        <div className="flex-1 text-sm font-medium text-[var(--glass-tone-danger-fg)] truncate">
+                                    <div key={ep.id} className="flex items-center gap-2 p-3 rounded-xl bg-destructive/10 border border-[#b91c1c]/30">
+                                        <div className="flex-1 text-sm font-medium text-destructive truncate">
                                             {t('deleteEpisode')}：{ep.title}
                                         </div>
                                         <button
@@ -299,13 +299,13 @@ export function EpisodeSelector({
                                                 setDeletingId(null)
                                                 setIsOpen(false)
                                             }}
-                                            className="px-2 py-1 rounded-lg bg-[var(--glass-tone-danger-fg)] text-white text-xs font-medium hover:opacity-90 transition-opacity"
+                                            className="px-2 py-1 rounded-lg bg-destructive text-white text-xs font-medium hover:opacity-90 transition-opacity"
                                         >
                                             {t('deleteEpisodeConfirm')}
                                         </button>
                                         <button
                                             onClick={() => setDeletingId(null)}
-                                            className="w-7 h-7 rounded-lg bg-[var(--glass-bg-muted)] text-[var(--glass-text-secondary)] hover:bg-[var(--glass-bg-surface-strong)] flex items-center justify-center"
+                                            className="w-7 h-7 rounded-lg bg-muted text-muted-foreground hover:bg-muted/40 flex items-center justify-center"
                                         >
                                             <AppIcon name="close" className="w-4 h-4" />
                                         </button>
@@ -317,8 +317,8 @@ export function EpisodeSelector({
                                 <div
                                     key={ep.id}
                                     className={`w-full flex items-center gap-3 p-3 rounded-xl transition-all ${ep.id === currentId
-                                        ? 'bg-[var(--glass-tone-info-bg)] border border-[var(--glass-stroke-focus)]'
-                                        : 'hover:bg-[var(--glass-bg-muted)] border border-transparent'
+                                        ? 'bg-primary/10 border border-primary/40'
+                                        : 'hover:bg-muted border border-transparent'
                                         }`}
                                 >
                                     <button
@@ -327,13 +327,13 @@ export function EpisodeSelector({
                                     >
                                         <div className={`w-2 h-10 rounded-full ${statusColor}`} />
                                         <div className="flex-1">
-                                            <div className="font-bold text-[var(--glass-text-primary)] text-sm truncate">{ep.title}</div>
+                                            <div className="font-bold text-foreground text-sm truncate">{ep.title}</div>
                                             {ep.summary && (
-                                                <div className="text-xs text-[var(--glass-text-tertiary)] truncate">{ep.summary}</div>
+                                                <div className="text-xs text-muted-foreground truncate">{ep.summary}</div>
                                             )}
                                         </div>
                                         {ep.id === currentId && (
-                                            <span className="flex h-4 w-4 items-center justify-center rounded-full bg-[var(--glass-tone-info-bg)] text-[var(--glass-tone-info-fg)]">
+                                            <span className="flex h-4 w-4 items-center justify-center rounded-full bg-primary/10 text-primary">
                                                 <AppIcon name="checkDot" className="h-2.5 w-2.5" />
                                             </span>
                                         )}
@@ -345,7 +345,7 @@ export function EpisodeSelector({
                                                 setEditingId(ep.id)
                                                 setEditingName(ep.title)
                                             }}
-                                            className="w-7 h-7 rounded-lg hover:bg-[var(--glass-bg-surface-strong)] flex items-center justify-center text-[var(--glass-text-tertiary)] hover:text-[var(--glass-text-secondary)] transition-colors"
+                                            className="w-7 h-7 rounded-lg hover:bg-muted/40 flex items-center justify-center text-muted-foreground hover:text-muted-foreground transition-colors"
                                             title={t('editEpisodeName')}
                                         >
                                             <AppIcon name="edit" className="w-4 h-4" />
@@ -357,7 +357,7 @@ export function EpisodeSelector({
                                                 e.stopPropagation()
                                                 setDeletingId(ep.id)
                                             }}
-                                            className="w-7 h-7 rounded-lg hover:bg-[var(--glass-tone-danger-bg)] flex items-center justify-center text-[var(--glass-text-tertiary)] hover:text-[var(--glass-tone-danger-fg)] transition-colors"
+                                            className="w-7 h-7 rounded-lg hover:bg-destructive/10 flex items-center justify-center text-muted-foreground hover:text-destructive transition-colors"
                                             title={t('deleteEpisode')}
                                         >
                                             <AppIcon name="trash" className="w-4 h-4" />
@@ -369,10 +369,10 @@ export function EpisodeSelector({
                     </div>
                     {onAdd && (
                         <>
-                            <div className="h-px bg-[var(--glass-bg-muted)] my-2 mx-2" />
+                            <div className="h-px bg-muted my-2 mx-2" />
                             <button
                                 onClick={() => { onAdd(); setIsOpen(false); }}
-                                className="w-full flex items-center justify-center gap-2 p-2 rounded-xl text-[var(--glass-text-tertiary)] hover:text-[var(--glass-tone-info-fg)] hover:bg-[var(--glass-tone-info-bg)] font-medium text-sm transition-colors"
+                                className="w-full flex items-center justify-center gap-2 p-2 rounded-xl text-muted-foreground hover:text-primary hover:bg-primary/10 font-medium text-sm transition-colors"
                             >
                                 <span className="text-lg">+</span> {t('newEpisode')}
                             </button>

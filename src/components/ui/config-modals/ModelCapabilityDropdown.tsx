@@ -14,6 +14,8 @@ import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react
 import { useTranslations } from 'next-intl'
 import type { CapabilityValue } from '@/lib/model-config-contract'
 import { AppIcon, RatioPreviewIcon } from '@/components/ui/icons'
+import { Button } from '@/components/ui/button'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 
 // ─── Types ────────────────────────────────────────────
 
@@ -203,6 +205,7 @@ export function ModelCapabilityDropdown({
         )
         .filter(Boolean)
         .join(' · ')
+    const shouldShowParamSummary = !compact && paramSummary.length > 0
 
     const triggerPy = compact ? 'py-1' : 'py-2.5'
     const triggerPx = compact ? 'px-1.5' : 'px-3'
@@ -211,89 +214,87 @@ export function ModelCapabilityDropdown({
     const providerSize = compact ? 'text-[9px]' : 'text-[10px]'
     const modelOptionTextSize = compact ? 'text-[12px]' : 'text-sm'
     const modelOptionProviderSize = compact ? 'text-[9px] px-1 py-0.5' : 'text-[10px] px-1.5 py-0.5'
+    const shouldShowProviderInTrigger = !compact
+    const panelMinWidth = compact ? '260px' : '340px'
 
     return (
         <div className="relative" ref={ref}>
-            {/* ─── Trigger ─── */}
-            <button
+            <Button
                 type="button"
+                variant="outline"
                 onClick={handleToggleOpen}
-                className={`glass-input-base ${triggerPx} ${triggerPy} flex w-full items-center justify-between gap-2 cursor-pointer transition-colors`}
+                className={`${triggerPx} ${triggerPy} h-auto w-full justify-between gap-2 bg-background text-left hover:bg-accent/30`}
             >
-                <div className="flex-1 min-w-0">
+                <div className="min-w-0 flex-1">
                     {selectedModel ? (
                         <>
-                            <div className="flex items-center gap-2">
-                                <span className={`${textSize} text-[var(--glass-text-primary)] font-medium`}>
+                            <div className="flex min-w-0 items-center gap-2">
+                                <span className={`${textSize} min-w-0 flex-1 truncate font-medium text-foreground`}>
                                     {selectedModel.label}
                                 </span>
-                                <span className={`${providerSize} px-1.5 py-0.5 rounded border border-[var(--glass-stroke-base)] text-[var(--glass-text-tertiary)]`}>
-                                    {selectedModel.providerName || selectedModel.provider || ''}
-                                </span>
+                                {shouldShowProviderInTrigger && (selectedModel.providerName || selectedModel.provider) && (
+                                    <span className={`${providerSize} max-w-[9rem] shrink-0 truncate whitespace-nowrap rounded border border-border px-1.5 py-0.5 text-muted-foreground`}>
+                                        {selectedModel.providerName || selectedModel.provider || ''}
+                                    </span>
+                                )}
                             </div>
-                            {paramSummary && (
-                                <div className={`${subTextSize} text-[var(--glass-text-tertiary)] mt-0.5 truncate`}>
+                            {shouldShowParamSummary && (
+                                <div className={`${subTextSize} mt-0.5 truncate text-muted-foreground`}>
                                     {paramSummary}
                                 </div>
                             )}
                         </>
                     ) : (
-                        <span className={`${textSize} text-[var(--glass-text-tertiary)]`}>
+                        <span className={`${textSize} text-muted-foreground`}>
                             {placeholder || t('pleaseSelect')}
                         </span>
                     )}
                 </div>
-                <AppIcon name="chevronDown" className={`w-4 h-4 text-[var(--glass-text-tertiary)] transition-transform shrink-0 ${isOpen ? 'rotate-180' : ''}`} />
-            </button>
+                <AppIcon name="chevronDown" className={`h-4 w-4 shrink-0 text-muted-foreground transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+            </Button>
 
-            {/* ─── Dropdown Panel ─── */}
             {isOpen && (
                 <div
-                    className={`glass-surface-modal absolute z-50 left-0 right-0 overflow-hidden flex flex-col ${openUpward ? 'bottom-full mb-1' : 'top-full mt-1'}`}
+                    className={`absolute left-0 right-0 z-50 flex flex-col overflow-hidden rounded-lg border border-border bg-popover text-popover-foreground shadow-md ${openUpward ? 'bottom-full mb-1' : 'top-full mt-1'}`}
                     style={{
-                        minWidth: compact ? '240px' : '320px',
+                        minWidth: panelMinWidth,
                         maxHeight: `${panelMaxHeight}px`,
                     }}
                 >
-                    {/* Model list */}
                     <div className="p-3 pb-2 shrink-0">
-                        <div className="text-[10px] font-semibold text-[var(--glass-text-tertiary)] uppercase tracking-wider mb-2">
+                        <div className="mb-2 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
                             {t('selectModel')}
                         </div>
                     </div>
                     <div className="px-3 pb-2 min-h-0 flex-1 overflow-y-auto custom-scrollbar">
                         <div className="space-y-1">
                             {models.map((m) => (
-                                <button
+                                <Button
                                     key={m.value}
                                     type="button"
                                     onClick={() => {
                                         if (m.disabled) return
                                         onModelChange(m.value)
-                                        // Don't close — let user configure params
                                     }}
                                     disabled={m.disabled}
-                                    className={`flex items-center gap-2 w-full px-3 py-2 rounded-lg text-left transition-all ${value === m.value
-                                        ? 'bg-[var(--glass-tone-info-bg)] text-[var(--glass-tone-info-fg)] shadow-[0_0_0_1px_rgba(79,128,255,0.35)]'
-                                        : m.disabled
-                                            ? 'text-[var(--glass-text-tertiary)] opacity-60 cursor-not-allowed'
-                                            : 'hover:bg-[var(--glass-bg-muted)] text-[var(--glass-text-secondary)]'
-                                        }`}
+                                    variant={value === m.value ? 'secondary' : 'ghost'}
+                                    className={`h-auto w-full justify-start gap-2 px-3 py-2 text-left ${m.disabled ? 'cursor-not-allowed opacity-60' : ''}`}
                                 >
-                                    <span className={`font-medium ${modelOptionTextSize}`}>{m.label}</span>
-                                    <span className={`${modelOptionProviderSize} rounded border border-[var(--glass-stroke-base)] text-[var(--glass-text-tertiary)]`}>
-                                        {m.providerName || m.provider || ''}
-                                    </span>
-                                </button>
+                                    <span className={`min-w-0 flex-1 truncate font-medium ${modelOptionTextSize}`}>{m.label}</span>
+                                    {(m.providerName || m.provider) && (
+                                        <span className={`${modelOptionProviderSize} max-w-[9rem] shrink-0 truncate whitespace-nowrap rounded border border-border text-muted-foreground`}>
+                                            {m.providerName || m.provider || ''}
+                                        </span>
+                                    )}
+                                </Button>
                             ))}
                         </div>
                     </div>
 
-                    {/* Capability params: fixed at panel bottom */}
                     {(visibleCapabilityFields.length > 0 || booleanToggles.length > 0) && (
-                        <div className="shrink-0 border-t border-[var(--glass-stroke-base)] bg-[var(--glass-bg-surface)]">
+                        <div className="shrink-0 border-t border-border bg-background">
                             <div className="p-3 pt-2">
-                                <div className="text-[10px] font-semibold text-[var(--glass-text-tertiary)] uppercase tracking-wider mb-2">
+                                <div className="mb-2 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
                                     {t('paramConfig')}
                                 </div>
                                 <div className="max-h-[156px] overflow-y-auto custom-scrollbar pr-1">
@@ -309,55 +310,57 @@ export function ModelCapabilityDropdown({
 
                                             return (
                                                 <div key={def.field} className="flex items-center justify-between gap-3">
-                                                    <span className="text-xs text-[var(--glass-text-secondary)] font-medium shrink-0">
+                                                    <span className="shrink-0 text-xs font-medium text-muted-foreground">
                                                         {resolveCapabilityLabel(def)}
                                                     </span>
                                                     {def.options.length === 1 ? (
-                                                        <span className="text-[11px] font-medium px-2 py-0.5 rounded-md bg-[var(--glass-bg-surface-strong)] border border-[var(--glass-stroke-base)] text-[var(--glass-text-secondary)] flex items-center gap-1">
+                                                        <span className="flex items-center gap-1 rounded-md border border-border bg-muted px-2 py-0.5 text-[11px] font-medium text-foreground">
                                                             {(() => {
                                                                 const ratioValue = String(def.options[0])
                                                                 return isR && isValidRatioText(ratioValue) ? <RatioIcon ratio={ratioValue} size={10} /> : null
                                                             })()}
                                                             {String(def.options[0])}
-                                                            <span className="text-[var(--glass-text-tertiary)] text-[10px]">({t('fixed')})</span>
+                                                            <span className="text-[10px] text-muted-foreground">({t('fixed')})</span>
                                                         </span>
                                                     ) : useSelect ? (
-                                                        <select
+                                                        <Select
                                                             value={selectValue}
-                                                            onChange={(event) => onCapabilityChange(def.field, event.target.value, def.options[0])}
-                                                            className="min-w-[110px] px-2 py-1 text-[11px] rounded-lg border border-[var(--glass-stroke-base)] bg-[var(--glass-bg-surface)] text-[var(--glass-text-secondary)] focus:outline-none focus:ring-1 focus:ring-[var(--glass-tone-info-fg)]"
+                                                            onValueChange={(nextValue) =>
+                                                                onCapabilityChange(def.field, nextValue, def.options[0])}
                                                         >
-                                                            {def.options.map((opt) => {
-                                                                const s = String(opt)
-                                                                return (
-                                                                    <option key={s} value={s}>
-                                                                        {s}
-                                                                    </option>
-                                                                )
-                                                            })}
-                                                        </select>
+                                                            <SelectTrigger className="h-7 min-w-[120px] px-2 text-[11px]">
+                                                                <SelectValue />
+                                                            </SelectTrigger>
+                                                            <SelectContent>
+                                                                {def.options.map((opt) => {
+                                                                    const s = String(opt)
+                                                                    return (
+                                                                        <SelectItem key={s} value={s} className="text-[11px]">
+                                                                            {s}
+                                                                        </SelectItem>
+                                                                    )
+                                                                })}
+                                                            </SelectContent>
+                                                        </Select>
                                                     ) : (
-                                                        <div className="flex rounded-lg border border-[var(--glass-stroke-base)] overflow-hidden">
+                                                        <div className="flex overflow-hidden rounded-lg border border-border">
                                                             {def.options.map((opt) => {
                                                                 const s = String(opt)
                                                                 const disabled = isOptionDisabled(def, opt)
-                                                                // If no override, highlight first option as default
                                                                 const on = currentVal ? s === currentVal : s === String(fallbackOption)
                                                                 return (
-                                                                    <button
+                                                                    <Button
                                                                         key={s}
                                                                         type="button"
+                                                                        size="sm"
+                                                                        variant={on ? 'secondary' : 'ghost'}
                                                                         onClick={() => onCapabilityChange(def.field, s, def.options[0])}
-                                                                        className={`px-2 py-0.5 text-[11px] font-medium transition-all flex items-center gap-1 cursor-pointer ${on
-                                                                            ? 'bg-[var(--glass-tone-info-bg)] text-[var(--glass-tone-info-fg)]'
-                                                                            : disabled
-                                                                                ? 'text-[var(--glass-text-tertiary)] bg-[var(--glass-bg-muted)] opacity-75 hover:opacity-95'
-                                                                                : 'text-[var(--glass-text-secondary)] bg-[var(--glass-bg-surface)] hover:bg-[var(--glass-bg-muted)]'
-                                                                            }`}
+                                                                        disabled={disabled}
+                                                                        className={`h-6 rounded-none px-2 text-[11px] ${disabled ? 'cursor-not-allowed opacity-60' : ''}`}
                                                                     >
                                                                         {isR && isValidRatioText(s) && <RatioIcon ratio={s} size={10} selected={on} />}
                                                                         {s}
-                                                                    </button>
+                                                                    </Button>
                                                                 )
                                                             })}
                                                         </div>
@@ -367,30 +370,28 @@ export function ModelCapabilityDropdown({
                                         })}
                                         {booleanToggles.map((toggle) => (
                                             <div key={toggle.key} className="flex items-center justify-between gap-3">
-                                                <span className="text-xs text-[var(--glass-text-secondary)] font-medium shrink-0">
+                                                <span className="shrink-0 text-xs font-medium text-muted-foreground">
                                                     {toggle.label}
                                                 </span>
-                                                <div className="flex rounded-lg border border-[var(--glass-stroke-base)] overflow-hidden">
-                                                    <button
+                                                <div className="flex overflow-hidden rounded-lg border border-border">
+                                                    <Button
                                                         type="button"
+                                                        size="sm"
+                                                        variant={toggle.value ? 'secondary' : 'ghost'}
                                                         onClick={() => toggle.onChange(true)}
-                                                        className={`px-2 py-0.5 text-[11px] font-medium transition-all ${toggle.value
-                                                            ? 'bg-[var(--glass-tone-info-bg)] text-[var(--glass-tone-info-fg)]'
-                                                            : 'text-[var(--glass-text-secondary)] hover:bg-[var(--glass-bg-muted)]'
-                                                            }`}
+                                                        className="h-6 rounded-none px-2 text-[11px]"
                                                     >
                                                         {toggle.onLabel || 'On'}
-                                                    </button>
-                                                    <button
+                                                    </Button>
+                                                    <Button
                                                         type="button"
+                                                        size="sm"
+                                                        variant={!toggle.value ? 'secondary' : 'ghost'}
                                                         onClick={() => toggle.onChange(false)}
-                                                        className={`px-2 py-0.5 text-[11px] font-medium transition-all ${!toggle.value
-                                                            ? 'bg-[var(--glass-tone-info-bg)] text-[var(--glass-tone-info-fg)]'
-                                                            : 'text-[var(--glass-text-secondary)] hover:bg-[var(--glass-bg-muted)]'
-                                                            }`}
+                                                        className="h-6 rounded-none px-2 text-[11px]"
                                                     >
                                                         {toggle.offLabel || 'Off'}
-                                                    </button>
+                                                    </Button>
                                                 </div>
                                             </div>
                                         ))}

@@ -1,0 +1,5 @@
+{"file": ".claude/commands/trellis/finish-work.md", "reason": "Finish work checklist"}
+{"file": ".claude/commands/trellis/check-backend.md", "reason": "Backend check spec"}
+{"file": ".claude/commands/trellis/check-frontend.md", "reason": "Frontend check spec"}
+{"file": ".trellis/spec/backend/error-handling.md", "reason": "校验错误处理契约"}
+{"file": ".trellis/spec/frontend/type-safety.md", "reason": "校验前端类型安全"}

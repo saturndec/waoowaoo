@@ -27,7 +27,7 @@ export default function LocationCardActions(props: LocationCardActionsProps) {
   if (props.mode === 'selection') {
     return (
       <>
-        <div className="mt-3 text-xs text-[var(--glass-text-tertiary)] text-center">
+        <div className="mt-3 text-xs text-muted-foreground text-center">
           {t('image.selectTip')}
         </div>
 
@@ -36,7 +36,7 @@ export default function LocationCardActions(props: LocationCardActionsProps) {
             <button
               onClick={props.onConfirmSelection}
               disabled={props.isConfirmingSelection}
-              className="px-4 py-2 text-sm bg-[var(--glass-tone-success-fg)] text-white rounded-lg hover:bg-[var(--glass-tone-success-fg)] transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+              className="px-4 py-2 text-sm bg-emerald-700 text-white rounded-lg hover:bg-emerald-700 transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
             >
               {props.isConfirmingSelection ? (
                 <TaskStatusInline state={props.confirmingSelectionState} className="text-white [&>span]:text-white [&_svg]:text-white" />
@@ -60,7 +60,7 @@ export default function LocationCardActions(props: LocationCardActionsProps) {
         type="button"
         onClick={props.onGenerate}
         disabled={!props.hasDescription}
-        className="glass-btn-base glass-btn-primary w-full py-1 text-xs disabled:opacity-50"
+        className="inline-flex items-center justify-center rounded-md bg-primary px-3 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 w-full py-1 text-xs disabled:opacity-50"
       >
         {t('common.generate')}
       </button>

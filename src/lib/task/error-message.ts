@@ -88,6 +88,14 @@ export function resolveTaskErrorSummary(payload: unknown, fallbackMessage = 'Tas
       ? getUserMessageByCode(normalized.code as UnifiedErrorCode)
       : null
 
+  if (normalized?.code === 'QUEUE_STUCK_TIMEOUT' && userFriendlyMessage) {
+    return {
+      code: normalized.code,
+      message: userFriendlyMessage,
+      cancelled: false,
+    }
+  }
+
   return {
     code: normalized?.code || code || null,
     message: message || userFriendlyMessage || normalizedMessage || fallbackMessage,

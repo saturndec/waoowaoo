@@ -59,10 +59,10 @@ export function StageNavigation({
           : `/workspace/${projectId}?stage=${stage.id}`
 
         const className = `px-5 py-2.5 rounded-xl transition-all font-medium inline-block ${isCurrent
-          ? 'bg-[var(--glass-accent-from)] text-white shadow-md'
+          ? 'bg-primary text-primary-foreground shadow-sm'
           : isEnabled
-            ? 'bg-[var(--glass-bg-muted)] text-[var(--glass-text-secondary)] hover:bg-[var(--glass-bg-muted)] cursor-pointer'
-            : 'bg-[var(--glass-bg-muted)] text-[var(--glass-text-tertiary)] cursor-not-allowed pointer-events-none'
+            ? 'bg-secondary text-secondary-foreground hover:bg-secondary/80 cursor-pointer'
+            : 'bg-muted text-muted-foreground cursor-not-allowed pointer-events-none'
           }`
 
         return (
@@ -88,7 +88,7 @@ export function StageNavigation({
               </span>
             )}
             {index < stages.length - 1 && (
-              <AppIcon name="chevronRight" className="w-5 h-5 text-[var(--glass-text-tertiary)]" />
+              <AppIcon name="chevronRight" className="h-5 w-5 text-muted-foreground" />
             )}
           </div>
         )
@@ -96,4 +96,3 @@ export function StageNavigation({
     </div>
   )
 }
-

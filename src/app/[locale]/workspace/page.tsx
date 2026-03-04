@@ -11,6 +11,12 @@ import ConfirmDialog from '@/components/ConfirmDialog'
 import TaskStatusInline from '@/components/task/TaskStatusInline'
 import { resolveTaskPresentationState } from '@/lib/task/presentation'
 import { AppIcon, IconGradientDefs } from '@/components/ui/icons'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent } from '@/components/ui/card'
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import { Input } from '@/components/ui/input'
+import { Textarea } from '@/components/ui/textarea'
+import { cn } from '@/lib/utils'
 
 interface ProjectStats {
   episodes: number
@@ -256,87 +262,88 @@ export default function WorkspacePage() {
 
   if (status === 'loading' || !session) {
     return (
-      <div className="glass-page min-h-screen flex items-center justify-center">
-        <div className="text-[var(--glass-text-secondary)]">{tc('loading')}</div>
+      <div className="flex min-h-screen items-center justify-center bg-background">
+        <div className="text-muted-foreground">{tc('loading')}</div>
       </div>
     )
   }
 
   return (
-    <div className="glass-page min-h-screen">
+    <div className="min-h-screen bg-background">
       {/* Header - 统一导航栏 */}
       <Navbar />
 
       {/* Main Content */}
-      <main className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-10 py-8">
+      <main className="w-full px-4 py-8 sm:px-6 lg:px-10">
         <div className="mb-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
-            <h1 className="text-3xl font-bold text-[var(--glass-text-primary)] mb-2">{t('title')}</h1>
-            <p className="text-[var(--glass-text-secondary)]">{t('subtitle')}</p>
+            <h1 className="mb-2 text-3xl font-bold text-foreground">{t('title')}</h1>
+            <p className="text-muted-foreground">{t('subtitle')}</p>
           </div>
 
           {/* 搜索框 */}
-          <div className="flex gap-2">
-            <input
+          <div className="flex w-full flex-wrap gap-2 sm:w-auto sm:flex-nowrap">
+            <Input
               type="text"
               value={searchInput}
               onChange={(e) => setSearchInput(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
               placeholder={t('searchPlaceholder')}
-              className="glass-input-base w-64 px-3 py-2"
+              className="w-full sm:w-64"
             />
-            <button
+            <Button
               onClick={handleSearch}
-              className="glass-btn-base glass-btn-primary px-4 py-2"
             >
               {t('searchButton')}
-            </button>
+            </Button>
             {searchQuery && (
-              <button
+              <Button
+                variant="outline"
                 onClick={() => {
                   setSearchInput('')
                   setSearchQuery('')
                   setPagination(prev => ({ ...prev, page: 1 }))
                 }}
-                className="glass-btn-base glass-btn-secondary px-4 py-2"
               >
                 {t('clearButton')}
-              </button>
+              </Button>
             )}
           </div>
         </div>
 
         {/* Projects Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+        <div className="grid justify-start gap-6 [grid-template-columns:repeat(auto-fill,minmax(min(100%,17rem),20rem))]">
           {/* New Project Card */}
-          <div
+          <Card
             onClick={() => setShowCreateModal(true)}
-            className="glass-surface p-6 cursor-pointer group flex items-center justify-center bg-gradient-to-br from-blue-500/5 via-cyan-500/5 to-blue-600/5 hover:from-blue-500/10 hover:via-cyan-500/10 hover:to-blue-600/10 transition-all duration-300"
+            className="group flex cursor-pointer items-center justify-center border-dashed bg-gradient-to-br from-blue-500/5 via-cyan-500/5 to-blue-600/5 p-6 transition-all duration-300 hover:border-primary/40 hover:from-blue-500/10 hover:via-cyan-500/10 hover:to-blue-600/10"
           >
-            <div className="flex flex-col items-center gap-3">
-              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center shadow-lg shadow-blue-500/20 group-hover:shadow-blue-500/40 group-hover:scale-110 transition-all duration-300">
-                <AppIcon name="plus" className="w-6 h-6 text-white" />
+            <CardContent className="flex flex-col items-center gap-3 p-0">
+              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-blue-500 to-cyan-500 shadow-lg shadow-blue-500/20 transition-all duration-300 group-hover:scale-110 group-hover:shadow-blue-500/40">
+                <AppIcon name="plus" className="h-6 w-6 text-white" />
               </div>
-              <span className="text-sm font-medium text-[var(--glass-text-secondary)] group-hover:text-[var(--glass-text-primary)] transition-colors">{t('newProject')}</span>
-            </div>
-          </div>
+              <span className="text-sm font-medium text-muted-foreground transition-colors group-hover:text-foreground">{t('newProject')}</span>
+            </CardContent>
+          </Card>
 
           {/* Project Cards */}
           {loading ? (
             // Loading skeleton
             Array.from({ length: 3 }).map((_, index) => (
-              <div key={index} className="glass-surface p-6 animate-pulse">
-                <div className="h-4 bg-[var(--glass-bg-muted)] rounded mb-3"></div>
-                <div className="h-3 bg-[var(--glass-bg-muted)] rounded mb-2"></div>
-                <div className="h-3 bg-[var(--glass-bg-muted)] rounded w-2/3"></div>
-              </div>
+              <Card key={index} className="animate-pulse p-6">
+                <CardContent className="space-y-3 p-0">
+                  <div className="h-4 rounded bg-muted"></div>
+                  <div className="h-3 rounded bg-muted"></div>
+                  <div className="h-3 w-2/3 rounded bg-muted"></div>
+                </CardContent>
+              </Card>
             ))
           ) : (
             projects.map((project) => (
               <Link
                 key={project.id}
                 href={`/workspace/${project.id}`}
-                className="glass-surface cursor-pointer relative group block hover:border-[var(--glass-tone-info-fg)]/40 transition-all duration-300 overflow-hidden"
+                className="group relative block overflow-hidden rounded-xl border bg-card transition-all duration-300 hover:border-primary/40 hover:shadow-md"
               >
                 {/* 悬停光效 */}
                 <div className="absolute inset-0 rounded-[inherit] bg-gradient-to-br from-blue-500/5 to-purple-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
@@ -344,16 +351,20 @@ export default function WorkspacePage() {
                 <div className="p-5 relative z-10">
                   {/* 操作按钮 */}
                   <div className="absolute top-3 right-3 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity z-20">
-                    <button
+                    <Button
                       onClick={(e) => openEditModal(project, e)}
-                      className="glass-btn-base glass-btn-secondary p-2 rounded-lg transition-colors"
+                      variant="secondary"
+                      size="icon"
+                      className="h-8 w-8"
                       title={t('editProject')}
                     >
-                      <AppIcon name="editSquare" className="w-4 h-4 text-[var(--glass-tone-info-fg)]" />
-                    </button>
-                    <button
+                      <AppIcon name="editSquare" className="h-4 w-4 text-primary" />
+                    </Button>
+                    <Button
                       onClick={(e) => openDeleteConfirm(project, e)}
-                      className="glass-btn-base glass-btn-secondary p-2 rounded-lg transition-colors"
+                      variant="secondary"
+                      size="icon"
+                      className="h-8 w-8"
                       title={t('deleteProject')}
                       disabled={deletingProjectId === project.id}
                     >
@@ -368,21 +379,21 @@ export default function WorkspacePage() {
                           className="[&>span]:sr-only"
                         />
                       ) : (
-                        <AppIcon name="trash" className="w-4 h-4 text-[var(--glass-tone-danger-fg)]" />
+                        <AppIcon name="trash" className="h-4 w-4 text-destructive" />
                       )}
-                    </button>
+                    </Button>
                   </div>
 
                   {/* 标题 */}
-                  <h3 className="text-lg font-bold text-[var(--glass-text-primary)] mb-2 line-clamp-2 pr-20 group-hover:text-[var(--glass-tone-info-fg)] transition-colors">
+                  <h3 className="mb-2 line-clamp-2 pr-20 text-lg font-bold text-foreground transition-colors group-hover:text-primary">
                     {project.name}
                   </h3>
 
                   {/* 描述：优先用户描述，fallback 到第一集故事 */}
                   {(project.description || project.stats?.firstEpisodePreview) && (
                     <div className="flex items-start gap-2 mb-4">
-                      <AppIcon name="fileText" className="w-4 h-4 text-[var(--glass-text-tertiary)] mt-0.5 flex-shrink-0" />
-                      <p className="text-sm text-[var(--glass-text-secondary)] line-clamp-2 leading-relaxed">
+                      <AppIcon name="fileText" className="mt-0.5 h-4 w-4 flex-shrink-0 text-muted-foreground" />
+                      <p className="line-clamp-2 text-sm leading-relaxed text-muted-foreground">
                         {project.description || project.stats?.firstEpisodePreview}
                       </p>
                     </div>
@@ -417,19 +428,19 @@ export default function WorkspacePage() {
                     </div>
                   ) : (
                     <div className="flex items-center gap-2.5 mb-3">
-                      <AppIcon name="statsBar" className="w-4 h-4 text-[var(--glass-text-tertiary)] flex-shrink-0" />
-                      <span className="text-xs text-[var(--glass-text-tertiary)]">{t('noContent')}</span>
+                      <AppIcon name="statsBar" className="h-4 w-4 flex-shrink-0 text-muted-foreground" />
+                      <span className="text-xs text-muted-foreground">{t('noContent')}</span>
                     </div>
                   )}
 
                   {/* 底部信息 */}
-                  <div className="flex items-center justify-between text-[11px] text-[var(--glass-text-tertiary)]">
+                  <div className="flex items-center justify-between text-[11px] text-muted-foreground">
                     <div className="flex items-center gap-1">
-                      <AppIcon name="clock" className="w-3 h-3" />
+                      <AppIcon name="clock" className="h-3 w-3" />
                       {formatDate(project.updatedAt)}
                     </div>
                     {project.totalCost !== undefined && project.totalCost > 0 && (
-                      <span className="text-[11px] font-mono font-medium text-[var(--glass-text-secondary)]">
+                      <span className="text-[11px] font-mono font-medium text-foreground/80">
                         {formatProjectCost(project.totalCost)}
                       </span>
                     )}
@@ -443,22 +454,22 @@ export default function WorkspacePage() {
         {/* Empty State */}
         {!loading && projects.length === 0 && (
           <div className="text-center py-12">
-            <div className="w-16 h-16 bg-[var(--glass-bg-muted)] rounded-xl flex items-center justify-center mx-auto mb-4">
-              <AppIcon name="folderCards" className="w-8 h-8 text-[var(--glass-text-tertiary)]" />
+            <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-xl bg-muted">
+              <AppIcon name="folderCards" className="h-8 w-8 text-muted-foreground" />
             </div>
-            <h3 className="text-lg font-medium text-[var(--glass-text-primary)] mb-2">
+            <h3 className="mb-2 text-lg font-medium text-foreground">
               {searchQuery ? t('noResults') : t('noProjects')}
             </h3>
-            <p className="text-[var(--glass-text-secondary)] mb-6">
+            <p className="mb-6 text-muted-foreground">
               {searchQuery ? t('noResultsDesc') : t('noProjectsDesc')}
             </p>
             {!searchQuery && (
-              <button
+              <Button
                 onClick={() => setShowCreateModal(true)}
-                className="glass-btn-base glass-btn-primary px-6 py-3"
+                className="px-6 py-3"
               >
                 {t('newProject')}
-              </button>
+              </Button>
             )}
           </div>
         )}
@@ -466,13 +477,14 @@ export default function WorkspacePage() {
         {/* 分页控件 */}
         {!loading && pagination.totalPages > 1 && (
           <div className="mt-8 flex items-center justify-center gap-2">
-            <button
+            <Button
+              variant="outline"
+              size="icon"
               onClick={() => handlePageChange(pagination.page - 1)}
               disabled={pagination.page <= 1}
-              className="glass-btn-base glass-btn-secondary px-3 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <AppIcon name="chevronLeft" className="w-5 h-5" />
-            </button>
+            </Button>
 
             {/* 页码按钮 */}
             {Array.from({ length: pagination.totalPages }, (_, i) => i + 1)
@@ -486,29 +498,29 @@ export default function WorkspacePage() {
                 <span key={page} className="flex items-center">
                   {/* 显示省略号 */}
                   {index > 0 && array[index - 1] !== page - 1 && (
-                    <span className="px-2 text-[var(--glass-text-tertiary)]">...</span>
+                    <span className="px-2 text-muted-foreground">...</span>
                   )}
-                  <button
+                  <Button
                     onClick={() => handlePageChange(page)}
-                    className={`glass-btn-base px-4 py-2 ${page === pagination.page
-                      ? 'glass-btn-primary'
-                      : 'glass-btn-secondary'
-                      }`}
+                    size="sm"
+                    variant={page === pagination.page ? 'default' : 'outline'}
+                    className={cn('px-4')}
                   >
                     {page}
-                  </button>
+                  </Button>
                 </span>
               ))}
 
-            <button
+            <Button
+              variant="outline"
+              size="icon"
               onClick={() => handlePageChange(pagination.page + 1)}
               disabled={pagination.page >= pagination.totalPages}
-              className="glass-btn-base glass-btn-secondary px-3 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <AppIcon name="chevronRight" className="w-5 h-5" />
-            </button>
+            </Button>
 
-            <span className="ml-4 text-sm text-[var(--glass-text-tertiary)]">
+            <span className="ml-4 text-sm text-muted-foreground">
               {t('totalProjects', { count: pagination.total })}
             </span>
           </div>
@@ -516,126 +528,135 @@ export default function WorkspacePage() {
       </main>
 
       {/* Create Project Modal - 简化版，只有名称和描述 */}
-      {showCreateModal && (
-        <div className="fixed inset-0 glass-overlay flex items-center justify-center z-50 backdrop-blur-sm">
-          <div className="glass-surface-modal p-6 w-full max-w-md mx-4">
-            <h2 className="text-xl font-bold text-[var(--glass-text-primary)] mb-4">{t('createProject')}</h2>
-            <form onSubmit={handleCreateProject}>
-              <div className="mb-4">
-                <label htmlFor="name" className="glass-field-label block mb-2">
-                  {t('projectName')} *
-                </label>
-                <input
-                  id="name"
-                  type="text"
-                  value={formData.name}
-                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  className="glass-input-base w-full px-3 py-2"
-                  placeholder={t('projectNamePlaceholder')}
-                  maxLength={100}
-                  required
-                  autoFocus
-                />
-              </div>
-              <div className="mb-6">
-                <label htmlFor="description" className="glass-field-label block mb-2">
-                  {t('projectDescription')}
-                </label>
-                <textarea
-                  id="description"
-                  value={formData.description}
-                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                  className="glass-textarea-base w-full px-3 py-2"
-                  placeholder={t('projectDescriptionPlaceholder')}
-                  rows={3}
-                  maxLength={500}
-                />
-              </div>
-              <div className="flex justify-end space-x-3">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setShowCreateModal(false)
-                    setFormData({ name: '', description: '' })
-                  }}
-                  className="glass-btn-base glass-btn-secondary px-4 py-2"
-                  disabled={createLoading}
-                >
-                  {tc('cancel')}
-                </button>
-                <button
-                  type="submit"
-                  className="glass-btn-base glass-btn-primary px-4 py-2 disabled:opacity-50"
-                  disabled={createLoading || !formData.name.trim()}
-                >
-                  {createLoading ? t('creating') : t('createProject')}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
+      <Dialog
+        open={showCreateModal}
+        onOpenChange={(open) => {
+          setShowCreateModal(open)
+          if (!open) setFormData({ name: '', description: '' })
+        }}
+      >
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>{t('createProject')}</DialogTitle>
+          </DialogHeader>
+          <form onSubmit={handleCreateProject} className="space-y-4">
+            <div className="space-y-2">
+              <label htmlFor="name" className="text-sm font-medium text-foreground">
+                {t('projectName')} *
+              </label>
+              <Input
+                id="name"
+                type="text"
+                value={formData.name}
+                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                placeholder={t('projectNamePlaceholder')}
+                maxLength={100}
+                required
+                autoFocus
+              />
+            </div>
+            <div className="space-y-2">
+              <label htmlFor="description" className="text-sm font-medium text-foreground">
+                {t('projectDescription')}
+              </label>
+              <Textarea
+                id="description"
+                value={formData.description}
+                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                placeholder={t('projectDescriptionPlaceholder')}
+                rows={3}
+                maxLength={500}
+              />
+            </div>
+            <DialogFooter>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => {
+                  setShowCreateModal(false)
+                  setFormData({ name: '', description: '' })
+                }}
+                disabled={createLoading}
+              >
+                {tc('cancel')}
+              </Button>
+              <Button
+                type="submit"
+                disabled={createLoading || !formData.name.trim()}
+              >
+                {createLoading ? t('creating') : t('createProject')}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
 
       {/* Edit Project Modal */}
-      {showEditModal && editingProject && (
-        <div className="fixed inset-0 glass-overlay flex items-center justify-center z-50 backdrop-blur-sm">
-          <div className="glass-surface-modal p-6 w-full max-w-md mx-4">
-            <h2 className="text-xl font-bold text-[var(--glass-text-primary)] mb-4">{t('editProject')}</h2>
-            <form onSubmit={handleEditProject}>
-              <div className="mb-4">
-                <label htmlFor="edit-name" className="glass-field-label block mb-2">
-                  {t('projectName')} *
-                </label>
-                <input
-                  id="edit-name"
-                  type="text"
-                  value={editFormData.name}
-                  onChange={(e) => setEditFormData({ ...editFormData, name: e.target.value })}
-                  className="glass-input-base w-full px-3 py-2"
-                  placeholder={t('projectNamePlaceholder')}
-                  maxLength={100}
-                  required
-                />
-              </div>
-              <div className="mb-6">
-                <label htmlFor="edit-description" className="glass-field-label block mb-2">
-                  {t('projectDescription')}
-                </label>
-                <textarea
-                  id="edit-description"
-                  value={editFormData.description}
-                  onChange={(e) => setEditFormData({ ...editFormData, description: e.target.value })}
-                  className="glass-textarea-base w-full px-3 py-2"
-                  placeholder={t('projectDescriptionPlaceholder')}
-                  rows={3}
-                  maxLength={500}
-                />
-              </div>
-              <div className="flex justify-end space-x-3">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setShowEditModal(false)
-                    setEditingProject(null)
-                    setEditFormData({ name: '', description: '' })
-                  }}
-                  className="glass-btn-base glass-btn-secondary px-4 py-2"
-                  disabled={createLoading}
-                >
-                  {tc('cancel')}
-                </button>
-                <button
-                  type="submit"
-                  className="glass-btn-base glass-btn-primary px-4 py-2 disabled:opacity-50"
-                  disabled={createLoading || !editFormData.name.trim()}
-                >
-                  {createLoading ? t('saving') : tc('save')}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
+      <Dialog
+        open={showEditModal && !!editingProject}
+        onOpenChange={(open) => {
+          setShowEditModal(open)
+          if (!open) {
+            setEditingProject(null)
+            setEditFormData({ name: '', description: '' })
+          }
+        }}
+      >
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>{t('editProject')}</DialogTitle>
+          </DialogHeader>
+          <form onSubmit={handleEditProject} className="space-y-4">
+            <div className="space-y-2">
+              <label htmlFor="edit-name" className="text-sm font-medium text-foreground">
+                {t('projectName')} *
+              </label>
+              <Input
+                id="edit-name"
+                type="text"
+                value={editFormData.name}
+                onChange={(e) => setEditFormData({ ...editFormData, name: e.target.value })}
+                placeholder={t('projectNamePlaceholder')}
+                maxLength={100}
+                required
+              />
+            </div>
+            <div className="space-y-2">
+              <label htmlFor="edit-description" className="text-sm font-medium text-foreground">
+                {t('projectDescription')}
+              </label>
+              <Textarea
+                id="edit-description"
+                value={editFormData.description}
+                onChange={(e) => setEditFormData({ ...editFormData, description: e.target.value })}
+                placeholder={t('projectDescriptionPlaceholder')}
+                rows={3}
+                maxLength={500}
+              />
+            </div>
+            <DialogFooter>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => {
+                  setShowEditModal(false)
+                  setEditingProject(null)
+                  setEditFormData({ name: '', description: '' })
+                }}
+                disabled={createLoading}
+              >
+                {tc('cancel')}
+              </Button>
+              <Button
+                type="submit"
+                disabled={createLoading || !editFormData.name.trim()}
+              >
+                {createLoading ? t('saving') : tc('save')}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
 
       {/* 删除确认对话框 */}
       <ConfirmDialog

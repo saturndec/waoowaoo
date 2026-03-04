@@ -14,6 +14,7 @@ import { MediaImageWithLoading } from '@/components/media/MediaImageWithLoading'
 import { resolveTaskPresentationState } from '@/lib/task/presentation'
 import TaskStatusOverlay from '@/components/task/TaskStatusOverlay'
 import TaskStatusInline from '@/components/task/TaskStatusInline'
+import { Button } from '@/components/ui/button'
 import { AppIcon } from '@/components/ui/icons'
 
 interface LocationImage {
@@ -176,47 +177,47 @@ export function LocationCard({ location, onImageClick, onImageEdit, onEdit }: Lo
   // 多图选择模式
   if (hasMultipleImages) {
     return (
-      <div className="col-span-3 glass-surface p-4">
+      <div className="col-span-1 rounded-xl border bg-card p-4 shadow-sm md:col-span-2">
         <input ref={fileInputRef} type="file" accept="image/*" onChange={handleUpload} className="hidden" />
 
         {/* 顶部：名字 + 操作 */}
         <div className="flex items-start justify-between mb-4">
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 mb-1">
-              <span className="text-sm font-semibold text-[var(--glass-text-primary)]">{location.name}</span>
+              <span className="text-sm font-semibold text-foreground">{location.name}</span>
             </div>
             {location.summary && (
-              <div className="text-xs text-[var(--glass-text-secondary)] mb-1 line-clamp-2" title={location.summary}>
+              <div className="mb-1 line-clamp-2 text-xs text-muted-foreground" title={location.summary}>
                 {location.summary}
               </div>
             )}
-            <div className="text-xs text-[var(--glass-text-tertiary)]">
+            <div className="text-xs text-muted-foreground">
               {effectiveSelectedIndex !== null ? tAssets('image.optionNumber', { number: effectiveSelectedIndex + 1 }) : tAssets('image.selectFirst')}
             </div>
           </div>
           <div className="flex items-center gap-1 ml-2">
-            <button onClick={handleGenerate} disabled={isTaskRunning} className="glass-btn-base glass-btn-soft h-6 w-6 rounded-md" title={t('regenerate')}>
+            <Button onClick={handleGenerate} disabled={isTaskRunning} variant="ghost" size="icon" className="h-7 w-7" title={t('regenerate')}>
               {isTaskRunning ? (
-                <TaskStatusInline state={displayTaskPresentation} className="[&_span]:sr-only [&_svg]:text-[var(--glass-tone-info-fg)]" />
+                <TaskStatusInline state={displayTaskPresentation} className="[&_span]:sr-only [&_svg]:text-primary" />
               ) : (
-                <AppIcon name="refresh" className="w-4 h-4 text-[var(--glass-tone-info-fg)]" />
+                <AppIcon name="refresh" className="h-4 w-4 text-primary" />
               )}
-            </button>
+            </Button>
             {hasPreviousVersion && (
-              <button onClick={handleUndo} className="glass-btn-base glass-btn-soft h-6 w-6 rounded-md" title={tAssets('image.undo')}>
-                <AppIcon name="sparkles" className="w-4 h-4 text-[var(--glass-tone-warning-fg)]" />
-              </button>
+              <Button onClick={handleUndo} variant="ghost" size="icon" className="h-7 w-7" title={tAssets('image.undo')}>
+                <AppIcon name="sparkles" className="h-4 w-4 text-amber-600" />
+              </Button>
             )}
-            <button onClick={() => setShowDeleteConfirm(true)} className="glass-btn-base glass-btn-soft h-6 w-6 rounded-md">
-              <AppIcon name="trash" className="w-4 h-4 text-[var(--glass-tone-danger-fg)]" />
-            </button>
+            <Button onClick={() => setShowDeleteConfirm(true)} variant="ghost" size="icon" className="h-7 w-7 text-destructive hover:text-destructive">
+              <AppIcon name="trash" className="h-4 w-4" />
+            </Button>
           </div>
         </div>
 
         {/* 任务失败错误提示 */}
         {taskErrorDisplay && !isTaskRunning && (
-          <div className="flex items-center gap-2 mb-3 p-2 rounded-lg bg-[var(--glass-danger-ring)] text-[var(--glass-tone-danger-fg)]">
-            <AppIcon name="alert" className="w-4 h-4 shrink-0" />
+          <div className="mb-3 flex items-center gap-2 rounded-lg bg-destructive/10 p-2 text-destructive">
+            <AppIcon name="alert" className="h-4 w-4 shrink-0" />
             <span className="text-xs line-clamp-2">{taskErrorDisplay.message}</span>
           </div>
         )}
@@ -229,7 +230,7 @@ export function LocationCard({ location, onImageClick, onImageEdit, onEdit }: Lo
               <div key={img.id} className="relative group/thumb">
                 <div
                   onClick={() => onImageClick?.(img.imageUrl!)}
-                  className={`rounded-lg overflow-hidden border-2 cursor-zoom-in transition-all ${isThisSelected ? 'border-[var(--glass-stroke-success)] ring-2 ring-[var(--glass-success-ring)]' : 'border-[var(--glass-stroke-base)] hover:border-[var(--glass-stroke-focus)]'}`}
+                  className={`cursor-zoom-in overflow-hidden rounded-lg border-2 transition-all ${isThisSelected ? 'border-emerald-500 ring-2 ring-emerald-200' : 'border-border hover:border-primary/40'}`}
                 >
                   <MediaImageWithLoading
                     src={img.imageUrl!}
@@ -237,16 +238,18 @@ export function LocationCard({ location, onImageClick, onImageEdit, onEdit }: Lo
                     containerClassName="w-full min-h-[88px]"
                     className="w-full h-auto object-contain"
                   />
-                  <div className={`absolute bottom-2 left-2 text-xs px-2 py-0.5 rounded ${isThisSelected ? 'glass-chip glass-chip-success' : 'glass-chip glass-chip-neutral'}`}>
+                  <div className={`absolute bottom-2 left-2 rounded px-2 py-0.5 text-xs ${isThisSelected ? 'bg-emerald-600 text-white' : 'bg-background/90 text-foreground'}`}>
                     {tAssets('image.optionNumber', { number: img.imageIndex + 1 })}
                   </div>
                 </div>
-                <button
+                <Button
                   onClick={(e) => { e.stopPropagation(); handleSelectImage(isThisSelected ? null : img.imageIndex) }}
-                  className={`absolute top-2 right-2 glass-btn-base h-7 w-7 rounded-full ${isThisSelected ? 'glass-btn-tone-success' : 'glass-btn-secondary'}`}
+                  variant={isThisSelected ? 'default' : 'secondary'}
+                  size="icon"
+                  className="absolute right-2 top-2 h-7 w-7 rounded-full"
                 >
-                  <AppIcon name="check" className="w-4 h-4" />
-                </button>
+                  <AppIcon name="check" className="h-4 w-4" />
+                </Button>
               </div>
             )
           })}
@@ -255,25 +258,25 @@ export function LocationCard({ location, onImageClick, onImageEdit, onEdit }: Lo
         {/* 确认按钮 */}
         {effectiveSelectedIndex !== null && (
           <div className="mt-4 flex justify-end">
-            <button onClick={handleConfirmSelection} disabled={selectImage.isPending} className="glass-btn-base glass-btn-tone-success px-4 py-2 rounded-lg flex items-center gap-2 text-sm">
+            <Button onClick={handleConfirmSelection} disabled={selectImage.isPending} className="h-9 gap-2 px-4 text-sm">
               {selectImage.isPending ? (
                 <TaskStatusInline state={selectImageRunningState} className="text-white [&>span]:sr-only [&_svg]:text-white" />
               ) : (
-                <AppIcon name="check" className="w-4 h-4" />
+                <AppIcon name="check" className="h-4 w-4" />
               )}
               {tAssets('image.confirmOption', { number: effectiveSelectedIndex + 1 })}
-            </button>
+            </Button>
           </div>
         )}
 
         {/* 删除确认 */}
         {showDeleteConfirm && (
-          <div className="absolute inset-0 glass-overlay flex items-center justify-center z-20 rounded-xl">
-            <div className="glass-surface-modal p-4 m-4">
-              <p className="mb-4 text-sm text-[var(--glass-text-primary)]">{t('confirmDeleteLocation')}</p>
+          <div className="absolute inset-0 z-20 flex items-center justify-center rounded-xl bg-black/45">
+            <div className="m-4 w-full max-w-sm rounded-xl border bg-card p-4 shadow-xl">
+              <p className="mb-4 text-sm text-foreground">{t('confirmDeleteLocation')}</p>
               <div className="flex gap-2 justify-end">
-                <button onClick={() => setShowDeleteConfirm(false)} className="glass-btn-base glass-btn-secondary px-3 py-1.5 rounded-lg text-sm">{t('cancel')}</button>
-                <button onClick={handleDelete} className="glass-btn-base glass-btn-danger px-3 py-1.5 rounded-lg text-sm">{t('delete')}</button>
+                <Button variant="outline" size="sm" onClick={() => setShowDeleteConfirm(false)}>{t('cancel')}</Button>
+                <Button variant="destructive" size="sm" onClick={handleDelete}>{t('delete')}</Button>
               </div>
             </div>
           </div>
@@ -284,11 +287,11 @@ export function LocationCard({ location, onImageClick, onImageEdit, onEdit }: Lo
 
   // 单图模式
   return (
-    <div className="glass-surface overflow-hidden relative group">
+    <div className="group relative overflow-hidden rounded-xl border bg-card shadow-sm">
       <input ref={fileInputRef} type="file" accept="image/*" onChange={handleUpload} className="hidden" />
 
       {/* 图片区域 */}
-      <div className="relative bg-[var(--glass-bg-muted)] min-h-[100px]">
+      <div className="relative min-h-[100px] bg-muted/50">
         {displayImageUrl ? (
           <>
             <MediaImageWithLoading
@@ -301,38 +304,38 @@ export function LocationCard({ location, onImageClick, onImageEdit, onEdit }: Lo
             {/* 操作按钮 - 非生成时显示 */}
             {!isTaskRunning && (
               <div className="absolute top-2 left-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                <button onClick={() => fileInputRef.current?.click()} disabled={uploadImage.isPending} className="glass-btn-base glass-btn-secondary h-7 w-7 rounded-full">
-                  <AppIcon name="upload" className="w-4 h-4 text-[var(--glass-tone-success-fg)]" />
-                </button>
-                <button onClick={() => onImageEdit?.('location', location.id, location.name, currentImageIndex)} className="glass-btn-base glass-btn-tone-info h-7 w-7 rounded-full">
-                  <AppIcon name="edit" className="w-4 h-4" />
-                </button>
-                <button onClick={handleGenerate} className="glass-btn-base glass-btn-secondary h-7 w-7 rounded-full">
-                  <AppIcon name="refresh" className="w-4 h-4 text-[var(--glass-tone-info-fg)]" />
-                </button>
+                <Button onClick={() => fileInputRef.current?.click()} disabled={uploadImage.isPending} variant="secondary" size="icon" className="h-7 w-7 rounded-full">
+                  <AppIcon name="upload" className="h-4 w-4 text-emerald-600" />
+                </Button>
+                <Button onClick={() => onImageEdit?.('location', location.id, location.name, currentImageIndex)} variant="secondary" size="icon" className="h-7 w-7 rounded-full">
+                  <AppIcon name="edit" className="h-4 w-4" />
+                </Button>
+                <Button onClick={handleGenerate} variant="secondary" size="icon" className="h-7 w-7 rounded-full">
+                  <AppIcon name="refresh" className="h-4 w-4 text-primary" />
+                </Button>
                 {hasPreviousVersion && (
-                  <button onClick={handleUndo} className="glass-btn-base glass-btn-secondary h-7 w-7 rounded-full">
-                    <AppIcon name="sparkles" className="w-4 h-4 text-[var(--glass-tone-warning-fg)]" />
-                  </button>
+                  <Button onClick={handleUndo} variant="secondary" size="icon" className="h-7 w-7 rounded-full">
+                    <AppIcon name="sparkles" className="h-4 w-4 text-amber-600" />
+                  </Button>
                 )}
               </div>
             )}
           </>
         ) : (
-          <div className="flex flex-col items-center justify-center py-12 text-[var(--glass-text-tertiary)]">
-            <AppIcon name="globe2" className="w-12 h-12 mb-3" />
-            <button onClick={handleGenerate} className="glass-btn-base glass-btn-primary flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-lg">
-              <AppIcon name="sparklesAlt" className="w-4 h-4" />
+          <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
+            <AppIcon name="globe2" className="mb-3 h-12 w-12" />
+            <Button onClick={handleGenerate} className="h-8 gap-1.5 px-3 text-sm">
+              <AppIcon name="sparklesAlt" className="h-4 w-4" />
               {t('generate')}
-            </button>
+            </Button>
           </div>
         )}
         {isTaskRunning && (
           <TaskStatusOverlay state={displayTaskPresentation} />
         )}
         {taskErrorDisplay && !isTaskRunning && (
-          <div className="absolute inset-0 flex flex-col items-center justify-center bg-[var(--glass-danger-ring)] text-[var(--glass-tone-danger-fg)] p-3 gap-1">
-            <AppIcon name="alert" className="w-6 h-6" />
+          <div className="absolute inset-0 flex flex-col items-center justify-center gap-1 bg-destructive/10 p-3 text-destructive">
+            <AppIcon name="alert" className="h-6 w-6" />
             <span className="text-xs text-center font-medium line-clamp-3">{taskErrorDisplay.message}</span>
           </div>
         )}
@@ -341,33 +344,35 @@ export function LocationCard({ location, onImageClick, onImageEdit, onEdit }: Lo
       {/* 信息区域 */}
       <div className="p-3">
         <div className="flex items-center justify-between">
-          <h3 className="font-medium text-[var(--glass-text-primary)] text-sm truncate">{location.name}</h3>
+          <h3 className="truncate text-sm font-medium text-foreground">{location.name}</h3>
           <div className="flex items-center gap-1">
             {/* 编辑按钮 */}
-            <button
+            <Button
               onClick={() => onEdit?.(location, currentImageIndex)}
-              className="glass-btn-base glass-btn-soft h-6 w-6 rounded-md opacity-0 group-hover:opacity-100"
+              variant="ghost"
+              size="icon"
+              className="h-6 w-6 opacity-0 transition-opacity group-hover:opacity-100"
               title={tAssets('video.panelCard.editPrompt')}
             >
-              <AppIcon name="edit" className="w-4 h-4 text-[var(--glass-text-secondary)]" />
-            </button>
+              <AppIcon name="edit" className="h-4 w-4 text-muted-foreground" />
+            </Button>
             {/* 删除按钮 */}
-            <button onClick={() => setShowDeleteConfirm(true)} className="glass-btn-base glass-btn-soft h-6 w-6 rounded-md text-[var(--glass-tone-danger-fg)] opacity-0 group-hover:opacity-100">
-              <AppIcon name="trash" className="w-4 h-4" />
-            </button>
+            <Button onClick={() => setShowDeleteConfirm(true)} variant="ghost" size="icon" className="h-6 w-6 text-destructive opacity-0 transition-opacity group-hover:opacity-100 hover:text-destructive">
+              <AppIcon name="trash" className="h-4 w-4" />
+            </Button>
           </div>
         </div>
-        {location.summary && <p className="mt-1 text-xs text-[var(--glass-text-secondary)] line-clamp-2">{location.summary}</p>}
+        {location.summary && <p className="mt-1 line-clamp-2 text-xs text-muted-foreground">{location.summary}</p>}
       </div>
 
       {/* 删除确认 */}
       {showDeleteConfirm && (
-        <div className="absolute inset-0 glass-overlay flex items-center justify-center z-20">
-          <div className="glass-surface-modal p-4 m-4">
-            <p className="mb-4 text-sm text-[var(--glass-text-primary)]">{t('confirmDeleteLocation')}</p>
+        <div className="absolute inset-0 z-20 flex items-center justify-center bg-black/45">
+          <div className="m-4 w-full max-w-sm rounded-xl border bg-card p-4 shadow-xl">
+            <p className="mb-4 text-sm text-foreground">{t('confirmDeleteLocation')}</p>
             <div className="flex gap-2 justify-end">
-              <button onClick={() => setShowDeleteConfirm(false)} className="glass-btn-base glass-btn-secondary px-3 py-1.5 rounded-lg text-sm">{t('cancel')}</button>
-              <button onClick={handleDelete} className="glass-btn-base glass-btn-danger px-3 py-1.5 rounded-lg text-sm">{t('delete')}</button>
+              <Button variant="outline" size="sm" onClick={() => setShowDeleteConfirm(false)}>{t('cancel')}</Button>
+              <Button variant="destructive" size="sm" onClick={handleDelete}>{t('delete')}</Button>
             </div>
           </div>
         </div>

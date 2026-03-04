@@ -4,73 +4,88 @@ import React from 'react'
 import { useTranslations } from 'next-intl'
 import { CustomModel } from './types'
 import { AppIcon } from '@/components/ui/icons'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 
 interface DefaultModelSectionProps {
-    type: 'llm' | 'image' | 'video' | 'lipsync'
-    models: CustomModel[]
-    defaultModels: {
-        analysisModel?: string
-        imageModel?: string
-        videoModel?: string
-        lipSyncModel?: string
-    }
-    onUpdateDefault: (field: string, modelKey: string) => void
+  type: 'llm' | 'image' | 'video' | 'lipsync'
+  models: CustomModel[]
+  defaultModels: {
+    analysisModel?: string
+    imageModel?: string
+    videoModel?: string
+    lipSyncModel?: string
+  }
+  onUpdateDefault: (field: string, modelKey: string) => void
 }
 
+type DefaultFieldKey = 'analysisModel' | 'imageModel' | 'videoModel' | 'lipSyncModel'
+const EMPTY_MODEL_VALUE = '__none__'
+
 export function DefaultModelSection({
-    type,
-    models,
-    defaultModels,
-    onUpdateDefault
+  type,
+  models,
+  defaultModels,
+  onUpdateDefault,
 }: DefaultModelSectionProps) {
-    const t = useTranslations('apiConfig')
+  const t = useTranslations('apiConfig')
 
-    // 只显示已启用的模型
-    const enabledModels = models.filter(m => m.enabled)
+  // 只显示已启用的模型
+  const enabledModels = models.filter((model) => model.enabled)
 
-    if (enabledModels.length === 0) {
-        return null
-    }
+  if (enabledModels.length === 0) {
+    return null
+  }
 
-    // 根据类型确定要显示的选择器
-    const selectors = type === 'llm'
-        ? [{ field: 'analysisModel', label: t('defaultModel.analysis') }]
-        : type === 'image'
-            ? [{ field: 'imageModel', label: t('defaultModel.image') }]
-            : type === 'video'
-                ? [{ field: 'videoModel', label: t('defaultModel.video') }]
-                : [{ field: 'lipSyncModel', label: t('lipsyncDefault') }]
+  // 根据类型确定要显示的选择器
+  const selectors: Array<{ field: DefaultFieldKey; label: string }> = type === 'llm'
+    ? [{ field: 'analysisModel', label: t('defaultModel.analysis') }]
+    : type === 'image'
+      ? [{ field: 'imageModel', label: t('defaultModel.image') }]
+      : type === 'video'
+        ? [{ field: 'videoModel', label: t('defaultModel.video') }]
+        : [{ field: 'lipSyncModel', label: t('lipsyncDefault') }]
 
-    return (
-        <div className="glass-surface rounded-2xl p-5">
-            <div className="flex items-center gap-2 mb-4">
-                <span className="inline-flex h-7 w-7 items-center justify-center rounded-lg border border-[var(--glass-stroke-base)] bg-[var(--glass-bg-muted)] text-[var(--glass-text-secondary)]">
-                    <AppIcon name="sparklesAlt" className="w-4 h-4" />
-                </span>
-                <h3 className="text-sm font-semibold text-[var(--glass-text-primary)]">{t('defaultModel.title')}</h3>
-            </div>
-
-            <p className="mb-4 text-xs text-[var(--glass-text-secondary)]">{t('defaultModel.hint')}</p>
-
-            <div className="grid gap-3">
-                {selectors.map(({ field, label }) => (
-                    <div key={field} className="flex items-center gap-3">
-                        <label className="w-24 shrink-0 text-sm text-[var(--glass-text-secondary)]">{label}</label>
-                        <select
-                            value={defaultModels[field as keyof typeof defaultModels] || ''}
-                            onChange={(e) => onUpdateDefault(field, e.target.value)}
-                            className="glass-select-base flex-1 px-3 py-2 text-sm"
-                        >
-                            <option value="">{t('defaultModel.notSelected')}</option>
-                            {enabledModels.map((model) => (
-                                <option key={model.modelKey} value={model.modelKey}>
-                                    {model.name}
-                                </option>
-                            ))}
-                        </select>
-                    </div>
+  return (
+    <Card className="rounded-2xl">
+      <CardHeader className="pb-3">
+        <CardTitle className="flex items-center gap-2 text-sm">
+          <span className="inline-flex h-7 w-7 items-center justify-center rounded-lg border border-border bg-muted text-muted-foreground">
+            <AppIcon name="sparklesAlt" className="h-4 w-4" />
+          </span>
+          {t('defaultModel.title')}
+        </CardTitle>
+        <p className="text-xs text-muted-foreground">{t('defaultModel.hint')}</p>
+      </CardHeader>
+      <CardContent className="space-y-3 pt-0">
+        {selectors.map(({ field, label }) => (
+          <div key={field} className="grid grid-cols-1 items-center gap-2 sm:grid-cols-[7rem_minmax(0,1fr)]">
+            <label className="text-sm font-medium text-muted-foreground">{label}</label>
+            <Select
+              value={defaultModels[field] || EMPTY_MODEL_VALUE}
+              onValueChange={(value) => onUpdateDefault(field, value === EMPTY_MODEL_VALUE ? '' : value)}
+            >
+              <SelectTrigger className="h-9 text-sm">
+                <SelectValue placeholder={t('defaultModel.notSelected')} />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value={EMPTY_MODEL_VALUE}>{t('defaultModel.notSelected')}</SelectItem>
+                {enabledModels.map((model) => (
+                  <SelectItem key={model.modelKey} value={model.modelKey}>
+                    {model.name}
+                  </SelectItem>
                 ))}
-            </div>
-        </div>
-    )
+              </SelectContent>
+            </Select>
+          </div>
+        ))}
+      </CardContent>
+    </Card>
+  )
 }

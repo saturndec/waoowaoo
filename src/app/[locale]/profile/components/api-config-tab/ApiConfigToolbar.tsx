@@ -3,6 +3,7 @@
 import type { ComponentProps } from 'react'
 import TaskStatusInline from '@/components/task/TaskStatusInline'
 import { AppIcon } from '@/components/ui/icons'
+import { Badge } from '@/components/ui/badge'
 
 interface ApiConfigToolbarProps {
   title: string
@@ -22,26 +23,26 @@ export function ApiConfigToolbar({
   saveFailedLabel,
 }: ApiConfigToolbarProps) {
   return (
-    <div className="flex items-center justify-between border-b border-[var(--glass-stroke-base)] px-6 py-4">
-      <h2 className="text-lg font-semibold text-[var(--glass-text-primary)]">{title}</h2>
+    <div className="flex items-center justify-between border-b border-border px-6 py-4">
+      <h2 className="text-lg font-semibold text-foreground">{title}</h2>
       <div className="flex items-center gap-2 text-sm">
         {saveStatus === 'saving' && (
-          <span className="glass-chip glass-chip-info flex items-center gap-1">
+          <Badge variant="secondary" className="flex items-center gap-1">
             <TaskStatusInline state={savingState} className="[&>span]:sr-only" />
             <span>{savingLabel}</span>
-          </span>
+          </Badge>
         )}
         {saveStatus === 'saved' && (
-          <span className="glass-chip glass-chip-success flex items-center gap-1">
+          <Badge className="flex items-center gap-1 bg-emerald-600 text-white hover:bg-emerald-600">
             <AppIcon name="check" className="w-4 h-4" />
             {savedLabel}
-          </span>
+          </Badge>
         )}
         {saveStatus === 'error' && (
-          <span className="glass-chip glass-chip-danger flex items-center gap-1">
+          <Badge variant="destructive" className="flex items-center gap-1">
             <AppIcon name="close" className="w-4 h-4" />
             {saveFailedLabel}
-          </span>
+          </Badge>
         )}
       </div>
     </div>

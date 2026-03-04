@@ -12,9 +12,9 @@ export interface RatioPreviewIconProps {
 
 function resolveUnselectedClass(variant: RatioPreviewVariant): string {
   if (variant === 'surface') {
-    return 'bg-[var(--glass-bg-surface)] shadow-[0_0_0_1px_rgba(163,181,214,0.25)]'
+    return 'bg-card shadow-[0_0_0_1px_rgba(163,181,214,0.25)]'
   }
-  return 'bg-[var(--glass-bg-surface-strong)] shadow-[0_0_0_1px_rgba(163,181,214,0.24)]'
+  return 'bg-muted/40 shadow-[0_0_0_1px_rgba(163,181,214,0.24)]'
 }
 
 export function RatioPreviewIcon({
@@ -47,7 +47,7 @@ export function RatioPreviewIcon({
   }
 
   const toneClass = selected
-    ? 'bg-[var(--glass-tone-info-bg)] shadow-[0_0_0_1px_rgba(79,128,255,0.35)]'
+    ? 'bg-primary/10 shadow-[0_0_0_1px_rgba(79,128,255,0.35)]'
     : resolveUnselectedClass(variant)
 
   return <span aria-hidden="true" className={`${radiusClassName} block transition-all ${toneClass}`} style={style} />

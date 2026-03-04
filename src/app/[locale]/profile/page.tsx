@@ -8,6 +8,16 @@ import { useTranslations } from 'next-intl'
 import Navbar from '@/components/Navbar'
 import ApiConfigTab from './components/ApiConfigTab'
 import { AppIcon, iconRegistry, type LucideIcon } from '@/components/ui/icons'
+import { Button } from '@/components/ui/button'
+import { Card } from '@/components/ui/card'
+import { Input } from '@/components/ui/input'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 
 interface BalanceInfo {
   currency?: string
@@ -88,13 +98,13 @@ interface ProjectDetails {
 
 // 类型对应的颜色
 const TYPE_COLORS: Record<string, { bg: string, text: string, border: string }> = {
-  image: { bg: 'bg-[var(--glass-bg-muted)]', text: 'text-[var(--glass-text-secondary)]', border: 'border-[var(--glass-stroke-base)]' },
-  video: { bg: 'bg-[var(--glass-bg-muted)]', text: 'text-[var(--glass-text-secondary)]', border: 'border-[var(--glass-stroke-base)]' },
-  text: { bg: 'bg-[var(--glass-bg-muted)]', text: 'text-[var(--glass-text-secondary)]', border: 'border-[var(--glass-stroke-base)]' },
-  tts: { bg: 'bg-[var(--glass-bg-muted)]', text: 'text-[var(--glass-text-secondary)]', border: 'border-[var(--glass-stroke-base)]' },
-  voice: { bg: 'bg-[var(--glass-bg-muted)]', text: 'text-[var(--glass-text-secondary)]', border: 'border-[var(--glass-stroke-base)]' },
-  voice_design: { bg: 'bg-[var(--glass-bg-muted)]', text: 'text-[var(--glass-text-secondary)]', border: 'border-[var(--glass-stroke-base)]' },
-  lip_sync: { bg: 'bg-[var(--glass-bg-muted)]', text: 'text-[var(--glass-text-secondary)]', border: 'border-[var(--glass-stroke-base)]' },
+  image: { bg: 'bg-blue-50', text: 'text-blue-700', border: 'border-blue-200' },
+  video: { bg: 'bg-indigo-50', text: 'text-indigo-700', border: 'border-indigo-200' },
+  text: { bg: 'bg-slate-50', text: 'text-slate-700', border: 'border-slate-200' },
+  tts: { bg: 'bg-purple-50', text: 'text-purple-700', border: 'border-purple-200' },
+  voice: { bg: 'bg-emerald-50', text: 'text-emerald-700', border: 'border-emerald-200' },
+  voice_design: { bg: 'bg-amber-50', text: 'text-amber-700', border: 'border-amber-200' },
+  lip_sync: { bg: 'bg-pink-50', text: 'text-pink-700', border: 'border-pink-200' },
 }
 
 function formatDate(dateString: string): string {
@@ -289,8 +299,8 @@ export default function ProfilePage() {
 
   if (status === 'loading' || !session) {
     return (
-      <div className="glass-page flex min-h-screen items-center justify-center">
-        <div className="text-[var(--glass-text-secondary)]">{tc('loading')}</div>
+      <div className="flex min-h-screen items-center justify-center bg-background">
+        <div className="text-muted-foreground">{tc('loading')}</div>
       </div>
     )
   }
@@ -302,35 +312,35 @@ export default function ProfilePage() {
   const availableTypes = [...new Set(projectDetails?.recentRecords?.map(r => r.apiType) || [])]
 
   return (
-    <div className="glass-page min-h-screen">
+    <div className="min-h-screen bg-background">
       <Navbar />
 
-      <main className="max-w-7xl mx-auto px-6 py-8">
+      <main className="w-full px-6 py-8">
         <div className="flex gap-6 h-[calc(100vh-140px)]">
 
           {/* 左侧侧边栏 */}
           <div className="w-64 flex-shrink-0">
-            <div className="glass-surface-elevated h-full flex flex-col p-5">
+            <Card className="h-full rounded-2xl p-5">
 
               {/* 用户信息 */}
               <div className="mb-6">
                 <div className="mb-4">
-                  <h2 className="font-semibold text-[var(--glass-text-primary)]">{session.user?.name || t('user')}</h2>
-                  <p className="text-xs text-[var(--glass-text-tertiary)]">{t('personalAccount')}</p>
+                  <h2 className="font-semibold text-foreground">{session.user?.name || t('user')}</h2>
+                  <p className="text-xs text-muted-foreground">{t('personalAccount')}</p>
                 </div>
 
                 {/* 余额卡片 */}
-                <div className="glass-surface-soft rounded-2xl border border-[var(--glass-stroke-base)] p-4">
-                  <div className="text-xs font-medium text-[var(--glass-text-secondary)]">{t('availableBalance')}</div>
-                  <div className="mt-1 text-2xl font-bold text-[var(--glass-text-primary)]">{formatMoney(balance?.balance || 0, currency)}</div>
+                <div className="rounded-2xl border border-border bg-muted/30 p-4">
+                  <div className="text-xs font-medium text-muted-foreground">{t('availableBalance')}</div>
+                  <div className="mt-1 text-2xl font-bold text-foreground">{formatMoney(balance?.balance || 0, currency)}</div>
                   <div className="flex gap-4 mt-3 text-xs">
                     <div>
-                      <span className="text-[var(--glass-text-secondary)]">{t('frozen')}</span>
-                      <span className="ml-1 font-medium text-[var(--glass-text-primary)]">{formatMoney(balance?.frozenAmount || 0, currency)}</span>
+                      <span className="text-muted-foreground">{t('frozen')}</span>
+                      <span className="ml-1 font-medium text-foreground">{formatMoney(balance?.frozenAmount || 0, currency)}</span>
                     </div>
                     <div>
-                      <span className="text-[var(--glass-text-secondary)]">{t('totalSpent')}</span>
-                      <span className="ml-1 font-medium text-[var(--glass-text-primary)]">{formatMoney(balance?.totalSpent || 0, currency)}</span>
+                      <span className="text-muted-foreground">{t('totalSpent')}</span>
+                      <span className="ml-1 font-medium text-foreground">{formatMoney(balance?.totalSpent || 0, currency)}</span>
                     </div>
                   </div>
                 </div>
@@ -338,88 +348,85 @@ export default function ProfilePage() {
 
               {/* 导航菜单 */}
               <nav className="flex-1 space-y-2">
-                <button
+                <Button
                   onClick={() => setActiveSection('apiConfig')}
-                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left transition-all cursor-pointer ${activeSection === 'apiConfig'
-                    ? 'glass-btn-base glass-btn-tone-info'
-                    : 'text-[var(--glass-text-secondary)] hover:bg-[var(--glass-bg-muted)]'
-                    }`}
+                  variant={activeSection === 'apiConfig' ? 'secondary' : 'ghost'}
+                  className="h-11 w-full justify-start gap-3 rounded-xl"
                 >
                   <AppIcon name="settingsHexAlt" className="w-5 h-5" />
                   <span className="font-medium">{t('apiConfig')}</span>
-                </button>
+                </Button>
 
-                <button
+                <Button
                   onClick={() => setActiveSection('billing')}
-                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left transition-all cursor-pointer ${activeSection === 'billing'
-                    ? 'glass-btn-base glass-btn-tone-info'
-                    : 'text-[var(--glass-text-secondary)] hover:bg-[var(--glass-bg-muted)]'
-                    }`}
+                  variant={activeSection === 'billing' ? 'secondary' : 'ghost'}
+                  className="h-11 w-full justify-start gap-3 rounded-xl"
                 >
                   <AppIcon name="receipt" className="w-5 h-5" />
                   <span className="font-medium">{t('billingRecords')}</span>
-                </button>
+                </Button>
               </nav>
 
               {/* 退出登录 */}
-              <button
+              <Button
                 onClick={() => signOut({ callbackUrl: '/' })}
-                className="glass-btn-base glass-btn-tone-danger mt-auto flex items-center gap-2 px-4 py-3 text-sm rounded-xl transition-all cursor-pointer"
+                variant="destructive"
+                className="mt-auto h-11 justify-start gap-2 rounded-xl text-sm"
               >
                 <AppIcon name="logout" className="w-4 h-4" />
                 {t('logout')}
-              </button>
-            </div>
+              </Button>
+            </Card>
           </div>
 
           {/* 右侧内容区 */}
           <div className="flex-1 min-w-0">
-            <div className="glass-surface-elevated h-full flex flex-col">
+            <Card className="h-full rounded-2xl">
 
               {activeSection === 'apiConfig' ? (
                 <ApiConfigTab />
               ) : (
                 <>
                   {/* 扣费记录标题栏 */}
-                  <div className="px-6 py-4 border-b border-[var(--glass-stroke-base)] flex items-center justify-between">
-                    <div className="flex items-center gap-4">
+                  <div className="flex items-center justify-between border-b border-border px-6 py-4">
+                    <div className="flex flex-wrap items-center gap-3">
                       {/* 返回按钮 */}
                       {selectedProject !== 'all' && (
-                        <button onClick={() => setSelectedProject('all')} className="text-sm text-[var(--glass-text-secondary)] hover:text-[var(--glass-text-primary)] flex items-center gap-1 cursor-pointer">
-                          <AppIcon name="chevronLeft" className="w-4 h-4" />
+                        <Button
+                          type="button"
+                          onClick={() => setSelectedProject('all')}
+                          variant="ghost"
+                          size="sm"
+                          className="gap-1"
+                        >
+                          <AppIcon name="chevronLeft" className="h-4 w-4" />
                           {tc('back')}
-                        </button>
+                        </Button>
                       )}
 
                       {/* 视图切换 */}
                       {(() => {
-                        const tabs = ['transactions', 'projects'] as const
                         const activeTab = (billingView === 'transactions' && selectedProject === 'all') ? 'transactions' : 'projects'
-                        const activeIdx = tabs.indexOf(activeTab)
                         return (
-                          <div className="rounded-lg p-0.5" style={{ background: 'rgba(0,0,0,0.04)' }}>
-                            <div className="relative grid gap-1" style={{ gridTemplateColumns: 'repeat(2, minmax(0, 1fr))' }}>
-                              <div
-                                className="absolute bottom-0.5 top-0.5 rounded-md bg-white transition-transform duration-200"
-                                style={{
-                                  boxShadow: '0 1px 4px rgba(0,0,0,0.15), 0 0 0 0.5px rgba(0,0,0,0.06)',
-                                  width: 'calc(100% / 2)',
-                                  transform: `translateX(${activeIdx * 100}%)`,
-                                }}
-                              />
-                              <button
-                                onClick={() => { setBillingView('transactions'); setSelectedProject('all') }}
-                                className={`relative z-[1] flex items-center justify-center gap-1 rounded-md px-4 py-1.5 text-sm font-medium transition-colors cursor-pointer ${activeTab === 'transactions' ? 'text-[var(--glass-text-primary)]' : 'text-[var(--glass-text-tertiary)] hover:text-[var(--glass-text-secondary)]'}`}
-                              >
-                                {t('accountTransactions')}
-                              </button>
-                              <button
-                                onClick={() => { setBillingView('projects'); setSelectedProject('all') }}
-                                className={`relative z-[1] flex items-center justify-center gap-1 rounded-md px-4 py-1.5 text-sm font-medium transition-colors cursor-pointer ${activeTab === 'projects' ? 'text-[var(--glass-text-primary)]' : 'text-[var(--glass-text-tertiary)] hover:text-[var(--glass-text-secondary)]'}`}
-                              >
-                                {t('projectDetails')}
-                              </button>
-                            </div>
+                          <div className="flex items-center gap-1 rounded-lg border border-border bg-muted p-1">
+                            <Button
+                              type="button"
+                              onClick={() => { setBillingView('transactions'); setSelectedProject('all') }}
+                              variant={activeTab === 'transactions' ? 'secondary' : 'ghost'}
+                              size="sm"
+                              className="h-8 px-3 text-sm"
+                            >
+                              {t('accountTransactions')}
+                            </Button>
+                            <Button
+                              type="button"
+                              onClick={() => { setBillingView('projects'); setSelectedProject('all') }}
+                              variant={activeTab === 'projects' ? 'secondary' : 'ghost'}
+                              size="sm"
+                              className="h-8 px-3 text-sm"
+                            >
+                              {t('projectDetails')}
+                            </Button>
                           </div>
                         )
                       })()}
@@ -427,42 +434,39 @@ export default function ProfilePage() {
 
                     {/* 项目内视图切换 */}
                     {selectedProject !== 'all' && (
-                      <div className="flex items-center gap-3">
-                        <div className="rounded-lg p-0.5" style={{ background: 'rgba(0,0,0,0.04)' }}>
-                          {(() => {
-                            const modeTabs = ['summary', 'records'] as const
-                            const modeIdx = modeTabs.indexOf(projectViewMode)
-                            return (
-                              <div className="relative grid gap-1" style={{ gridTemplateColumns: 'repeat(2, minmax(0, 1fr))' }}>
-                                <div
-                                  className="absolute bottom-0.5 top-0.5 rounded-md bg-white transition-transform duration-200"
-                                  style={{
-                                    boxShadow: '0 1px 4px rgba(0,0,0,0.15), 0 0 0 0.5px rgba(0,0,0,0.06)',
-                                    width: 'calc(100% / 2)',
-                                    transform: `translateX(${modeIdx * 100}%)`,
-                                  }}
-                                />
-                                <button onClick={() => setProjectViewMode('summary')} className={`relative z-[1] px-3 py-1 text-xs rounded-md transition-colors cursor-pointer ${projectViewMode === 'summary' ? 'text-[var(--glass-text-primary)] font-medium' : 'text-[var(--glass-text-tertiary)] hover:text-[var(--glass-text-secondary)]'}`}>
-                                  {t('summary')}
-                                </button>
-                                <button onClick={() => setProjectViewMode('records')} className={`relative z-[1] px-3 py-1 text-xs rounded-md transition-colors cursor-pointer ${projectViewMode === 'records' ? 'text-[var(--glass-text-primary)] font-medium' : 'text-[var(--glass-text-tertiary)] hover:text-[var(--glass-text-secondary)]'}`}>
-                                  {t('transactions')}
-                                </button>
-                              </div>
-                            )
-                          })()}
+                      <div className="flex flex-wrap items-center gap-2">
+                        <div className="flex items-center gap-1 rounded-lg border border-border bg-muted p-1">
+                          <Button
+                            type="button"
+                            onClick={() => setProjectViewMode('summary')}
+                            variant={projectViewMode === 'summary' ? 'secondary' : 'ghost'}
+                            size="sm"
+                            className="h-7 px-2 text-xs"
+                          >
+                            {t('summary')}
+                          </Button>
+                          <Button
+                            type="button"
+                            onClick={() => setProjectViewMode('records')}
+                            variant={projectViewMode === 'records' ? 'secondary' : 'ghost'}
+                            size="sm"
+                            className="h-7 px-2 text-xs"
+                          >
+                            {t('transactions')}
+                          </Button>
                         </div>
                         {projectViewMode === 'records' && (
-                          <select
-                            value={recordsFilter}
-                            onChange={(e) => setRecordsFilter(e.target.value)}
-                            className="glass-select-base px-2 py-1 text-xs cursor-pointer"
-                          >
-                            <option value="all">{t('allTypes')}</option>
-                            {availableTypes.map(type => (
-                              <option key={type} value={type}>{t(`apiTypes.${type}`) || type}</option>
-                            ))}
-                          </select>
+                          <Select value={recordsFilter} onValueChange={setRecordsFilter}>
+                            <SelectTrigger className="h-8 w-[10rem] text-xs">
+                              <SelectValue placeholder={t('allTypes')} />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="all">{t('allTypes')}</SelectItem>
+                              {availableTypes.map((type) => (
+                                <SelectItem key={type} value={type}>{t(`apiTypes.${type}`) || type}</SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
                         )}
                       </div>
                     )}
@@ -471,71 +475,75 @@ export default function ProfilePage() {
                   {/* 内容区域 */}
                   <div className="flex-1 overflow-y-auto p-5">
                     {loading ? (
-                      <div className="space-y-3">{[1, 2, 3, 4, 5].map(i => <div key={i} className="glass-surface-soft h-16 rounded-xl animate-pulse"></div>)}</div>
+                      <div className="space-y-3">{[1, 2, 3, 4, 5].map(i => <div key={i} className="h-16 animate-pulse rounded-xl border border-border bg-muted/40"></div>)}</div>
                     ) : billingView === 'transactions' && selectedProject === 'all' ? (
                       /* 账户流水 */
                       <div className="h-full flex flex-col">
                         {/* 筛选按钮 */}
                         <div className="mb-3 flex items-center justify-between">
-                          <button
+                          <Button
+                            type="button"
                             onClick={() => setShowFilters(!showFilters)}
-                            className={`px-4 py-2 text-sm rounded-xl border transition-all cursor-pointer flex items-center gap-2 ${showFilters
-                              ? 'glass-btn-base glass-btn-secondary'
-                              : (txType !== 'all' || txStartDate || txEndDate)
-                                ? 'glass-btn-base glass-btn-secondary'
-                                : 'glass-btn-base glass-btn-secondary'
-                              }`}
+                            variant="outline"
+                            className="gap-2"
                           >
                             <AppIcon name="filter" className="w-4 h-4" />
                             {t('filter')}
                             {(txType !== 'all' || txStartDate || txEndDate) && !showFilters && (
-                              <span className="glass-chip glass-chip-neutral ml-1 px-2 py-0.5 text-xs">
+                              <span className="ml-1 rounded-full bg-muted px-2 py-0.5 text-xs text-muted-foreground">
                                 {[txType !== 'all', txStartDate, txEndDate].filter(Boolean).length}
                               </span>
                             )}
-                          </button>
+                          </Button>
                         </div>
 
                         {/* 筛选栏 */}
                         {showFilters && (
-                          <div className="glass-surface-soft mb-4 space-y-3 rounded-2xl p-4">
+                          <div className="mb-4 space-y-3 rounded-2xl border border-border bg-muted/30 p-4">
                             <div className="flex items-end gap-3">
                               <div className="flex-1">
-                                <label className="mb-1.5 block text-xs font-medium text-[var(--glass-text-secondary)]">{tb('transactionType')}</label>
-                                <select
+                                <label className="mb-1.5 block text-xs font-medium text-muted-foreground">{tb('transactionType')}</label>
+                                <Select
                                   value={txType}
-                                  onChange={(e) => { setTxType(e.target.value as 'all' | 'recharge' | 'consume'); setTxPage(1) }}
-                                  className="glass-select-base w-full cursor-pointer px-3 py-2.5 text-sm"
+                                  onValueChange={(value: 'all' | 'recharge' | 'consume') => { setTxType(value); setTxPage(1) }}
                                 >
-                                  <option value="all">{tb('all')}</option>
-                                  <option value="recharge">{tb('income')}</option>
-                                  <option value="consume">{tb('expense')}</option>
-                                </select>
+                                  <SelectTrigger className="h-10 w-full text-sm">
+                                    <SelectValue placeholder={tb('all')} />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    <SelectItem value="all">{tb('all')}</SelectItem>
+                                    <SelectItem value="recharge">{tb('income')}</SelectItem>
+                                    <SelectItem value="consume">{tb('expense')}</SelectItem>
+                                  </SelectContent>
+                                </Select>
                               </div>
                               <div className="flex-1">
-                                <label className="mb-1.5 block text-xs font-medium text-[var(--glass-text-secondary)]">{tb('startDate')}</label>
-                                <input
+                                <label className="mb-1.5 block text-xs font-medium text-muted-foreground">{tb('startDate')}</label>
+                                <Input
                                   type="date"
                                   value={txStartDate}
                                   onChange={(e) => { setTxStartDate(e.target.value); setTxPage(1) }}
-                                  className="glass-input-base w-full cursor-pointer px-3 py-2.5 text-sm"
+                                  className="h-10 w-full cursor-pointer text-sm"
                                 />
                               </div>
                               <div className="flex-1">
-                                <label className="mb-1.5 block text-xs font-medium text-[var(--glass-text-secondary)]">{tb('endDate')}</label>
-                                <input
+                                <label className="mb-1.5 block text-xs font-medium text-muted-foreground">{tb('endDate')}</label>
+                                <Input
                                   type="date"
                                   value={txEndDate}
                                   onChange={(e) => { setTxEndDate(e.target.value); setTxPage(1) }}
-                                  className="glass-input-base w-full cursor-pointer px-3 py-2.5 text-sm"
+                                  className="h-10 w-full cursor-pointer text-sm"
                                 />
                               </div>
                               {(txType !== 'all' || txStartDate || txEndDate) && (
-                                <button
+                                <Button
+                                  type="button"
                                   onClick={() => { setTxType('all'); setTxStartDate(''); setTxEndDate(''); setTxPage(1) }}
-                                  className="glass-btn-base glass-btn-secondary cursor-pointer rounded-xl px-4 py-2.5 text-sm">
+                                  variant="secondary"
+                                  className="h-10 px-4 text-sm"
+                                >
                                   {tb('reset')}
-                                </button>
+                                </Button>
                               )}
                             </div>
                           </div>
@@ -546,18 +554,18 @@ export default function ProfilePage() {
                           {transactions.length > 0 ? (
                             <div className="space-y-2">
                               {transactions.map(tx => (
-                                <div key={tx.id} className="glass-surface-soft flex items-center justify-between rounded-2xl border border-transparent p-4 transition-all hover:border-[var(--glass-stroke-focus)]">
+                                <div key={tx.id} className="flex items-center justify-between rounded-2xl border border-border bg-card p-4 transition-colors hover:bg-muted/30">
                                   <div className="flex items-center gap-4">
                                     {(() => {
                                       const Icon = getTxIcon(tx)
                                       return (
-                                        <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl bg-[var(--glass-bg-muted)] text-[var(--glass-text-secondary)]">
+                                        <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl bg-muted text-muted-foreground">
                                           <Icon className="w-5 h-5" />
                                         </div>
                                       )
                                     })()}
                                     <div>
-                                      <div className="text-sm font-medium text-[var(--glass-text-primary)]">
+                                      <div className="text-sm font-medium text-foreground">
                                         {tx.type === 'recharge'
                                           ? (tx.description || t('recharge'))
                                           : (tx.action
@@ -566,7 +574,7 @@ export default function ProfilePage() {
                                         }
                                       </div>
                                       {tx.type !== 'recharge' && (tx.billingMeta?.model || tx.projectName || tx.episodeNumber != null) && (
-                                        <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-[var(--glass-text-tertiary)]">
+                                        <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
                                           {tx.billingMeta?.model && (
                                             <span className="inline-flex items-center gap-1">
                                               <AppIcon name="cpu" className="w-3 h-3 flex-shrink-0" />
@@ -596,21 +604,21 @@ export default function ProfilePage() {
                                           )}
                                         </div>
                                       )}
-                                      <div className="mt-0.5 text-xs text-[var(--glass-text-tertiary)]">{formatDate(tx.createdAt)}</div>
+                                      <div className="mt-0.5 text-xs text-muted-foreground">{formatDate(tx.createdAt)}</div>
                                     </div>
                                   </div>
                                   <div className="text-right">
-                                    <div className="font-semibold text-[var(--glass-text-primary)]">
+                                    <div className="font-semibold text-foreground">
                                       {tx.type === 'recharge' ? '+' : ''}{formatMoney(Math.abs(tx.amount), currency)}
                                     </div>
-                                    <div className="mt-0.5 text-xs text-[var(--glass-text-tertiary)]">{t('balanceAfter', { amount: formatMoney(tx.balanceAfter, currency) })}</div>
+                                    <div className="mt-0.5 text-xs text-muted-foreground">{t('balanceAfter', { amount: formatMoney(tx.balanceAfter, currency) })}</div>
                                   </div>
                                 </div>
                               ))}
                             </div>
                           ) : (
-                            <div className="flex h-full flex-col items-center justify-center text-[var(--glass-text-tertiary)]">
-                              <AppIcon name="file" className="mb-4 h-16 w-16 text-[var(--glass-stroke-strong)]" />
+                            <div className="flex h-full flex-col items-center justify-center text-muted-foreground">
+                              <AppIcon name="file" className="mb-4 h-16 w-16 text-border" />
                               <p className="text-sm">{t('noTransactions')}</p>
                             </div>
                           )}
@@ -618,21 +626,25 @@ export default function ProfilePage() {
 
                         {/* 分页 */}
                         {transactionPagination && transactionPagination.totalPages > 1 && (
-                          <div className="mt-4 flex items-center justify-between border-t border-[var(--glass-stroke-base)] pt-4">
-                            <div className="text-sm text-[var(--glass-text-secondary)]">
+                          <div className="mt-4 flex items-center justify-between border-t border-border pt-4">
+                            <div className="text-sm text-muted-foreground">
                               {t('pagination', { total: transactionPagination.total, page: transactionPagination.page, totalPages: transactionPagination.totalPages })}
                             </div>
                             <div className="flex items-center gap-2">
-                              <button
+                              <Button
+                                type="button"
                                 onClick={() => setTxPage(Math.max(1, txPage - 1))}
                                 disabled={txPage === 1}
-                                className="glass-btn-base glass-btn-secondary cursor-pointer rounded-lg px-3 py-1.5 text-sm disabled:opacity-50 disabled:cursor-not-allowed"
-                              >{t('previousPage')}</button>
-                              <button
+                                variant="secondary"
+                                size="sm"
+                              >{t('previousPage')}</Button>
+                              <Button
+                                type="button"
                                 onClick={() => setTxPage(Math.min(transactionPagination.totalPages, txPage + 1))}
                                 disabled={txPage === transactionPagination.totalPages}
-                                className="glass-btn-base glass-btn-secondary cursor-pointer rounded-lg px-3 py-1.5 text-sm disabled:opacity-50 disabled:cursor-not-allowed"
-                              >{t('nextPage')}</button>
+                                variant="secondary"
+                                size="sm"
+                              >{t('nextPage')}</Button>
                             </div>
                           </div>
                         )}
@@ -642,43 +654,43 @@ export default function ProfilePage() {
                       projects.length > 0 ? (
                         <div className="space-y-2">
                           {projects.map(p => (
-                            <div key={p.projectId} onClick={() => setSelectedProject(p.projectId)} className="glass-surface-soft flex cursor-pointer items-center justify-between rounded-2xl border border-transparent p-4 transition-all hover:border-[var(--glass-stroke-focus)]">
+                            <div key={p.projectId} onClick={() => setSelectedProject(p.projectId)} className="flex cursor-pointer items-center justify-between rounded-2xl border border-border bg-card p-4 transition-colors hover:bg-muted/30">
                               <div>
-                                <div className="font-medium text-[var(--glass-text-primary)]">{p.projectName}</div>
-                                <div className="mt-0.5 text-xs text-[var(--glass-text-tertiary)]">{t('recordCount', { count: p.recordCount })}</div>
+                                <div className="font-medium text-foreground">{p.projectName}</div>
+                                <div className="mt-0.5 text-xs text-muted-foreground">{t('recordCount', { count: p.recordCount })}</div>
                               </div>
-                              <div className="font-semibold text-[var(--glass-text-primary)]">{formatMoney(p.totalCost, currency)}</div>
+                              <div className="font-semibold text-foreground">{formatMoney(p.totalCost, currency)}</div>
                             </div>
                           ))}
                         </div>
                       ) : (
-                        <div className="flex h-full flex-col items-center justify-center text-[var(--glass-text-tertiary)]"><p className="text-sm">{t('noProjectCosts')}</p></div>
+                        <div className="flex h-full flex-col items-center justify-center text-muted-foreground"><p className="text-sm">{t('noProjectCosts')}</p></div>
                       )
                     ) : detailsLoading ? (
-                      <div className="space-y-3">{[1, 2, 3].map(i => <div key={i} className="glass-surface-soft h-20 rounded-xl animate-pulse"></div>)}</div>
+                      <div className="space-y-3">{[1, 2, 3].map(i => <div key={i} className="h-20 animate-pulse rounded-xl border border-border bg-muted/40"></div>)}</div>
                     ) : projectDetails ? (
                       projectViewMode === 'summary' ? (
                         /* 汇总视图 */
                         <div className="space-y-6">
                           <div className="flex items-center justify-between">
-                            <h4 className="font-medium text-[var(--glass-text-primary)]">{selectedProjectName}</h4>
-                            <div className="text-lg font-bold text-[var(--glass-text-primary)]">{t('totalCost', { amount: formatMoney(projectDetails.total, currency) })}</div>
+                            <h4 className="font-medium text-foreground">{selectedProjectName}</h4>
+                            <div className="text-lg font-bold text-foreground">{t('totalCost', { amount: formatMoney(projectDetails.total, currency) })}</div>
                           </div>
 
                           <div>
-                            <h5 className="mb-3 text-sm font-medium text-[var(--glass-text-secondary)]">{t('byType')}</h5>
+                            <h5 className="mb-3 text-sm font-medium text-muted-foreground">{t('byType')}</h5>
                             <div className="grid grid-cols-3 gap-3">
                               {projectDetails.byType.map(item => {
-                                const colors = TYPE_COLORS[item.apiType] || { bg: 'bg-[var(--glass-bg-muted)]', text: 'text-[var(--glass-text-secondary)]', border: 'border-[var(--glass-stroke-base)]' }
+                                const colors = TYPE_COLORS[item.apiType] || { bg: 'bg-muted', text: 'text-muted-foreground', border: 'border-border' }
                                 return (
                                   <div
                                     key={item.apiType}
                                     onClick={() => { setProjectViewMode('records'); setRecordsFilter(item.apiType) }}
-                                    className={`${colors.bg} ${colors.border} border rounded-2xl p-4 cursor-pointer transition-colors hover:border-[var(--glass-stroke-focus)]`}
+                                    className={`${colors.bg} ${colors.border} cursor-pointer rounded-2xl border p-4 transition-colors hover:opacity-90`}
                                   >
                                     <div className={`text-xs ${colors.text} font-medium`}>{t(`apiTypes.${item.apiType}` as never) || item.apiType}</div>
                                     <div className={`text-xl font-bold ${colors.text} mt-1`}>{formatMoney(item._sum.cost || 0, currency)}</div>
-                                    <div className="mt-1 text-xs text-[var(--glass-text-tertiary)]">{item._count} {t('times')}</div>
+                                    <div className="mt-1 text-xs text-muted-foreground">{item._count} {t('times')}</div>
                                   </div>
                                 )
                               })}
@@ -686,15 +698,15 @@ export default function ProfilePage() {
                           </div>
 
                           <div>
-                            <h5 className="mb-3 text-sm font-medium text-[var(--glass-text-secondary)]">{t('byAction')}</h5>
+                            <h5 className="mb-3 text-sm font-medium text-muted-foreground">{t('byAction')}</h5>
                             <div className="space-y-2">
                               {projectDetails.byAction.map(item => (
-                                <div key={item.action} className="glass-surface-soft flex items-center justify-between rounded-xl p-3">
+                                <div key={item.action} className="flex items-center justify-between rounded-xl border border-border bg-card p-3">
                                   <div className="flex items-center gap-3">
-                                    <div className="text-sm text-[var(--glass-text-primary)]">{t(`actionTypes.${item.action.replace(/-/g, '_')}` as never) || item.action}</div>
-                                    <span className="text-xs text-[var(--glass-text-tertiary)]">{item._count} {t('times')}</span>
+                                    <div className="text-sm text-foreground">{t(`actionTypes.${item.action.replace(/-/g, '_')}` as never) || item.action}</div>
+                                    <span className="text-xs text-muted-foreground">{item._count} {t('times')}</span>
                                   </div>
-                                  <div className="font-medium text-[var(--glass-text-secondary)]">{formatMoney(item._sum.cost || 0, currency)}</div>
+                                  <div className="font-medium text-muted-foreground">{formatMoney(item._sum.cost || 0, currency)}</div>
                                 </div>
                               ))}
                             </div>
@@ -704,33 +716,33 @@ export default function ProfilePage() {
                         /* 流水视图 */
                         <div className="space-y-2">
                           {filteredRecords.length > 0 ? filteredRecords.map(record => {
-                            const colors = TYPE_COLORS[record.apiType] || { bg: 'bg-[var(--glass-bg-muted)]', text: 'text-[var(--glass-text-secondary)]', border: 'border-[var(--glass-stroke-base)]' }
+                            const colors = TYPE_COLORS[record.apiType] || { bg: 'bg-muted', text: 'text-muted-foreground', border: 'border-border' }
                             return (
-                              <div key={record.id} className="glass-surface-soft flex items-center justify-between rounded-xl p-3">
+                              <div key={record.id} className="flex items-center justify-between rounded-xl border border-border bg-card p-3">
                                 <div className="flex items-center gap-3">
                                   <div className={`w-8 h-8 rounded-lg ${colors.bg} ${colors.text} flex items-center justify-center text-xs font-medium`}>
                                     {(t(`apiTypes.${record.apiType}` as never) || record.apiType).charAt(0).toUpperCase()}
                                   </div>
                                   <div>
-                                    <div className="text-sm text-[var(--glass-text-primary)]">{t(`actionTypes.${record.action.replace(/-/g, '_')}` as never) || record.action}</div>
-                                    <div className="text-xs text-[var(--glass-text-tertiary)]">{record.model} · {formatDate(record.createdAt)}</div>
+                                    <div className="text-sm text-foreground">{t(`actionTypes.${record.action.replace(/-/g, '_')}` as never) || record.action}</div>
+                                    <div className="text-xs text-muted-foreground">{record.model} · {formatDate(record.createdAt)}</div>
                                   </div>
                                 </div>
-                                <div className="font-medium text-[var(--glass-text-secondary)]">{formatMoney(record.cost, currency, 4)}</div>
+                                <div className="font-medium text-muted-foreground">{formatMoney(record.cost, currency, 4)}</div>
                               </div>
                             )
                           }) : (
-                            <div className="py-8 text-center text-sm text-[var(--glass-text-tertiary)]">{t('noRecords')}</div>
+                            <div className="py-8 text-center text-sm text-muted-foreground">{t('noRecords')}</div>
                           )}
                         </div>
                       )
                     ) : (
-                      <div className="flex h-full flex-col items-center justify-center text-[var(--glass-text-tertiary)]"><p className="text-sm">{t('noDetails')}</p></div>
+                      <div className="flex h-full flex-col items-center justify-center text-muted-foreground"><p className="text-sm">{t('noDetails')}</p></div>
                     )}
                   </div>
                 </>
               )}
-            </div>
+            </Card>
           </div>
         </div>
       </main >

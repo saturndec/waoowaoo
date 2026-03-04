@@ -65,12 +65,30 @@ function extractFlowFields(jobData: TaskJobData): Record<string, unknown> {
   }
 }
 
+function readLocaleCandidate(value: unknown): string | null {
+  if (typeof value !== 'string') return null
+  const normalized = value.trim().toLowerCase()
+  return normalized || null
+}
+
 function withFlowFields(jobData: TaskJobData, payload?: Record<string, unknown> | null): Record<string, unknown> {
   const base = { ...(payload || {}) }
   const flowFields = extractFlowFields(jobData)
   for (const [key, value] of Object.entries(flowFields)) {
     if (base[key] === undefined || base[key] === null || base[key] === '') {
       base[key] = value
+    }
+  }
+  const baseMeta = toObject(base.meta)
+  const payloadLocale =
+    readLocaleCandidate(baseMeta.locale)
+    || readLocaleCandidate(base.locale)
+    || readLocaleCandidate(jobData.locale)
+  if (payloadLocale) {
+    base.locale = payloadLocale
+    base.meta = {
+      ...baseMeta,
+      locale: payloadLocale,
     }
   }
   return base
@@ -196,8 +214,30 @@ export async function withTaskLifecycle(job: Job<TaskJobData>, handler: (job: Jo
   // Register project name for per-project log file routing
   void resolveProjectNameForLogging(data.projectId)
 
+  let heartbeatFailureNoticed = false
   const heartbeatTimer = setInterval(() => {
     void touchTaskHeartbeat(taskId)
+      .then(() => {
+        if (heartbeatFailureNoticed) {
+          logger.info({
+            action: 'worker.heartbeat.recovered',
+            message: 'task heartbeat write recovered',
+          })
+          heartbeatFailureNoticed = false
+        }
+      })
+      .catch((error: unknown) => {
+        const message = error instanceof Error ? error.message : String(error)
+        if (!heartbeatFailureNoticed) {
+          logger.error({
+            action: 'worker.heartbeat.failed',
+            message: `task heartbeat write failed: ${message}`,
+            errorCode: 'DB_HEARTBEAT_WRITE_FAILED',
+            retryable: true,
+          })
+        }
+        heartbeatFailureNoticed = true
+      })
   }, 10_000)
 
   try {
@@ -324,10 +364,50 @@ export async function withTaskLifecycle(job: Job<TaskJobData>, handler: (job: Jo
         })) as TaskBillingInfo
         await updateTaskBillingInfo(taskId, billingInfo)
       }
+      const markedTerminatedFailed = await tryMarkTaskFailed(
+        taskId,
+        'WORKER_EXECUTION_ERROR',
+        error.message,
+      )
+      if (markedTerminatedFailed) {
+        const terminatedPayload = withFlowFields(data, {
+          stage: 'terminated',
+          stageLabel: '任务已终止',
+          displayMode: 'loading',
+          message: error.message,
+          errorCode: 'WORKER_EXECUTION_ERROR',
+          trace: {
+            requestId: data.trace?.requestId || null,
+          },
+        })
+        try {
+          await publishTaskEvent({
+            taskId,
+            projectId: data.projectId,
+            userId: data.userId,
+            type: TASK_EVENT_TYPE.FAILED,
+            taskType: data.type,
+            targetType: data.targetType,
+            targetId: data.targetId,
+            episodeId: data.episodeId || null,
+            payload: terminatedPayload,
+            persist: false,
+          })
+        } catch (publishError) {
+          logger.warn({
+            action: 'worker.terminated.publish_failed',
+            message: 'failed to publish terminated event',
+            error: publishError instanceof Error ? publishError.message : String(publishError),
+          })
+        }
+      }
       logger.info({
         action: 'worker.terminated',
         message: error.message,
         durationMs: Date.now() - startedAt,
+        details: {
+          taskMarkedFailed: markedTerminatedFailed,
+        },
       })
       throw new UnrecoverableError(`Task terminated: ${error.message}`)
     }

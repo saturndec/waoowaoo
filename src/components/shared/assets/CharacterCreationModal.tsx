@@ -159,18 +159,18 @@ export function CharacterCreationModal({
 
   return (
     <div
-      className="fixed inset-0 glass-overlay flex items-center justify-center z-50 p-4"
+      className="fixed inset-0 bg-black/45 flex items-center justify-center z-50 p-4"
       onClick={handleBackdropClick}
     >
-      <div className="glass-surface-modal max-w-lg w-full max-h-[85vh] flex flex-col">
+      <div className="rounded-xl border border-border bg-card shadow-lg max-w-lg w-full max-h-[85vh] flex flex-col">
         <div className="p-6 overflow-y-auto flex-1">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-semibold text-[var(--glass-text-primary)]">
+            <h3 className="text-lg font-semibold text-foreground">
               {t('character.title')}
             </h3>
             <button
               onClick={onClose}
-              className="glass-btn-base glass-btn-soft w-8 h-8 rounded-full flex items-center justify-center text-[var(--glass-text-tertiary)]"
+              className="inline-flex items-center justify-center border border-border bg-muted/50 hover:bg-muted w-8 h-8 rounded-full flex items-center justify-center text-muted-foreground"
             >
               <XMarkIcon className="w-5 h-5" />
             </button>
@@ -212,10 +212,10 @@ export function CharacterCreationModal({
           />
         </div>
 
-        <div className="flex justify-end p-4 border-t border-[var(--glass-stroke-base)] bg-[var(--glass-bg-surface-strong)] rounded-b-xl flex-shrink-0">
+        <div className="flex justify-end p-4 border-t border-border bg-muted/40 rounded-b-xl flex-shrink-0">
           <button
             onClick={onClose}
-            className="glass-btn-base glass-btn-secondary px-4 py-2 rounded-lg text-sm"
+            className="inline-flex items-center justify-center border border-input bg-background hover:bg-accent hover:text-accent-foreground px-4 py-2 rounded-lg text-sm"
             disabled={isSubmitting}
           >
             {t('common.cancel')}

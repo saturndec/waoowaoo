@@ -42,6 +42,8 @@
   "lipsyncDefault": "Lip Sync Model",
   "selectDefault": "Select",
   "providerPool": "Provider Pool",
+  "builtinProviders": "Built-in Providers",
+  "customProviders": "Custom Providers",
   "providerIdExists": "Provider ID already exists",
   "presetProviderCannotDelete": "Preset providers cannot be deleted",
   "confirmDeleteProvider": "Are you sure you want to delete this provider?",

@@ -2,6 +2,11 @@
 
 import { useEffect, useMemo, useState } from 'react'
 import { AppIcon } from '@/components/ui/icons'
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Switch } from '@/components/ui/switch'
+import { Textarea } from '@/components/ui/textarea'
 import { getProviderKey, isPresetComingSoonModel, type CustomModel } from '../types'
 import type { UseProviderCardStateResult } from './hooks/useProviderCardState'
 import type {
@@ -165,7 +170,7 @@ export function ProviderAdvancedFields({
       if (targetType === 'llm') {
         return (
           <div className="mt-2 grid grid-cols-1 gap-2 md:grid-cols-2">
-            <input
+            <Input
               type="number"
               step="0.01"
               min="0"
@@ -174,9 +179,9 @@ export function ProviderAdvancedFields({
                 state.setNewModel({ ...state.newModel, priceInput: event.target.value })
               }
               placeholder={t('pricingInputLabel')}
-              className="glass-input-base px-3 py-1.5 text-[12px] font-mono"
+              className="h-8 px-3 py-1.5 font-mono text-[12px]"
             />
-            <input
+            <Input
               type="number"
               step="0.01"
               min="0"
@@ -185,9 +190,9 @@ export function ProviderAdvancedFields({
                 state.setNewModel({ ...state.newModel, priceOutput: event.target.value })
               }
               placeholder={t('pricingOutputLabel')}
-              className="glass-input-base px-3 py-1.5 text-[12px] font-mono"
+              className="h-8 px-3 py-1.5 font-mono text-[12px]"
             />
-            <span className="shrink-0 text-[11px] text-[var(--glass-text-tertiary)]">¥/M tokens</span>
+            <span className="shrink-0 text-[11px] text-muted-foreground">¥/M tokens</span>
           </div>
         )
       }
@@ -195,7 +200,7 @@ export function ProviderAdvancedFields({
       if (targetType === 'image' || targetType === 'video') {
         return (
           <div className="mt-2 space-y-2">
-            <input
+            <Input
               type="number"
               step="0.0001"
               min="0"
@@ -204,15 +209,15 @@ export function ProviderAdvancedFields({
                 state.setNewModel({ ...state.newModel, basePrice: event.target.value })
               }
               placeholder={t('pricingBasePriceLabel')}
-              className="glass-input-base w-full px-3 py-1.5 text-[12px] font-mono"
+              className="h-8 w-full px-3 py-1.5 font-mono text-[12px]"
             />
-            <textarea
+            <Textarea
               value={state.newModel.optionPricesJson ?? ''}
               onChange={(event) =>
                 state.setNewModel({ ...state.newModel, optionPricesJson: event.target.value })
               }
               placeholder={t('pricingOptionPricesPlaceholder')}
-              className="glass-input-base min-h-[84px] w-full resize-y px-3 py-2 text-[12px] font-mono"
+              className="min-h-[84px] w-full resize-y px-3 py-2 font-mono text-[12px]"
             />
           </div>
         )
@@ -222,27 +227,26 @@ export function ProviderAdvancedFields({
     }
 
     return (
-      <div className="mt-2.5 rounded-lg bg-[var(--glass-bg-muted)] px-2 py-2">
-        <label className="flex items-center gap-2">
-          <button
+      <div className="mt-2.5 rounded-lg border border-border bg-muted/40 px-2.5 py-2">
+        <div className="flex items-center gap-2">
+          <Button
+            type="button"
+            size="sm"
+            variant={enabled ? 'secondary' : 'outline'}
             onClick={() =>
               state.setNewModel({
                 ...state.newModel,
                 enableCustomPricing: !enabled,
               })
             }
-            className="glass-check-mini"
-            data-active={enabled}
-            type="button"
+            className="h-7 px-2 text-xs"
           >
-            {enabled && (
-              <AppIcon name="checkSm" className="h-2.5 w-2.5 text-white" />
-            )}
-          </button>
-          <span className="text-xs font-medium text-[var(--glass-text-secondary)]">
+            <AppIcon name={enabled ? 'check' : 'plus'} className="h-3.5 w-3.5" />
+          </Button>
+          <span className="text-xs font-medium text-muted-foreground">
             {t('pricingEnableCustom')}
           </span>
-        </label>
+        </div>
         {renderInputs()}
       </div>
     )
@@ -250,110 +254,101 @@ export function ProviderAdvancedFields({
 
   return useTabbedLayout ? (
     <div className="space-y-2.5 p-3">
-      <div className="rounded-lg p-0.5" style={{ background: 'rgba(0,0,0,0.04)' }}>
-        <div
-          className="relative grid gap-1"
-          style={{ gridTemplateColumns: `repeat(${Math.max(1, visibleTypes.length)}, minmax(0, 1fr))` }}
-        >
-          {visibleTypes.length > 0 && currentType && (
-            <div
-              className="absolute bottom-0.5 top-0.5 rounded-md bg-white transition-transform duration-200"
-              style={{
-                boxShadow: '0 1px 4px rgba(0,0,0,0.15), 0 0 0 0.5px rgba(0,0,0,0.06)',
-                width: `calc(100% / ${visibleTypes.length})`,
-                transform: `translateX(${Math.max(0, visibleTypes.indexOf(currentType)) * 100}%)`,
-              }}
-            />
-          )}
-          {visibleTypes.map((type) => (
-            <button
-              key={type}
-              onClick={() => setActiveType(type)}
-              className={`relative z-[1] flex items-center justify-center gap-1 rounded-md px-3 py-1.5 text-[12px] font-medium transition-colors ${currentType === type
-                ? 'text-[var(--glass-text-primary)]'
-                : 'text-[var(--glass-text-tertiary)] hover:text-[var(--glass-text-secondary)]'
-                }`}
-            >
-              <TypeIcon type={type} className="h-3 w-3" />
-              <span>{typeLabel(type, t)}</span>
-            </button>
-          ))}
-        </div>
+      <div
+        className="grid gap-1 rounded-lg border border-border bg-muted p-1"
+        style={{ gridTemplateColumns: `repeat(${Math.max(1, visibleTypes.length)}, minmax(0, 1fr))` }}
+      >
+        {visibleTypes.map((type) => (
+          <Button
+            key={type}
+            type="button"
+            size="sm"
+            variant={currentType === type ? 'secondary' : 'ghost'}
+            onClick={() => setActiveType(type)}
+            className="h-7 justify-center gap-1 text-[12px]"
+          >
+            <TypeIcon type={type} className="h-3 w-3" />
+            <span>{typeLabel(type, t)}</span>
+          </Button>
+        ))}
       </div>
 
       {currentType && (
         <div className="flex items-center justify-between px-1">
-          <div className="flex items-center gap-2 text-[12px] font-semibold text-[var(--glass-text-primary)]">
+          <div className="flex items-center gap-2 text-[12px] font-semibold text-foreground">
             <TypeIcon type={currentType} className="h-3 w-3" />
             <span>{typeLabel(currentType, t)}</span>
-            <span className="rounded-full bg-[var(--glass-tone-neutral-bg)] px-1.5 py-0.5 text-[11px] font-semibold text-[var(--glass-tone-neutral-fg)]">
+            <span className="rounded-full bg-secondary px-1.5 py-0.5 text-[11px] font-semibold text-secondary-foreground">
               {currentModels.length}
             </span>
           </div>
           {shouldShowAddButton && (
-            <button
+            <Button
               onClick={() => state.setShowAddForm(currentType)}
-              className="glass-btn-base glass-btn-soft px-2 py-1 text-[12px] font-medium"
+              variant="secondary"
+              size="sm"
+              className="h-7 px-2 text-[12px] font-medium"
             >
               <AppIcon name="plus" className="h-3.5 w-3.5" />
               {t('add')}
-            </button>
+            </Button>
           )}
         </div>
       )}
 
       {currentType && state.showAddForm === currentType && addableModelTypes.has(currentType) && (
-        <div className="glass-surface-soft rounded-xl p-3">
+        <div className="rounded-xl border border-border bg-muted/30 p-3">
           <div className="mb-2.5 flex items-center gap-2">
-            <input
+            <Input
               type="text"
               value={state.newModel.name}
               onChange={(event) =>
                 state.setNewModel({ ...state.newModel, name: event.target.value })
               }
               placeholder={t('modelDisplayName')}
-              className="glass-input-base px-3 py-1.5 text-[12px]"
+              className="h-8 px-3 py-1.5 text-[12px]"
               autoFocus
             />
-            <button onClick={state.handleCancelAdd} className="glass-icon-btn-sm">
+            <Button onClick={state.handleCancelAdd} variant="ghost" size="icon" className="h-7 w-7">
               <AppIcon name="close" className="h-4 w-4" />
-            </button>
+            </Button>
           </div>
           <div className="flex items-center gap-2">
-            <input
+            <Input
               type="text"
               value={state.newModel.modelId}
               onChange={(event) =>
                 state.setNewModel({ ...state.newModel, modelId: event.target.value })
               }
               placeholder={t('modelActualId')}
-              className={`glass-input-base flex-1 px-3 py-1.5 text-[12px] font-mono ${currentType === 'video' && state.batchMode && provider.id === 'ark' ? 'rounded-r-none' : ''}`}
+              className={`h-8 flex-1 px-3 py-1.5 font-mono text-[12px] ${currentType === 'video' && state.batchMode && provider.id === 'ark' ? 'rounded-r-none' : ''}`}
             />
             {currentType === 'video' && state.batchMode && provider.id === 'ark' && (
-              <span className="rounded-r-lg bg-[var(--glass-bg-muted)] px-2 py-1.5 font-mono text-[12px] text-[var(--glass-text-secondary)]">
+              <span className="rounded-r-lg bg-muted px-2 py-1.5 font-mono text-[12px] text-muted-foreground">
                 -batch
               </span>
             )}
-            <button
+            <Button
               onClick={() => state.handleAddModel(currentType)}
-              className="glass-btn-base glass-btn-primary px-3 py-1.5 text-[12px] font-medium"
+              size="sm"
+              className="h-8 px-3 py-1.5 text-[12px] font-medium"
             >
               {t('save')}
-            </button>
+            </Button>
           </div>
           {renderCustomPricingEditor(currentType)}
           {currentType === 'video' && provider.id === 'ark' && (
-            <div className="mt-2.5 flex items-center gap-2 rounded-lg bg-[var(--glass-bg-muted)] px-2 py-2">
-              <button
+            <div className="mt-2.5 flex items-center gap-2 rounded-lg border border-border bg-muted/40 px-2.5 py-2">
+              <Button
+                type="button"
+                size="sm"
+                variant={state.batchMode ? 'secondary' : 'outline'}
                 onClick={() => state.setBatchMode(!state.batchMode)}
-                className="glass-check-mini"
-                data-active={state.batchMode}
+                className="h-7 px-2 text-xs"
               >
-                {state.batchMode && (
-                  <AppIcon name="checkSm" className="h-2.5 w-2.5 text-white" />
-                )}
-              </button>
-              <span className="text-xs font-medium text-[var(--glass-text-secondary)]">
+                <AppIcon name={state.batchMode ? 'check' : 'plus'} className="h-3.5 w-3.5" />
+              </Button>
+              <span className="text-xs font-medium text-muted-foreground">
                 {t('batchModeHalfPrice')}
               </span>
             </div>
@@ -361,9 +356,9 @@ export function ProviderAdvancedFields({
         </div>
       )}
 
-      <div className="glass-surface-soft rounded-xl p-2">
+      <div className="rounded-xl border border-border bg-muted/20 p-2">
         <div
-          className="glass-provider-model-scroll h-[280px] overflow-y-auto pr-1"
+          className="h-[280px] overflow-y-auto pr-1"
           style={{ scrollbarGutter: 'stable' }}
         >
           <div className="space-y-2">
@@ -386,48 +381,50 @@ export function ProviderAdvancedFields({
     <div className="p-3">
       {state.showAddForm === null ? (
         <div className="text-center">
-          <p className="mb-3 text-[12px] text-[var(--glass-text-tertiary)]">{t('noModelsForProvider')}</p>
-          <button
+          <p className="mb-3 text-[12px] text-muted-foreground">{t('noModelsForProvider')}</p>
+          <Button
             onClick={() => state.setShowAddForm(defaultAddType)}
-            className="glass-btn-base glass-btn-soft mx-auto px-3 py-1.5 text-[12px]"
+            variant="secondary"
+            className="mx-auto h-8 px-3 py-1.5 text-[12px]"
           >
             <AppIcon name="plus" className="h-3.5 w-3.5" />
             {t('addModel')}
-          </button>
+          </Button>
         </div>
       ) : (
-        <div className="glass-surface-soft rounded-xl p-3">
+        <div className="rounded-xl border border-border bg-muted/30 p-3">
           <div className="mb-2.5 flex items-center gap-2">
-            <input
+            <Input
               type="text"
               value={state.newModel.name}
               onChange={(event) =>
                 state.setNewModel({ ...state.newModel, name: event.target.value })
               }
               placeholder={t('modelDisplayName')}
-              className="glass-input-base px-3 py-1.5 text-[12px]"
+              className="h-8 px-3 py-1.5 text-[12px]"
               autoFocus
             />
-            <button onClick={state.handleCancelAdd} className="glass-icon-btn-sm">
+            <Button onClick={state.handleCancelAdd} variant="ghost" size="icon" className="h-7 w-7">
               <AppIcon name="close" className="h-4 w-4" />
-            </button>
+            </Button>
           </div>
           <div className="flex items-center gap-2">
-            <input
+            <Input
               type="text"
               value={state.newModel.modelId}
               onChange={(event) =>
                 state.setNewModel({ ...state.newModel, modelId: event.target.value })
               }
               placeholder={t('modelActualId')}
-              className="glass-input-base flex-1 px-3 py-1.5 text-[12px] font-mono"
+              className="h-8 flex-1 px-3 py-1.5 font-mono text-[12px]"
             />
-            <button
+            <Button
               onClick={() => state.showAddForm && state.handleAddModel(state.showAddForm)}
-              className="glass-btn-base glass-btn-primary px-3 py-1.5 text-[12px] font-medium"
+              size="sm"
+              className="h-8 px-3 py-1.5 text-[12px] font-medium"
             >
               {t('save')}
-            </button>
+            </Button>
           </div>
           {renderCustomPricingEditor(state.showAddForm)}
         </div>
@@ -456,96 +453,103 @@ function ModelRow({
   const priceTexts = getModelPriceTexts(model, t)
   const priceText = priceTexts.join(' / ')
   const isComingSoonModel = isPresetComingSoonModel(model.provider, model.modelId)
-  const rowDisabledClass = model.enabled ? '' : 'opacity-50'
+  const rowDisabledClass = model.enabled ? '' : 'opacity-70'
 
   return (
-    <div className={`group flex items-center justify-between gap-2 rounded-xl bg-[var(--glass-bg-surface)] px-3 py-2 transition-colors hover:bg-[var(--glass-bg-surface-strong)] ${rowDisabledClass}`}>
+    <div className={`group flex items-center justify-between gap-2 rounded-xl border border-border bg-background px-3 py-2 transition-colors hover:bg-muted/40 ${rowDisabledClass}`}>
       {state.editingModelId === model.modelKey ? (
         <>
           <div className="flex min-w-0 flex-1 flex-col gap-2">
-            <input
+            <Input
               type="text"
               value={state.editModel.name}
               onChange={(event) =>
                 state.setEditModel({ ...state.editModel, name: event.target.value })
               }
-              className="glass-input-base w-full px-3 py-1.5 text-[12px]"
+              className="h-8 w-full px-3 py-1.5 text-[12px]"
               placeholder={t('modelDisplayName')}
             />
-            <input
+            <Input
               type="text"
               value={state.editModel.modelId}
               onChange={(event) =>
                 state.setEditModel({ ...state.editModel, modelId: event.target.value })
               }
-              className="glass-input-base w-full px-3 py-1.5 text-[12px] font-mono"
+              className="h-8 w-full px-3 py-1.5 font-mono text-[12px]"
               placeholder={t('modelActualId')}
             />
-            <div className="text-xs text-[var(--glass-text-tertiary)]">{priceText}</div>
+            <div className="text-xs text-muted-foreground">{priceText}</div>
           </div>
           <div className="flex items-center gap-1.5">
-            <button
+            <Button
               onClick={() => state.handleSaveModel(model.modelKey)}
-              className="glass-icon-btn-sm"
+              variant="ghost"
+              size="icon"
+              className="h-7 w-7"
               title={t('save')}
             >
               <AppIcon name="check" className="h-4 w-4" />
-            </button>
-            <button
+            </Button>
+            <Button
               onClick={state.handleCancelEditModel}
-              className="glass-icon-btn-sm"
+              variant="ghost"
+              size="icon"
+              className="h-7 w-7"
               title={t('cancel')}
             >
               <AppIcon name="close" className="w-3.5 h-3.5" />
-            </button>
+            </Button>
           </div>
         </>
       ) : (
         <>
           <div className="flex min-w-0 flex-1 flex-col gap-0.5">
-            <div className="flex flex-wrap items-center gap-2">
-              <span className={`text-[12px] font-semibold ${model.enabled ? 'text-[var(--glass-text-primary)]' : 'text-[var(--glass-text-secondary)]'}`}>
+            <div className="flex min-w-0 items-center gap-2">
+              <span className={`min-w-0 flex-1 truncate text-[12px] font-semibold ${model.enabled ? 'text-foreground' : 'text-muted-foreground'}`}>
                 {model.name}
               </span>
               {state.isDefaultModel(model) && model.enabled && (
-                <span className="shrink-0 rounded-md bg-[var(--glass-text-primary)] px-1.5 py-0.5 text-[10px] leading-none text-white">
+                <Badge variant="secondary" className="h-5 shrink-0 px-1.5 text-[10px] leading-none">
                   {t('default')}
-                </span>
+                </Badge>
               )}
-              <span className="shrink-0 text-[11px] text-[var(--glass-text-tertiary)]">{priceText}</span>
+              <span className="shrink-0 whitespace-nowrap text-[11px] text-muted-foreground">{priceText}</span>
             </div>
-            <span className="break-all text-[11px] text-[var(--glass-text-tertiary)]">{model.modelId}</span>
+            <span className="truncate text-[11px] text-muted-foreground" title={model.modelId}>
+              {model.modelId}
+            </span>
           </div>
 
           <div className="flex items-center gap-1.5">
             {!state.isPresetModel(model.modelKey) && onUpdateModel && (
-              <button
+              <Button
                 onClick={() => state.handleEditModel(model)}
-                className="glass-icon-btn-sm opacity-0 transition-opacity group-hover:opacity-100"
+                variant="ghost"
+                size="icon"
+                className="h-7 w-7 opacity-0 transition-opacity group-hover:opacity-100"
                 title={t('configure')}
               >
                 <AppIcon name="edit" className="h-3.5 w-3.5" />
-              </button>
+              </Button>
             )}
-            <button
+            <Button
               onClick={() => onDeleteModel(model.modelKey)}
-              className="glass-icon-btn-sm opacity-0 transition-opacity hover:text-[var(--glass-tone-danger-fg)] group-hover:opacity-100"
+              variant="ghost"
+              size="icon"
+              className="h-7 w-7 opacity-0 transition-opacity hover:text-destructive group-hover:opacity-100"
             >
               <AppIcon name="trash" className="h-3.5 w-3.5" />
-            </button>
+            </Button>
 
-            <button
-              onClick={() => {
-                if (isComingSoonModel) return
+            <Switch
+              checked={model.enabled}
+              onCheckedChange={(nextEnabled) => {
+                if (isComingSoonModel || nextEnabled === model.enabled) return
                 onToggleModel(model.modelKey)
               }}
-              className={`glass-toggle ${isComingSoonModel ? 'cursor-not-allowed opacity-60' : ''}`}
-              data-active={model.enabled}
               disabled={isComingSoonModel}
               title={isComingSoonModel ? t('comingSoon') : undefined}
-            >
-              <div className="glass-toggle-thumb"></div>
-            </button>
+            />
           </div>
         </>
       )}

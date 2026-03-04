@@ -60,20 +60,20 @@ export default function LocationSection({
     const locations: Location[] = assets?.locations ?? []
 
     return (
-        <div className="glass-surface p-6">
+        <div className="rounded-xl border border-border bg-card p-6">
             <div className="flex items-center justify-between mb-6">
                 <div className="flex items-center gap-3">
-                    <span className="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-[var(--glass-tone-info-bg)] text-[var(--glass-tone-info-fg)]">
+                    <span className="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-primary/10 text-primary">
                         <AppIcon name="imageLandscape" className="h-5 w-5" />
                     </span>
-                    <h3 className="text-lg font-bold text-[var(--glass-text-primary)]">{t("stage.locationAssets")}</h3>
-                    <span className="text-sm text-[var(--glass-text-tertiary)] bg-[var(--glass-bg-muted)]/50 px-2 py-1 rounded-lg">
+                    <h3 className="text-lg font-bold text-foreground">{t("stage.locationAssets")}</h3>
+                    <span className="text-sm text-muted-foreground bg-muted/50 px-2 py-1 rounded-lg">
                         {t("stage.locationCounts", { count: locations.length })}
                     </span>
                 </div>
                 <button
                     onClick={onAddLocation}
-                    className="glass-btn-base glass-btn-primary flex items-center gap-2 px-4 py-2 font-medium"
+                    className="inline-flex items-center justify-center rounded-md bg-primary px-3 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 flex items-center gap-2 px-4 py-2 font-medium"
                 >
                     + {t("location.add")}
                 </button>

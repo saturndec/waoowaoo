@@ -34,8 +34,8 @@ export default function StoryboardGroupHeader({
           onClick={onMoveUp}
           disabled={sbIndex === 0 || movingClipId === storyboardClipId}
           className={`rounded p-1 transition-colors ${sbIndex === 0 || movingClipId === storyboardClipId
-            ? 'cursor-not-allowed text-[var(--glass-text-tertiary)]'
-            : 'text-[var(--glass-text-secondary)] hover:bg-[var(--glass-tone-info-bg)] hover:text-[var(--glass-tone-info-fg)]'
+            ? 'cursor-not-allowed text-muted-foreground'
+            : 'text-muted-foreground hover:bg-primary/10 hover:text-primary'
             }`}
           title={t('panel.moveUp')}
         >
@@ -45,22 +45,22 @@ export default function StoryboardGroupHeader({
           onClick={onMoveDown}
           disabled={sbIndex === totalStoryboards - 1 || movingClipId === storyboardClipId}
           className={`rounded p-1 transition-colors ${sbIndex === totalStoryboards - 1 || movingClipId === storyboardClipId
-            ? 'cursor-not-allowed text-[var(--glass-text-tertiary)]'
-            : 'text-[var(--glass-text-secondary)] hover:bg-[var(--glass-tone-info-bg)] hover:text-[var(--glass-tone-info-fg)]'
+            ? 'cursor-not-allowed text-muted-foreground'
+            : 'text-muted-foreground hover:bg-primary/10 hover:text-primary'
             }`}
           title={t('panel.moveDown')}
         >
           <AppIcon name="chevronDown" className="w-4 h-4" />
         </button>
       </div>
-      <div className="glass-surface-soft flex h-12 w-12 items-center justify-center rounded-2xl text-2xl font-bold text-[var(--glass-tone-info-fg)]">
+      <div className="rounded-xl border border-border bg-muted/30 flex h-12 w-12 items-center justify-center rounded-2xl text-2xl font-bold text-primary">
         {sbIndex + 1}
       </div>
       <div>
-        <h3 className="text-sm font-medium text-[var(--glass-text-secondary)]">
+        <h3 className="text-sm font-medium text-muted-foreground">
           {t('group.segment')}【{formatClipTitle(clip)}】
         </h3>
-        <p className="mt-0.5 line-clamp-1 text-xs text-[var(--glass-text-tertiary)]">{clip?.summary}</p>
+        <p className="mt-0.5 line-clamp-1 text-xs text-muted-foreground">{clip?.summary}</p>
       </div>
     </div>
   )

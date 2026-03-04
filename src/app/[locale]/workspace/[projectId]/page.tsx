@@ -13,6 +13,8 @@ import NovelPromotionWorkspace from './modes/novel-promotion/NovelPromotionWorks
 import SmartImportWizard, { SplitEpisode } from './modes/novel-promotion/components/SmartImportWizard'
 import { resolveTaskPresentationState } from '@/lib/task/presentation'
 import { resolveSelectedEpisodeId } from './episode-selection'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent } from '@/components/ui/card'
 
 // 有效的stage值
 const VALID_STAGES = ['config', 'script', 'assets', 'text-storyboard', 'storyboard', 'videos', 'voice', 'editor'] as const
@@ -251,10 +253,10 @@ export default function ProjectDetailPage() {
 
   if (isInitializing) {
     return (
-      <div className="glass-page min-h-screen">
+      <div className="min-h-screen bg-background">
         <Navbar />
         <main className="flex items-center justify-center h-[calc(100vh-64px)]">
-          <div className="text-[var(--glass-text-secondary)]">{tc('loading')}</div>
+          <div className="text-muted-foreground">{tc('loading')}</div>
         </main>
       </div>
     )
@@ -263,36 +265,37 @@ export default function ProjectDetailPage() {
   // Error状态
   if (error || !project) {
     return (
-      <div className="glass-page min-h-screen">
+      <div className="min-h-screen bg-background">
         <Navbar />
-        <main className="container mx-auto px-4 py-8">
-          <div className="glass-surface p-6 text-center">
-            <p className="text-[var(--glass-tone-danger-fg)] mb-4">{error || t('projectNotFound')}</p>
-            <button
-              onClick={() => router.push('/workspace')}
-              className="glass-btn-base glass-btn-primary px-6 py-2"
-            >
-              {t('backToWorkspace')}
-            </button>
-          </div>
+        <main className="w-full px-4 py-8">
+          <Card className="p-6 text-center">
+            <CardContent className="space-y-4 p-0">
+              <p className="text-destructive">{error || t('projectNotFound')}</p>
+              <Button
+                onClick={() => router.push('/workspace')}
+              >
+                {t('backToWorkspace')}
+              </Button>
+            </CardContent>
+          </Card>
         </main>
       </div>
     )
   }
 
   return (
-    <div className="glass-page min-h-screen flex flex-col">
+    <div className="flex min-h-screen flex-col bg-background">
       <Navbar />
 
       {/* V3 UI: 浮动导航替代了旧的 Sidebar */}
 
       {/* 主内容区 - 占满全部宽度 */}
       <main className="flex-1 overflow-y-auto">
-        <div className="container mx-auto px-4 py-8">
+        <div className="w-full px-4 py-8 sm:px-6 xl:px-8">
           {isGlobalAssetsView && project.novelPromotionData ? (
             // 全局资产视图（确保数据准备好）
             <div>
-              <h1 className="text-2xl font-bold text-[var(--glass-text-primary)] mb-6">{t('globalAssets')}</h1>
+              <h1 className="mb-6 text-2xl font-bold text-foreground">{t('globalAssets')}</h1>
               <NovelPromotionWorkspace
                 project={project}
                 projectId={projectId}
@@ -327,12 +330,14 @@ export default function ProjectDetailPage() {
             />
           ) : (
             // 加载中
-            <div className="glass-surface p-8 text-center">
-              <div className="mx-auto mb-4 w-12 h-12 rounded-full flex items-center justify-center bg-[var(--glass-bg-muted)] text-[var(--glass-text-tertiary)]">
-                <TaskStatusInline state={initLoadingState} className="[&>span]:sr-only" />
-              </div>
-              <h2 className="text-xl font-semibold text-[var(--glass-text-secondary)] mb-2">{tc('loading')}</h2>
-            </div>
+            <Card className="p-8 text-center">
+              <CardContent className="p-0">
+                <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-muted text-muted-foreground">
+                  <TaskStatusInline state={initLoadingState} className="[&>span]:sr-only" />
+                </div>
+                <h2 className="mb-2 text-xl font-semibold text-muted-foreground">{tc('loading')}</h2>
+              </CardContent>
+            </Card>
           )}
         </div>
       </main>

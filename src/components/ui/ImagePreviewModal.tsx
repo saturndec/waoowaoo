@@ -39,7 +39,7 @@ export default function ImagePreviewModal({ imageUrl, onClose }: ImagePreviewMod
 
   return (
     <div
-      className="fixed inset-0 z-[9999] flex items-center justify-center bg-[var(--glass-overlay)] backdrop-blur-sm"
+      className="fixed inset-0 z-[9999] flex items-center justify-center bg-[var(--ui-overlay)] backdrop-blur-sm"
       onClick={onClose}
       style={{ margin: 0, padding: 0 }}
     >
@@ -47,7 +47,7 @@ export default function ImagePreviewModal({ imageUrl, onClose }: ImagePreviewMod
         {/* 关闭按钮 */}
         <button
           onClick={onClose}
-          className="absolute top-6 right-6 z-10 w-10 h-10 flex items-center justify-center rounded-full bg-[var(--glass-overlay)] hover:bg-[var(--glass-overlay)] text-white transition-colors"
+          className="absolute top-6 right-6 z-10 w-10 h-10 flex items-center justify-center rounded-full bg-[var(--ui-overlay-strong)] hover:bg-[var(--ui-overlay)] text-white transition-colors"
         >
           <AppIcon name="close" className="w-6 h-6" />
         </button>
@@ -57,7 +57,7 @@ export default function ImagePreviewModal({ imageUrl, onClose }: ImagePreviewMod
             target="_blank"
             rel="noopener noreferrer"
             onClick={(e) => e.stopPropagation()}
-            className="absolute top-6 right-20 z-10 px-3 h-10 inline-flex items-center rounded-full bg-[var(--glass-overlay)] hover:bg-[var(--glass-overlay)] text-white text-sm transition-colors"
+            className="absolute top-6 right-20 z-10 px-3 h-10 inline-flex items-center rounded-full bg-[var(--ui-overlay-strong)] hover:bg-[var(--ui-overlay)] text-white text-sm transition-colors"
           >
             {t('viewOriginal')}
           </a>

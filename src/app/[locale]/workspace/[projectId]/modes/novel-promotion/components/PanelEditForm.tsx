@@ -2,7 +2,9 @@
 
 import { useTranslations } from 'next-intl'
 import PanelEditFormV2 from '@/components/ui/patterns/PanelEditFormV2'
-import { GlassButton, GlassModalShell, GlassSurface } from '@/components/ui/primitives'
+import { Button } from '@/components/ui/button'
+import { Card } from '@/components/ui/card'
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Character, Location } from '@/types/project'
 import { useProjectAssets } from '@/lib/query/hooks/useProjectAssets'
 import { AppIcon } from '@/components/ui/icons'
@@ -91,46 +93,51 @@ export function CharacterPickerModal({
   const characters: Character[] = assets?.characters ?? []
 
   return (
-    <GlassModalShell open onClose={onClose} size="md" title={ts('panel.selectCharacter')}>
-      <div className="max-h-[60vh] space-y-4 overflow-y-auto">
-        {characters.length === 0 ? (
-          <p className="py-8 text-center text-[var(--glass-text-secondary)]">{ts('panel.noCharacterAssets')}</p>
-        ) : (
-          characters.map(char => {
-            const appearances = char.appearances || []
-            return (
-              <GlassSurface key={char.id} variant="panel" className="space-y-2 p-3">
-                <h5 className="text-sm font-medium text-[var(--glass-text-primary)]">{char.name}</h5>
-                <div className="flex flex-wrap gap-2">
-                  {appearances.map((app: CharacterAppearance) => {
-                    const appearanceName = app.changeReason || ts('panel.defaultAppearance')
-                    const isSelected = currentCharacters.some(
-                      c => c.name === char.name && c.appearance === appearanceName
-                    )
-                    return (
-                      <GlassButton
-                        key={app.id || app.appearanceIndex}
-                        size="sm"
-                        variant={isSelected ? 'secondary' : 'ghost'}
-                        disabled={isSelected}
-                        onClick={() => {
-                          if (!isSelected) onSelect(char.name, appearanceName)
-                        }}
-                      >
-                        {appearanceName}
-                        {isSelected && (
-                          <AppIcon name="checkTiny" className="h-3 w-3" />
-                        )}
-                      </GlassButton>
-                    )
-                  })}
-                </div>
-              </GlassSurface>
-            )
-          })
-        )}
-      </div>
-    </GlassModalShell>
+    <Dialog open onOpenChange={(open) => (!open ? onClose() : undefined)}>
+      <DialogContent className="max-w-2xl">
+        <DialogHeader>
+          <DialogTitle>{ts('panel.selectCharacter')}</DialogTitle>
+        </DialogHeader>
+        <div className="max-h-[60vh] space-y-4 overflow-y-auto">
+          {characters.length === 0 ? (
+            <p className="py-8 text-center text-muted-foreground">{ts('panel.noCharacterAssets')}</p>
+          ) : (
+            characters.map(char => {
+              const appearances = char.appearances || []
+              return (
+                <Card key={char.id} className="space-y-2 p-3">
+                  <h5 className="text-sm font-medium text-foreground">{char.name}</h5>
+                  <div className="flex flex-wrap gap-2">
+                    {appearances.map((app: CharacterAppearance) => {
+                      const appearanceName = app.changeReason || ts('panel.defaultAppearance')
+                      const isSelected = currentCharacters.some(
+                        c => c.name === char.name && c.appearance === appearanceName
+                      )
+                      return (
+                        <Button
+                          key={app.id || app.appearanceIndex}
+                          size="sm"
+                          variant={isSelected ? 'secondary' : 'ghost'}
+                          disabled={isSelected}
+                          onClick={() => {
+                            if (!isSelected) onSelect(char.name, appearanceName)
+                          }}
+                        >
+                          {appearanceName}
+                          {isSelected && (
+                            <AppIcon name="checkTiny" className="h-3 w-3" />
+                          )}
+                        </Button>
+                      )
+                    })}
+                  </div>
+                </Card>
+              )
+            })
+          )}
+        </div>
+      </DialogContent>
+    </Dialog>
   )
 }
 
@@ -152,38 +159,43 @@ export function LocationPickerModal({
   const locations: Location[] = assets?.locations ?? []
 
   return (
-    <GlassModalShell open onClose={onClose} size="md" title={ts('panel.selectLocation')}>
-      <div className="max-h-[60vh] overflow-y-auto">
-        {locations.length === 0 ? (
-          <p className="py-8 text-center text-[var(--glass-text-secondary)]">{ts('panel.noLocationAssets')}</p>
-        ) : (
-          <div className="grid grid-cols-2 gap-3">
-            {locations.map(loc => {
-              const isSelected = currentLocation === loc.name
-              return (
-                <button
-                  key={loc.id}
-                  type="button"
-                  onClick={() => onSelect(loc.name)}
-                  className={`rounded-[var(--glass-radius-md)] border px-3 py-3 text-left transition-colors ${
-                    isSelected
-                      ? 'bg-[var(--glass-tone-success-bg)] text-[var(--glass-tone-success-fg)]'
-                      : 'bg-[var(--glass-bg-muted)] text-[var(--glass-text-secondary)]'
-                  }`}
-                >
-                  <div className="font-medium text-[var(--glass-text-primary)] flex items-center gap-1.5">
-                    <AppIcon name="imageAlt" className="h-3.5 w-3.5 text-[var(--glass-text-tertiary)]" />
-                    <span>{loc.name}</span>
-                  </div>
-                  {isSelected ? (
-                    <span className="text-xs text-[var(--glass-tone-success-fg)]">{ts('panel.selected')}</span>
-                  ) : null}
-                </button>
-              )
-            })}
-          </div>
-        )}
-      </div>
-    </GlassModalShell>
+    <Dialog open onOpenChange={(open) => (!open ? onClose() : undefined)}>
+      <DialogContent className="max-w-2xl">
+        <DialogHeader>
+          <DialogTitle>{ts('panel.selectLocation')}</DialogTitle>
+        </DialogHeader>
+        <div className="max-h-[60vh] overflow-y-auto">
+          {locations.length === 0 ? (
+            <p className="py-8 text-center text-muted-foreground">{ts('panel.noLocationAssets')}</p>
+          ) : (
+            <div className="grid grid-cols-2 gap-3">
+              {locations.map(loc => {
+                const isSelected = currentLocation === loc.name
+                return (
+                  <button
+                    key={loc.id}
+                    type="button"
+                    onClick={() => onSelect(loc.name)}
+                    className={`rounded-md border px-3 py-3 text-left transition-colors ${
+                      isSelected
+                        ? 'border-emerald-200 bg-emerald-100 text-emerald-700'
+                        : 'border-border bg-muted/60 text-muted-foreground hover:bg-muted'
+                    }`}
+                  >
+                    <div className="flex items-center gap-1.5 font-medium text-foreground">
+                      <AppIcon name="imageAlt" className="h-3.5 w-3.5 text-muted-foreground" />
+                      <span>{loc.name}</span>
+                    </div>
+                    {isSelected ? (
+                      <span className="text-xs text-emerald-700">{ts('panel.selected')}</span>
+                    ) : null}
+                  </button>
+                )
+              })}
+            </div>
+          )}
+        </div>
+      </DialogContent>
+    </Dialog>
   )
 }

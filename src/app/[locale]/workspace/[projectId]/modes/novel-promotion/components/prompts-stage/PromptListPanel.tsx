@@ -1,6 +1,7 @@
 import { useTranslations } from 'next-intl'
 import TaskStatusInline from '@/components/task/TaskStatusInline'
 import { AppIcon } from '@/components/ui/icons'
+import { Button } from '@/components/ui/button'
 import type { PromptStageRuntime } from './hooks/usePromptStageActions'
 import PromptListCardView from './PromptListCardView'
 import PromptListTableView from './PromptListTableView'
@@ -26,52 +27,59 @@ export default function PromptListPanel({ runtime }: PromptListPanelProps) {
 
   return (
     <>
-      <div className="flex items-center justify-between">
-        <div className="flex items-center space-x-4">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="flex flex-wrap items-center gap-3">
           {onBack && (
-            <button
+            <Button
               onClick={onBack}
               disabled={isAnyTaskRunning}
-              className="glass-btn-base px-4 py-2 bg-[var(--glass-bg-muted)] text-[var(--glass-text-secondary)] hover:bg-[var(--glass-bg-muted)] text-sm disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1.5"
+              variant="outline"
+              size="sm"
+              className="gap-1.5"
             >
               <AppIcon name="chevronLeft" className="w-4 h-4" />
               <span>{tCommon('back')}</span>
-            </button>
+            </Button>
           )}
-          <span className="text-sm text-[var(--glass-text-secondary)]">
+          <span className="text-sm text-muted-foreground">
             {t('header.panels')}: {shots.length}
             {runningCount > 0 && (
-              <span className="ml-2 text-[var(--glass-tone-info-fg)] font-medium">
+              <span className="ml-2 font-medium text-foreground">
                 ({runningCount} {t('group.generating')})
               </span>
             )}
           </span>
-          <button
+          <Button
             onClick={onGenerateAllImages}
             disabled={isAnyTaskRunning}
-            className="glass-btn-base px-4 py-2 bg-[var(--glass-tone-success-fg)] text-white hover:bg-[var(--glass-tone-success-fg)] text-sm disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
+            size="sm"
+            className="min-w-[7rem]"
           >
             {isAnyTaskRunning ? (
-              <TaskStatusInline state={batchTaskRunningState} className="text-white [&>span]:text-white [&_svg]:text-white" />
+              <TaskStatusInline state={batchTaskRunningState} className="[&>span]:text-primary-foreground [&_svg]:text-primary-foreground text-primary-foreground" />
             ) : (
               t('group.generateAll')
             )}
-          </button>
+          </Button>
         </div>
 
-        <div className="flex items-center space-x-2">
-          <button
+        <div className="flex items-center gap-2 rounded-lg border border-border bg-muted p-1">
+          <Button
             onClick={() => onViewModeChange('card')}
-            className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${viewMode === 'card' ? 'bg-[var(--glass-accent-from)] text-white' : 'bg-[var(--glass-bg-muted)] text-[var(--glass-text-secondary)] hover:bg-[var(--glass-bg-muted)]'}`}
+            variant={viewMode === 'card' ? 'secondary' : 'ghost'}
+            size="sm"
+            className="h-8 px-3 text-sm"
           >
             {tCommon('preview')}
-          </button>
-          <button
+          </Button>
+          <Button
             onClick={() => onViewModeChange('table')}
-            className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${viewMode === 'table' ? 'bg-[var(--glass-accent-from)] text-white' : 'bg-[var(--glass-bg-muted)] text-[var(--glass-text-secondary)] hover:bg-[var(--glass-bg-muted)]'}`}
+            variant={viewMode === 'table' ? 'secondary' : 'ghost'}
+            size="sm"
+            className="h-8 px-3 text-sm"
           >
             {t('common.status')}
-          </button>
+          </Button>
         </div>
       </div>
 

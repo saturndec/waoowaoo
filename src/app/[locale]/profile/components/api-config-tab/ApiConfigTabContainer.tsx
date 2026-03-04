@@ -2,7 +2,6 @@
 
 import { useState } from 'react'
 import { useLocale, useTranslations } from 'next-intl'
-import { GlassModalShell } from '@/components/ui/primitives'
 import { resolveTaskPresentationState } from '@/lib/task/presentation'
 import type { CapabilityValue } from '@/lib/model-config-contract'
 import {
@@ -16,6 +15,11 @@ import { ApiConfigProviderList } from './ApiConfigProviderList'
 import { useApiConfigFilters } from './hooks/useApiConfigFilters'
 import { ModelCapabilityDropdown } from '@/components/ui/config-modals/ModelCapabilityDropdown'
 import { AppIcon } from '@/components/ui/icons'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardHeader } from '@/components/ui/card'
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import { Input } from '@/components/ui/input'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 
 type CustomProviderType = 'gemini-compatible' | 'openai-compatible'
 type DefaultModelField =
@@ -28,7 +32,8 @@ type DefaultModelField =
   | 'lipSyncModel'
 
 const MONO_ICON_BADGE =
-  'inline-flex items-center justify-center rounded-lg bg-[var(--glass-bg-surface)] p-1 text-[var(--glass-text-secondary)]'
+  'inline-flex items-center justify-center rounded-lg border border-border bg-muted p-1 text-muted-foreground'
+const EMPTY_MODEL_VALUE = '__none__'
 
 const Icons = {
   settings: () => (
@@ -45,9 +50,6 @@ const Icons = {
   ),
   lipsync: () => (
     <AppIcon name="audioWave" className="w-3.5 h-3.5" />
-  ),
-  chevronDown: () => (
-    <AppIcon name="chevronDown" className="w-3 h-3" />
   ),
 }
 
@@ -192,7 +194,7 @@ export function ApiConfigTabContainer() {
 
   if (loading) {
     return (
-      <div className="flex h-full items-center justify-center p-6 text-[var(--glass-text-tertiary)]">
+      <div className="flex h-full items-center justify-center p-6 text-muted-foreground">
         {tc('loading')}
       </div>
     )
@@ -220,18 +222,21 @@ export function ApiConfigTabContainer() {
       />
 
       <div className="flex-1 overflow-y-auto">
-        <div className="mx-auto max-w-4xl space-y-6 p-6">
-          <div className="glass-surface rounded-2xl p-3.5">
-            <div className="mb-1 flex items-center gap-2 px-1">
-              <span className="glass-surface-soft inline-flex h-6 w-6 items-center justify-center rounded-lg text-[var(--glass-text-secondary)]">
-                <Icons.settings />
-              </span>
-              <h2 className="text-[15px] font-semibold text-[var(--glass-text-primary)]">{t('defaultModels')}</h2>
-            </div>
-            <p className="mb-2.5 px-1 text-[12px] text-[var(--glass-text-secondary)]">
-              {t('defaultModel.hint')}
-            </p>
-            <div className="grid grid-cols-1 gap-2.5 md:grid-cols-2 lg:grid-cols-3">
+        <div className="w-full space-y-6 p-6">
+          <Card className="rounded-2xl shadow-sm">
+            <CardHeader className="pb-3">
+              <div className="mb-1 flex items-center gap-2 px-1">
+                <span className="inline-flex h-6 w-6 items-center justify-center rounded-lg border border-border bg-muted text-muted-foreground">
+                  <Icons.settings />
+                </span>
+                <h2 className="text-[15px] font-semibold text-foreground">{t('defaultModels')}</h2>
+              </div>
+              <p className="px-1 text-[12px] text-muted-foreground">
+                {t('defaultModel.hint')}
+              </p>
+            </CardHeader>
+            <CardContent className="pt-0">
+              <div className="grid justify-start gap-2.5 [grid-template-columns:repeat(auto-fill,minmax(min(100%,18.5rem),20rem))]">
               {defaultModelCards.map((card) => {
                 const options = getEnabledModelsByType(card.modelType)
                 const currentKey = defaultModels[card.field]
@@ -254,102 +259,102 @@ export function ApiConfigTabContainer() {
                 const ModelIcon = Icons[card.icon]
 
                 return (
-                  <div
+                  <Card
                     key={card.field}
-                    className="glass-surface-soft rounded-xl p-2.5"
+                    className="w-full border-border bg-muted/30 shadow-none"
                   >
-                    <div className="mb-2 flex items-center gap-2">
-                      <span className={MONO_ICON_BADGE}>
-                        <ModelIcon />
-                      </span>
-                      <span className="text-[12px] font-semibold text-[var(--glass-text-primary)]">
-                        {card.title}
-                      </span>
-                    </div>
-                    {card.modelType === 'video' || card.modelType === 'image' || card.modelType === 'llm' ? (
-                      /* Unified model capability dropdown */
-                      <ModelCapabilityDropdown
-                        compact
-                        models={options.map((opt) => ({
-                          value: opt.modelKey,
-                          label: opt.name,
-                          provider: opt.provider,
-                          providerName: opt.providerName || getProviderDisplayName(opt.provider, locale),
-                        }))}
-                        value={normalizedKey || undefined}
-                        onModelChange={(newModelKey) => {
-                          // 用新模型的 capabilities 计算 fields，而不是旧模型的
-                          const newModel = options.find((opt) => opt.modelKey === newModelKey)
-                          const newCapFields = extractCapabilityFieldsFromModel(
-                            newModel?.capabilities as Record<string, unknown> | undefined,
-                            card.modelType,
-                          )
-                          updateDefaultModel(card.field, newModelKey, newCapFields)
-                        }}
-                        capabilityFields={capabilityFields.map((d) => ({
-                          ...d,
-                          label: toCapabilityFieldLabel(d.field),
-                        }))}
-                        capabilityOverrides={
-                          current
-                            ? Object.fromEntries(
-                              capabilityFields
-                                .filter((d) => capabilityDefaults[current.modelKey]?.[d.field] !== undefined)
-                                .map((d) => [d.field, capabilityDefaults[current.modelKey][d.field]])
+                    <CardContent className="space-y-2 p-2.5">
+                      <div className="flex items-center gap-2">
+                        <span className={MONO_ICON_BADGE}>
+                          <ModelIcon />
+                        </span>
+                        <span className="text-[12px] font-semibold text-foreground">
+                          {card.title}
+                        </span>
+                      </div>
+                      {card.modelType === 'video' || card.modelType === 'image' || card.modelType === 'llm' ? (
+                        <ModelCapabilityDropdown
+                          compact
+                          models={options.map((opt) => ({
+                            value: opt.modelKey,
+                            label: opt.name,
+                            provider: opt.provider,
+                            providerName: opt.providerName || getProviderDisplayName(opt.provider, locale),
+                          }))}
+                          value={normalizedKey || undefined}
+                          onModelChange={(newModelKey) => {
+                            const newModel = options.find((opt) => opt.modelKey === newModelKey)
+                            const newCapFields = extractCapabilityFieldsFromModel(
+                              newModel?.capabilities as Record<string, unknown> | undefined,
+                              card.modelType,
                             )
-                            : {}
-                        }
-                        onCapabilityChange={(field, rawValue, sample) => {
-                          if (!current) return
-                          if (!rawValue) {
-                            updateCapabilityDefault(current.modelKey, field, null)
-                            return
+                            updateDefaultModel(card.field, newModelKey, newCapFields)
+                          }}
+                          capabilityFields={capabilityFields.map((d) => ({
+                            ...d,
+                            label: toCapabilityFieldLabel(d.field),
+                          }))}
+                          capabilityOverrides={
+                            current
+                              ? Object.fromEntries(
+                                capabilityFields
+                                  .filter((d) => capabilityDefaults[current.modelKey]?.[d.field] !== undefined)
+                                  .map((d) => [d.field, capabilityDefaults[current.modelKey][d.field]])
+                              )
+                              : {}
                           }
-                          updateCapabilityDefault(
-                            current.modelKey,
-                            field,
-                            parseBySample(rawValue, sample),
-                          )
-                        }}
-                        placeholder={t('selectDefault')}
-                      />
-                    ) : (
-                      /* Non-video models: keep native select */
-                      <>
-                        <div className="relative">
-                          <select
-                            value={normalizedKey}
-                            onChange={(event) => updateDefaultModel(card.field, event.target.value)}
-                            className="glass-select-base w-full cursor-pointer appearance-none py-1.5 pl-2.5 pr-7 text-[12px]"
+                          onCapabilityChange={(field, rawValue, sample) => {
+                            if (!current) return
+                            if (!rawValue) {
+                              updateCapabilityDefault(current.modelKey, field, null)
+                              return
+                            }
+                            updateCapabilityDefault(
+                              current.modelKey,
+                              field,
+                              parseBySample(rawValue, sample),
+                            )
+                          }}
+                          placeholder={t('selectDefault')}
+                        />
+                      ) : (
+                        <>
+                          <Select
+                            value={normalizedKey || EMPTY_MODEL_VALUE}
+                            onValueChange={(nextValue) =>
+                              updateDefaultModel(
+                                card.field,
+                                nextValue === EMPTY_MODEL_VALUE ? '' : nextValue,
+                              )}
                           >
-                            <option value="">{t('selectDefault')}</option>
-                            {options.map((option, index) => (
-                              <option
-                                key={`${option.modelKey}-${index}`}
-                                value={option.modelKey}
-                              >
-                                {option.name} ({option.providerName || getProviderDisplayName(option.provider, locale)})
-                              </option>
-                            ))}
-                          </select>
-                          <div className="pointer-events-none absolute right-2.5 top-2 text-[var(--glass-text-tertiary)]">
-                            <Icons.chevronDown />
-                          </div>
-                        </div>
-                        {current && card.modelType !== 'lipsync' && (
-                          <div className="mt-1.5 flex items-center justify-between px-0.5">
-                            <span className="text-[11px] text-[var(--glass-text-tertiary)]">
-                              {current.providerName}
-                            </span>
-                          </div>
-                        )}
-                      </>
-                    )}
-                  </div>
+                            <SelectTrigger className="h-8 text-[12px]">
+                              <SelectValue placeholder={t('selectDefault')} />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value={EMPTY_MODEL_VALUE}>{t('selectDefault')}</SelectItem>
+                              {options.map((option) => (
+                                <SelectItem key={option.modelKey} value={option.modelKey}>
+                                  {option.name} ({option.providerName || getProviderDisplayName(option.provider, locale)})
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          {current && card.modelType !== 'lipsync' && (
+                            <div className="mt-1.5 flex items-center justify-between px-0.5">
+                              <span className="text-[11px] text-muted-foreground">
+                                {current.providerName}
+                              </span>
+                            </div>
+                          )}
+                        </>
+                      )}
+                    </CardContent>
+                  </Card>
                 )
               })}
-            </div>
-          </div>
+              </div>
+            </CardContent>
+          </Card>
 
           <ApiConfigProviderList
             modelProviders={modelProviders}
@@ -367,6 +372,8 @@ export function ApiConfigTabContainer() {
             onAddModel={addModel}
             labels={{
               providerPool: t('providerPool'),
+              builtinProviders: t('builtinProviders'),
+              customProviders: t('customProviders'),
               addGeminiProvider: t('addGeminiProvider'),
               otherProviders: t('otherProviders'),
               audioCategory: t('audioCategory'),
@@ -376,59 +383,41 @@ export function ApiConfigTabContainer() {
         </div>
       </div>
 
-      <GlassModalShell
-        open={showAddGeminiProvider}
-        onClose={handleCancelAddGeminiProvider}
-        title={t('addGeminiProvider')}
-        description={t('providerPool')}
-        size="md"
-        footer={
-          <div className="flex justify-end gap-2">
-            <button
-              onClick={handleCancelAddGeminiProvider}
-              className="glass-btn-base glass-btn-secondary px-3 py-1.5 text-sm"
-            >
-              {tc('cancel')}
-            </button>
-            <button
-              onClick={handleAddGeminiProvider}
-              className="glass-btn-base glass-btn-primary px-3 py-1.5 text-sm"
-            >
-              {tp('add')}
-            </button>
-          </div>
-        }
-      >
+      <Dialog open={showAddGeminiProvider} onOpenChange={(open) => (open ? setShowAddGeminiProvider(true) : handleCancelAddGeminiProvider())}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>{t('addGeminiProvider')}</DialogTitle>
+            <DialogDescription>{t('providerPool')}</DialogDescription>
+          </DialogHeader>
         <div className="space-y-3">
           <div>
-            <label className="mb-1.5 block text-xs font-medium text-[var(--glass-text-primary)]">
+            <label className="mb-1.5 block text-xs font-medium text-foreground">
               {t('apiType')}
             </label>
-            <div className="relative">
-              <select
-                value={newGeminiProvider.apiType}
-                onChange={(event) =>
-                  setNewGeminiProvider({
-                    ...newGeminiProvider,
-                    apiType: event.target.value as CustomProviderType,
-                  })
-                }
-                className="glass-select-base w-full cursor-pointer appearance-none px-3 py-2.5 pr-8 text-sm"
-              >
-                <option value="gemini-compatible">{t('apiTypeGeminiCompatible')}</option>
-                <option value="openai-compatible">{t('apiTypeOpenAICompatible')}</option>
-              </select>
-              <div className="pointer-events-none absolute right-3 top-3 text-[var(--glass-text-tertiary)]">
-                <Icons.chevronDown />
-              </div>
-            </div>
+            <Select
+              value={newGeminiProvider.apiType}
+              onValueChange={(value) =>
+                setNewGeminiProvider({
+                  ...newGeminiProvider,
+                  apiType: value as CustomProviderType,
+                })
+              }
+            >
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="gemini-compatible">{t('apiTypeGeminiCompatible')}</SelectItem>
+                <SelectItem value="openai-compatible">{t('apiTypeOpenAICompatible')}</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
 
           <div>
-            <label className="mb-1.5 block text-xs font-medium text-[var(--glass-text-primary)]">
+            <label className="mb-1.5 block text-xs font-medium text-foreground">
               {tp('name')}
             </label>
-            <input
+            <Input
               type="text"
               value={newGeminiProvider.name}
               onChange={(event) =>
@@ -438,15 +427,15 @@ export function ApiConfigTabContainer() {
                 })
               }
               placeholder={tp('name')}
-              className="glass-input-base w-full px-3 py-2.5 text-sm"
+              className="h-10"
             />
           </div>
 
           <div>
-            <label className="mb-1.5 block text-xs font-medium text-[var(--glass-text-primary)]">
+            <label className="mb-1.5 block text-xs font-medium text-foreground">
               {t('baseUrl')}
             </label>
-            <input
+            <Input
               type="text"
               value={newGeminiProvider.baseUrl}
               onChange={(event) =>
@@ -456,15 +445,15 @@ export function ApiConfigTabContainer() {
                 })
               }
               placeholder={t('baseUrl')}
-              className="glass-input-base w-full px-3 py-2.5 text-sm font-mono"
+              className="h-10 font-mono"
             />
           </div>
 
           <div>
-            <label className="mb-1.5 block text-xs font-medium text-[var(--glass-text-primary)]">
+            <label className="mb-1.5 block text-xs font-medium text-foreground">
               {t('apiKeyLabel')}
             </label>
-            <input
+            <Input
               type="password"
               value={newGeminiProvider.apiKey}
               onChange={(event) =>
@@ -474,11 +463,18 @@ export function ApiConfigTabContainer() {
                 })
               }
               placeholder={t('apiKeyLabel')}
-              className="glass-input-base w-full px-3 py-2.5 text-sm"
+              className="h-10"
             />
           </div>
         </div>
-      </GlassModalShell>
+          <DialogFooter>
+            <Button variant="outline" onClick={handleCancelAddGeminiProvider}>
+              {tc('cancel')}
+            </Button>
+            <Button onClick={handleAddGeminiProvider}>{tp('add')}</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

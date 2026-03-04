@@ -49,14 +49,14 @@ export default function AssetToolbar({
         })
         : null
     return (
-        <div className="glass-surface p-4">
+        <div className="rounded-xl border border-border bg-card p-4">
             <div className="flex items-center justify-between">
                 <div className="flex items-center gap-4">
-                    <span className="text-sm font-semibold text-[var(--glass-text-secondary)] inline-flex items-center gap-2">
-                        <AppIcon name="diamond" className="w-4 h-4 text-[var(--glass-tone-info-fg)]" />
+                    <span className="text-sm font-semibold text-muted-foreground inline-flex items-center gap-2">
+                        <AppIcon name="diamond" className="w-4 h-4 text-primary" />
                         {t("toolbar.assetManagement")}
                     </span>
-                    <span className="text-sm text-[var(--glass-text-tertiary)]">
+                    <span className="text-sm text-muted-foreground">
                         {t("toolbar.assetCount", { total: totalAssets, appearances: totalAppearances, locations: totalLocations })}
                     </span>
                     {/* 全局资产分析按钮 */}
@@ -64,7 +64,7 @@ export default function AssetToolbar({
                         <button
                             onClick={onGlobalAnalyze}
                             disabled={isGlobalAnalyzing || isBatchSubmitting || isAnalyzingAssets}
-                            className="glass-btn-base glass-btn-primary flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                            className="inline-flex items-center justify-center rounded-md bg-primary px-3 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium disabled:opacity-50 disabled:cursor-not-allowed"
                             title={t("toolbar.globalAnalyzeHint")}
                         >
                             <AppIcon name="idea" className="w-3.5 h-3.5" />
@@ -76,7 +76,7 @@ export default function AssetToolbar({
                     <button
                         onClick={onGenerateAll}
                         disabled={isBatchSubmitting || isAnalyzingAssets || isGlobalAnalyzing}
-                        className="glass-btn-base glass-btn-tone-success flex items-center gap-2 px-4 py-2 text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="inline-flex items-center justify-center rounded-md bg-emerald-100 px-3 py-2 text-sm font-medium text-emerald-700 transition-colors hover:bg-emerald-200 flex items-center gap-2 px-4 py-2 text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                         {isBatchSubmitting ? (
                             <>
@@ -93,7 +93,7 @@ export default function AssetToolbar({
                     <button
                         onClick={onRegenerateAll}
                         disabled={isBatchSubmitting || isAnalyzingAssets || isGlobalAnalyzing}
-                        className="glass-btn-base glass-btn-tone-warning flex items-center gap-2 px-4 py-2 text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="inline-flex items-center justify-center rounded-md bg-amber-100 px-3 py-2 text-sm font-medium text-amber-700 transition-colors hover:bg-amber-200 flex items-center gap-2 px-4 py-2 text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
                         title={t("toolbar.regenerateAllHint")}
                     >
                         <AppIcon name="refresh" className="w-4 h-4" />
@@ -101,7 +101,7 @@ export default function AssetToolbar({
                     </button>
                     <button
                         onClick={() => onRefresh()}
-                        className="glass-btn-base glass-btn-secondary flex items-center gap-2 px-4 py-2 text-sm font-medium border border-[var(--glass-stroke-base)]"
+                        className="inline-flex items-center justify-center rounded-md border border-input bg-background px-3 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground flex items-center gap-2 px-4 py-2 text-sm font-medium border border-border"
                     >
                         <AppIcon name="refresh" className="w-4 h-4" />
                         <span>{t("common.refresh")}</span>

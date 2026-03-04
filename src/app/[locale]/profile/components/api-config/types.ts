@@ -41,6 +41,7 @@ export interface CustomModel {
     modelKey: string      // 唯一主键（provider::modelId）
     name: string          // 显示名称
     type: UnifiedModelType
+    source?: 'preset' | 'manual' | 'discovered'
     provider: string
     price: number
     priceMin?: number

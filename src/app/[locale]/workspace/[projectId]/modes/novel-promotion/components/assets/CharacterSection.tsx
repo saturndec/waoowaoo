@@ -147,25 +147,25 @@ export default function CharacterSection({
     }, [characters, focusCharacterId, focusCharacterRequestId])
 
     return (
-        <div className="glass-surface p-6">
+        <div className="rounded-xl border border-border bg-card p-6">
             <div className="flex items-center justify-between mb-6">
                 <div className="flex items-center gap-3">
-                    <span className="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-[var(--glass-bg-muted)] text-[var(--glass-text-secondary)]">
+                    <span className="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-muted text-muted-foreground">
                         <AppIcon name="user" className="h-5 w-5" />
                     </span>
-                    <h3 className="text-lg font-bold text-[var(--glass-text-primary)]">{t("stage.characterAssets")}</h3>
+                    <h3 className="text-lg font-bold text-foreground">{t("stage.characterAssets")}</h3>
                     {isAnalyzingAssets && (
-                        <span className="px-2 py-1 text-xs bg-[var(--glass-tone-info-bg)] text-[var(--glass-tone-info-fg)] rounded-lg flex items-center gap-1">
+                        <span className="px-2 py-1 text-xs bg-primary/10 text-primary rounded-lg flex items-center gap-1">
                             <TaskStatusInline state={analyzingAssetsState} />
                         </span>
                     )}
-                    <span className="text-sm text-[var(--glass-text-tertiary)] bg-[var(--glass-bg-muted)]/50 px-2 py-1 rounded-lg">
+                    <span className="text-sm text-muted-foreground bg-muted/50 px-2 py-1 rounded-lg">
                         {t("stage.counts", { characterCount: characters.length, appearanceCount: totalAppearances })}
                     </span>
                 </div>
                 <button
                     onClick={onAddCharacter}
-                    className="glass-btn-base glass-btn-primary flex items-center gap-2 px-4 py-2 font-medium"
+                    className="inline-flex items-center justify-center rounded-md bg-primary px-3 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 flex items-center gap-2 px-4 py-2 font-medium"
                 >
                     + {t("character.add")}
                 </button>
@@ -187,13 +187,13 @@ export default function CharacterSection({
                         <div
                             key={character.id}
                             id={`project-character-${character.id}`}
-                            className={`glass-surface rounded-xl p-4 scroll-mt-24 transition-all duration-700 ${highlightedCharacterId === character.id ? 'ring-2 ring-[var(--glass-focus-ring)] bg-[var(--glass-tone-info-bg)]/40' : ''}`}
+                            className={`rounded-xl border border-border bg-card rounded-xl p-4 scroll-mt-24 transition-all duration-700 ${highlightedCharacterId === character.id ? 'ring-2 ring-primary/40 bg-primary/10' : ''}`}
                         >
                             {/* 角色标题 */}
-                            <div className="flex items-center justify-between border-b border-[var(--glass-stroke-base)] pb-2">
+                            <div className="flex items-center justify-between border-b border-border pb-2">
                                 <div className="flex items-center gap-3">
-                                    <h3 className="text-base font-semibold text-[var(--glass-text-primary)]">{character.name}</h3>
-                                    <span className="text-xs text-[var(--glass-text-tertiary)]">
+                                    <h3 className="text-base font-semibold text-foreground">{character.name}</h3>
+                                    <span className="text-xs text-muted-foreground">
                                         {t("character.assetCount", { count: sortedAppearances.length })}
                                     </span>
                                 </div>
@@ -201,14 +201,14 @@ export default function CharacterSection({
                                     {/* 从资产中心复制按钮 */}
                                     <button
                                         onClick={() => onCopyFromGlobal(character.id)}
-                                        className="text-xs text-[var(--glass-tone-info-fg)] hover:text-[var(--glass-tone-info-fg)] flex items-center gap-1 px-2 py-1 rounded-lg hover:bg-[var(--glass-tone-info-bg)] transition-colors"
+                                        className="text-xs text-primary hover:text-primary flex items-center gap-1 px-2 py-1 rounded-lg hover:bg-primary/10 transition-colors"
                                     >
                                         <AppIcon name="copy" className="w-4 h-4" />
                                         {t("character.copyFromGlobal")}
                                     </button>
                                     <button
                                         onClick={() => onDeleteCharacter(character.id)}
-                                        className="text-xs text-[var(--glass-tone-danger-fg)] hover:text-[var(--glass-tone-danger-fg)] flex items-center gap-1"
+                                        className="text-xs text-destructive hover:text-destructive flex items-center gap-1"
                                     >
                                         <AppIcon name="trash" className="w-4 h-4" />
                                         {t("character.delete")}

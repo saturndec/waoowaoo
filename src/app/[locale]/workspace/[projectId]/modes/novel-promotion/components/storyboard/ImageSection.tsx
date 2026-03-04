@@ -81,7 +81,7 @@ export default function ImageSection({
     })
 
     return (
-      <div className="relative flex h-full w-full items-center justify-center overflow-hidden bg-[var(--glass-bg-surface-modal)] backdrop-blur-md group/loading">
+      <div className="relative flex h-full w-full items-center justify-center overflow-hidden bg-black/60 backdrop-blur-md group/loading">
         {backdropImageUrl && (
           <MediaImageWithLoading
             src={backdropImageUrl}
@@ -91,7 +91,7 @@ export default function ImageSection({
             sizes="(max-width: 768px) 100vw, 33vw"
           />
         )}
-        <div className={`absolute inset-0 ${backdropImageUrl ? 'bg-black/45 backdrop-blur-[1px]' : 'bg-[var(--glass-bg-surface-modal)] backdrop-blur-md'}`} />
+        <div className={`absolute inset-0 ${backdropImageUrl ? 'bg-black/45 backdrop-blur-[1px]' : 'bg-black/60 backdrop-blur-md'}`} />
         <TaskStatusOverlay
           state={state}
           className={backdropImageUrl ? 'bg-black/45 backdrop-blur-[1px]' : undefined}
@@ -101,13 +101,13 @@ export default function ImageSection({
   }
 
   const renderFailedState = () => (
-    <div className="flex h-full w-full flex-col items-center justify-center gap-1 bg-[var(--glass-danger-ring)] text-[var(--glass-tone-danger-fg)] p-2">
+    <div className="flex h-full w-full flex-col items-center justify-center gap-1 bg-destructive/10 text-destructive p-2">
       <AppIcon name="alert" className="w-6 h-6 mb-1" />
       <span className="text-xs text-center font-medium">{t('image.failed')}</span>
       <span className="text-[10px] text-center mt-1 line-clamp-2 px-1">{failedError}</span>
       <button
         onClick={onClearError}
-        className="glass-btn-base glass-btn-tone-danger mt-1 px-2 py-1 text-[10px] rounded-md"
+        className="inline-flex items-center justify-center rounded-md bg-destructive/10 px-3 py-2 text-sm font-medium text-destructive transition-colors hover:bg-destructive/20 mt-1 px-2 py-1 text-[10px] rounded-md"
       >
         {t('variant.close')}
       </button>
@@ -115,7 +115,7 @@ export default function ImageSection({
   )
 
   const renderEmptyState = () => (
-    <div className="flex h-full w-full flex-col items-center justify-center gap-2 bg-[var(--glass-bg-surface-strong)] text-[var(--glass-text-tertiary)]">
+    <div className="flex h-full w-full flex-col items-center justify-center gap-2 bg-muted/40 text-muted-foreground">
       <AppIcon name="imagePreview" className="w-8 h-8" />
       <span className="text-xs">{t('video.toolbar.showPending')}</span>
       <button
@@ -123,7 +123,7 @@ export default function ImageSection({
           triggerPulse()
           onRegeneratePanelImage(panelId, 1, false)
         }}
-        className="glass-btn-base glass-btn-tone-success mt-1 px-4 py-2 text-xs rounded-lg transition-all active:scale-95"
+        className="inline-flex items-center justify-center rounded-md bg-emerald-100 px-3 py-2 text-sm font-medium text-emerald-700 transition-colors hover:bg-emerald-200 mt-1 px-4 py-2 text-xs rounded-lg transition-all active:scale-95"
       >
         {t('panel.generateImage')}
       </button>
@@ -132,7 +132,7 @@ export default function ImageSection({
 
   return (
     <div
-      className={`relative overflow-hidden group rounded-t-2xl transition-all bg-[var(--glass-bg-muted)] ${isTaskPulseAnimating ? 'animate-brightness-boost' : ''}`}
+      className={`relative overflow-hidden group rounded-t-2xl transition-all bg-muted ${isTaskPulseAnimating ? 'animate-brightness-boost' : ''}`}
       style={{ aspectRatio: cssAspectRatio }}
     >
       {isDeleting ? (
@@ -172,11 +172,11 @@ export default function ImageSection({
       )}
 
       <div className="absolute top-2 left-2">
-        <span className="glass-chip glass-chip-neutral px-2 py-0.5 text-xs font-medium">{globalPanelNumber}</span>
+        <span className="inline-flex items-center rounded-full bg-muted px-2 py-0.5 text-xs font-medium text-muted-foreground px-2 py-0.5 text-xs font-medium">{globalPanelNumber}</span>
       </div>
 
       <div className="absolute top-2 right-2">
-        <span className="glass-chip glass-chip-info px-2 py-0.5 text-xs">{shotType}</span>
+        <span className="inline-flex items-center rounded-full bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary px-2 py-0.5 text-xs">{shotType}</span>
       </div>
 
       {!candidateData && (

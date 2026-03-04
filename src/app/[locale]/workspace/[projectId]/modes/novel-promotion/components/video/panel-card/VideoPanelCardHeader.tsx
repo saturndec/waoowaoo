@@ -34,7 +34,7 @@ export default function VideoPanelCardHeader({ runtime }: VideoPanelCardHeaderPr
   const showFirstLastFrameSwitch = layout.hasNext
 
   return (
-    <div className="bg-[var(--glass-bg-muted)] flex items-center justify-center relative" style={{ aspectRatio: player.cssAspectRatio }}>
+    <div className="relative flex items-center justify-center bg-muted/50" style={{ aspectRatio: player.cssAspectRatio }}>
       {hasVisibleBaseVideo && player.isPlaying ? (
         <video
           ref={player.videoRef}
@@ -56,8 +56,8 @@ export default function VideoPanelCardHeader({ runtime }: VideoPanelCardHeaderPr
             containerClassName="w-full h-full bg-black"
             className="w-full h-full object-contain bg-black"
           />
-          <div className="absolute inset-0 flex items-center justify-center bg-[var(--glass-overlay)] group-hover:bg-[var(--glass-overlay)] transition-colors pointer-events-none">
-            <div className="w-16 h-16 bg-[var(--glass-bg-surface-strong)] rounded-full flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
+          <div className="pointer-events-none absolute inset-0 flex items-center justify-center bg-black/45 transition-colors group-hover:bg-black/55">
+            <div className="flex h-16 w-16 items-center justify-center rounded-full bg-card shadow-lg transition-transform group-hover:scale-110">
               <AppIcon name="play" className="w-8 h-8 text-white" />
             </div>
           </div>
@@ -66,16 +66,16 @@ export default function VideoPanelCardHeader({ runtime }: VideoPanelCardHeaderPr
         <MediaImageWithLoading
           src={panel.imageUrl}
           alt={t('panelCard.shot', { number: panelIndex + 1 })}
-          containerClassName="w-full h-full bg-[var(--glass-bg-muted)]"
-          className={`w-full h-full object-contain bg-[var(--glass-bg-muted)] ${media.onPreviewImage ? 'cursor-zoom-in' : ''}`}
+          containerClassName="h-full w-full bg-muted/50"
+          className={`h-full w-full object-contain bg-muted/50 ${media.onPreviewImage ? 'cursor-zoom-in' : ''}`}
           onClick={media.onPreviewImage ? player.handlePreviewImage : undefined}
         />
       ) : (
-        <AppIcon name="playCircle" className="w-16 h-16 text-[var(--glass-text-tertiary)]" />
+        <AppIcon name="playCircle" className="h-16 w-16 text-muted-foreground" />
       )}
 
       {/* 镜头编号 */}
-      <div className="absolute top-2 left-2 bg-[var(--glass-overlay)] text-white px-2 py-0.5 rounded text-xs font-medium">
+      <div className="absolute left-2 top-2 rounded bg-black/45 px-2 py-0.5 text-xs font-medium text-white">
         {panelIndex + 1}
       </div>
 
@@ -91,9 +91,9 @@ export default function VideoPanelCardHeader({ runtime }: VideoPanelCardHeaderPr
               }}
               onMouseEnter={() => setShowTooltip(true)}
               onMouseLeave={() => setShowTooltip(false)}
-              className={`h-8 w-8 rounded-full flex items-center justify-center shadow-[var(--glass-shadow-sm)] transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--glass-stroke-focus)] ${layout.isLinked
-                ? 'bg-[var(--glass-accent-from)] text-white shadow-[0_0_12px_rgba(99,102,241,0.5)]'
-                : 'bg-[var(--glass-bg-surface)] text-[var(--glass-text-secondary)] hover:bg-[var(--glass-tone-info-bg)] hover:text-[var(--glass-tone-info-fg)]'
+              className={`flex h-8 w-8 items-center justify-center rounded-full shadow-sm transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 ${layout.isLinked
+                ? 'bg-primary text-primary-foreground shadow-[0_0_12px_rgba(30,41,59,0.35)]'
+                : 'bg-card text-muted-foreground hover:bg-blue-100 hover:text-blue-700'
                 }`}
             >
               <AppIcon name="unplug" size={16} />
@@ -102,9 +102,9 @@ export default function VideoPanelCardHeader({ runtime }: VideoPanelCardHeaderPr
             {/* 自定义 Tooltip */}
             {showTooltip && (
               <div className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 z-50 pointer-events-none">
-                <div className="bg-[var(--glass-bg-surface-strong)] text-[var(--glass-text-primary)] text-xs rounded-lg px-3 py-1.5 shadow-[var(--glass-shadow-md)] whitespace-nowrap border border-[var(--glass-stroke-base)]">
+                <div className="whitespace-nowrap rounded-lg border border-border bg-popover px-3 py-1.5 text-xs text-foreground shadow-md">
                   {layout.isLinked ? t('firstLastFrame.unlinkAction') : t('firstLastFrame.linkToNext')}
-                  <div className="absolute left-1/2 -translate-x-1/2 top-full w-0 h-0 border-l-4 border-r-4 border-t-4 border-l-transparent border-r-transparent border-t-[var(--glass-bg-surface-strong)]" />
+                  <div className="absolute left-1/2 top-full h-0 w-0 -translate-x-1/2 border-l-4 border-r-4 border-t-4 border-l-transparent border-r-transparent border-t-popover" />
                 </div>
               </div>
             )}
@@ -115,17 +115,17 @@ export default function VideoPanelCardHeader({ runtime }: VideoPanelCardHeaderPr
       {/* 口型同步切换 */}
       {panel.lipSyncVideoUrl && hasVisibleBaseVideo ? (
         <div
-          className="absolute top-2 right-2 flex items-center bg-[var(--glass-overlay)] rounded-full p-0.5 cursor-pointer"
+          className="absolute right-2 top-2 flex cursor-pointer items-center rounded-full bg-black/45 p-0.5"
           onClick={(event) => {
             event.stopPropagation()
             media.onToggleLipSyncVideo(panelKey, !media.showLipSyncVideo)
             player.setIsPlaying(false)
           }}
         >
-          <div className={`px-2 py-0.5 rounded-full text-[10px] font-medium transition-all ${!media.showLipSyncVideo ? 'bg-[var(--glass-tone-success-fg)] text-white' : 'text-[var(--glass-text-tertiary)] hover:text-white'}`}>
+          <div className={`rounded-full px-2 py-0.5 text-[10px] font-medium transition-all ${!media.showLipSyncVideo ? 'bg-emerald-600 text-white' : 'text-slate-300 hover:text-white'}`}>
             {t('panelCard.original')}
           </div>
-          <div className={`px-2 py-0.5 rounded-full text-[10px] font-medium transition-all ${media.showLipSyncVideo ? 'bg-[var(--glass-accent-from)] text-white' : 'text-[var(--glass-text-tertiary)] hover:text-white'}`}>
+          <div className={`rounded-full px-2 py-0.5 text-[10px] font-medium transition-all ${media.showLipSyncVideo ? 'bg-primary text-primary-foreground' : 'text-slate-300 hover:text-white'}`}>
             {t('panelCard.synced')}
           </div>
         </div>
@@ -144,7 +144,7 @@ export default function VideoPanelCardHeader({ runtime }: VideoPanelCardHeaderPr
               panel.panelId,
             )}
           disabled={!videoModel.selectedModel || videoModel.missingCapabilityFields.length > 0}
-          className="absolute bottom-2 right-2 bg-[var(--glass-overlay)] hover:bg-[var(--glass-overlay-strong)] text-white p-2 rounded-full transition-all z-20 disabled:cursor-not-allowed disabled:opacity-50"
+          className="absolute bottom-2 right-2 z-20 rounded-full bg-black/45 p-2 text-white transition-all hover:bg-black/60 disabled:cursor-not-allowed disabled:opacity-50"
         >
           <AppIcon name="refresh" className="w-4 h-4" />
         </button>
@@ -157,10 +157,10 @@ export default function VideoPanelCardHeader({ runtime }: VideoPanelCardHeaderPr
 
       {/* 错误提示 */}
       {taskStatus.panelErrorDisplay && !taskStatus.isVideoTaskRunning && !taskStatus.isLipSyncTaskRunning && !errorDismissed && (
-        <div className="absolute inset-0 bg-[var(--glass-tone-danger-bg)] flex flex-col items-center justify-center z-10 p-4">
+        <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-destructive/15 p-4">
           <button
             onClick={(e) => { e.stopPropagation(); setErrorDismissed(true) }}
-            className="absolute top-2 right-2 w-5 h-5 flex items-center justify-center rounded-full bg-black/30 hover:bg-black/50 text-white text-xs transition-colors"
+            className="absolute right-2 top-2 flex h-5 w-5 items-center justify-center rounded-full bg-black/30 text-xs text-white transition-colors hover:bg-black/50"
           >
             <AppIcon name="close" className="w-3 h-3" />
           </button>

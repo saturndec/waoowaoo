@@ -100,15 +100,15 @@ export default function LanguageSwitcher() {
                     onClick={() => setIsMenuOpen((prev) => !prev)}
                     aria-label={SWITCH_CONFIRM_COPY[targetLocale].triggerLabel}
                     aria-expanded={isMenuOpen}
-                    className="glass-btn-base glass-btn-secondary inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm"
+                    className="inline-flex items-center justify-center border border-input bg-background hover:bg-accent hover:text-accent-foreground inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm"
                 >
                     <AppIcon name="globe" className="h-4 w-4" />
                     <span>{LANGUAGE_LABELS[currentLocale]}</span>
-                    <AppIcon name="chevronDown" className="h-4 w-4 text-[var(--glass-text-tertiary)]" />
+                    <AppIcon name="chevronDown" className="h-4 w-4 text-muted-foreground" />
                 </button>
 
                 {isMenuOpen ? (
-                    <div className="glass-surface-modal absolute right-0 z-50 mt-2 w-44 rounded-xl p-2">
+                    <div className="rounded-xl border border-border bg-card shadow-lg absolute right-0 z-50 mt-2 w-44 rounded-xl p-2">
                         {(Object.entries(LANGUAGE_LABELS) as Array<[Locale, string]>).map(([locale, label]) => {
                             const isActive = locale === currentLocale
                             return (
@@ -117,8 +117,8 @@ export default function LanguageSwitcher() {
                                     type="button"
                                     onClick={() => requestLanguageSwitch(locale)}
                                     className={`w-full rounded-lg px-3 py-2 text-left text-sm transition-colors ${isActive
-                                        ? 'bg-[var(--glass-fill-active)] text-[var(--glass-text-primary)]'
-                                        : 'text-[var(--glass-text-secondary)] hover:bg-[var(--glass-fill-hover)] hover:text-[var(--glass-text-primary)]'
+                                        ? 'bg-primary/10 text-foreground'
+                                        : 'text-muted-foreground hover:bg-accent hover:text-foreground'
                                         }`}
                                 >
                                     {label}

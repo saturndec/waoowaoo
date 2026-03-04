@@ -112,14 +112,14 @@ export default function CharacterCreationForm({
                 />
                 <button
                   onClick={() => setCreateMode('description')}
-                  className={`relative z-[1] flex items-center justify-center gap-2 rounded-md py-2 px-4 text-sm font-medium transition-colors cursor-pointer ${createMode === 'description' ? 'text-[var(--glass-text-primary)]' : 'text-[var(--glass-text-tertiary)] hover:text-[var(--glass-text-secondary)]'}`}
+                  className={`relative z-[1] flex items-center justify-center gap-2 rounded-md py-2 px-4 text-sm font-medium transition-colors cursor-pointer ${createMode === 'description' ? 'text-foreground' : 'text-muted-foreground hover:text-muted-foreground'}`}
                 >
                   <SparklesIcon className="w-4 h-4" />
                   <span>{t('character.modeDescription')}</span>
                 </button>
                 <button
                   onClick={() => setCreateMode('reference')}
-                  className={`relative z-[1] flex items-center justify-center gap-2 rounded-md py-2 px-4 text-sm font-medium transition-colors cursor-pointer ${createMode === 'reference' ? 'text-[var(--glass-text-primary)]' : 'text-[var(--glass-text-tertiary)] hover:text-[var(--glass-text-secondary)]'}`}
+                  className={`relative z-[1] flex items-center justify-center gap-2 rounded-md py-2 px-4 text-sm font-medium transition-colors cursor-pointer ${createMode === 'reference' ? 'text-foreground' : 'text-muted-foreground hover:text-muted-foreground'}`}
                 >
                   <PhotoIcon className="w-4 h-4" />
                   <span>{t('character.modeReference')}</span>
@@ -131,30 +131,30 @@ export default function CharacterCreationForm({
       </div>
 
       {mode === 'project' && availableCharacters.length > 0 && (
-        <div className="flex items-start gap-3 p-3 glass-surface-soft rounded-lg border border-[var(--glass-stroke-base)]">
+        <div className="flex items-start gap-3 p-3 rounded-xl border border-border bg-muted/30 rounded-lg border border-border">
           <input
             type="checkbox"
             id="isSubAppearance"
             checked={isSubAppearance}
             onChange={(e) => setIsSubAppearance(e.target.checked)}
-            className="mt-0.5 w-4 h-4 rounded border-[var(--glass-stroke-base)] text-[var(--glass-tone-info-fg)]"
+            className="mt-0.5 w-4 h-4 rounded border-border text-primary"
           />
           <label htmlFor="isSubAppearance" className="flex-1 text-sm cursor-pointer">
-            <span className="font-medium text-[var(--glass-text-primary)]">{t('character.isSubAppearance')}</span>
-            <p className="text-xs text-[var(--glass-text-secondary)] mt-0.5">{t('character.isSubAppearanceHint')}</p>
+            <span className="font-medium text-foreground">{t('character.isSubAppearance')}</span>
+            <p className="text-xs text-muted-foreground mt-0.5">{t('character.isSubAppearanceHint')}</p>
           </label>
         </div>
       )}
 
       {isSubAppearance && (
         <div className="space-y-2">
-          <label className="glass-field-label block">
-            {t('character.selectMainCharacter')} <span className="text-[var(--glass-tone-danger-fg)]">*</span>
+          <label className="block text-sm font-medium text-foreground block">
+            {t('character.selectMainCharacter')} <span className="text-destructive">*</span>
           </label>
           <select
             value={selectedCharacterId}
             onChange={(e) => setSelectedCharacterId(e.target.value)}
-            className="glass-select-base w-full px-3 py-2 text-sm"
+            className="w-full rounded-md border border-input bg-background w-full px-3 py-2 text-sm"
           >
             <option value="">{t('character.selectCharacterPlaceholder')}</option>
             {availableCharacters.map((char) => (
@@ -168,37 +168,37 @@ export default function CharacterCreationForm({
 
       {isSubAppearance && (
         <div className="space-y-2">
-          <label className="glass-field-label block">
-            {t('character.changeReason')} <span className="text-[var(--glass-tone-danger-fg)]">*</span>
+          <label className="block text-sm font-medium text-foreground block">
+            {t('character.changeReason')} <span className="text-destructive">*</span>
           </label>
           <input
             type="text"
             value={changeReason}
             onChange={(e) => setChangeReason(e.target.value)}
             placeholder={t('character.changeReasonPlaceholder')}
-            className="glass-input-base w-full px-3 py-2 text-sm"
+            className="w-full rounded-md border border-input bg-background w-full px-3 py-2 text-sm"
           />
         </div>
       )}
 
       {!isSubAppearance && (
         <div className="space-y-2">
-          <label className="glass-field-label block">
-            {t('character.name')} <span className="text-[var(--glass-tone-danger-fg)]">*</span>
+          <label className="block text-sm font-medium text-foreground block">
+            {t('character.name')} <span className="text-destructive">*</span>
           </label>
           <input
             type="text"
             value={name}
             onChange={(e) => setName(e.target.value)}
             placeholder={t('character.namePlaceholder')}
-            className="glass-input-base w-full px-3 py-2 text-sm"
+            className="w-full rounded-md border border-input bg-background w-full px-3 py-2 text-sm"
           />
         </div>
       )}
 
       {!isSubAppearance && (
         <div className="space-y-2">
-          <label className="glass-field-label block">
+          <label className="block text-sm font-medium text-foreground block">
             {t('artStyle.title')}
           </label>
           <div className="grid grid-cols-2 gap-2">
@@ -207,9 +207,9 @@ export default function CharacterCreationForm({
                 key={style.value}
                 type="button"
                 onClick={() => setArtStyle(style.value)}
-                className={`glass-btn-base px-3 py-2 rounded-lg text-sm border transition-all justify-start ${artStyle === style.value
-                  ? 'glass-btn-tone-info border-[var(--glass-stroke-focus)]'
-                  : 'glass-btn-soft border-[var(--glass-stroke-base)] text-[var(--glass-text-secondary)]'
+                className={`inline-flex items-center justify-center px-3 py-2 rounded-lg text-sm border transition-all justify-start ${artStyle === style.value
+                  ? 'bg-primary/10 text-primary hover:bg-primary/15 border-primary/40'
+                  : 'border border-border bg-muted/50 hover:bg-muted border-border text-muted-foreground'
                   }`}
               >
                 <span>{style.preview}</span>
@@ -221,17 +221,17 @@ export default function CharacterCreationForm({
       )}
 
       {createMode === 'reference' && (
-        <div className="glass-surface-soft rounded-xl p-4 space-y-3 border border-[var(--glass-stroke-base)]">
+        <div className="rounded-xl border border-border bg-muted/30 rounded-xl p-4 space-y-3 border border-border">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2 text-sm font-medium text-[var(--glass-tone-info-fg)]">
+            <div className="flex items-center gap-2 text-sm font-medium text-primary">
               <PhotoIcon className="w-4 h-4" />
               <span>{t('character.uploadReference')}</span>
             </div>
-            <span className="text-xs text-[var(--glass-text-tertiary)]">{t('character.pasteHint')}</span>
+            <span className="text-xs text-muted-foreground">{t('character.pasteHint')}</span>
           </div>
 
-          <div className="glass-surface flex items-center gap-2 p-2 rounded-lg">
-            <span className="text-xs text-[var(--glass-text-secondary)] shrink-0">{t('character.generationMode')}：</span>
+          <div className="rounded-xl border border-border bg-card flex items-center gap-2 p-2 rounded-lg">
+            <span className="text-xs text-muted-foreground shrink-0">{t('character.generationMode')}：</span>
             {(() => {
               const subTabs = ['direct', 'extract'] as const
               const subIdx = subTabs.indexOf(referenceSubMode)
@@ -248,13 +248,13 @@ export default function CharacterCreationForm({
                     />
                     <button
                       onClick={() => setReferenceSubMode('direct')}
-                      className={`relative z-[1] px-3 py-1.5 text-xs rounded-sm transition-colors cursor-pointer ${referenceSubMode === 'direct' ? 'text-[var(--glass-text-primary)] font-medium' : 'text-[var(--glass-text-tertiary)] hover:text-[var(--glass-text-secondary)]'}`}
+                      className={`relative z-[1] px-3 py-1.5 text-xs rounded-sm transition-colors cursor-pointer ${referenceSubMode === 'direct' ? 'text-foreground font-medium' : 'text-muted-foreground hover:text-muted-foreground'}`}
                     >
                       {t('character.directGenerate')}
                     </button>
                     <button
                       onClick={() => setReferenceSubMode('extract')}
-                      className={`relative z-[1] px-3 py-1.5 text-xs rounded-sm transition-colors cursor-pointer ${referenceSubMode === 'extract' ? 'text-[var(--glass-text-primary)] font-medium' : 'text-[var(--glass-text-tertiary)] hover:text-[var(--glass-text-secondary)]'}`}
+                      className={`relative z-[1] px-3 py-1.5 text-xs rounded-sm transition-colors cursor-pointer ${referenceSubMode === 'extract' ? 'text-foreground font-medium' : 'text-muted-foreground hover:text-muted-foreground'}`}
                     >
                       {t('character.extractPrompt')}
                     </button>
@@ -268,7 +268,7 @@ export default function CharacterCreationForm({
             <button
               onClick={handleExtractDescription}
               disabled={isExtracting || referenceImagesBase64.length === 0}
-              className="glass-btn-base glass-btn-tone-info w-full px-3 py-2 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed text-sm"
+              className="inline-flex items-center justify-center bg-primary/10 text-primary hover:bg-primary/15 w-full px-3 py-2 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed text-sm"
             >
               {isExtracting ? t('aiDesign.generating') : t('character.extractFirst')}
             </button>
@@ -285,9 +285,9 @@ export default function CharacterCreationForm({
           <button
             onClick={handleCreateWithReference}
             disabled={isSubmitting || !name.trim() || referenceImagesBase64.length === 0}
-            className={`glass-btn-base w-full px-4 py-2.5 rounded-lg transition-all disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2 text-sm ${referenceSubMode === 'extract'
-              ? 'glass-btn-tone-info'
-              : 'glass-btn-primary'
+            className={`inline-flex items-center justify-center w-full px-4 py-2.5 rounded-lg transition-all disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2 text-sm ${referenceSubMode === 'extract'
+              ? 'bg-primary/10 text-primary hover:bg-primary/15'
+              : 'bg-primary text-primary-foreground hover:bg-primary/90'
               }`}
           >
             {isSubmitting ? t('common.creating') : t('character.convertToSheet')}
@@ -298,8 +298,8 @@ export default function CharacterCreationForm({
       {createMode === 'description' && (
         <>
           {!isSubAppearance && (
-            <div className="glass-surface-soft rounded-xl p-4 space-y-3 border border-[var(--glass-stroke-base)]">
-              <div className="flex items-center gap-2 text-sm font-medium text-[var(--glass-tone-info-fg)]">
+            <div className="rounded-xl border border-border bg-muted/30 rounded-xl p-4 space-y-3 border border-border">
+              <div className="flex items-center gap-2 text-sm font-medium text-primary">
                 <SparklesIcon className="w-4 h-4" />
                 <span>{t('aiDesign.title')}</span>
               </div>
@@ -309,7 +309,7 @@ export default function CharacterCreationForm({
                   value={aiInstruction}
                   onChange={(e) => setAiInstruction(e.target.value)}
                   placeholder={t('aiDesign.placeholder')}
-                  className="glass-input-base flex-1 px-3 py-2 text-sm"
+                  className="w-full rounded-md border border-input bg-background flex-1 px-3 py-2 text-sm"
                   disabled={isAiDesigning}
                   onKeyDown={(e) => {
                     if (e.key === 'Enter' && !e.shiftKey) {
@@ -321,7 +321,7 @@ export default function CharacterCreationForm({
                 <button
                   onClick={handleAiDesign}
                   disabled={isAiDesigning || !aiInstruction.trim()}
-                  className="glass-btn-base glass-btn-tone-info px-4 py-2 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed text-sm whitespace-nowrap"
+                  className="inline-flex items-center justify-center bg-primary/10 text-primary hover:bg-primary/15 px-4 py-2 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed text-sm whitespace-nowrap"
                 >
                   {isAiDesigning ? t('aiDesign.generating') : t('aiDesign.generate')}
                 </button>
@@ -330,8 +330,8 @@ export default function CharacterCreationForm({
           )}
 
           <div className="space-y-2">
-            <label className="glass-field-label block">
-              {isSubAppearance ? t('character.modifyDescription') : t('character.description')} <span className="text-[var(--glass-tone-danger-fg)]">*</span>
+            <label className="block text-sm font-medium text-foreground block">
+              {isSubAppearance ? t('character.modifyDescription') : t('character.description')} <span className="text-destructive">*</span>
             </label>
             <textarea
               value={description}
@@ -340,7 +340,7 @@ export default function CharacterCreationForm({
               placeholder={isSubAppearance
                 ? t('character.modifyDescriptionPlaceholder')
                 : t('character.descPlaceholder')}
-              className="glass-textarea-base w-full px-3 py-2 text-sm resize-none"
+              className="w-full rounded-md border border-input bg-background w-full px-3 py-2 text-sm resize-none"
             />
           </div>
 
@@ -349,7 +349,7 @@ export default function CharacterCreationForm({
             disabled={isSubmitting || (isSubAppearance
               ? !selectedCharacterId.trim() || !changeReason.trim() || !description.trim()
               : !name.trim() || !description.trim())}
-            className="glass-btn-base glass-btn-primary w-full px-4 py-2.5 rounded-lg disabled:opacity-40 disabled:cursor-not-allowed text-sm"
+            className="inline-flex items-center justify-center bg-primary text-primary-foreground hover:bg-primary/90 w-full px-4 py-2.5 rounded-lg disabled:opacity-40 disabled:cursor-not-allowed text-sm"
           >
             {isSubmitting ? t('common.adding') : t('common.add')}
           </button>

@@ -25,32 +25,32 @@ export default function PanelVariantModalCustomOptions({
   return (
     <>
       <div>
-        <h3 className="text-sm font-medium text-[var(--glass-text-primary)] mb-2">{t('variant.customInstruction')}</h3>
+        <h3 className="text-sm font-medium text-foreground mb-2">{t('variant.customInstruction')}</h3>
         <textarea
           value={customInput}
           onChange={(event) => onCustomInputChange(event.target.value)}
           placeholder={t('variant.customPlaceholder')}
-          className="glass-textarea-base h-16 px-3 py-2 text-sm resize-none"
+          className="w-full rounded-md border border-input bg-background h-16 px-3 py-2 text-sm resize-none"
           disabled={isSubmittingVariantTask}
         />
       </div>
 
       <div className="flex items-center gap-4">
-        <label className="flex items-center gap-2 text-sm text-[var(--glass-text-secondary)] cursor-pointer">
+        <label className="flex items-center gap-2 text-sm text-muted-foreground cursor-pointer">
           <input
             type="checkbox"
             checked={includeCharacterAssets}
             onChange={(event) => onIncludeCharacterAssetsChange(event.target.checked)}
-            className="w-4 h-4 accent-[var(--glass-accent-from)] rounded"
+            className="w-4 h-4 accent-primary rounded"
           />
           {t('variant.includeCharacter')}
         </label>
-        <label className="flex items-center gap-2 text-sm text-[var(--glass-text-secondary)] cursor-pointer">
+        <label className="flex items-center gap-2 text-sm text-muted-foreground cursor-pointer">
           <input
             type="checkbox"
             checked={includeLocationAsset}
             onChange={(event) => onIncludeLocationAssetChange(event.target.checked)}
-            className="w-4 h-4 accent-[var(--glass-accent-from)] rounded"
+            className="w-4 h-4 accent-primary rounded"
           />
           {t('variant.includeLocation')}
         </label>

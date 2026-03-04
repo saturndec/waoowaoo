@@ -12,6 +12,10 @@ import { AppIcon } from '@/components/ui/icons'
 import { shouldShowError } from '@/lib/error-utils'
 import TaskStatusInline from '@/components/task/TaskStatusInline'
 import { resolveTaskPresentationState } from '@/lib/task/presentation'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Textarea } from '@/components/ui/textarea'
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import {
     useRefreshGlobalAssets,
     useUpdateLocationName,
@@ -162,57 +166,55 @@ export function LocationEditModal({
     }
 
     return (
-        <div className="fixed inset-0 glass-overlay flex items-center justify-center z-50 p-4">
-            <div className="glass-surface-modal max-w-2xl w-full max-h-[80vh] overflow-y-auto">
-                <div className="p-6 space-y-4">
-                    {/* 标题 */}
-                    <div className="flex items-center justify-between">
-                        <h3 className="text-lg font-semibold text-[var(--glass-text-primary)]">
-                            {t('modal.editLocation')} - {locationName}
-                        </h3>
-                        <button onClick={onClose} className="glass-btn-base glass-btn-soft h-8 w-8 rounded-full text-[var(--glass-text-tertiary)] hover:text-[var(--glass-text-secondary)]">
-                            <AppIcon name="close" className="w-6 h-6" />
-                        </button>
-                    </div>
+        <Dialog open onOpenChange={(open) => { if (!open) onClose() }}>
+            <DialogContent className="max-h-[80vh] max-w-2xl overflow-y-auto">
+                <DialogHeader>
+                    <DialogTitle className="text-lg">
+                        {t('modal.editLocation')} - {locationName}
+                    </DialogTitle>
+                </DialogHeader>
 
+                <div className="space-y-4">
                     {/* 场景名字编辑 */}
                     <div className="space-y-2">
-                        <label className="glass-field-label block">
+                        <label className="block text-sm font-medium text-foreground">
                             {t('location.name')}
                         </label>
                         <div className="flex gap-2">
-                            <input
+                            <Input
                                 type="text"
                                 value={editingName}
                                 onChange={(e) => setEditingName(e.target.value)}
-                                className="glass-input-base flex-1 px-3 py-2"
+                                className="flex-1"
                                 placeholder={t('modal.namePlaceholder')}
                             />
                             {editingName !== locationName && (
-                                <button
+                                <Button
+                                    type="button"
                                     onClick={handleSaveName}
                                     disabled={updateName.isPending || !editingName.trim()}
-                                    className="glass-btn-base glass-btn-tone-success px-3 py-2 rounded-lg text-sm whitespace-nowrap"
+                                    variant="secondary"
+                                    className="whitespace-nowrap"
                                 >
                                     {updateName.isPending ? t('smartImport.preview.saving') : t('modal.saveName')}
-                                </button>
+                                </Button>
                             )}
                         </div>
                     </div>
 
                     {/* AI 修改区域 */}
-                    <div className="space-y-2 glass-surface-soft p-4 rounded-lg border border-[var(--glass-stroke-base)]">
-                        <label className="glass-field-label block flex items-center gap-2">
-                            <AppIcon name="bolt" className="w-4 h-4" />
+                    <div className="space-y-2 rounded-lg border border-border bg-muted/30 p-4">
+                        <label className="flex items-center gap-2 text-sm font-medium text-foreground">
+                            <AppIcon name="bolt" className="h-4 w-4" />
                             {t('modal.smartModify')}
                         </label>
                         <div className="flex gap-2">
-                            <input
+                            <Input
                                 type="text"
                                 value={aiModifyInstruction}
                                 onChange={(e) => setAiModifyInstruction(e.target.value)}
                                 placeholder={t('modal.modifyPlaceholder')}
-                                className="glass-input-base flex-1 px-3 py-2"
+                                className="flex-1"
                                 disabled={isAiModifying}
                                 onKeyDown={(e) => {
                                     if (e.key === 'Enter' && !e.shiftKey) {
@@ -221,71 +223,76 @@ export function LocationEditModal({
                                     }
                                 }}
                             />
-                            <button
+                            <Button
+                                type="button"
                                 onClick={handleAiModify}
                                 disabled={isAiModifying || !aiModifyInstruction.trim()}
-                                className="glass-btn-base glass-btn-tone-info px-4 py-2 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 whitespace-nowrap"
+                                className="gap-2 whitespace-nowrap"
                             >
                                 {isAiModifying ? (
-                                    <TaskStatusInline state={aiModifyingState} className="text-white [&>span]:text-white [&_svg]:text-white" />
+                                    <TaskStatusInline state={aiModifyingState} className="text-primary-foreground [&>span]:text-primary-foreground [&_svg]:text-primary-foreground" />
                                 ) : (
                                     <>
-                                        <AppIcon name="bolt" className="w-4 h-4" />
+                                        <AppIcon name="bolt" className="h-4 w-4" />
                                         {t('modal.smartModify')}
                                     </>
                                 )}
-                            </button>
+                            </Button>
                         </div>
-                        <p className="glass-field-hint">
+                        <p className="text-xs text-muted-foreground">
                             {t('modal.aiLocationTip')}
                         </p>
                     </div>
 
                     {/* 描述编辑 */}
                     <div className="space-y-2">
-                        <label className="glass-field-label block">
+                        <label className="block text-sm font-medium text-foreground">
                             {t('location.description')}
                         </label>
-                        <textarea
+                        <Textarea
                             value={editingDescription}
                             onChange={(e) => setEditingDescription(e.target.value)}
-                            className="glass-textarea-base w-full h-48 px-3 py-2 resize-none"
+                            className="h-48 w-full resize-none"
                             placeholder={t('modal.descPlaceholder')}
                             disabled={isAiModifying}
                         />
                     </div>
 
                     {/* 操作按钮 */}
-                    <div className="flex gap-3 justify-end">
-                        <button
+                    <div className="flex justify-end gap-3">
+                        <Button
+                            type="button"
                             onClick={onClose}
-                            className="glass-btn-base glass-btn-secondary px-4 py-2 rounded-lg"
+                            variant="outline"
                             disabled={isSaving}
                         >
                             {t('common.cancel')}
-                        </button>
-                        <button
+                        </Button>
+                        <Button
+                            type="button"
                             onClick={handleSaveOnly}
                             disabled={isSaving || !editingDescription.trim()}
-                            className="glass-btn-base glass-btn-secondary px-4 py-2 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                            variant="secondary"
+                            className="gap-2"
                         >
                             {isSaving ? (
-                                <TaskStatusInline state={savingState} className="text-white [&>span]:text-white [&_svg]:text-white" />
+                                <TaskStatusInline state={savingState} className="text-secondary-foreground [&>span]:text-secondary-foreground [&_svg]:text-secondary-foreground" />
                             ) : (
                                 t('modal.saveOnly')
                             )}
-                        </button>
-                        <button
+                        </Button>
+                        <Button
+                            type="button"
                             onClick={handleSaveAndGenerate}
                             disabled={isSaving || !editingDescription.trim()}
-                            className="glass-btn-base glass-btn-primary px-4 py-2 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                            className="gap-2"
                         >
                             {t('modal.saveAndGenerate')}
-                        </button>
+                        </Button>
                     </div>
                 </div>
-            </div>
-        </div>
+            </DialogContent>
+        </Dialog>
     )
 }
 

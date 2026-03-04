@@ -6,6 +6,9 @@ import { useRouter } from "next/navigation"
 import Link from "next/link"
 import { useTranslations } from 'next-intl'
 import Navbar from "@/components/Navbar"
+import { Button } from '@/components/ui/button'
+import { Card, CardContent } from '@/components/ui/card'
+import { Input } from '@/components/ui/input'
 
 export default function SignIn() {
   const [username, setUsername] = useState("")
@@ -41,79 +44,81 @@ export default function SignIn() {
   }
 
   return (
-    <div className="glass-page min-h-screen">
+    <div className="min-h-screen bg-background">
       <Navbar />
-      <div className="flex items-center justify-center px-4 py-12">
-        <div className="max-w-md w-full">
-          <div className="glass-surface-modal p-8">
+      <div className="px-4 py-12 sm:px-6 lg:px-8">
+        <div className="w-full">
+          <Card className="w-full rounded-2xl">
+            <CardContent className="p-8">
             <div className="text-center mb-8">
-              <h1 className="text-3xl font-bold text-[var(--glass-text-primary)] mb-2">
+              <h1 className="text-3xl font-bold text-foreground mb-2">
                 {t('welcomeBack')}
               </h1>
-              <p className="text-[var(--glass-text-secondary)]">{t('loginTo')}</p>
+              <p className="text-muted-foreground">{t('loginTo')}</p>
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-6">
               <div>
-                <label htmlFor="username" className="glass-field-label block mb-2">
+                <label htmlFor="username" className="mb-2 block text-sm font-medium text-foreground">
                   {t('phoneNumber')}
                 </label>
-                <input
+                <Input
                   id="username"
                   type="text"
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
                   required
-                  className="glass-input-base w-full px-4 py-3"
+                  className="h-11"
                   placeholder={t('phoneNumberPlaceholder')}
                 />
               </div>
 
               <div>
-                <label htmlFor="password" className="glass-field-label block mb-2">
+                <label htmlFor="password" className="mb-2 block text-sm font-medium text-foreground">
                   {t('password')}
                 </label>
-                <input
+                <Input
                   id="password"
                   type="password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
-                  className="glass-input-base w-full px-4 py-3"
+                  className="h-11"
                   placeholder={t('passwordPlaceholder')}
                 />
               </div>
 
               {error && (
-                <div className="bg-[var(--glass-tone-danger-bg)] border border-[color:color-mix(in_srgb,var(--glass-tone-danger-fg)_22%,transparent)] text-[var(--glass-tone-danger-fg)] px-4 py-3 rounded-lg text-sm">
+                <div className="rounded-lg border border-destructive/20 bg-destructive/10 px-4 py-3 text-sm text-destructive">
                   {error}
                 </div>
               )}
 
-              <button
+              <Button
                 type="submit"
                 disabled={loading}
-                className="glass-btn-base glass-btn-primary w-full py-3 px-4 font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
+                className="h-11 w-full font-semibold"
               >
                 {loading ? t('loginButtonLoading') : t('loginButton')}
-              </button>
+              </Button>
             </form>
 
             <div className="mt-6 text-center">
-              <p className="text-[var(--glass-text-secondary)]">
+              <p className="text-muted-foreground">
                 {t('noAccount')}{" "}
-                <Link href="/auth/signup" className="text-[var(--glass-tone-info-fg)] hover:underline font-medium">
+                <Link href="/auth/signup" className="font-medium text-primary hover:underline">
                   {t('signupNow')}
                 </Link>
               </p>
             </div>
 
             <div className="mt-6 text-center">
-              <Link href="/" className="text-[var(--glass-text-tertiary)] hover:text-[var(--glass-text-secondary)] text-sm">
+              <Link href="/" className="text-sm text-muted-foreground hover:text-foreground">
                 {t('backToHome')}
               </Link>
             </div>
-          </div>
+            </CardContent>
+          </Card>
         </div>
       </div>
     </div>

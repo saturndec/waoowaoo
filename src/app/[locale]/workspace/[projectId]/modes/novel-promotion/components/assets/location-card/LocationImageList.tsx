@@ -58,8 +58,8 @@ export default function LocationImageList(props: LocationImageListProps) {
               <div
                 onClick={() => props.onImageClick(img.imageUrl!)}
                 className={`rounded-lg overflow-hidden border-2 transition-all cursor-pointer relative ${isThisSelected
-                  ? 'border-[var(--glass-stroke-success)] ring-2 ring-[var(--glass-focus-ring)]'
-                  : 'border-[var(--glass-stroke-base)] hover:border-[var(--glass-stroke-focus)]'
+                  ? 'border-emerald-300 ring-2 ring-primary/40'
+                  : 'border-border hover:border-primary/40'
                   }`}
               >
                 <MediaImageWithLoading
@@ -74,7 +74,7 @@ export default function LocationImageList(props: LocationImageListProps) {
                 )}
 
                 <div
-                  className={`absolute bottom-2 left-2 flex items-center gap-1 text-white text-xs px-2 py-0.5 rounded ${isThisSelected ? 'bg-[var(--glass-tone-success-fg)]' : 'bg-[var(--glass-overlay)]'
+                  className={`absolute bottom-2 left-2 flex items-center gap-1 text-white text-xs px-2 py-0.5 rounded ${isThisSelected ? 'bg-emerald-700' : 'bg-black/55'
                     }`}
                 >
                   <span>{t('image.optionNumber', { number: img.imageIndex + 1 })}</span>
@@ -92,8 +92,8 @@ export default function LocationImageList(props: LocationImageListProps) {
                   }}
                   disabled={isThisTaskRunning}
                   className={`absolute top-2 right-2 w-7 h-7 rounded-full flex items-center justify-center transition-all shadow-sm ${isThisSelected
-                    ? 'bg-[var(--glass-tone-success-fg)] text-white'
-                    : 'bg-[var(--glass-bg-surface-strong)] hover:bg-[var(--glass-accent-from)] hover:text-white'
+                    ? 'bg-emerald-700 text-white'
+                    : 'bg-muted/40 hover:bg-primary hover:text-white'
                     } disabled:opacity-50`}
                   title={isThisSelected ? t('image.cancelSelection') : t('image.useThis')}
                 >
@@ -113,7 +113,7 @@ export default function LocationImageList(props: LocationImageListProps) {
   })
 
   return (
-    <div className="rounded-lg overflow-hidden border-2 border-[var(--glass-stroke-base)] relative">
+    <div className="rounded-lg overflow-hidden border-2 border-border relative">
       {props.currentImageUrl ? (
         <div className="relative w-full">
           <MediaImageWithLoading
@@ -124,21 +124,21 @@ export default function LocationImageList(props: LocationImageListProps) {
             onClick={() => props.onImageClick(props.currentImageUrl!)}
           />
           {props.selectedIndex !== null && props.hasMultipleImages && (
-            <div className="absolute bottom-2 left-2 bg-[var(--glass-tone-success-fg)] text-white text-xs px-2 py-0.5 rounded">
+            <div className="absolute bottom-2 left-2 bg-emerald-700 text-white text-xs px-2 py-0.5 rounded">
               {t('image.optionNumber', { number: props.selectedIndex + 1 })}
             </div>
           )}
         </div>
       ) : (
-        <div className="w-full h-full bg-[var(--glass-bg-muted)] flex items-center justify-center">
+        <div className="w-full h-full bg-muted flex items-center justify-center">
           {locationErrorDisplay && !props.isTaskRunning ? (
             <div className="flex flex-col items-center justify-center py-8 px-4 text-center">
-              <AppIcon name="alert" className="w-8 h-8 text-[var(--glass-tone-danger-fg)] mb-2" />
-              <div className="text-[var(--glass-tone-danger-fg)] text-xs font-medium mb-1">{t('common.generateFailed')}</div>
-              <div className="text-[var(--glass-tone-danger-fg)] text-xs max-w-full break-words">{locationErrorDisplay.message}</div>
+              <AppIcon name="alert" className="w-8 h-8 text-destructive mb-2" />
+              <div className="text-destructive text-xs font-medium mb-1">{t('common.generateFailed')}</div>
+              <div className="text-destructive text-xs max-w-full break-words">{locationErrorDisplay.message}</div>
             </div>
           ) : (
-            <AppIcon name="globe2" className="w-8 h-8 text-[var(--glass-text-tertiary)]" />
+            <AppIcon name="globe2" className="w-8 h-8 text-muted-foreground" />
           )}
         </div>
       )}

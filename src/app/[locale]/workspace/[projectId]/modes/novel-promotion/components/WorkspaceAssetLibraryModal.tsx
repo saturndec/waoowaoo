@@ -4,6 +4,7 @@ import AssetsStage from './AssetsStage'
 import TaskStatusInline from '@/components/task/TaskStatusInline'
 import type { TaskPresentationState } from '@/lib/task/presentation'
 import { AppIcon } from '@/components/ui/icons'
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 
 interface WorkspaceAssetLibraryModalProps {
   isOpen: boolean
@@ -34,32 +35,19 @@ export default function WorkspaceAssetLibraryModal({
   triggerGlobalAnalyze,
   onGlobalAnalyzeComplete,
 }: WorkspaceAssetLibraryModalProps) {
-  if (!isOpen) return null
-
   return (
-    <div
-      className="fixed inset-0 z-[100] flex items-center justify-center glass-overlay animate-fadeIn"
-      onClick={(e) => {
-        if (e.target === e.currentTarget) onClose()
-      }}
-    >
-      <div className="glass-surface-modal w-[95vw] max-w-6xl h-[90vh] flex flex-col">
-        <div className="flex items-center justify-between px-8 py-5 border-b border-[var(--glass-stroke-base)] flex-shrink-0">
-          <h2 className="text-2xl font-bold text-[var(--glass-text-primary)] flex items-center gap-3">
-            <AppIcon name="package" className="h-7 w-7 text-[var(--glass-text-secondary)]" />
+    <Dialog open={isOpen} onOpenChange={(nextOpen) => { if (!nextOpen) onClose() }}>
+      <DialogContent className="z-[100] flex h-[90vh] w-[95vw] max-w-6xl flex-col overflow-hidden p-0">
+        <DialogHeader className="border-b border-border px-8 py-5">
+          <DialogTitle className="flex items-center gap-3 text-2xl font-bold text-foreground">
+            <AppIcon name="package" className="h-7 w-7 text-muted-foreground" />
             资产库
-          </h2>
-          <button
-            onClick={onClose}
-            className="glass-btn-base glass-btn-soft rounded-full p-3"
-          >
-            <AppIcon name="close" className="w-6 h-6" />
-          </button>
-        </div>
+          </DialogTitle>
+        </DialogHeader>
 
-        <div className="flex-1 overflow-y-auto p-6 custom-scrollbar" data-asset-scroll-container="1">
+        <div className="custom-scrollbar flex-1 overflow-y-auto p-6" data-asset-scroll-container="1">
           {assetsLoading && !hasCharacters && !hasLocations && (
-            <div className="flex flex-col items-center justify-center h-64 text-[var(--glass-text-tertiary)] animate-pulse">
+            <div className="flex h-64 animate-pulse flex-col items-center justify-center text-muted-foreground">
               <TaskStatusInline state={assetsLoadingState} className="text-base [&>span]:text-base" />
             </div>
           )}
@@ -72,7 +60,7 @@ export default function WorkspaceAssetLibraryModal({
             onGlobalAnalyzeComplete={onGlobalAnalyzeComplete}
           />
         </div>
-      </div>
-    </div>
+      </DialogContent>
+    </Dialog>
   )
 }

@@ -20,20 +20,20 @@ export default function VoiceCreationForm({ runtime, children }: VoiceCreationFo
 
   return (
     <div
-      className="fixed z-[10000] left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 glass-surface-modal w-full max-w-xl overflow-hidden"
+      className="fixed z-[10000] left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 rounded-xl border border-border bg-card shadow-lg w-full max-w-xl overflow-hidden"
       onClick={(e) => e.stopPropagation()}
     >
-      <div className="flex items-center justify-between px-5 py-3 border-b border-[var(--glass-stroke-base)] bg-[var(--glass-bg-surface-strong)]">
+      <div className="flex items-center justify-between px-5 py-3 border-b border-border bg-muted/40">
         <div className="flex items-center gap-2">
-          <AppIcon name="mic" className="w-5 h-5 text-[var(--glass-tone-info-fg)]" />
-          <h2 className="font-semibold text-[var(--glass-text-primary)]">{tHub('addVoice')}</h2>
+          <AppIcon name="mic" className="w-5 h-5 text-primary" />
+          <h2 className="font-semibold text-foreground">{tHub('addVoice')}</h2>
         </div>
-        <button onClick={handleClose} className="glass-btn-base glass-btn-soft p-1 text-[var(--glass-text-tertiary)]">
+        <button onClick={handleClose} className="inline-flex items-center justify-center border border-border bg-muted/50 hover:bg-muted p-1 text-muted-foreground">
           <AppIcon name="close" className="w-5 h-5" />
         </button>
       </div>
 
-      <div className="flex border-b border-[var(--glass-stroke-base)]">
+      <div className="flex border-b border-border">
         {(() => {
           const tabs = [
             { id: 'design' as const, label: tvCreate('aiDesignMode') },
@@ -57,8 +57,8 @@ export default function VoiceCreationForm({ runtime, children }: VoiceCreationFo
                       key={tab.id}
                       onClick={() => handleModeChange(tab.id)}
                       className={`relative z-[1] px-4 py-1.5 text-sm rounded-md transition-colors cursor-pointer ${mode === tab.id
-                        ? 'text-[var(--glass-text-primary)] font-medium'
-                        : 'text-[var(--glass-text-tertiary)] hover:text-[var(--glass-text-secondary)]'
+                        ? 'text-foreground font-medium'
+                        : 'text-muted-foreground hover:text-muted-foreground'
                         }`}
                     >
                       {tab.label}
@@ -73,13 +73,13 @@ export default function VoiceCreationForm({ runtime, children }: VoiceCreationFo
 
       <div className="p-5 space-y-4 max-h-[70vh] overflow-y-auto">
         <div>
-          <label className="glass-field-label mb-1 block">{tHub('voiceName')}</label>
+          <label className="block text-sm font-medium text-foreground mb-1 block">{tHub('voiceName')}</label>
           <input
             type="text"
             value={voiceName}
             onChange={(e) => setVoiceName(e.target.value)}
             placeholder={tHub('voiceNamePlaceholder')}
-            className="glass-input-base w-full px-3 py-2 text-sm"
+            className="w-full rounded-md border border-input bg-background w-full px-3 py-2 text-sm"
           />
         </div>
 

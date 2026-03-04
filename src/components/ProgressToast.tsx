@@ -19,7 +19,7 @@ export default function ProgressToast({ show, message, step }: ProgressToastProp
 
   return (
     <div className="fixed bottom-8 right-8 z-50 animate-slide-up">
-      <div className="glass-surface-modal min-w-[320px] p-4">
+      <div className="rounded-xl border border-border bg-card shadow-lg min-w-[320px] p-4">
         <div className="flex items-start space-x-3">
           {/* Loading Spinner */}
           <div className="flex-shrink-0 mt-0.5">
@@ -28,11 +28,11 @@ export default function ProgressToast({ show, message, step }: ProgressToastProp
           
           {/* Content */}
           <div className="flex-1">
-            <div className="mb-1 font-semibold text-[var(--glass-text-primary)]">
+            <div className="mb-1 font-semibold text-foreground">
               {message}
             </div>
             {step && (
-              <div className="text-sm text-[var(--glass-text-secondary)]">
+              <div className="text-sm text-muted-foreground">
                 {step}
               </div>
             )}
@@ -40,8 +40,8 @@ export default function ProgressToast({ show, message, step }: ProgressToastProp
         </div>
         
         {/* Progress Bar */}
-        <div className="mt-3 h-1.5 w-full overflow-hidden rounded-full bg-[var(--glass-bg-muted)]">
-          <div className="h-1.5 rounded-full bg-[var(--glass-accent-from)] animate-progress" />
+        <div className="mt-3 h-1.5 w-full overflow-hidden rounded-full bg-muted">
+          <div className="h-1.5 rounded-full bg-primary animate-progress" />
         </div>
       </div>
     </div>

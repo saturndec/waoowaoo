@@ -42,16 +42,16 @@ export default function UnconfirmedProfilesSection({
   }
 
   return (
-    <div className="bg-[var(--glass-tone-warning-bg)] border border-[var(--glass-stroke-warning)] rounded-xl p-4">
+    <div className="bg-amber-100 border border-amber-300 rounded-xl p-4">
       <div className="flex items-center justify-between mb-4">
         <div>
-          <h3 className="text-lg font-semibold text-[var(--glass-text-primary)]">{confirmTitle}</h3>
-          <p className="text-sm text-[var(--glass-text-secondary)]">{confirmHint}</p>
+          <h3 className="text-lg font-semibold text-foreground">{confirmTitle}</h3>
+          <p className="text-sm text-muted-foreground">{confirmHint}</p>
         </div>
         <button
           onClick={onBatchConfirm}
           disabled={batchConfirming}
-          className="glass-btn-base glass-btn-primary px-4 py-2 disabled:opacity-50 flex items-center gap-2"
+          className="inline-flex items-center justify-center rounded-md bg-primary px-3 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 px-4 py-2 disabled:opacity-50 flex items-center gap-2"
         >
           {batchConfirming ? (
             <TaskStatusInline state={batchConfirmingState} className="text-white [&>span]:text-white [&_svg]:text-white" />

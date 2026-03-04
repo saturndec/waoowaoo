@@ -30,7 +30,7 @@ export default function VideoTimelinePanel({
   const tVoice = useTranslations('voice')
 
   return (
-    <div className="glass-surface-elevated overflow-hidden">
+    <div className="rounded-xl border border-border bg-card shadow-md overflow-hidden">
       <div
         role="button"
         tabIndex={0}
@@ -41,21 +41,21 @@ export default function VideoTimelinePanel({
             onToggleExpanded()
           }
         }}
-        className="w-full px-6 py-4 flex items-center justify-between hover:bg-[var(--glass-bg-muted)]/50 transition-colors cursor-pointer"
+        className="w-full px-6 py-4 flex items-center justify-between hover:bg-muted/50 transition-colors cursor-pointer"
       >
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-[var(--glass-accent-from)] rounded-xl flex items-center justify-center shadow-[var(--glass-shadow-md)]">
+          <div className="w-10 h-10 bg-primary rounded-xl flex items-center justify-center shadow-md">
             <AppIcon name="micOutline" className="w-5 h-5 text-white" />
           </div>
           <div className="text-left">
-            <h3 className="font-bold text-[var(--glass-text-primary)]">{tVoice('title')}</h3>
-            <p className="text-sm text-[var(--glass-text-tertiary)]">
+            <h3 className="font-bold text-foreground">{tVoice('title')}</h3>
+            <p className="text-sm text-muted-foreground">
               {tVoice('linesCount', { count: allVoiceLines.length })}
               {tVoice('audioGeneratedCount', { count: allVoiceLines.filter((line) => line.audioUrl).length })}
             </p>
           </div>
         </div>
-        <AppIcon name="chevronDown" className={`w-5 h-5 text-[var(--glass-text-tertiary)] transition-transform ${expanded ? 'rotate-180' : ''}`} />
+        <AppIcon name="chevronDown" className={`w-5 h-5 text-muted-foreground transition-transform ${expanded ? 'rotate-180' : ''}`} />
       </div>
 
       {expanded && (

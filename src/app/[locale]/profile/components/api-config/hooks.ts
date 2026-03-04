@@ -48,6 +48,11 @@ interface UseProvidersReturn {
     getModelsByType: (type: CustomModel['type']) => CustomModel[]
 }
 
+type OpenAICompatibleModelPayload = {
+    modelId: string
+    name: string
+}
+
 function isRecord(value: unknown): value is Record<string, unknown> {
     return !!value && typeof value === 'object' && !Array.isArray(value)
 }
@@ -77,6 +82,21 @@ function parsePricingDisplayMap(raw: unknown): PricingDisplayMap {
         }
     }
     return map
+}
+
+function parseOpenAICompatibleModels(raw: unknown): OpenAICompatibleModelPayload[] {
+    if (!isRecord(raw) || !Array.isArray(raw.models)) return []
+    const seen = new Set<string>()
+    const models: OpenAICompatibleModelPayload[] = []
+    for (const item of raw.models) {
+        if (!isRecord(item)) continue
+        const modelId = typeof item.modelId === 'string' ? item.modelId.trim() : ''
+        if (!modelId || seen.has(modelId)) continue
+        seen.add(modelId)
+        const name = typeof item.name === 'string' && item.name.trim() ? item.name.trim() : modelId
+        models.push({ modelId, name })
+    }
+    return models
 }
 
 /**
@@ -157,6 +177,7 @@ export function useProviders(): UseProvidersReturn {
                 modelKey,
                 price: 0,
                 priceLabel: '--',
+                source: 'preset',
                 enabled: !isPresetComingSoonModelKey(modelKey),
             }
         }),
@@ -244,6 +265,7 @@ export function useProviders(): UseProvidersReturn {
                         ? false
                         : (hasSavedModels ? (alwaysEnabledPreset || !!saved) : false),
                     price: 0,
+                    source: saved?.source === 'manual' || saved?.source === 'discovered' ? saved.source : 'preset',
                     capabilities: saved?.capabilities ?? preset.capabilities,
                 }
                 return applyPricingDisplay(mergedPreset, pricingDisplay)
@@ -252,6 +274,7 @@ export function useProviders(): UseProvidersReturn {
                 !PRESET_MODELS.find((preset) => encodeModelKey(preset.provider, preset.modelId) === m.modelKey)
             ).map((m: CustomModel) => ({
                 ...applyPricingDisplay(m, pricingDisplay),
+                source: m.source === 'discovered' ? 'discovered' : 'manual',
                 // 尊重服务端返回的 enabled 字段（后端对 disabled presets 会明确返回 enabled: false）
                 enabled: (m as CustomModel & { enabled?: boolean }).enabled !== false,
             }))
@@ -329,6 +352,94 @@ export function useProviders(): UseProvidersReturn {
         }
     }, []) // 无依赖，所有值均从 ref 读取
 
+    const syncOpenAICompatibleModels = useCallback(async (provider: Provider) => {
+        if (getProviderKey(provider.id) !== 'openai-compatible') return
+        const apiKey = typeof provider.apiKey === 'string' ? provider.apiKey.trim() : ''
+        const baseUrl = typeof provider.baseUrl === 'string' ? provider.baseUrl.trim() : ''
+        if (!apiKey || !baseUrl) return
+
+        try {
+            const response = await fetch('/api/user/api-config/openai-compatible-models', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    providerId: provider.id,
+                    apiKey,
+                    baseUrl,
+                }),
+            })
+            if (!response.ok) {
+                const payload = await response.json().catch(() => null)
+                const message = isRecord(payload) && isRecord(payload.error) && typeof payload.error.message === 'string'
+                    ? payload.error.message
+                    : `HTTP ${response.status}`
+                throw new Error(message)
+            }
+
+            const payload = await response.json().catch(() => null)
+            const fetchedModels = parseOpenAICompatibleModels(payload)
+            if (fetchedModels.length === 0) return
+
+            setModels((previousModels) => {
+                const discoveredMap = new Map(
+                    fetchedModels.map((model) => [
+                        encodeModelKey(provider.id, model.modelId),
+                        model,
+                    ]),
+                )
+
+                let changed = false
+                const nextModels = previousModels.map((model) => {
+                    const discovered = discoveredMap.get(model.modelKey)
+                    if (!discovered) return model
+                    discoveredMap.delete(model.modelKey)
+                    const nextModel: CustomModel = {
+                        ...model,
+                        name: discovered.name,
+                        enabled: true,
+                        source: 'discovered',
+                    }
+                    if (
+                        nextModel.name !== model.name
+                        || nextModel.enabled !== model.enabled
+                        || nextModel.source !== model.source
+                    ) {
+                        changed = true
+                    }
+                    return nextModel
+                })
+
+                const additions = Array.from(discoveredMap.values()).map((model) => ({
+                    modelId: model.modelId,
+                    modelKey: encodeModelKey(provider.id, model.modelId),
+                    name: model.name,
+                    type: 'llm' as const,
+                    provider: provider.id,
+                    source: 'discovered' as const,
+                    price: 0,
+                    priceLabel: '--',
+                    enabled: true,
+                }))
+
+                if (additions.length > 0) {
+                    changed = true
+                }
+
+                if (!changed) {
+                    return previousModels
+                }
+
+                const merged = [...nextModels, ...additions]
+                latestModelsRef.current = merged
+                void performSave(undefined, true)
+                return merged
+            })
+        } catch (error) {
+            _ulogError('[API Config] OpenAI 兼容模型自动获取失败:', error)
+            setSaveStatus('error')
+        }
+    }, [performSave])
+
     // 默认模型操作：选中即立刻显示已保存（与项目设置一致）
     // capabilityFieldsToDefault：切换模型时自动将第一个 option 写入 capabilityDefaults（只填未配置字段）
     const updateDefaultModel = useCallback((
@@ -391,14 +502,20 @@ export function useProviders(): UseProvidersReturn {
     // 提供商操作
     const updateProviderApiKey = useCallback((providerId: string, apiKey: string) => {
         setProviders(prev => {
+            let updatedProvider: Provider | null = null
             const next = prev.map(p =>
-                p.id === providerId ? { ...p, apiKey, hasApiKey: !!apiKey } : p
+                p.id === providerId
+                    ? (updatedProvider = { ...p, apiKey, hasApiKey: !!apiKey })
+                    : p
             )
             latestProvidersRef.current = next
-            void performSave(undefined, true)
+            void performSave(undefined, true).then(async () => {
+                if (!updatedProvider) return
+                await syncOpenAICompatibleModels(updatedProvider)
+            })
             return next
         })
-    }, [performSave])
+    }, [performSave, syncOpenAICompatibleModels])
 
     const addProvider = useCallback((provider: Omit<Provider, 'hasApiKey'>) => {
         setProviders(prev => {
@@ -415,13 +532,17 @@ export function useProviders(): UseProvidersReturn {
             if (providerKey === 'gemini-compatible') {
                 // 保存后直接 refetch：后端注入带完整 capabilities 的 Google 预设模型（disabled）
                 void performSave(undefined, true).then(() => void fetchConfig())
+            } else if (providerKey === 'openai-compatible') {
+                void performSave(undefined, true).then(async () => {
+                    await syncOpenAICompatibleModels(newProvider)
+                })
             } else {
                 void performSave(undefined, true)
             }
             return next
         })
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [t, performSave])
+    }, [t, performSave, syncOpenAICompatibleModels])
 
     const deleteProvider = useCallback((providerId: string) => {
         if (PRESET_PROVIDERS.find(p => p.id === providerId)) {
@@ -469,14 +590,20 @@ export function useProviders(): UseProvidersReturn {
 
     const updateProviderBaseUrl = useCallback((providerId: string, baseUrl: string) => {
         setProviders(prev => {
+            let updatedProvider: Provider | null = null
             const next = prev.map(p =>
-                p.id === providerId ? { ...p, baseUrl } : p
+                p.id === providerId
+                    ? (updatedProvider = { ...p, baseUrl })
+                    : p
             )
             latestProvidersRef.current = next
-            void performSave(undefined, true)
+            void performSave(undefined, true).then(async () => {
+                if (!updatedProvider) return
+                await syncOpenAICompatibleModels(updatedProvider)
+            })
             return next
         })
-    }, [performSave])
+    }, [performSave, syncOpenAICompatibleModels])
 
     // 模型操作
     const toggleModel = useCallback((modelKey: string, providerId?: string) => {
@@ -531,6 +658,7 @@ export function useProviders(): UseProvidersReturn {
                 {
                     ...model,
                     modelKey: model.modelKey || encodeModelKey(model.provider, model.modelId),
+                    source: model.source || 'manual',
                     price: 0,
                     priceLabel: '--',
                     enabled: true,

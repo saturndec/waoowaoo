@@ -12,6 +12,8 @@ import { useState } from 'react'
 import { useTranslations } from 'next-intl'
 import AssetsStage from './AssetsStage'
 import { AppIcon } from '@/components/ui/icons'
+import { Button } from '@/components/ui/button'
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 
 interface AssetLibraryProps {
   projectId: string
@@ -26,48 +28,34 @@ export default function AssetLibrary({
   const t = useTranslations('assets')
 
   return (
-    <>
-      {/* 触发按钮 - 现代玻璃态风格 */}
-      <button
+    <Dialog open={isOpen} onOpenChange={setIsOpen}>
+      <Button
         type="button"
         onClick={() => setIsOpen(true)}
-        className="fixed top-20 right-4 z-40 flex items-center gap-2 px-5 py-2.5 glass-btn-base glass-btn-secondary text-[var(--glass-text-secondary)] font-medium"
+        variant="secondary"
+        className="fixed right-4 top-20 z-40 h-11 gap-2 rounded-full px-5 font-medium"
       >
-        <AppIcon name="folderCards" className="w-5 h-5" />
+        <AppIcon name="folderCards" className="h-5 w-5" />
         {t('assetLibrary.button')}
-      </button>
+      </Button>
 
-      {/* 全屏弹窗 - 现代玻璃态风格 */}
-      {isOpen && (
-        <div className="fixed inset-0 glass-overlay z-50 flex items-center justify-center p-6">
-          <div className="glass-surface-modal w-full h-full max-w-[95vw] max-h-[95vh] flex flex-col overflow-hidden">
-            {/* 头部 */}
-            <div className="flex items-center justify-between px-8 py-5 border-b border-[var(--glass-stroke-base)]">
-              <div className="flex items-center gap-4">
-                <div className="w-10 h-10 bg-[var(--glass-accent-from)] rounded-2xl flex items-center justify-center shadow-[var(--glass-shadow-md)]">
-                  <AppIcon name="folderCards" className="w-5 h-5 text-white" />
-                </div>
-                <h2 className="text-2xl font-bold text-[var(--glass-text-primary)]">{t('assetLibrary.title')}</h2>
-              </div>
-              <button
-                type="button"
-                onClick={() => setIsOpen(false)}
-                className="w-10 h-10 glass-btn-base glass-btn-secondary flex items-center justify-center"
-              >
-                <AppIcon name="close" className="w-5 h-5 text-[var(--glass-text-tertiary)]" />
-              </button>
-            </div>
+      <DialogContent className="flex h-[90vh] max-h-[95vh] w-[95vw] max-w-[95vw] flex-col overflow-hidden p-0">
+        <DialogHeader className="border-b border-border px-8 py-5">
+          <DialogTitle className="flex items-center gap-4 text-2xl font-bold">
+            <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-primary text-primary-foreground shadow-sm">
+              <AppIcon name="folderCards" className="h-5 w-5" />
+            </span>
+            {t('assetLibrary.title')}
+          </DialogTitle>
+        </DialogHeader>
 
-            {/* 内容区域 - 复用AssetsStage，现在 AssetsStage 内部直接订阅和处理图片生成 */}
-            <div className="flex-1 overflow-y-auto p-8">
-              <AssetsStage
-                projectId={projectId}
-                isAnalyzingAssets={isAnalyzingAssets}
-              />
-            </div>
-          </div>
+        <div className="flex-1 overflow-y-auto p-8">
+          <AssetsStage
+            projectId={projectId}
+            isAnalyzingAssets={isAnalyzingAssets}
+          />
         </div>
-      )}
-    </>
+      </DialogContent>
+    </Dialog>
   )
 }

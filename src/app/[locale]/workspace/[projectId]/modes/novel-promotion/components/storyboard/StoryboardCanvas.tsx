@@ -125,7 +125,7 @@ export default function StoryboardCanvas({
   const t = useTranslations('storyboard')
   if (sortedStoryboards.length === 0) {
     return (
-      <div className="text-center py-12 text-[var(--glass-text-tertiary)]">
+      <div className="text-center py-12 text-muted-foreground">
         <p>{t('canvas.emptyTitle')}</p>
         <p className="text-sm mt-2">{t('canvas.emptyDescription')}</p>
       </div>
@@ -203,7 +203,7 @@ export default function StoryboardCanvas({
               <button
                 onClick={() => addStoryboardGroup(sbIndex + 1)}
                 disabled={addingStoryboardGroup}
-                className="glass-btn-base glass-btn-tone-success group flex items-center gap-1 rounded px-3 py-1.5 text-xs transition-all disabled:opacity-50"
+                className="inline-flex items-center justify-center rounded-md bg-emerald-100 px-3 py-2 text-sm font-medium text-emerald-700 transition-colors hover:bg-emerald-200 group flex items-center gap-1 rounded px-3 py-1.5 text-xs transition-all disabled:opacity-50"
               >
                 <AppIcon name="plusAlt" className="h-3 w-3 opacity-70 transition-opacity group-hover:opacity-100" />
                 <span className="opacity-80 group-hover:opacity-100 transition-opacity">{t('group.insertHere')}</span>

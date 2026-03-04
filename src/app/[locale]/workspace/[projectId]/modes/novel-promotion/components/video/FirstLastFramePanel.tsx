@@ -7,6 +7,7 @@ import TaskStatusInline from '@/components/task/TaskStatusInline'
 import { resolveTaskPresentationState } from '@/lib/task/presentation'
 import { MediaImageWithLoading } from '@/components/media/MediaImageWithLoading'
 import { ModelCapabilityDropdown } from '@/components/ui/config-modals/ModelCapabilityDropdown'
+import { Button } from '@/components/ui/button'
 import { AppIcon } from '@/components/ui/icons'
 
 interface FirstLastFramePanelProps {
@@ -93,19 +94,21 @@ export default function FirstLastFramePanel({
 
   return (
     <div className="mb-2 space-y-2">
-      <div className="p-2 bg-[var(--glass-tone-info-bg)] border border-[var(--glass-stroke-focus)] rounded-lg">
-        <div className="flex items-center gap-2 text-xs text-[var(--glass-tone-info-fg)] mb-2">
+      <div className="rounded-lg border border-primary/30 bg-blue-50 p-2">
+        <div className="mb-2 flex items-center gap-2 text-xs text-primary">
           <span>{t("firstLastFrame.title")}</span>
-          <span className="text-[var(--glass-tone-info-fg)]">{t("firstLastFrame.range", { from: panelIndex + 1, to: panelIndex + 2 })}</span>
-          <button
+          <span>{t("firstLastFrame.range", { from: panelIndex + 1, to: panelIndex + 2 })}</span>
+          <Button
             onClick={() => onToggleLink(panelKey, panel.storyboardId, panel.panelIndex)}
-            className="ml-auto text-[var(--glass-tone-info-fg)] hover:text-[var(--glass-text-primary)] underline"
+            variant="ghost"
+            size="sm"
+            className="ml-auto h-6 px-2 text-xs text-primary hover:text-foreground"
           >
             {t("firstLastFrame.unlinkAction")}
-          </button>
+          </Button>
         </div>
         <div className="flex gap-2 items-center">
-          <div className="flex-1 bg-[var(--glass-bg-muted)] rounded overflow-hidden relative" style={{ aspectRatio: cssAspectRatio }}>
+          <div className="relative flex-1 overflow-hidden rounded bg-muted/50" style={{ aspectRatio: cssAspectRatio }}>
             {panel.imageUrl && (
               <MediaImageWithLoading
                 src={panel.imageUrl}
@@ -117,10 +120,10 @@ export default function FirstLastFramePanel({
                 }}
               />
             )}
-            <span className="absolute bottom-1 left-1 bg-[var(--glass-accent-from)] text-white text-[10px] px-1 rounded">{t("firstLastFrame.firstFrame")}</span>
+            <span className="absolute bottom-1 left-1 rounded bg-primary px-1 text-[10px] text-primary-foreground">{t("firstLastFrame.firstFrame")}</span>
           </div>
-          <AppIcon name="arrowRight" className="w-4 h-4 text-[var(--glass-tone-info-fg)]" />
-          <div className="flex-1 bg-[var(--glass-bg-muted)] rounded overflow-hidden relative" style={{ aspectRatio: cssAspectRatio }}>
+          <AppIcon name="arrowRight" className="h-4 w-4 text-primary" />
+          <div className="relative flex-1 overflow-hidden rounded bg-muted/50" style={{ aspectRatio: cssAspectRatio }}>
             {nextPanel.imageUrl && (
               <MediaImageWithLoading
                 src={nextPanel.imageUrl}
@@ -132,46 +135,44 @@ export default function FirstLastFramePanel({
                 }}
               />
             )}
-            <span className="absolute bottom-1 left-1 bg-[var(--glass-tone-warning-fg)] text-white text-[10px] px-1 rounded">{t("firstLastFrame.lastFrame")}</span>
+            <span className="absolute bottom-1 left-1 rounded bg-amber-600 px-1 text-[10px] text-white">{t("firstLastFrame.lastFrame")}</span>
           </div>
         </div>
         {/* 首尾帧提示词编辑 */}
         <div className="mt-2">
           <div className="flex items-center justify-between mb-1">
-            <span className="text-xs text-[var(--glass-tone-info-fg)] font-medium">{t("firstLastFrame.customPrompt")}</span>
+            <span className="text-xs font-medium text-primary">{t("firstLastFrame.customPrompt")}</span>
             {hasCustomPrompt && (
-              <button
+              <Button
                 onClick={() => onResetPrompt(panelKey)}
-                className="text-xs text-[var(--glass-tone-info-fg)] hover:text-[var(--glass-tone-info-fg)] underline"
+                variant="ghost"
+                size="sm"
+                className="h-6 px-2 text-xs text-primary"
               >
                 {t("firstLastFrame.useDefault")}
-              </button>
+              </Button>
             )}
           </div>
           <textarea
             value={currentPrompt}
             onChange={(e) => onCustomPromptChange(panelKey, e.target.value)}
-            className="w-full text-xs p-2 border border-[var(--glass-stroke-focus)] rounded bg-[var(--glass-bg-surface)] text-[var(--glass-text-secondary)] focus:outline-none focus:ring-1 focus:ring-[var(--glass-tone-info-fg)] resize-none"
+            className="w-full resize-none rounded border border-primary/40 bg-background p-2 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
             rows={3}
             placeholder={t("firstLastFrame.promptPlaceholder")}
           />
         </div>
       </div>
       <div className="flex items-center gap-2">
-        <button
+        <Button
           onClick={() => onGenerate(panel.storyboardId, panel.panelIndex, nextPanel.storyboardId, nextPanel.panelIndex, panelKey, flGenerationOptions, panel.panelId)}
           disabled={isVideoTaskRunning || !panel.imageUrl || !nextPanel.imageUrl || !flModel || hasMissingCapabilities}
-          className={`glass-btn-base flex-1 py-2 text-sm font-medium disabled:opacity-50 ${isFirstLastFrameGenerated
-            ? 'bg-[var(--glass-tone-success-fg)] text-white'
-            : isVideoTaskRunning
-              ? 'bg-[var(--glass-bg-muted)] text-[var(--glass-text-tertiary)]'
-              : 'bg-[var(--glass-accent-from)] text-white hover:bg-[var(--glass-accent-to)]'
-            }`}
+          variant={isFirstLastFrameGenerated ? 'secondary' : 'default'}
+          className="h-9 flex-1 text-sm font-medium"
         >
           {isFirstLastFrameGenerated ? t("firstLastFrame.generated") : isVideoTaskRunning ? (
             <TaskStatusInline state={videoTaskRunningState} className="text-white [&>span]:text-white [&_svg]:text-white" />
           ) : t("firstLastFrame.generate")}
-        </button>
+        </Button>
         <div className="min-w-[220px] max-w-[280px]">
           <ModelCapabilityDropdown
             compact

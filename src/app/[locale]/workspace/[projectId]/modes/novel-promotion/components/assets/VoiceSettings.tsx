@@ -107,8 +107,8 @@ export default function VoiceSettings({
 
     // 紧凑模式样式
     const containerClass = compact
-        ? 'border border-[var(--glass-stroke-base)] rounded-xl p-3 bg-[var(--glass-bg-surface-strong)]'
-        : 'mt-4 border border-[var(--glass-stroke-base)] rounded-xl p-4 bg-[var(--glass-bg-surface-strong)]'
+        ? 'border border-border rounded-xl p-3 bg-muted/40'
+        : 'mt-4 border border-border rounded-xl p-4 bg-muted/40'
 
     const headerClass = compact
         ? 'flex items-center gap-2 mb-2 pb-2 border-b'
@@ -119,12 +119,12 @@ export default function VoiceSettings({
 
     return (
         <div className={containerClass}>
-            <div className={`${headerClass} ${hasCustomVoice ? 'border-[var(--glass-stroke-base)]' : 'border-[var(--glass-stroke-warning)]'}`}>
-                <div className={`${iconSize} rounded-full flex items-center justify-center ${hasCustomVoice ? 'bg-[var(--glass-bg-muted)]' : 'bg-[var(--glass-tone-warning-bg)]'}`}>
-                    <AppIcon name="mic" className={`${innerIconSize} ${hasCustomVoice ? 'text-[var(--glass-text-secondary)]' : 'text-[var(--glass-tone-warning-fg)]'}`} />
+            <div className={`${headerClass} ${hasCustomVoice ? 'border-border' : 'border-amber-300'}`}>
+                <div className={`${iconSize} rounded-full flex items-center justify-center ${hasCustomVoice ? 'bg-muted' : 'bg-amber-100'}`}>
+                    <AppIcon name="mic" className={`${innerIconSize} ${hasCustomVoice ? 'text-muted-foreground' : 'text-amber-700'}`} />
                 </div>
-                <span className={`text-${compact ? 'xs' : 'sm'} font-medium ${hasCustomVoice ? 'text-[var(--glass-text-secondary)]' : 'text-[var(--glass-tone-warning-fg)]'}`}>
-                    {t('tts.title')}{!hasCustomVoice && <span className="text-[var(--glass-tone-warning-fg)]">({t('tts.noVoice')})</span>}
+                <span className={`text-${compact ? 'xs' : 'sm'} font-medium ${hasCustomVoice ? 'text-muted-foreground' : 'text-amber-700'}`}>
+                    {t('tts.title')}{!hasCustomVoice && <span className="text-amber-700">({t('tts.noVoice')})</span>}
                 </span>
             </div>
 
@@ -142,10 +142,10 @@ export default function VoiceSettings({
                 <button
                     onClick={() => voiceFileInputRef.current?.click()}
                     disabled={uploadVoice.isPending}
-                    className="flex-1 min-w-[80px] px-2 py-1.5 bg-[var(--glass-bg-surface)] border border-[var(--glass-stroke-base)] rounded-lg text-xs text-[var(--glass-text-secondary)] font-medium hover:border-[var(--glass-stroke-success)] hover:bg-[var(--glass-tone-success-bg)] hover:text-[var(--glass-tone-success-fg)] transition-all relative group whitespace-nowrap"
+                    className="flex-1 min-w-[80px] px-2 py-1.5 bg-card border border-border rounded-lg text-xs text-muted-foreground font-medium hover:border-emerald-300 hover:bg-emerald-100 hover:text-emerald-700 transition-all relative group whitespace-nowrap"
                 >
                     <div className="flex items-center justify-center gap-1">
-                        {hasCustomVoice && <div className="w-1.5 h-1.5 bg-[var(--glass-tone-success-fg)] rounded-full flex-shrink-0"></div>}
+                        {hasCustomVoice && <div className="w-1.5 h-1.5 bg-emerald-700 rounded-full flex-shrink-0"></div>}
                         <span>{uploadVoice.isPending ? t('tts.uploading') : hasCustomVoice ? t('tts.uploaded') : t('tts.uploadAudio')}</span>
                     </div>
                 </button>
@@ -154,7 +154,7 @@ export default function VoiceSettings({
                 {onSelectFromHub && (
                     <button
                         onClick={() => onSelectFromHub(characterId)}
-                        className="flex-1 min-w-[80px] px-2 py-1.5 bg-[var(--glass-bg-surface)] border border-[var(--glass-stroke-focus)] rounded-lg text-xs text-[var(--glass-tone-info-fg)] font-medium hover:border-[var(--glass-stroke-focus)] hover:bg-[var(--glass-tone-info-bg)] transition-all whitespace-nowrap"
+                        className="flex-1 min-w-[80px] px-2 py-1.5 bg-card border border-primary/40 rounded-lg text-xs text-primary font-medium hover:border-primary/40 hover:bg-primary/10 transition-all whitespace-nowrap"
                     >
                         <div className="flex items-center justify-center gap-1">
                             <AppIcon name="copy" className="w-3.5 h-3.5 flex-shrink-0" />
@@ -167,7 +167,7 @@ export default function VoiceSettings({
                 {onVoiceDesign && (
                     <button
                         onClick={() => onVoiceDesign(characterId, characterName)}
-                        className="glass-btn-base glass-btn-primary flex-1 min-w-[80px] px-2 py-1.5 text-xs font-medium whitespace-nowrap"
+                        className="inline-flex items-center justify-center rounded-md bg-primary px-3 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 flex-1 min-w-[80px] px-2 py-1.5 text-xs font-medium whitespace-nowrap"
                     >
                         <div className="flex items-center justify-center gap-1">
                             <AppIcon name="bolt" className="w-3.5 h-3.5 flex-shrink-0" />
@@ -182,8 +182,8 @@ export default function VoiceSettings({
                 <button
                     onClick={handlePreviewVoice}
                     className={`w-full mt-2 px-3 py-2 border rounded-lg text-sm font-medium transition-all ${isPreviewingVoice
-                        ? 'bg-[var(--glass-accent-from)] border-[var(--glass-stroke-focus)] text-white hover:bg-[var(--glass-accent-to)]'
-                        : 'bg-[var(--glass-tone-info-bg)] border-[var(--glass-stroke-focus)] text-[var(--glass-tone-info-fg)] hover:bg-[var(--glass-tone-info-bg)]'
+                        ? 'bg-primary border-primary/40 text-white hover:bg-primary/90'
+                        : 'bg-primary/10 border-primary/40 text-primary hover:bg-primary/10'
                         }`}
                 >
                     <div className="flex items-center justify-center gap-2">

@@ -18,6 +18,7 @@ type TaskSnapshotResponse = {
 type WaitTaskOptions = {
   intervalMs?: number
   timeoutMs?: number
+  maxQueuedMs?: number
   onTaskUpdate?: (task: TaskSnapshot) => void
 }
 
@@ -34,8 +35,10 @@ export function isAsyncTaskResponse(data: unknown): data is { async: true; taskI
 export async function waitForTaskResult(taskId: string, options: WaitTaskOptions = {}) {
   const intervalMs = options.intervalMs ?? 1500
   const timeoutMs = options.timeoutMs ?? 0
+  const maxQueuedMs = options.maxQueuedMs ?? 0
   const onTaskUpdate = options.onTaskUpdate
   const startedAt = Date.now()
+  let queuedStartedAt = 0
 
   while (true) {
     if (timeoutMs > 0 && Date.now() - startedAt > timeoutMs) {
@@ -64,6 +67,16 @@ export async function waitForTaskResult(taskId: string, options: WaitTaskOptions
     }
     if (task.status === 'failed') {
       throw new Error(resolveTaskErrorMessage(task, `Task ${task.status}`))
+    }
+    if (task.status === 'queued') {
+      if (queuedStartedAt <= 0) {
+        queuedStartedAt = Date.now()
+      }
+      if (maxQueuedMs > 0 && Date.now() - queuedStartedAt > maxQueuedMs) {
+        throw new Error(resolveTaskErrorMessage(task, '任务排队超时，请检查 worker 或稍后重试'))
+      }
+    } else {
+      queuedStartedAt = 0
     }
     if (task.status !== 'queued' && task.status !== 'processing') {
       throw new Error(resolveTaskErrorMessage(task, `Task ${task.status}`))

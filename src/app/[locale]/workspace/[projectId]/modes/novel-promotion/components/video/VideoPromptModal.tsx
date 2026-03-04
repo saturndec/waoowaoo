@@ -3,6 +3,9 @@
 import { useTranslations } from 'next-intl'
 import { VideoPanel } from './types'
 import { AppIcon } from '@/components/ui/icons'
+import { Button } from '@/components/ui/button'
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import { Textarea } from '@/components/ui/textarea'
 
 interface VideoPromptModalProps {
   panel: VideoPanel | undefined
@@ -25,78 +28,69 @@ export default function VideoPromptModal({
   if (!panel) return null
 
   return (
-    <div className="fixed inset-0 bg-[var(--glass-overlay)] flex items-center justify-center z-50" onClick={onCancel}>
-      <div className="bg-[var(--glass-bg-surface)] rounded-lg max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
-        {/* 标题栏 */}
-        <div className="sticky top-0 bg-[var(--glass-bg-surface)] border-b px-6 py-4 flex items-center justify-between">
-          <h3 className="text-lg font-bold">{t('promptModal.title', { number: panelIndex + 1 })}</h3>
-          <button onClick={onCancel} className="text-[var(--glass-text-tertiary)] hover:text-[var(--glass-text-secondary)]">
-            <AppIcon name="close" className="w-6 h-6" />
-          </button>
-        </div>
+    <Dialog open={true} onOpenChange={(open) => { if (!open) onCancel() }}>
+      <DialogContent className="max-h-[90vh] max-w-2xl overflow-y-auto p-0">
+        <DialogHeader className="sticky top-0 z-10 border-b bg-card px-6 py-4">
+          <DialogTitle className="flex items-center justify-between gap-2 text-lg">
+            {t('promptModal.title', { number: panelIndex + 1 })}
+            <Button onClick={onCancel} variant="ghost" size="icon" className="h-8 w-8">
+              <AppIcon name="close" className="h-5 w-5" />
+            </Button>
+          </DialogTitle>
+        </DialogHeader>
 
-        <div className="p-6 space-y-4">
-          {/* 镜头信息 */}
-          <div className="p-3 bg-[var(--glass-bg-muted)] rounded-lg text-sm space-y-1">
+        <div className="space-y-4 p-6">
+          <div className="space-y-1 rounded-lg bg-muted/50 p-3 text-sm">
             <div className="flex items-center gap-2">
-              <span className="text-[var(--glass-text-tertiary)]">{t('promptModal.shotType')}</span>
-              <span className="px-2 py-0.5 bg-[var(--glass-tone-info-bg)] text-[var(--glass-tone-info-fg)] rounded">{panel.textPanel?.shot_type}</span>
+              <span className="text-muted-foreground">{t('promptModal.shotType')}</span>
+              <span className="rounded bg-blue-100 px-2 py-0.5 text-blue-700">{panel.textPanel?.shot_type}</span>
               {panel.textPanel?.camera_move && (
-                <span className="px-2 py-0.5 bg-[var(--glass-tone-warning-bg)] text-[var(--glass-tone-warning-fg)] rounded">{panel.textPanel.camera_move}</span>
+                <span className="rounded bg-amber-100 px-2 py-0.5 text-amber-700">{panel.textPanel.camera_move}</span>
               )}
               {panel.textPanel?.duration && (
-                <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-[var(--glass-bg-muted)] text-[var(--glass-text-secondary)] rounded">
-                  <AppIcon name="clock" className="w-3 h-3" />
+                <span className="inline-flex items-center gap-1 rounded bg-muted px-2 py-0.5 text-muted-foreground">
+                  <AppIcon name="clock" className="h-3 w-3" />
                   {panel.textPanel.duration}
                   {t('promptModal.duration')}
                 </span>
               )}
             </div>
-            <div><span className="text-[var(--glass-text-tertiary)]">{t('promptModal.location')}</span>{panel.textPanel?.location || t('promptModal.locationUnknown')}</div>
-            <div><span className="text-[var(--glass-text-tertiary)]">{t('promptModal.characters')}</span>{panel.textPanel?.characters?.join('、') || t('promptModal.charactersNone')}</div>
-            <div><span className="text-[var(--glass-text-tertiary)]">{t('promptModal.description')}</span>{panel.textPanel?.description}</div>
+            <div><span className="text-muted-foreground">{t('promptModal.location')}</span>{panel.textPanel?.location || t('promptModal.locationUnknown')}</div>
+            <div><span className="text-muted-foreground">{t('promptModal.characters')}</span>{panel.textPanel?.characters?.join('、') || t('promptModal.charactersNone')}</div>
+            <div><span className="text-muted-foreground">{t('promptModal.description')}</span>{panel.textPanel?.description}</div>
             {panel.textPanel?.text_segment && (
-              <div className="border-t pt-2 mt-2">
-                <span className="text-[var(--glass-text-tertiary)]">{t('promptModal.text')}</span>
-                <span className="text-[var(--glass-text-secondary)] italic">&quot;{panel.textPanel.text_segment}&quot;</span>
+              <div className="mt-2 border-t pt-2">
+                <span className="text-muted-foreground">{t('promptModal.text')}</span>
+                <span className="italic text-foreground">&quot;{panel.textPanel.text_segment}&quot;</span>
               </div>
             )}
           </div>
 
-          {/* 视频提示词编辑 */}
           <div>
-            <label className="block text-sm font-medium text-[var(--glass-text-secondary)] mb-2">
+            <label className="mb-2 block text-sm font-medium text-foreground">
               {t('promptModal.promptLabel')}
             </label>
-            <textarea
+            <Textarea
               value={editValue}
               onChange={(e) => onEditValueChange(e.target.value)}
-              className="w-full px-3 py-2 border border-[var(--glass-stroke-strong)] rounded-lg focus:ring-2 focus:ring-[var(--glass-tone-info-fg)] focus:border-[var(--glass-stroke-focus)]"
               rows={6}
               placeholder={t('promptModal.placeholder')}
             />
-            <p className="text-xs text-[var(--glass-text-tertiary)] mt-1">
+            <p className="mt-1 text-xs text-muted-foreground">
               {t('promptModal.tip')}
             </p>
           </div>
-
-          {/* 按钮 */}
-          <div className="flex justify-end gap-3 pt-4 border-t">
-            <button
-              onClick={onCancel}
-              className="glass-btn-base px-4 py-2 bg-[var(--glass-bg-muted)] text-[var(--glass-text-secondary)] hover:bg-[var(--glass-bg-muted)]"
-            >
-              {t('promptModal.cancel')}
-            </button>
-            <button
-              onClick={onSave}
-              className="glass-btn-base px-4 py-2 bg-[var(--glass-accent-from)] text-white hover:bg-[var(--glass-accent-to)]"
-            >
-              {t('promptModal.save')}
-            </button>
-          </div>
         </div>
-      </div>
-    </div>
+
+        <DialogFooter className="border-t px-6 py-4">
+          <Button onClick={onCancel} variant="outline">
+            {t('promptModal.cancel')}
+          </Button>
+          <Button onClick={onSave}>
+            {t('promptModal.save')}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   )
 }

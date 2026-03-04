@@ -308,18 +308,18 @@ export function SettingsModal({
 
     return (
         <div
-            className="fixed inset-0 z-[100] flex items-center justify-center glass-overlay animate-fadeIn"
+            className="fixed inset-0 z-[100] flex items-center justify-center bg-black/45 animate-fadeIn"
             onClick={(e) => {
                 if (e.target === e.currentTarget) onClose()
             }}
         >
-            <div className="glass-surface-modal p-7 w-full max-w-3xl transform transition-all scale-100 max-h-[90vh] overflow-y-auto custom-scrollbar">
+            <div className="rounded-xl border border-border bg-card shadow-lg p-7 w-full max-w-3xl transform transition-all scale-100 max-h-[90vh] overflow-y-auto custom-scrollbar">
                 <div className="flex justify-between items-center mb-6">
-                    <h2 className="text-2xl font-bold text-[var(--glass-text-primary)]">{t('title')}</h2>
+                    <h2 className="text-2xl font-bold text-foreground">{t('title')}</h2>
                     <div className="flex items-center gap-3">
-                        <div className={`glass-chip text-xs transition-all duration-300 ${saveStatus === 'saved'
-                            ? 'glass-chip-success'
-                            : 'glass-chip-neutral'
+                        <div className={`inline-flex items-center rounded-full border border-border px-2 py-0.5 text-xs font-medium text-xs transition-all duration-300 ${saveStatus === 'saved'
+                            ? 'inline-flex items-center rounded-full border border-border px-2 py-0.5 text-xs font-medium-success'
+                            : 'inline-flex items-center rounded-full border border-border px-2 py-0.5 text-xs font-medium-neutral'
                             }`}>
                             {saveStatus === 'saved' ? (
                                 <>
@@ -328,14 +328,14 @@ export function SettingsModal({
                                 </>
                             ) : (
                                 <>
-                                    <span className="w-1.5 h-1.5 bg-[var(--glass-tone-success-fg)] rounded-full"></span>
+                                    <span className="w-1.5 h-1.5 bg-[#15803d] rounded-full"></span>
                                     {t('autoSave')}
                                 </>
                             )}
                         </div>
                         <button
                             onClick={onClose}
-                            className="glass-btn-base glass-btn-soft rounded-full p-2 text-[var(--glass-text-tertiary)] hover:text-[var(--glass-text-secondary)]"
+                            className="inline-flex items-center justify-center border border-border bg-muted/50 hover:bg-muted rounded-full p-2 text-muted-foreground hover:text-muted-foreground"
                         >
                             <AppIcon name="close" className="w-6 h-6" />
                         </button>
@@ -343,8 +343,8 @@ export function SettingsModal({
                 </div>
 
                 <div className="space-y-5">
-                    <div className="glass-surface-soft p-5 sm:p-6 space-y-4">
-                        <h3 className="text-sm font-semibold text-[var(--glass-text-tertiary)]">{t('visualStyle')}</h3>
+                    <div className="rounded-xl border border-border bg-muted/30 p-5 sm:p-6 space-y-4">
+                        <h3 className="text-sm font-semibold text-muted-foreground">{t('visualStyle')}</h3>
                         <div className="max-w-xs">
                             <StyleSelector
                                 value={artStyle}
@@ -354,14 +354,14 @@ export function SettingsModal({
                         </div>
                     </div>
 
-                    <div className="glass-surface-soft p-5 sm:p-6 space-y-4">
-                        <h3 className="text-sm font-semibold text-[var(--glass-text-tertiary)]">{t('modelParams')}</h3>
+                    <div className="rounded-xl border border-border bg-muted/30 p-5 sm:p-6 space-y-4">
+                        <h3 className="text-sm font-semibold text-muted-foreground">{t('modelParams')}</h3>
                         {!modelsLoaded && (
-                            <div className="text-xs text-[var(--glass-text-tertiary)]">{t('loadingModels')}</div>
+                            <div className="text-xs text-muted-foreground">{t('loadingModels')}</div>
                         )}
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div className="space-y-2">
-                                <label className="text-sm font-medium text-[var(--glass-text-secondary)]">{t('analysisModel')}</label>
+                                <label className="text-sm font-medium text-muted-foreground">{t('analysisModel')}</label>
                                 <ModelCapabilityDropdown
                                     models={userModels.llm}
                                     value={analysisModel}
@@ -376,7 +376,7 @@ export function SettingsModal({
                             </div>
 
                             <div className="space-y-2">
-                                <label className="text-sm font-medium text-[var(--glass-text-secondary)]">{t('characterModel')}</label>
+                                <label className="text-sm font-medium text-muted-foreground">{t('characterModel')}</label>
                                 <ModelCapabilityDropdown
                                     models={userModels.image}
                                     value={characterModel}
@@ -390,7 +390,7 @@ export function SettingsModal({
                             </div>
 
                             <div className="space-y-2">
-                                <label className="text-sm font-medium text-[var(--glass-text-secondary)]">{t('locationModel')}</label>
+                                <label className="text-sm font-medium text-muted-foreground">{t('locationModel')}</label>
                                 <ModelCapabilityDropdown
                                     models={userModels.image}
                                     value={locationModel}
@@ -404,7 +404,7 @@ export function SettingsModal({
                             </div>
 
                             <div className="space-y-2">
-                                <label className="text-sm font-medium text-[var(--glass-text-secondary)]">{t('storyboardModel')}</label>
+                                <label className="text-sm font-medium text-muted-foreground">{t('storyboardModel')}</label>
                                 <ModelCapabilityDropdown
                                     models={userModels.image}
                                     value={imageModel}
@@ -418,7 +418,7 @@ export function SettingsModal({
                             </div>
 
                             <div className="space-y-2">
-                                <label className="text-sm font-medium text-[var(--glass-text-secondary)]">{t('editModel')}</label>
+                                <label className="text-sm font-medium text-muted-foreground">{t('editModel')}</label>
                                 <ModelCapabilityDropdown
                                     models={userModels.image}
                                     value={editModel}
@@ -432,7 +432,7 @@ export function SettingsModal({
                             </div>
 
                             <div className="space-y-2">
-                                <label className="text-sm font-medium text-[var(--glass-text-secondary)]">{t('videoModel')}</label>
+                                <label className="text-sm font-medium text-muted-foreground">{t('videoModel')}</label>
                                 <ModelCapabilityDropdown
                                     models={userModels.video}
                                     value={videoModel}
@@ -447,8 +447,8 @@ export function SettingsModal({
                         </div>
                     </div>
 
-                    <div className="glass-surface-soft p-5 sm:p-6 space-y-4">
-                        <h3 className="text-sm font-semibold text-[var(--glass-text-tertiary)]">{t('aspectRatio')}</h3>
+                    <div className="rounded-xl border border-border bg-muted/30 p-5 sm:p-6 space-y-4">
+                        <h3 className="text-sm font-semibold text-muted-foreground">{t('aspectRatio')}</h3>
                         <div className="max-w-xs">
                             <RatioSelector
                                 value={videoRatio}

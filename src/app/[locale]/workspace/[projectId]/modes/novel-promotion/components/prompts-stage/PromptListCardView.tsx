@@ -4,6 +4,9 @@ import TaskStatusOverlay from '@/components/task/TaskStatusOverlay'
 import TaskStatusInline from '@/components/task/TaskStatusInline'
 import { resolveTaskPresentationState } from '@/lib/task/presentation'
 import { MediaImageWithLoading } from '@/components/media/MediaImageWithLoading'
+import { Button } from '@/components/ui/button'
+import { Textarea } from '@/components/ui/textarea'
+import { Badge } from '@/components/ui/badge'
 import {
   parseImagePrompt,
   type LocationAssetWithImages,
@@ -32,7 +35,6 @@ export default function PromptListCardView({ runtime }: PromptListCardViewProps)
     aiModifyingShots,
     textareaRef,
     shotExtraAssets,
-    getGenerateButtonToneClass,
     getShotRunningState,
     isShotTaskRunning,
     handleStartEdit,
@@ -54,8 +56,8 @@ export default function PromptListCardView({ runtime }: PromptListCardViewProps)
         const promptContent = shot.imagePrompt ? parseImagePrompt(shot.imagePrompt).content : ''
 
         return (
-          <div key={shot.id} className="card-base overflow-hidden">
-            <div className="aspect-video bg-[var(--glass-bg-muted)] flex items-center justify-center relative">
+          <div key={shot.id} className="overflow-hidden rounded-xl border border-border bg-card shadow-sm">
+            <div className="relative flex aspect-video items-center justify-center bg-muted">
               {shot.imageUrl ? (
                 <MediaImageWithLoading
                   src={shot.imageUrl}
@@ -65,101 +67,106 @@ export default function PromptListCardView({ runtime }: PromptListCardViewProps)
                   onClick={() => setPreviewImage(shot.imageUrl)}
                 />
               ) : (
-                <AppIcon name="video" className="w-16 h-16 text-[var(--glass-text-tertiary)]" />
+                <AppIcon name="video" className="h-16 w-16 text-muted-foreground" />
               )}
-              <div className="absolute top-2 left-2 bg-[var(--glass-overlay)] text-white px-2 py-1 rounded text-xs font-medium">
+              <div className="absolute left-2 top-2 rounded bg-black/60 px-2 py-1 text-xs font-medium text-white">
                 #{shot.shotId}
               </div>
               {shot.imageUrl && (
-                <button
+                <Button
                   onClick={(event) => {
                     event.stopPropagation()
                     onGenerateImage(shot.id, shotExtraAssets[shot.id])
                   }}
                   disabled={isBatchSubmitting}
-                  className="absolute top-2 right-2 bg-[var(--glass-overlay)] hover:bg-[var(--glass-text-primary)] text-white p-2 rounded-full transition-all disabled:opacity-50 disabled:cursor-not-allowed z-10"
+                  variant="secondary"
+                  size="icon"
+                  className="absolute right-2 top-2 z-10 h-8 w-8 rounded-full bg-black/60 text-white hover:bg-black/75"
                   title={t('panel.regenerateImage')}
                 >
-                  <AppIcon name="refresh" className="w-4 h-4" />
-                </button>
+                  <AppIcon name="refresh" className="h-4 w-4" />
+                </Button>
               )}
               {isShotTaskRunning(shot) && <TaskStatusOverlay state={shotRunningState} />}
             </div>
 
-            <div className="p-5 space-y-4">
+            <div className="space-y-4 p-5">
               {shot.imagePrompt && (
                 <div className="space-y-2 border-b pb-4">
                   <div className="flex items-center gap-2">
-                    <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-[var(--glass-tone-info-bg)] text-[var(--glass-tone-info-fg)] rounded-md text-sm font-medium">
+                    <Badge variant="secondary" className="gap-1.5 px-3 py-1.5 text-sm font-medium">
                       <AppIcon name="imageEdit" className="w-4 h-4" />
                       {styleLabel}
-                    </span>
+                    </Badge>
                   </div>
 
                   <div className="text-sm">
                     <div className="flex items-center justify-between mb-2">
-                      <span className="font-semibold text-[var(--glass-text-primary)] text-base">{t('prompts.imagePrompt')}</span>
+                      <span className="text-base font-semibold text-foreground">{t('prompts.imagePrompt')}</span>
                       {!isEditing && (
-                        <button
+                        <Button
                           onClick={() => handleStartEdit(shot.id, 'imagePrompt', shot.imagePrompt || '')}
-                          className="text-[var(--glass-tone-info-fg)] hover:text-[var(--glass-text-primary)] p-1.5 hover:bg-[var(--glass-tone-info-bg)] rounded transition-colors"
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8"
                           title={t('prompts.imagePrompt')}
                         >
                           <AppIcon name="edit" className="w-4 h-4" />
-                        </button>
+                        </Button>
                       )}
                     </div>
 
                     {isEditing ? (
                       <div className="space-y-3">
                         <div>
-                          <label className="block text-xs font-medium text-[var(--glass-text-secondary)] mb-1">{t('prompts.currentPrompt')}</label>
-                          <textarea
+                          <label className="mb-1 block text-xs font-medium text-muted-foreground">{t('prompts.currentPrompt')}</label>
+                          <Textarea
                             value={editValue}
                             onChange={(event) => handleEditValueChange(event.target.value)}
-                            className="w-full px-3 py-2 border border-[var(--glass-stroke-strong)] rounded-lg focus:ring-2 focus:ring-[var(--glass-tone-info-fg)] focus:border-[var(--glass-stroke-focus)] text-sm resize-none"
+                            className="w-full resize-none text-sm"
                             rows={4}
                             autoFocus
                           />
                         </div>
 
                         <div className="border-t pt-3">
-                          <label className="block text-xs font-medium text-[var(--glass-text-secondary)] mb-1">
-                            {t('prompts.aiInstruction')} <span className="text-[var(--glass-text-tertiary)]">{t('prompts.supportReference')}</span>
+                          <label className="mb-1 block text-xs font-medium text-muted-foreground">
+                            {t('prompts.aiInstruction')} <span className="text-muted-foreground">{t('prompts.supportReference')}</span>
                           </label>
                           <div className="relative">
-                            <textarea
+                            <Textarea
                               ref={textareaRef}
                               value={aiModifyInstruction}
                               onChange={(event) => handleModifyInstructionChange(event.target.value)}
                               placeholder={t('prompts.instructionPlaceholder')}
-                              className="w-full px-3 py-2 border border-[var(--glass-stroke-strong)] rounded-lg focus:ring-2 focus:ring-[var(--glass-tone-info-fg)] focus:border-[var(--glass-stroke-focus)] text-sm resize-none"
+                              className="w-full resize-none text-sm"
                               rows={2}
                             />
 
                             {showAssetPicker && (
-                              <div className="absolute z-10 mt-1 w-full bg-[var(--glass-bg-surface)] border border-[var(--glass-stroke-strong)] rounded-lg shadow-lg max-h-48 overflow-y-auto">
+                              <div className="absolute z-10 mt-1 max-h-48 w-full overflow-y-auto rounded-lg border border-border bg-popover shadow-lg">
                                 <div className="p-2">
-                                  <div className="text-xs font-medium text-[var(--glass-text-tertiary)] mb-2">{t('prompts.selectAsset')}</div>
+                                  <div className="mb-2 text-xs font-medium text-muted-foreground">{t('prompts.selectAsset')}</div>
 
                                   {assetLibraryCharacters.length > 0 && (
                                     <div className="mb-2">
-                                      <div className="text-xs text-[var(--glass-text-tertiary)] mb-1">{t('prompts.character')}</div>
+                                      <div className="mb-1 text-xs text-muted-foreground">{t('prompts.character')}</div>
                                       {assetLibraryCharacters.map((character) => (
-                                        <button
+                                        <Button
                                           key={character.id}
                                           onClick={() => handleSelectAsset({ id: character.id, name: character.name, description: character.description, type: 'character' })}
-                                          className="w-full text-left px-2 py-1.5 hover:bg-[var(--glass-tone-info-bg)] rounded text-sm"
+                                          variant="ghost"
+                                          className="h-8 w-full justify-start px-2 text-sm"
                                         >
                                           {character.name}
-                                        </button>
+                                        </Button>
                                       ))}
                                     </div>
                                   )}
 
                                   {assetLibraryLocations.length > 0 && (
                                     <div>
-                                      <div className="text-xs text-[var(--glass-text-tertiary)] mb-1">{t('prompts.location')}</div>
+                                      <div className="mb-1 text-xs text-muted-foreground">{t('prompts.location')}</div>
                                       {assetLibraryLocations.map((location) => {
                                         const locationAsset = location as LocationAssetWithImages
                                         const selectedImage = locationAsset.selectedImageId
@@ -168,13 +175,14 @@ export default function PromptListCardView({ runtime }: PromptListCardViewProps)
                                         const description = selectedImage?.description || locationAsset.description || ''
 
                                         return (
-                                          <button
+                                          <Button
                                             key={location.id}
                                             onClick={() => handleSelectAsset({ id: location.id, name: location.name, description, type: 'location' })}
-                                            className="w-full text-left px-2 py-1.5 hover:bg-[var(--glass-tone-info-bg)] rounded text-sm"
+                                            variant="ghost"
+                                            className="h-8 w-full justify-start px-2 text-sm"
                                           >
                                             {location.name}
-                                          </button>
+                                          </Button>
                                         )
                                       })}
                                     </div>
@@ -185,63 +193,64 @@ export default function PromptListCardView({ runtime }: PromptListCardViewProps)
                           </div>
 
                           {selectedAssets.length > 0 && (
-                            <div className="flex flex-wrap gap-2 mt-3 p-2.5 bg-[var(--glass-bg-muted)]/50 rounded-lg border border-[var(--glass-stroke-base)]">
-                              <div className="text-xs text-[var(--glass-text-tertiary)] font-medium w-full mb-1">{t('prompts.referencedAssets')}</div>
+                            <div className="mt-3 flex flex-wrap gap-2 rounded-lg border border-border bg-muted/50 p-2.5">
+                              <div className="mb-1 w-full text-xs font-medium text-muted-foreground">{t('prompts.referencedAssets')}</div>
                               {selectedAssets.map((asset, index) => (
-                                <span
+                                <Badge
                                   key={asset.id}
-                                  className={`group inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-all ${asset.type === 'character'
-                                    ? 'bg-[var(--glass-bg-muted)] text-[var(--glass-text-secondary)] border border-[var(--glass-stroke-strong)] hover:bg-[var(--glass-bg-muted)] hover:border-[var(--glass-stroke-focus)]'
-                                    : 'bg-[var(--glass-tone-info-bg)] text-[var(--glass-tone-info-fg)] border border-[var(--glass-stroke-focus)] hover:bg-[var(--glass-tone-info-bg)] hover:border-[var(--glass-stroke-focus)]'
-                                    }`}
+                                  variant={asset.type === 'character' ? 'outline' : 'secondary'}
+                                  className="group gap-1.5 px-3 py-1.5 text-xs font-medium"
                                 >
                                   <span>{asset.name}</span>
-                                  <button
+                                  <Button
                                     onClick={() => handleRemoveSelectedAsset(index, asset.name)}
-                                    className="ml-0.5 hover:bg-[var(--glass-bg-surface-strong)] rounded p-0.5 transition-colors"
+                                    variant="ghost"
+                                    size="icon"
+                                    className="ml-0.5 h-4 w-4 rounded p-0"
                                     title={t('prompts.removeAsset')}
                                   >
                                     <AppIcon name="closeSolid" className="w-3 h-3" />
-                                  </button>
-                                </span>
+                                  </Button>
+                                </Badge>
                               ))}
                             </div>
                           )}
 
-                          <button
+                          <Button
                             onClick={handleAiModify}
                             disabled={editingPrompt ? aiModifyingShots.has(editingPrompt.shotId) || !aiModifyInstruction.trim() : true}
-                            className="glass-btn-base glass-btn-primary mt-2 w-full px-3 py-2 text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                            className="mt-2 w-full gap-2 text-sm font-medium"
                             title={t('prompts.aiModifyTip')}
                           >
                             {editingPrompt && aiModifyingShots.has(editingPrompt.shotId) ? (
                               <TaskStatusInline
                                 state={resolveTaskPresentationState({ phase: 'processing', intent: 'modify', resource: 'text', hasOutput: true })}
-                                className="text-white [&>span]:text-white [&_svg]:text-white"
+                                className="[&>span]:text-primary-foreground [&_svg]:text-primary-foreground text-primary-foreground"
                               />
                             ) : (
                               t('prompts.aiModify')
                             )}
-                          </button>
+                          </Button>
                         </div>
 
                         <div className="flex gap-2 pt-2 border-t">
-                          <button
+                          <Button
                             onClick={handleSaveEdit}
-                            className="flex-1 px-4 py-2 bg-[var(--glass-accent-from)] text-white rounded-lg text-sm font-medium hover:bg-[var(--glass-accent-to)] transition-colors"
+                            className="flex-1"
                           >
                             {t('prompts.save')}
-                          </button>
-                          <button
+                          </Button>
+                          <Button
                             onClick={handleCancelEdit}
-                            className="flex-1 px-4 py-2 bg-[var(--glass-bg-muted)] text-[var(--glass-text-secondary)] rounded-lg text-sm font-medium hover:bg-[var(--glass-bg-muted)] transition-colors"
+                            variant="secondary"
+                            className="flex-1"
                           >
                             {tCommon('cancel')}
-                          </button>
+                          </Button>
                         </div>
                       </div>
                     ) : (
-                      <p className="text-[var(--glass-text-secondary)] leading-relaxed">{promptContent}</p>
+                      <p className="leading-relaxed text-muted-foreground">{promptContent}</p>
                     )}
                   </div>
                 </div>
@@ -249,39 +258,40 @@ export default function PromptListCardView({ runtime }: PromptListCardViewProps)
 
               <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
                 <div className="flex items-center gap-2">
-                  <span className="text-[var(--glass-text-tertiary)] font-medium">SRT:</span>
-                  <span className="text-[var(--glass-text-primary)]">{shot.srtStart}-{shot.srtEnd}</span>
-                  <span className="text-[var(--glass-text-tertiary)]">({shot.srtDuration?.toFixed(1)}s)</span>
+                  <span className="font-medium text-muted-foreground">SRT:</span>
+                  <span className="text-foreground">{shot.srtStart}-{shot.srtEnd}</span>
+                  <span className="text-muted-foreground">({shot.srtDuration?.toFixed(1)}s)</span>
                 </div>
                 {shot.scale && (
                   <div className="flex items-center gap-2">
-                    <span className="text-[var(--glass-text-tertiary)] font-medium">{t('panel.shotType')}</span>
-                    <span className="text-[var(--glass-text-primary)]">{shot.scale}</span>
+                    <span className="font-medium text-muted-foreground">{t('panel.shotType')}</span>
+                    <span className="text-foreground">{shot.scale}</span>
                   </div>
                 )}
                 {shot.locations && (
                   <div className="flex items-center gap-2">
-                    <span className="text-[var(--glass-text-tertiary)] font-medium">{t('panel.location')}</span>
-                    <span className="text-[var(--glass-text-primary)]">{shot.locations}</span>
+                    <span className="font-medium text-muted-foreground">{t('panel.location')}</span>
+                    <span className="text-foreground">{shot.locations}</span>
                   </div>
                 )}
                 {shot.module && (
                   <div className="flex items-center gap-2">
-                    <span className="text-[var(--glass-text-tertiary)] font-medium">{t('panel.mode')}</span>
-                    <span className="text-[var(--glass-text-primary)]">{shot.module}</span>
+                    <span className="font-medium text-muted-foreground">{t('panel.mode')}</span>
+                    <span className="text-foreground">{shot.module}</span>
                   </div>
                 )}
               </div>
 
-              <button
+              <Button
                 onClick={() => onGenerateImage(shot.id, shotExtraAssets[shot.id])}
                 disabled={isShotTaskRunning(shot) || isBatchSubmitting}
-                className={`glass-btn-base w-full py-2 text-sm disabled:opacity-50 disabled:cursor-not-allowed ${getGenerateButtonToneClass(shot)}`}
+                variant={shot.imageUrl ? 'secondary' : 'default'}
+                className="w-full text-sm"
               >
                 {shot.imageUrl ? t('group.hasSynced') : isShotTaskRunning(shot) ? (
-                  <TaskStatusInline state={shotRunningState} className="justify-center text-white [&>span]:text-white [&_svg]:text-white" />
+                  <TaskStatusInline state={shotRunningState} className="justify-center text-primary-foreground [&>span]:text-primary-foreground [&_svg]:text-primary-foreground" />
                 ) : t('assets.location.generateImage')}
-              </button>
+              </Button>
             </div>
           </div>
         )

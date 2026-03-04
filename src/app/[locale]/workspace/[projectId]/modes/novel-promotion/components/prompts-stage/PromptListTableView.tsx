@@ -2,6 +2,7 @@ import { useTranslations } from 'next-intl'
 import { AppIcon } from '@/components/ui/icons'
 import TaskStatusInline from '@/components/task/TaskStatusInline'
 import { MediaImageWithLoading } from '@/components/media/MediaImageWithLoading'
+import { Button } from '@/components/ui/button'
 import {
   parseImagePrompt,
   type PromptStageRuntime,
@@ -19,7 +20,6 @@ export default function PromptListTableView({ runtime }: PromptListTableViewProp
     onGenerateImage,
     isBatchSubmitting,
     shotExtraAssets,
-    getGenerateButtonToneClass,
     getShotRunningState,
     isShotTaskRunning,
     handleStartEdit,
@@ -27,27 +27,27 @@ export default function PromptListTableView({ runtime }: PromptListTableViewProp
   } = runtime
 
   return (
-    <div className="card-base overflow-hidden">
+    <div className="overflow-hidden rounded-xl border border-border bg-card">
       <div className="overflow-x-auto">
-        <table className="min-w-full divide-y divide-[var(--glass-stroke-soft)]">
-          <thead className="bg-[var(--glass-bg-muted)]">
+        <table className="min-w-full divide-y divide-border">
+          <thead className="bg-muted/50">
             <tr>
-              <th className="px-4 py-3 text-left text-xs font-medium text-[var(--glass-text-tertiary)] uppercase tracking-wider">{t('panel.shot')}</th>
-              <th className="px-4 py-3 text-left text-xs font-medium text-[var(--glass-text-tertiary)] uppercase tracking-wider">{t('common.preview')}</th>
-              <th className="px-4 py-3 text-left text-xs font-medium text-[var(--glass-text-tertiary)] uppercase tracking-wider">SRT</th>
-              <th className="px-4 py-3 text-left text-xs font-medium text-[var(--glass-text-tertiary)] uppercase tracking-wider">{t('common.actions')}</th>
+              <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-muted-foreground">{t('panel.shot')}</th>
+              <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-muted-foreground">{t('common.preview')}</th>
+              <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-muted-foreground">SRT</th>
+              <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-muted-foreground">{t('common.actions')}</th>
             </tr>
           </thead>
-          <tbody className="bg-[var(--glass-bg-surface)] divide-y divide-[var(--glass-stroke-soft)]">
+          <tbody className="divide-y divide-border bg-card">
             {shots.map((shot) => {
               const { content } = parseImagePrompt(shot.imagePrompt)
               const shotRunningState = getShotRunningState(shot)
 
               return (
-                <tr key={shot.id} className="hover:bg-[var(--glass-bg-muted)]">
-                  <td className="px-4 py-3 whitespace-nowrap text-sm font-medium text-[var(--glass-text-primary)]">#{shot.shotId}</td>
+                <tr key={shot.id} className="hover:bg-muted/40">
+                  <td className="whitespace-nowrap px-4 py-3 text-sm font-medium text-foreground">#{shot.shotId}</td>
                   <td className="px-4 py-3 whitespace-nowrap">
-                    <div className="w-20 h-12 bg-[var(--glass-bg-muted)] rounded overflow-hidden">
+                    <div className="h-12 w-20 overflow-hidden rounded bg-muted">
                       {shot.imageUrl && (
                         <MediaImageWithLoading
                           src={shot.imageUrl}
@@ -59,27 +59,33 @@ export default function PromptListTableView({ runtime }: PromptListTableViewProp
                       )}
                     </div>
                   </td>
-                  <td className="px-4 py-3 whitespace-nowrap text-sm text-[var(--glass-text-secondary)]">
+                  <td className="whitespace-nowrap px-4 py-3 text-sm text-muted-foreground">
                     {shot.srtStart}-{shot.srtEnd}
-                    <div className="text-xs text-[var(--glass-text-tertiary)]">{shot.srtDuration?.toFixed(1)}s</div>
+                    <div className="text-xs text-muted-foreground">{shot.srtDuration?.toFixed(1)}s</div>
                     <div className="text-xs mt-1 line-clamp-2">{content}</div>
                   </td>
                   <td className="px-4 py-3 whitespace-nowrap text-sm">
                     <div className="flex items-center space-x-2">
-                      <button
+                      <Button
                         onClick={() => onGenerateImage(shot.id, shotExtraAssets[shot.id])}
                         disabled={isShotTaskRunning(shot) || isBatchSubmitting}
-                        className={`glass-btn-base px-3 py-1 text-xs disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-1 ${getGenerateButtonToneClass(shot)}`}
+                        size="sm"
+                        variant={shot.imageUrl ? 'secondary' : 'default'}
+                        className="h-7 px-2 text-xs"
                       >
-                        {isShotTaskRunning(shot) ? <TaskStatusInline state={shotRunningState} /> : <span>{t('common.generate')}</span>}
-                      </button>
-                      <button
+                        {isShotTaskRunning(shot)
+                          ? <TaskStatusInline state={shotRunningState} className="[&>span]:text-primary-foreground [&_svg]:text-primary-foreground text-primary-foreground" />
+                          : <span>{t('common.generate')}</span>}
+                      </Button>
+                      <Button
                         onClick={() => handleStartEdit(shot.id, 'imagePrompt', shot.imagePrompt || '')}
-                        className="text-[var(--glass-tone-info-fg)] hover:text-[var(--glass-text-primary)] p-1"
+                        variant="ghost"
+                        size="icon"
+                        className="h-7 w-7"
                         title={t('prompts.imagePrompt')}
                       >
                         <AppIcon name="edit" className="w-3.5 h-3.5" />
-                      </button>
+                      </Button>
                     </div>
                   </td>
                 </tr>

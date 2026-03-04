@@ -12,7 +12,7 @@ export default function StepParse() {
           {[0, 1, 2, 3, 4].map((i) => (
             <div
               key={i}
-              className="w-3 h-12 bg-[var(--glass-accent-from)] rounded-full"
+              className="w-3 h-12 bg-primary rounded-full"
               style={{
                 animation: 'wave 1s ease-in-out infinite',
                 animationDelay: `${i * 0.1}s`,
@@ -20,9 +20,9 @@ export default function StepParse() {
             />
           ))}
         </div>
-        <h2 className="text-xl font-semibold text-[var(--glass-text-primary)] mb-2">{t('analyzing.title')}</h2>
-        <p className="text-[var(--glass-text-secondary)]">{t('analyzing.description')}</p>
-        <p className="text-sm text-[var(--glass-text-tertiary)] mt-2">{t('analyzing.autoSave')}</p>
+        <h2 className="text-xl font-semibold text-foreground mb-2">{t('analyzing.title')}</h2>
+        <p className="text-muted-foreground">{t('analyzing.description')}</p>
+        <p className="text-sm text-muted-foreground mt-2">{t('analyzing.autoSave')}</p>
 
         <style jsx>{`
           @keyframes wave {

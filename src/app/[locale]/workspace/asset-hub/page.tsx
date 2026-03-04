@@ -27,6 +27,7 @@ import {
 } from '@/lib/query/hooks'
 import { queryKeys } from '@/lib/query/keys'
 import { AppIcon } from '@/components/ui/icons'
+import { Card, CardContent } from '@/components/ui/card'
 
 export default function AssetHubPage() {
     const t = useTranslations('assetHub')
@@ -328,22 +329,24 @@ export default function AssetHubPage() {
     }
 
     return (
-        <div className="glass-page min-h-screen">
+        <div className="min-h-screen bg-background">
             <Navbar />
-            <div className="max-w-7xl mx-auto px-4 py-6">
+            <div className="w-full px-4 py-6 sm:px-6 xl:px-8">
                 {/* 页面标题 */}
-                <div className="mb-6">
-                    <h1 className="text-2xl font-bold text-[var(--glass-text-primary)]">{t('title')}</h1>
-                    <p className="text-sm text-[var(--glass-text-secondary)] mt-1">{t('description')}</p>
-                    <p className="text-xs text-[var(--glass-text-tertiary)] mt-2 flex items-center gap-1">
-                        <AppIcon name="info" className="w-3.5 h-3.5" />
-                        {t('modelHint')}
-                        <Link href="/profile" className="text-[var(--glass-tone-info-fg)] hover:underline">{t('modelHintLink')}</Link>
-                        {t('modelHintSuffix')}
-                    </p>
-                </div>
+                <Card className="mb-6 border-dashed">
+                    <CardContent className="space-y-2 p-5">
+                        <h1 className="text-2xl font-bold text-foreground">{t('title')}</h1>
+                        <p className="text-sm text-muted-foreground">{t('description')}</p>
+                        <p className="mt-1 flex flex-wrap items-center gap-1 text-xs text-muted-foreground">
+                            <AppIcon name="info" className="h-3.5 w-3.5" />
+                            {t('modelHint')}
+                            <Link href="/profile" className="font-medium text-primary hover:underline">{t('modelHintLink')}</Link>
+                            {t('modelHintSuffix')}
+                        </p>
+                    </CardContent>
+                </Card>
 
-                <div className="flex gap-6">
+                <div className="grid grid-cols-1 gap-6 xl:grid-cols-[17rem_minmax(0,1fr)]">
                     {/* 左侧文件夹树 */}
                     <FolderSidebar
                         folders={folders}

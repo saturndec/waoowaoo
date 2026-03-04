@@ -12,9 +12,9 @@ export default function AIDataModalPreviewPane({
   previewJson,
 }: AIDataModalPreviewPaneProps) {
   return (
-    <div className="w-1/2 bg-[var(--glass-text-primary)] overflow-y-auto p-4">
+    <div className="w-1/2 bg-foreground overflow-y-auto p-4">
       <div className="flex items-center justify-between mb-3">
-        <span className="text-xs text-[var(--glass-text-tertiary)]">{t('aiData.jsonPreview')}</span>
+        <span className="text-xs text-muted-foreground">{t('aiData.jsonPreview')}</span>
         <button
           onClick={() => {
             const text = JSON.stringify(previewJson, null, 2)
@@ -32,13 +32,13 @@ export default function AIDataModalPreviewPane({
               document.body.removeChild(el)
             }
           }}
-          className="text-xs text-[var(--glass-tone-info-fg)] hover:text-[var(--glass-text-primary)] flex items-center gap-1"
+          className="text-xs text-primary hover:text-foreground flex items-center gap-1"
         >
           <AppIcon name="copy" className="w-3.5 h-3.5" />
           {t('common.copy')}
         </button>
       </div>
-      <pre className="text-xs text-[var(--glass-tone-success-fg)] font-mono whitespace-pre-wrap break-all">
+      <pre className="text-xs text-emerald-700 font-mono whitespace-pre-wrap break-all">
         {JSON.stringify(previewJson, null, 2)}
       </pre>
     </div>

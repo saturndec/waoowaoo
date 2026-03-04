@@ -38,18 +38,13 @@ export async function register() {
     // 解决 Redis 重启后 DB 仍为 queued 但 BullMQ Job 丢失的孤儿任务问题
     try {
       const { addTaskJob } = await import('@/lib/task/queues')
-      const { locales } = await import('@/i18n/routing')
+      const { normalizeTaskPayloadLocale, resolveRecoverableTaskLocale } = await import('@/lib/task/recover-locale')
       const { TASK_STATUS, TASK_TYPE } = await import('@/lib/task/types')
       type TaskBillingInfo = import('@/lib/task/types').TaskBillingInfo
       type TaskJobData = import('@/lib/task/types').TaskJobData
       type TaskType = import('@/lib/task/types').TaskType
 
       const TASK_TYPE_SET: ReadonlySet<string> = new Set(Object.values(TASK_TYPE))
-
-      function toObject(value: unknown): Record<string, unknown> {
-        if (!value || typeof value !== 'object' || Array.isArray(value)) return {}
-        return value as Record<string, unknown>
-      }
 
       function toTaskType(value: unknown): TaskType | null {
         if (typeof value !== 'string') return null
@@ -69,16 +64,6 @@ export async function register() {
         return billing as TaskBillingInfo
       }
 
-      async function markTaskEnqueued(taskId: string) {
-        await prisma.task.update({
-          where: { id: taskId },
-          data: {
-            enqueuedAt: new Date(),
-            lastEnqueueError: null,
-          },
-        })
-      }
-
       async function markTaskEnqueueFailed(taskId: string, error: string) {
         await prisma.task.update({
           where: { id: taskId },
@@ -87,24 +72,6 @@ export async function register() {
             lastEnqueueError: error.slice(0, 500),
           },
         })
-      }
-
-      function resolveTaskLocaleFromPayload(payload: unknown): TaskJobData['locale'] | null {
-        const payloadObj = toObject(payload)
-        const payloadMeta = toObject(payloadObj.meta)
-        const raw = typeof payloadMeta.locale === 'string'
-          ? payloadMeta.locale
-          : typeof payloadObj.locale === 'string'
-            ? payloadObj.locale
-            : ''
-        if (!raw.trim()) return null
-        const normalized = raw.trim().toLowerCase()
-        for (const locale of locales) {
-          if (normalized === locale || normalized.startsWith(`${locale}-`)) {
-            return locale
-          }
-        }
-        return null
       }
 
       const RE_ENQUEUE_BATCH_SIZE = 100
@@ -149,7 +116,10 @@ export async function register() {
               continue
             }
 
-            const locale = resolveTaskLocaleFromPayload(task.payload)
+            const locale = await resolveRecoverableTaskLocale({
+              taskId: task.id,
+              payload: task.payload,
+            })
             if (!locale) {
               await prisma.task.update({
                 where: { id: task.id },
@@ -163,6 +133,7 @@ export async function register() {
               failed++
               continue
             }
+            const normalizedPayload = normalizeTaskPayloadLocale(task.payload, locale)
 
             const jobData: TaskJobData = {
               taskId: task.id,
@@ -172,7 +143,7 @@ export async function register() {
               episodeId: task.episodeId || null,
               targetType: task.targetType,
               targetId: task.targetId,
-              payload: toTaskPayload(task.payload),
+              payload: toTaskPayload(normalizedPayload),
               billingInfo: toTaskBillingInfo(task.billingInfo),
               userId: task.userId,
               trace: null,
@@ -180,7 +151,14 @@ export async function register() {
             await addTaskJob(jobData, {
               priority: typeof task.priority === 'number' ? task.priority : 0,
             })
-            await markTaskEnqueued(task.id)
+            await prisma.task.update({
+              where: { id: task.id },
+              data: {
+                enqueuedAt: new Date(),
+                lastEnqueueError: null,
+                payload: normalizedPayload,
+              },
+            })
             enqueued++
           } catch (error) {
             const message = error instanceof Error ? error.message : String(error)
@@ -203,7 +181,8 @@ export async function register() {
 
     // ─── Phase 3: 启动 Task Watchdog（DB ↔ BullMQ 持续对账）───
     try {
-      const { startTaskWatchdog } = await import('@/lib/task/reconcile')
+      const { startTaskWatchdog, stopTaskWatchdog } = await import('@/lib/task/reconcile')
+      stopTaskWatchdog()
       startTaskWatchdog()
       _ulogInfo('[Instrumentation] Task watchdog started')
     } catch (error) {

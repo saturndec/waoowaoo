@@ -2,12 +2,13 @@
 import { logError as _ulogError } from '@/lib/logging/core'
 
 import { useState, useRef, useEffect } from 'react'
-import { createPortal } from 'react-dom'
 import { useTranslations } from 'next-intl'
 import { useGlobalVoices } from '@/lib/query/hooks'
 import TaskStatusInline from '@/components/task/TaskStatusInline'
 import { resolveTaskPresentationState } from '@/lib/task/presentation'
 import { AppIcon } from '@/components/ui/icons'
+import { Button } from '@/components/ui/button'
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 
 interface Voice {
     id: string
@@ -97,43 +98,31 @@ export default function VoicePickerDialog({ isOpen, onClose, onSelect }: VoicePi
     }
 
     if (!isOpen) return null
-    if (typeof document === 'undefined') return null
 
-    const dialogContent = (
-        <>
-            {/* 背景遮罩 */}
-            <div className="fixed inset-0 z-[9999] glass-overlay" onClick={handleClose} />
-
-            {/* 对话框 */}
-            <div
-                className="fixed z-[10000] left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 glass-surface-modal w-full max-w-2xl max-h-[80vh] overflow-hidden"
-                onClick={e => e.stopPropagation()}
-            >
-                {/* 头部 */}
-                <div className="flex items-center justify-between px-5 py-3 border-b border-[var(--glass-stroke-base)] bg-[var(--glass-bg-surface-strong)]">
-                    <div className="flex items-center gap-2">
-                        <AppIcon name="mic" className="w-5 h-5 text-[var(--glass-tone-info-fg)]" />
-                        <h2 className="font-semibold text-[var(--glass-text-primary)]">{t('voicePickerTitle')}</h2>
-                    </div>
-                    <button onClick={handleClose} className="glass-btn-base glass-btn-soft p-1 text-[var(--glass-text-tertiary)]">
-                        <AppIcon name="close" className="w-5 h-5" />
-                    </button>
-                </div>
+    return (
+        <Dialog open={isOpen} onOpenChange={(open) => { if (!open) handleClose() }}>
+            <DialogContent className="z-[10000] max-h-[80vh] w-full max-w-2xl overflow-hidden p-0">
+                <DialogHeader className="border-b border-border bg-muted/40 px-5 py-3">
+                    <DialogTitle className="flex items-center gap-2 text-base">
+                        <AppIcon name="mic" className="h-5 w-5 text-muted-foreground" />
+                        {t('voicePickerTitle')}
+                    </DialogTitle>
+                </DialogHeader>
 
                 {/* 内容区 */}
-                <div className="p-5 overflow-y-auto max-h-[60vh]">
+                <div className="max-h-[60vh] overflow-y-auto p-5">
                     {loading ? (
                         <div className="flex items-center justify-center py-12">
                             <TaskStatusInline state={loadingState} />
                         </div>
                     ) : voices.length === 0 ? (
-                        <div className="text-center py-12 text-[var(--glass-text-secondary)]">
-                            <AppIcon name="mic" className="w-16 h-16 mx-auto mb-4 text-[var(--glass-text-tertiary)]" />
+                        <div className="py-12 text-center text-muted-foreground">
+                            <AppIcon name="mic" className="mx-auto mb-4 h-16 w-16 text-muted-foreground" />
                             <p>{t('voicePickerEmpty')}</p>
                         </div>
                     ) : (
-                        <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                            {voices.map(voice => {
+                        <div className="grid grid-cols-2 gap-3 md:grid-cols-3">
+                            {voices.map((voice) => {
                                 const isSelected = selectedVoice?.id === voice.id
                                 const isPlaying = playingId === voice.id
                                 const genderIcon = voice.gender === 'male' ? 'M' : voice.gender === 'female' ? 'F' : ''
@@ -142,55 +131,55 @@ export default function VoicePickerDialog({ isOpen, onClose, onSelect }: VoicePi
                                     <div
                                         key={voice.id}
                                         onClick={() => setSelectedVoice(voice)}
-                                        className={`relative p-4 rounded-xl border-2 cursor-pointer transition-all ${isSelected
-                                            ? 'border-[var(--glass-stroke-focus)] bg-[var(--glass-tone-info-bg)]'
-                                            : 'border-[var(--glass-stroke-base)] hover:border-[var(--glass-stroke-focus)] bg-[var(--glass-bg-surface)]'
+                                        className={`relative cursor-pointer rounded-xl border-2 p-4 transition-all ${isSelected
+                                            ? 'border-primary/50 bg-primary/10'
+                                            : 'border-border bg-card hover:border-primary/40'
                                             }`}
                                     >
                                         {/* 选中标记 */}
                                         {isSelected && (
-                                            <div className="absolute -top-1.5 -right-1.5 w-5 h-5 glass-chip glass-chip-info rounded-full flex items-center justify-center p-0">
-                                                <AppIcon name="checkSolid" className="w-3 h-3 text-white" />
+                                            <div className="absolute -right-1.5 -top-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-primary text-primary-foreground">
+                                                <AppIcon name="checkSolid" className="h-3 w-3" />
                                             </div>
                                         )}
 
                                         {/* 音色信息 */}
                                         <div className="flex items-center gap-3">
-                                            <div className="w-10 h-10 rounded-full glass-surface-soft flex items-center justify-center flex-shrink-0">
-                                                <AppIcon name="mic" className="w-5 h-5 text-[var(--glass-tone-info-fg)]" />
+                                            <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full border border-border bg-muted">
+                                                <AppIcon name="mic" className="h-5 w-5 text-muted-foreground" />
                                             </div>
-                                            <div className="flex-1 min-w-0">
+                                            <div className="min-w-0 flex-1">
                                                 <div className="flex items-center gap-1">
-                                                    <span className="font-medium text-[var(--glass-text-primary)] text-sm truncate">{voice.name}</span>
-                                                    {genderIcon && <span className="glass-chip glass-chip-neutral text-[10px] px-1.5 py-0">{genderIcon}</span>}
+                                                    <span className="truncate text-sm font-medium text-foreground">{voice.name}</span>
+                                                    {genderIcon && <span className="rounded-full bg-muted px-1.5 py-0 text-[10px] text-muted-foreground">{genderIcon}</span>}
                                                 </div>
                                                 {voice.description && (
-                                                    <p className="text-xs text-[var(--glass-text-secondary)] truncate">{voice.description}</p>
+                                                    <p className="truncate text-xs text-muted-foreground">{voice.description}</p>
                                                 )}
                                             </div>
                                         </div>
 
                                         {/* 试听按钮 */}
                                         {voice.customVoiceUrl && (
-                                            <button
+                                            <Button
+                                                type="button"
                                                 onClick={(e) => { e.stopPropagation(); handlePlay(voice) }}
-                                                className={`mt-2 w-full py-1.5 rounded-lg text-xs font-medium transition-all flex items-center justify-center gap-1 glass-btn-base ${isPlaying
-                                                    ? 'glass-btn-tone-info'
-                                                    : 'glass-btn-secondary text-[var(--glass-text-secondary)]'
-                                                    }`}
+                                                variant={isPlaying ? 'secondary' : 'outline'}
+                                                size="sm"
+                                                className="mt-2 w-full gap-1 text-xs"
                                             >
                                                 {isPlaying ? (
                                                     <>
-                                                        <AppIcon name="pause" className="w-3 h-3" />
+                                                        <AppIcon name="pause" className="h-3 w-3" />
                                                         {tv('playing')}
                                                     </>
                                                 ) : (
                                                     <>
-                                                        <AppIcon name="play" className="w-3 h-3" />
+                                                        <AppIcon name="play" className="h-3 w-3" />
                                                         {tv('preview')}
                                                     </>
                                                 )}
-                                            </button>
+                                            </Button>
                                         )}
                                     </div>
                                 )
@@ -200,24 +189,25 @@ export default function VoicePickerDialog({ isOpen, onClose, onSelect }: VoicePi
                 </div>
 
                 {/* 底部操作 */}
-                <div className="flex gap-2 p-4 border-t border-[var(--glass-stroke-base)] bg-[var(--glass-bg-surface-strong)]">
-                    <button
+                <div className="flex gap-2 border-t border-border bg-muted/40 p-4">
+                    <Button
+                        type="button"
                         onClick={handleClose}
-                        className="glass-btn-base glass-btn-secondary flex-1 py-2 rounded-lg text-sm"
+                        variant="outline"
+                        className="flex-1"
                     >
                         {t('cancel')}
-                    </button>
-                    <button
+                    </Button>
+                    <Button
+                        type="button"
                         onClick={handleConfirm}
                         disabled={!selectedVoice}
-                        className="glass-btn-base glass-btn-primary flex-1 py-2 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed text-sm font-medium"
+                        className="flex-1"
                     >
                         {t('voicePickerConfirm')}
-                    </button>
+                    </Button>
                 </div>
-            </div>
-        </>
+            </DialogContent>
+        </Dialog>
     )
-
-    return createPortal(dialogContent, document.body)
 }

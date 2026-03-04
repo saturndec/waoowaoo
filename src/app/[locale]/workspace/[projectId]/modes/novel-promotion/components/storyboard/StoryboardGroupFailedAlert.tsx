@@ -16,16 +16,16 @@ export default function StoryboardGroupFailedAlert({
   onClose,
 }: StoryboardGroupFailedAlertProps) {
   return (
-    <div className="mb-4 rounded-lg border border-[var(--glass-stroke-danger)] bg-[var(--glass-danger-ring)] p-3">
+    <div className="mb-4 rounded-lg border border-destructive/30 bg-destructive/10 p-3">
       <div className="flex items-start gap-3">
-        <AppIcon name="alert" className="mt-0.5 h-5 w-5 shrink-0 text-[var(--glass-tone-danger-fg)]" />
+        <AppIcon name="alert" className="mt-0.5 h-5 w-5 shrink-0 text-destructive" />
         <div className="flex-1">
-          <h4 className="text-sm font-bold text-[var(--glass-tone-danger-fg)]">{title}</h4>
-          <p className="mt-1 text-sm text-[var(--glass-tone-danger-fg)]">{failedError}</p>
+          <h4 className="text-sm font-bold text-destructive">{title}</h4>
+          <p className="mt-1 text-sm text-destructive">{failedError}</p>
         </div>
         <button
           onClick={onClose}
-          className="glass-btn-base glass-btn-tone-danger rounded p-1"
+          className="inline-flex items-center justify-center rounded-md bg-destructive/10 px-3 py-2 text-sm font-medium text-destructive transition-colors hover:bg-destructive/20 rounded p-1"
           title={closeTitle}
         >
           <AppIcon name="close" className="w-4 h-4" />

@@ -5,7 +5,7 @@ import PanelEditForm, { PanelEditData } from '../PanelEditForm'
 import ImageSection from './ImageSection'
 import PanelActionButtons from './PanelActionButtons'
 import { StoryboardPanel } from './hooks/useStoryboardState'
-import { GlassSurface } from '@/components/ui/primitives'
+import { Card } from '@/components/ui/card'
 import { AppIcon } from '@/components/ui/icons'
 
 interface PanelCandidateData {
@@ -88,17 +88,15 @@ export default function PanelCard({
 }: PanelCardProps) {
   const t = useTranslations('storyboard')
   return (
-    <GlassSurface
-      variant="elevated"
-      padded={false}
-      className="relative overflow-visible transition-all hover:shadow-[var(--glass-shadow-md)] group/card"
+    <Card
+      className="relative overflow-visible border-border bg-card transition-all hover:shadow-md group/card"
       data-storyboard-id={storyboardId}
     >
       {/* 删除按钮 - 右上角外部 */}
       {!isModifying && !isDeleting && (
         <button
           onClick={onDelete}
-          className="absolute -top-2 -right-2 z-10 opacity-0 group-hover/card:opacity-100 transition-opacity bg-[var(--glass-tone-danger-fg)] hover:bg-[var(--glass-tone-danger-fg)] text-white w-5 h-5 rounded-full flex items-center justify-center text-xs shadow-md"
+          className="absolute -top-2 -right-2 z-10 opacity-0 group-hover/card:opacity-100 transition-opacity bg-destructive hover:bg-destructive text-white w-5 h-5 rounded-full flex items-center justify-center text-xs shadow-md"
           title={t('panelActions.deleteShot')}
         >
           <AppIcon name="closeMd" className="h-3 w-3" />
@@ -157,6 +155,6 @@ export default function PanelCard({
           onRemoveLocation={onRemoveLocation}
         />
       </div>
-    </GlassSurface>
+    </Card>
   )
 }

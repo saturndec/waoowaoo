@@ -15,7 +15,7 @@ export default function VoiceCreationModalLayout(props: VoiceCreationModalShellP
 
   return createPortal(
     <>
-      <div className="fixed inset-0 z-[9999] glass-overlay" onClick={runtime.handleClose} />
+      <div className="fixed inset-0 z-[9999] bg-black/45" onClick={runtime.handleClose} />
       <VoiceCreationForm runtime={runtime}>
         <VoicePreviewSection runtime={runtime} />
       </VoiceCreationForm>

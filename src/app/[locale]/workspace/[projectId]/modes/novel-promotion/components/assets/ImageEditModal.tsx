@@ -86,18 +86,18 @@ export default function ImageEditModal({
     }
 
     return (
-        <div className="fixed inset-0 bg-[var(--glass-overlay)] z-50 flex items-center justify-center p-4">
+        <div className="fixed inset-0 bg-black/55 z-50 flex items-center justify-center p-4">
             <div
-                className="bg-[var(--glass-bg-surface)] rounded-xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto"
+                className="bg-card rounded-xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto"
                 onPaste={handlePaste}
             >
                 <div className="p-6 border-b">
-                    <h3 className="text-lg font-bold text-[var(--glass-text-primary)]">{title}</h3>
-                    <p className="text-sm text-[var(--glass-text-tertiary)] mt-1">{subtitle} · {t('imageEdit.subtitle')}</p>
+                    <h3 className="text-lg font-bold text-foreground">{title}</h3>
+                    <p className="text-sm text-muted-foreground mt-1">{subtitle} · {t('imageEdit.subtitle')}</p>
                 </div>
                 <div className="p-6 space-y-4">
                     <div>
-                        <label className="block text-sm font-medium text-[var(--glass-text-secondary)] mb-2">{t('imageEdit.editInstruction')}</label>
+                        <label className="block text-sm font-medium text-muted-foreground mb-2">{t('imageEdit.editInstruction')}</label>
                         <textarea
                             value={modifyPrompt}
                             onChange={(e) => setModifyPrompt(e.target.value)}
@@ -105,13 +105,13 @@ export default function ImageEditModal({
                                 ? t('imageEdit.characterPlaceholder')
                                 : t('imageEdit.locationPlaceholder')
                             }
-                            className="w-full h-24 px-3 py-2 border border-[var(--glass-stroke-strong)] rounded-lg focus:ring-2 focus:ring-[var(--glass-tone-info-fg)] focus:border-[var(--glass-stroke-focus)] resize-none"
+                            className="w-full h-24 px-3 py-2 border border-border rounded-lg focus:ring-2 focus:ring-primary focus:border-primary/40 resize-none"
                             autoFocus
                         />
                     </div>
                     <div>
-                        <label className="block text-sm font-medium text-[var(--glass-text-secondary)] mb-2">
-                            {t('imageEdit.referenceImages')} <span className="text-[var(--glass-text-tertiary)] font-normal">{t('imageEdit.referenceImagesHint')}</span>
+                        <label className="block text-sm font-medium text-muted-foreground mb-2">
+                            {t('imageEdit.referenceImages')} <span className="text-muted-foreground font-normal">{t('imageEdit.referenceImagesHint')}</span>
                         </label>
                         <input
                             ref={fileInputRef}
@@ -132,7 +132,7 @@ export default function ImageEditModal({
                                     />
                                     <button
                                         onClick={() => removeImage(idx)}
-                                        className="absolute -top-1 -right-1 w-5 h-5 bg-[var(--glass-tone-danger-fg)] text-white rounded-full text-xs flex items-center justify-center hover:bg-[var(--glass-tone-danger-fg)]"
+                                        className="absolute -top-1 -right-1 w-5 h-5 bg-destructive text-white rounded-full text-xs flex items-center justify-center hover:bg-destructive"
                                     >
                                         <AppIcon name="closeSm" className="h-3 w-3" />
                                     </button>
@@ -140,7 +140,7 @@ export default function ImageEditModal({
                             ))}
                             <button
                                 onClick={() => fileInputRef.current?.click()}
-                                className="w-16 h-16 border-2 border-dashed border-[var(--glass-stroke-strong)] rounded-lg flex items-center justify-center text-[var(--glass-text-tertiary)] hover:border-[var(--glass-stroke-focus)] hover:text-[var(--glass-tone-info-fg)] transition-colors"
+                                className="w-16 h-16 border-2 border-dashed border-border rounded-lg flex items-center justify-center text-muted-foreground hover:border-primary/40 hover:text-primary transition-colors"
                             >
                                 <AppIcon name="plus" className="w-6 h-6" />
                             </button>
@@ -150,14 +150,14 @@ export default function ImageEditModal({
                 <div className="p-6 border-t flex justify-end gap-3">
                     <button
                         onClick={onClose}
-                        className="px-4 py-2 text-[var(--glass-text-secondary)] hover:bg-[var(--glass-bg-muted)] rounded-lg transition-colors"
+                        className="px-4 py-2 text-muted-foreground hover:bg-muted rounded-lg transition-colors"
                     >
                         {t("common.cancel")}
                     </button>
                     <button
                         onClick={handleSubmit}
                         disabled={!modifyPrompt.trim()}
-                        className="px-4 py-2 bg-[var(--glass-accent-from)] text-white rounded-lg hover:bg-[var(--glass-accent-to)] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                        className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                     >
                         {t('imageEdit.startEditing')}
                     </button>

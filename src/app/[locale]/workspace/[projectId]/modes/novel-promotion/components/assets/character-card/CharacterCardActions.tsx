@@ -34,7 +34,7 @@ export default function CharacterCardActions(props: CharacterCardActionsProps) {
   if (props.mode === 'selection') {
     return (
       <>
-        <div className="mt-3 text-xs text-[var(--glass-text-tertiary)] text-center">
+        <div className="mt-3 text-xs text-muted-foreground text-center">
           {t('image.selectTip')}
         </div>
 
@@ -43,7 +43,7 @@ export default function CharacterCardActions(props: CharacterCardActionsProps) {
             <button
               onClick={props.onConfirmSelection}
               disabled={props.isConfirmingSelection}
-              className="px-4 py-2 bg-[var(--glass-tone-success-fg)] text-white rounded-lg hover:bg-[var(--glass-tone-success-fg)] transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 text-sm font-medium"
+              className="px-4 py-2 bg-emerald-700 text-white rounded-lg hover:bg-emerald-700 transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 text-sm font-medium"
             >
               {props.isConfirmingSelection ? (
                 <TaskStatusInline state={props.confirmSelectionState} className="text-white [&>span]:text-white [&_svg]:text-white" />
@@ -67,7 +67,7 @@ export default function CharacterCardActions(props: CharacterCardActionsProps) {
       {props.isPrimaryAppearance && props.voiceSettings}
 
       {!props.isPrimaryAppearance && !props.primaryAppearanceSelected ? (
-        <div className="w-full py-2 text-xs text-center text-[var(--glass-text-tertiary)] bg-[var(--glass-bg-muted)] rounded border border-dashed border-[var(--glass-stroke-strong)]">
+        <div className="w-full py-2 text-xs text-center text-muted-foreground bg-muted rounded border border-dashed border-border">
           <div className="flex items-center justify-center gap-1">
             <AppIcon name="lock" className="w-3 h-3" />
             {t('character.selectPrimaryFirst')}
@@ -79,7 +79,7 @@ export default function CharacterCardActions(props: CharacterCardActionsProps) {
             type="button"
             onClick={props.onGenerate}
             disabled={!props.hasDescription}
-            className={`glass-btn-base w-full py-1 text-xs disabled:opacity-50 ${props.isPrimaryAppearance ? 'glass-btn-primary' : 'glass-btn-tone-info'}`}
+            className={`inline-flex items-center justify-center w-full py-1 text-xs disabled:opacity-50 ${props.isPrimaryAppearance ? 'bg-primary text-primary-foreground hover:bg-primary/90' : 'bg-primary/10 text-primary hover:bg-primary/15'}`}
           >
             {props.isPrimaryAppearance ? t('common.generate') : t('character.generateFromPrimary')}
           </button>

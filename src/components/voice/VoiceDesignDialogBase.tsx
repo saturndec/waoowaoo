@@ -186,27 +186,27 @@ export default function VoiceDesignDialogBase({
 
   const dialogContent = (
     <>
-      <div className="fixed inset-0 z-[9999] glass-overlay" onClick={handleClose} />
+      <div className="fixed inset-0 z-[9999] bg-black/45" onClick={handleClose} />
       <div
-        className="fixed z-[10000] left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 glass-surface-modal w-full max-w-xl overflow-hidden"
+        className="fixed z-[10000] left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 rounded-xl border border-border bg-card shadow-lg w-full max-w-xl overflow-hidden"
         onClick={(event) => event.stopPropagation()}
       >
-        <div className="flex items-center justify-between px-5 py-3 border-b border-[var(--glass-stroke-base)] bg-[var(--glass-bg-surface-strong)]">
+        <div className="flex items-center justify-between px-5 py-3 border-b border-border bg-muted/40">
           <div className="flex items-center gap-2">
-            <AppIcon name="mic" className="w-5 h-5 text-[var(--glass-tone-info-fg)]" />
-            <h2 className="font-semibold text-[var(--glass-text-primary)]">{tv('designVoiceFor', { speaker })}</h2>
+            <AppIcon name="mic" className="w-5 h-5 text-primary" />
+            <h2 className="font-semibold text-foreground">{tv('designVoiceFor', { speaker })}</h2>
             {hasExistingVoice && (
-              <span className="glass-chip glass-chip-warning text-xs px-1.5 py-0.5">{tv('hasExistingVoice')}</span>
+              <span className="inline-flex items-center rounded-full border border-border px-2 py-0.5 text-xs font-medium inline-flex items-center rounded-full border border-border px-2 py-0.5 text-xs font-medium-warning text-xs px-1.5 py-0.5">{tv('hasExistingVoice')}</span>
             )}
           </div>
-          <button onClick={handleClose} className="glass-btn-base glass-btn-soft p-1 text-[var(--glass-text-tertiary)]">
+          <button onClick={handleClose} className="inline-flex items-center justify-center border border-border bg-muted/50 hover:bg-muted p-1 text-muted-foreground">
             <AppIcon name="close" className="w-5 h-5" />
           </button>
         </div>
 
         <div className="p-5 space-y-4">
           <div>
-            <div className="text-sm text-[var(--glass-text-secondary)] mb-2">{tv('selectStyle')}</div>
+            <div className="text-sm text-muted-foreground mb-2">{tv('selectStyle')}</div>
             <div className="flex flex-wrap gap-1.5">
               {VOICE_PRESET_KEYS.map((presetKey, index) => {
                 const prompt = tv(`presetsPrompts.${presetKey}` as `presetsPrompts.${VoicePresetKey}`)
@@ -214,10 +214,10 @@ export default function VoiceDesignDialogBase({
                   <button
                     key={index}
                     onClick={() => setVoicePrompt(prompt)}
-                    className={`glass-btn-base px-2.5 py-1 text-xs rounded-md border transition-all ${
+                    className={`inline-flex items-center justify-center px-2.5 py-1 text-xs rounded-md border transition-all ${
                       voicePrompt === prompt
-                        ? 'glass-btn-tone-info border-[var(--glass-stroke-focus)]'
-                        : 'glass-btn-soft text-[var(--glass-text-secondary)] border-[var(--glass-stroke-base)] hover:border-[var(--glass-stroke-focus)]'
+                        ? 'bg-primary/10 text-primary hover:bg-primary/15 border-primary/40'
+                        : 'border border-border bg-muted/50 hover:bg-muted text-muted-foreground border-border hover:border-primary/40'
                     }`}
                   >
                     {tv(`presets.${presetKey}` as `presets.${VoicePresetKey}`)}
@@ -228,30 +228,30 @@ export default function VoiceDesignDialogBase({
           </div>
 
           <div>
-            <div className="text-sm text-[var(--glass-text-secondary)] mb-1">{tv('orCustomDescription')}</div>
+            <div className="text-sm text-muted-foreground mb-1">{tv('orCustomDescription')}</div>
             <textarea
               value={voicePrompt}
               onChange={(event) => setVoicePrompt(event.target.value)}
               placeholder={tv('describePlaceholder')}
-              className="glass-textarea-base w-full px-3 py-2 text-sm resize-none"
+              className="w-full rounded-md border border-input bg-background w-full px-3 py-2 text-sm resize-none"
               rows={2}
             />
           </div>
 
           <details className="text-sm">
-            <summary className="text-[var(--glass-text-secondary)] cursor-pointer hover:text-[var(--glass-text-primary)]">
+            <summary className="text-muted-foreground cursor-pointer hover:text-foreground">
               {tv('editPreviewText')}
             </summary>
             <input
               type="text"
               value={previewText}
               onChange={(event) => setPreviewText(event.target.value)}
-              className="glass-input-base w-full mt-2 px-3 py-2 text-sm"
+              className="w-full rounded-md border border-input bg-background w-full mt-2 px-3 py-2 text-sm"
             />
           </details>
 
           {error && (
-            <div className="text-sm text-[var(--glass-tone-danger-fg)] bg-[var(--glass-tone-danger-bg)] px-3 py-2 rounded-lg">
+            <div className="text-sm text-destructive bg-destructive/10 px-3 py-2 rounded-lg">
               {error}
             </div>
           )}
@@ -260,7 +260,7 @@ export default function VoiceDesignDialogBase({
             <button
               onClick={handleGenerate}
               disabled={!voicePrompt.trim()}
-              className="glass-btn-base glass-btn-primary w-full py-2.5 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed text-sm font-medium"
+              className="inline-flex items-center justify-center bg-primary text-primary-foreground hover:bg-primary/90 w-full py-2.5 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed text-sm font-medium"
             >
               {tv('generate3Schemes')}
             </button>
@@ -270,14 +270,14 @@ export default function VoiceDesignDialogBase({
             <div className="py-6">
               <TaskStatusInline
                 state={designSubmittingState}
-                className="justify-center text-[var(--glass-text-secondary)] [&>span]:text-[var(--glass-text-secondary)]"
+                className="justify-center text-muted-foreground [&>span]:text-muted-foreground"
               />
             </div>
           )}
 
           {generatedVoices.length > 0 && (
             <div className="space-y-3">
-              <div className="text-sm text-[var(--glass-text-secondary)]">{tv('selectScheme')}</div>
+              <div className="text-sm text-muted-foreground">{tv('selectScheme')}</div>
               <div className="grid grid-cols-3 gap-2">
                 {generatedVoices.map((voice, index) => (
                   <div
@@ -285,25 +285,25 @@ export default function VoiceDesignDialogBase({
                     onClick={() => setSelectedIndex(index)}
                     className={`relative p-3 rounded-lg border-2 cursor-pointer transition-all text-center ${
                       selectedIndex === index
-                        ? 'border-[var(--glass-stroke-focus)] bg-[var(--glass-tone-info-bg)]'
-                        : 'border-[var(--glass-stroke-base)] hover:border-[var(--glass-stroke-focus)]'
+                        ? 'border-primary/40 bg-primary/10'
+                        : 'border-border hover:border-primary/40'
                     }`}
                   >
                     {selectedIndex === index && (
-                      <div className="absolute -top-1.5 -right-1.5 w-5 h-5 glass-chip glass-chip-info rounded-full flex items-center justify-center p-0">
+                      <div className="absolute -top-1.5 -right-1.5 w-5 h-5 inline-flex items-center rounded-full bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary rounded-full flex items-center justify-center p-0">
                         <AppIcon name="checkSolid" className="w-3 h-3 text-white" />
                       </div>
                     )}
-                    <div className="text-sm font-medium text-[var(--glass-text-primary)] mb-2">{tv('schemeN', { n: index + 1 })}</div>
+                    <div className="text-sm font-medium text-foreground mb-2">{tv('schemeN', { n: index + 1 })}</div>
                     <button
                       onClick={(event) => {
                         event.stopPropagation()
                         handlePlayVoice(index)
                       }}
-                      className={`w-10 h-10 mx-auto rounded-full glass-btn-base flex items-center justify-center transition-all ${
+                      className={`w-10 h-10 mx-auto rounded-full inline-flex items-center justify-center flex items-center justify-center transition-all ${
                         playingIndex === index
-                          ? 'glass-btn-tone-info animate-pulse'
-                          : 'glass-btn-secondary text-[var(--glass-text-secondary)]'
+                          ? 'bg-primary/10 text-primary hover:bg-primary/15 animate-pulse'
+                          : 'border border-input bg-background hover:bg-accent hover:text-accent-foreground text-muted-foreground'
                       }`}
                     >
                       {playingIndex === index ? (
@@ -320,14 +320,14 @@ export default function VoiceDesignDialogBase({
                 <button
                   onClick={handleGenerate}
                   disabled={isDesignSubmitting}
-                  className="glass-btn-base glass-btn-secondary flex-1 py-2 rounded-lg text-sm"
+                  className="inline-flex items-center justify-center border border-input bg-background hover:bg-accent hover:text-accent-foreground flex-1 py-2 rounded-lg text-sm"
                 >
                   {tv('regenerate')}
                 </button>
                 <button
                   onClick={handleConfirmSelection}
                   disabled={selectedIndex === null}
-                  className="glass-btn-base glass-btn-tone-success flex-1 py-2 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed text-sm font-medium"
+                  className="inline-flex items-center justify-center bg-emerald-100 text-emerald-700 hover:bg-emerald-200 flex-1 py-2 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed text-sm font-medium"
                 >
                   {tv('confirmUse')}
                 </button>
@@ -338,26 +338,26 @@ export default function VoiceDesignDialogBase({
       </div>
 
       {showConfirmDialog && (
-        <div className="fixed inset-0 z-[10001] flex items-center justify-center p-4 glass-overlay">
-          <div className="glass-surface-modal w-full max-w-sm p-5 text-center">
-            <div className="w-12 h-12 mx-auto glass-chip glass-chip-warning rounded-full flex items-center justify-center mb-3 p-0">
-              <AppIcon name="alert" className="w-6 h-6 text-[var(--glass-tone-warning-fg)]" />
+        <div className="fixed inset-0 z-[10001] flex items-center justify-center p-4 bg-black/45">
+          <div className="rounded-xl border border-border bg-card shadow-lg w-full max-w-sm p-5 text-center">
+            <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-amber-100">
+              <AppIcon name="alert" className="w-6 h-6 text-amber-700" />
             </div>
-            <h3 className="font-semibold text-[var(--glass-text-primary)] mb-1">{tv('confirmReplace')}</h3>
-            <p className="text-sm text-[var(--glass-text-secondary)] mb-4">
+            <h3 className="font-semibold text-foreground mb-1">{tv('confirmReplace')}</h3>
+            <p className="text-sm text-muted-foreground mb-4">
               {tv('replaceWarning')}
-              <span className="font-medium text-[var(--glass-text-primary)]">「{speaker}」</span>
+              <span className="font-medium text-foreground">「{speaker}」</span>
             </p>
             <div className="flex gap-2">
               <button
                 onClick={() => setShowConfirmDialog(false)}
-                className="glass-btn-base glass-btn-secondary flex-1 py-2 rounded-lg text-sm"
+                className="inline-flex items-center justify-center border border-input bg-background hover:bg-accent hover:text-accent-foreground flex-1 py-2 rounded-lg text-sm"
               >
                 {t('cancel')}
               </button>
               <button
                 onClick={doSave}
-                className="glass-btn-base glass-btn-danger flex-1 py-2 rounded-lg text-sm"
+                className="inline-flex flex-1 items-center justify-center rounded-lg bg-destructive px-3 py-2 text-sm text-destructive-foreground hover:bg-destructive/90"
               >
                 {tv('confirmReplaceBtn')}
               </button>

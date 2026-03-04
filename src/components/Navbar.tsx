@@ -6,6 +6,8 @@ import { useSession } from 'next-auth/react'
 import { useTranslations } from 'next-intl'
 import LanguageSwitcher from './LanguageSwitcher'
 import { AppIcon } from '@/components/ui/icons'
+import { Button } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
 
 export default function Navbar() {
   const { data: session } = useSession()
@@ -13,8 +15,8 @@ export default function Navbar() {
   const tc = useTranslations('common')
 
   return (
-    <nav className="glass-nav sticky top-0 z-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <nav className="sticky top-0 z-50 border-b border-border bg-background/95 backdrop-blur">
+      <div className="w-full px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           <div className="flex items-center gap-2">
             <Link href={session ? "/workspace" : "/"} className="group">
@@ -26,29 +28,29 @@ export default function Navbar() {
                 className="object-contain transition-transform group-hover:scale-110"
               />
             </Link>
-            <span className="glass-chip glass-chip-info px-2.5 py-1 text-[11px]">
+            <Badge variant="secondary" className="px-2.5 py-1 text-[11px]">
               {tc('betaVersion')}
-            </span>
+            </Badge>
           </div>
           <div className="flex items-center space-x-6">
             {session ? (
               <>
                 <Link
                   href="/workspace"
-                  className="text-sm text-[var(--glass-text-secondary)] hover:text-[var(--glass-text-primary)] font-medium transition-colors"
+                  className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
                 >
                   {t('workspace')}
                 </Link>
                 <Link
                   href="/workspace/asset-hub"
-                  className="text-sm text-[var(--glass-text-secondary)] hover:text-[var(--glass-text-primary)] font-medium transition-colors flex items-center gap-1"
+                  className="flex items-center gap-1 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
                 >
                   <AppIcon name="folderHeart" className="w-4 h-4" />
                   {t('assetHub')}
                 </Link>
                 <Link
                   href="/profile"
-                  className="text-sm text-[var(--glass-text-secondary)] hover:text-[var(--glass-text-primary)] font-medium transition-colors flex items-center gap-1"
+                  className="flex items-center gap-1 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
                   title={t('profile')}
                 >
                   <AppIcon name="userRoundCog" className="w-5 h-5" />
@@ -61,16 +63,13 @@ export default function Navbar() {
               <>
                 <Link
                   href="/auth/signin"
-                  className="text-sm text-[var(--glass-text-secondary)] hover:text-[var(--glass-text-primary)] font-medium transition-colors"
+                  className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
                 >
                   {t('signin')}
                 </Link>
-                <Link
-                  href="/auth/signup"
-                  className="glass-btn-base glass-btn-primary px-4 py-2 text-sm font-medium"
-                >
-                  {t('signup')}
-                </Link>
+                <Button size="sm" asChild>
+                  <Link href="/auth/signup">{t('signup')}</Link>
+                </Button>
                 <LanguageSwitcher />
               </>
             )}

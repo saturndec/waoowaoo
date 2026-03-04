@@ -18,11 +18,11 @@ export default function TaskStatusInline({ state, className }: TaskStatusInlineP
   return (
     <div className={['inline-flex items-center gap-1 text-xs', className || ''].join(' ').trim()}>
       {state.isError ? (
-        <span className="text-[var(--glass-tone-danger-fg)]">{label}</span>
+        <span className="text-destructive">{label}</span>
       ) : (
         <>
-          <AppIcon name="loader" className="h-3.5 w-3.5 animate-spin text-[var(--glass-tone-info-fg)]" />
-          <span className="text-[var(--glass-text-secondary)]">{label}</span>
+          <AppIcon name="loader" className="h-3.5 w-3.5 animate-spin text-primary" />
+          <span className="text-muted-foreground">{label}</span>
         </>
       )}
     </div>

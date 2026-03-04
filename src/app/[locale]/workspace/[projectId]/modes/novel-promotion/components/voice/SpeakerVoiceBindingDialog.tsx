@@ -100,27 +100,27 @@ export default function SpeakerVoiceBindingDialog({
     // 主弹窗：Tab 切换
     return createPortal(
         <>
-            <div className="fixed inset-0 z-[9999] glass-overlay" onClick={handleClose} />
+            <div className="fixed inset-0 z-[9999] bg-black/45" onClick={handleClose} />
             <div
-                className="fixed z-[10000] left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 glass-surface-modal w-full max-w-md overflow-hidden"
+                className="fixed z-[10000] left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 rounded-xl border border-border bg-card shadow-lg w-full max-w-md overflow-hidden"
                 onClick={(e) => e.stopPropagation()}
             >
                 {/* 头部 */}
-                <div className="flex items-center justify-between px-5 py-4 border-b border-[var(--glass-stroke-base)] bg-[var(--glass-bg-surface-strong)]">
+                <div className="flex items-center justify-between px-5 py-4 border-b border-border bg-muted/40">
                     <div className="flex items-center gap-2 min-w-0">
-                        <AppIcon name="mic" className="w-5 h-5 text-[var(--glass-tone-info-fg)] shrink-0" />
-                        <h2 className="font-semibold text-[var(--glass-text-primary)] truncate">
+                        <AppIcon name="mic" className="w-5 h-5 text-primary shrink-0" />
+                        <h2 className="font-semibold text-foreground truncate">
                             {t('title', { speaker })}
                         </h2>
                     </div>
-                    <button onClick={handleClose} className="glass-btn-base glass-btn-soft p-1 text-[var(--glass-text-tertiary)] shrink-0">
+                    <button onClick={handleClose} className="inline-flex items-center justify-center rounded-md border border-border bg-muted/50 px-3 py-2 text-sm font-medium transition-colors hover:bg-muted p-1 text-muted-foreground shrink-0">
                         <AppIcon name="close" className="w-5 h-5" />
                     </button>
                 </div>
 
                 {/* 描述 */}
                 <div className="px-5 pt-4 pb-2">
-                    <p className="text-sm text-[var(--glass-text-secondary)]">
+                    <p className="text-sm text-muted-foreground">
                         {t('description')}
                     </p>
                 </div>
@@ -150,8 +150,8 @@ export default function SpeakerVoiceBindingDialog({
                                             key={tab.id}
                                             onClick={() => handleTabClick(tab.id)}
                                             className={`relative z-[1] px-3 py-1.5 text-sm rounded-md transition-colors cursor-pointer ${activeTab === tab.id
-                                                ? 'text-[var(--glass-text-primary)] font-medium'
-                                                : 'text-[var(--glass-text-tertiary)] hover:text-[var(--glass-text-secondary)]'
+                                                ? 'text-foreground font-medium'
+                                                : 'text-muted-foreground hover:text-muted-foreground'
                                                 }`}
                                         >
                                             {tab.label}
@@ -166,26 +166,26 @@ export default function SpeakerVoiceBindingDialog({
                 {/* Tab 内容区 — 显示描述和进入按钮 */}
                 <div className="p-5">
                     <div className="text-center py-6">
-                        <div className={`w-14 h-14 mx-auto rounded-full flex items-center justify-center mb-3 ${activeTab === 'select' ? 'bg-[var(--glass-tone-info-bg)]'
-                            : activeTab === 'upload' ? 'bg-[var(--glass-tone-success-bg)]'
-                                : 'bg-[var(--glass-accent-bg,var(--glass-tone-info-bg))]'
+                        <div className={`w-14 h-14 mx-auto rounded-full flex items-center justify-center mb-3 ${activeTab === 'select' ? 'bg-primary/10'
+                            : activeTab === 'upload' ? 'bg-emerald-100'
+                                : 'bg-primary/10'
                             }`}>
                             <AppIcon
                                 name={activeTab === 'select' ? 'mic' : activeTab === 'upload' ? 'cloudUpload' : 'idea'}
-                                className={`w-6 h-6 ${activeTab === 'select' ? 'text-[var(--glass-tone-info-fg)]'
-                                    : activeTab === 'upload' ? 'text-[var(--glass-tone-success-fg)]'
-                                        : 'text-[var(--glass-accent-from,var(--glass-tone-info-fg))]'
+                                className={`w-6 h-6 ${activeTab === 'select' ? 'text-primary'
+                                    : activeTab === 'upload' ? 'text-emerald-700'
+                                        : 'text-primary'
                                     }`}
                             />
                         </div>
-                        <p className="text-sm text-[var(--glass-text-secondary)] mb-4">
+                        <p className="text-sm text-muted-foreground mb-4">
                             {activeTab === 'select' && t('selectFromLibraryDesc')}
                             {activeTab === 'upload' && t('uploadAudioDesc')}
                             {activeTab === 'design' && t('aiDesignDesc')}
                         </p>
                         <button
                             onClick={() => setSubDialogOpen(true)}
-                            className="glass-btn-base glass-btn-primary px-8 py-2.5 rounded-lg text-sm font-medium"
+                            className="inline-flex items-center justify-center rounded-md bg-primary px-3 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 px-8 py-2.5 rounded-lg text-sm font-medium"
                         >
                             {activeTab === 'select' && t('selectFromLibrary')}
                             {activeTab === 'upload' && t('uploadAudio')}

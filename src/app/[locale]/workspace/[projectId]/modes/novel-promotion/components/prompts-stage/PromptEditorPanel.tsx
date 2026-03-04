@@ -23,9 +23,9 @@ export default function PromptEditorPanel({ runtime }: PromptEditorPanelProps) {
   return (
     <>
       {onAppendContent && (
-        <div className="mt-8 p-6 bg-[var(--glass-bg-muted)] rounded-lg border-2 border-dashed border-[var(--glass-stroke-strong)]">
-          <h3 className="text-lg font-semibold text-[var(--glass-text-primary)] mb-3">{tStoryboard('prompts.appendTitle')}</h3>
-          <p className="text-sm text-[var(--glass-text-secondary)] mb-4">
+        <div className="mt-8 p-6 bg-muted rounded-lg border-2 border-dashed border-border">
+          <h3 className="text-lg font-semibold text-foreground mb-3">{tStoryboard('prompts.appendTitle')}</h3>
+          <p className="text-sm text-muted-foreground mb-4">
             {tStoryboard('prompts.appendDescription')}
           </p>
           <textarea
@@ -33,13 +33,13 @@ export default function PromptEditorPanel({ runtime }: PromptEditorPanelProps) {
             onChange={(e) => setAppendContent(e.target.value)}
             placeholder={tStoryboard('panelActions.pasteSrtPlaceholder')}
             disabled={isAppending}
-            className="w-full h-48 p-4 border border-[var(--glass-stroke-strong)] rounded-lg resize-none focus:ring-2 focus:ring-[var(--glass-tone-info-fg)] focus:border-[var(--glass-stroke-focus)] disabled:bg-[var(--glass-bg-muted)] disabled:cursor-not-allowed font-mono text-sm"
+            className="w-full h-48 p-4 border border-border rounded-lg resize-none focus:ring-2 focus:ring-primary focus:border-primary/40 disabled:bg-muted disabled:cursor-not-allowed font-mono text-sm"
           />
           <div className="flex justify-end mt-4">
             <button
               onClick={handleAppendSubmit}
               disabled={isAppending || !appendContent.trim()}
-              className="glass-btn-base px-6 py-3 bg-[var(--glass-tone-success-fg)] text-white hover:bg-[var(--glass-tone-success-fg)] disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
+              className="inline-flex items-center justify-center px-6 py-3 bg-emerald-700 text-white hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
             >
               {isAppending ? (
                 <TaskStatusInline state={appendTaskRunningState} className="text-white [&>span]:text-white [&_svg]:text-white" />
@@ -55,7 +55,7 @@ export default function PromptEditorPanel({ runtime }: PromptEditorPanelProps) {
         <button
           onClick={onNext}
           disabled={isAnyTaskRunning}
-          className="glass-btn-base px-6 py-2 bg-[var(--glass-accent-from)] text-white hover:bg-[var(--glass-accent-to)] disabled:opacity-50 disabled:cursor-not-allowed"
+          className="inline-flex items-center justify-center px-6 py-2 bg-primary text-white hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {tNovelPromotion('buttons.enterVideoGeneration')}
         </button>

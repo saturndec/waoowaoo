@@ -175,7 +175,7 @@ function ToastContainer({
                     {/* 关闭按钮 */}
                     <button
                         onClick={() => onDismiss(toast.id)}
-                        className="glass-btn-base glass-btn-ghost w-6 h-6 rounded-md p-0 opacity-70 hover:opacity-100 transition-opacity"
+                        className="inline-flex items-center justify-center bg-transparent text-muted-foreground hover:bg-accent hover:text-foreground w-6 h-6 rounded-md p-0 opacity-70 hover:opacity-100 transition-opacity"
                     >
                         <AppIcon name="close" className="w-4 h-4" />
                     </button>
@@ -192,14 +192,14 @@ function ToastContainer({
 function getToastStyle(type: Toast['type']): string {
     switch (type) {
         case 'success':
-            return 'bg-[var(--glass-tone-success-bg)] text-[var(--glass-tone-success-fg)] border-[color:color-mix(in_srgb,var(--glass-tone-success-fg)_22%,transparent)]'
+            return 'bg-emerald-100 text-emerald-700 border-[color:color-mix(in_srgb,#15803d_22%,transparent)]'
         case 'error':
-            return 'bg-[var(--glass-tone-danger-bg)] text-[var(--glass-tone-danger-fg)] border-[color:color-mix(in_srgb,var(--glass-tone-danger-fg)_22%,transparent)]'
+            return 'bg-destructive/10 text-destructive border-[color:color-mix(in_srgb,#b91c1c_22%,transparent)]'
         case 'warning':
-            return 'bg-[var(--glass-tone-warning-bg)] text-[var(--glass-tone-warning-fg)] border-[color:color-mix(in_srgb,var(--glass-tone-warning-fg)_22%,transparent)]'
+            return 'bg-amber-100 text-amber-700 border-[color:color-mix(in_srgb,#b45309_22%,transparent)]'
         case 'info':
         default:
-            return 'bg-[var(--glass-tone-info-bg)] text-[var(--glass-tone-info-fg)] border-[color:color-mix(in_srgb,var(--glass-tone-info-fg)_22%,transparent)]'
+            return 'bg-primary/10 text-primary border-[color:color-mix(in_srgb,#1d4ed8_22%,transparent)]'
     }
 }
 

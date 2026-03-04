@@ -41,11 +41,11 @@ export const TransitionPicker: React.FC<TransitionPickerProps> = ({
             flexDirection: 'column',
             gap: '8px',
             padding: '12px',
-            background: 'var(--glass-bg-surface)',
-            border: '1px solid var(--glass-stroke-base)',
+            background: 'var(--card)',
+            border: '1px solid var(--border)',
             borderRadius: '8px'
         }}>
-            <div style={{ fontSize: '12px', color: 'var(--glass-text-secondary)', marginBottom: '4px' }}>
+            <div style={{ fontSize: '12px', color: 'var(--muted-foreground)', marginBottom: '4px' }}>
                 {t('editor.transition.title')}
             </div>
 
@@ -66,8 +66,8 @@ export const TransitionPicker: React.FC<TransitionPickerProps> = ({
                             alignItems: 'center',
                             gap: '2px',
                             padding: '8px 4px',
-                            background: value === option.type ? 'var(--glass-accent-from)' : 'var(--glass-bg-muted)',
-                            border: value === option.type ? '1px solid var(--glass-stroke-focus)' : '1px solid var(--glass-stroke-base)',
+                            background: value === option.type ? 'var(--primary)' : 'var(--muted)',
+                            border: value === option.type ? '1px solid var(--ring)' : '1px solid var(--border)',
                             borderRadius: '6px',
                             cursor: disabled ? 'not-allowed' : 'pointer',
                             opacity: disabled ? 0.5 : 1,
@@ -77,9 +77,9 @@ export const TransitionPicker: React.FC<TransitionPickerProps> = ({
                         <AppIcon
                             name={option.icon}
                             size={16}
-                            color={value === option.type ? 'var(--glass-text-on-accent)' : 'var(--glass-text-primary)'}
+                            color={value === option.type ? 'var(--primary-foreground)' : 'var(--foreground)'}
                         />
-                        <span style={{ fontSize: '10px', color: value === option.type ? 'var(--glass-text-on-accent)' : 'var(--glass-text-primary)' }}>{t(`editor.transition.options.${option.labelKey}`)}</span>
+                        <span style={{ fontSize: '10px', color: value === option.type ? 'var(--primary-foreground)' : 'var(--foreground)' }}>{t(`editor.transition.options.${option.labelKey}`)}</span>
                     </button>
                 ))}
             </div>
@@ -87,7 +87,7 @@ export const TransitionPicker: React.FC<TransitionPickerProps> = ({
             {/* 持续时间选择 */}
             {value !== 'none' && (
                 <div style={{ marginTop: '8px' }}>
-                    <div style={{ fontSize: '11px', color: 'var(--glass-text-tertiary)', marginBottom: '4px' }}>
+                    <div style={{ fontSize: '11px', color: 'var(--muted-foreground)', marginBottom: '4px' }}>
                         {t('editor.transition.duration')}
                     </div>
                     <div style={{
@@ -102,11 +102,11 @@ export const TransitionPicker: React.FC<TransitionPickerProps> = ({
                                 style={{
                                     flex: 1,
                                     padding: '6px 8px',
-                                    background: duration === option.value ? 'var(--glass-accent-from)' : 'var(--glass-bg-muted)',
-                                    border: duration === option.value ? '1px solid var(--glass-stroke-focus)' : '1px solid var(--glass-stroke-base)',
+                                    background: duration === option.value ? 'var(--primary)' : 'var(--muted)',
+                                    border: duration === option.value ? '1px solid var(--ring)' : '1px solid var(--border)',
                                     borderRadius: '4px',
                                     fontSize: '11px',
-                                    color: duration === option.value ? 'var(--glass-text-on-accent)' : 'var(--glass-text-primary)',
+                                    color: duration === option.value ? 'var(--primary-foreground)' : 'var(--foreground)',
                                     cursor: disabled ? 'not-allowed' : 'pointer',
                                     opacity: disabled ? 0.5 : 1
                                 }}

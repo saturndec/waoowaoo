@@ -8,6 +8,9 @@ import { VoiceCard } from './VoiceCard'
 import TaskStatusInline from '@/components/task/TaskStatusInline'
 import { resolveTaskPresentationState } from '@/lib/task/presentation'
 import { AppIcon } from '@/components/ui/icons'
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 
 interface Character {
     id: string
@@ -75,10 +78,15 @@ interface AssetGridProps {
     onVoiceSelect?: (characterId: string) => void
 }
 
-// 内联 SVG 图标
 const PlusIcon = ({ className }: { className?: string }) => (
     <AppIcon name="plus" className={className} />
 )
+
+type FilterType = 'all' | 'character' | 'location' | 'voice'
+type SectionType = 'character' | 'location' | 'voice'
+
+const sectionGridClassName =
+    'grid gap-4 [grid-template-columns:repeat(auto-fill,minmax(min(100%,15.5rem),1fr))] 2xl:[grid-template-columns:repeat(auto-fill,minmax(min(100%,17rem),1fr))]'
 
 export function AssetGrid({
     characters,
@@ -88,7 +96,7 @@ export function AssetGrid({
     onAddCharacter,
     onAddLocation,
     onAddVoice,
-    selectedFolderId: _selectedFolderId,
+    selectedFolderId,
     onImageClick,
     onImageEdit,
     onVoiceDesign,
@@ -97,6 +105,8 @@ export function AssetGrid({
     onVoiceSelect
 }: AssetGridProps) {
     const t = useTranslations('assetHub')
+    void selectedFolderId
+
     const loadingState = loading
         ? resolveTaskPresentationState({
             phase: 'processing',
@@ -105,9 +115,8 @@ export function AssetGrid({
             hasOutput: false,
         })
         : null
-    void _selectedFolderId
 
-    const [filter, setFilter] = useState<'all' | 'character' | 'location' | 'voice'>('all')
+    const [filter, setFilter] = useState<FilterType>('all')
     const [sectionPage, setSectionPage] = useState<{ character: number; location: number; voice: number }>({
         character: 1,
         location: 1,
@@ -126,7 +135,7 @@ export function AssetGrid({
         }
     }
 
-    const setPage = (type: 'character' | 'location' | 'voice', page: number) => {
+    const setPage = (type: SectionType, page: number) => {
         setSectionPage((prev) => ({ ...prev, [type]: page }))
     }
 
@@ -134,42 +143,46 @@ export function AssetGrid({
     const locationsPage = paginate(locations, sectionPage.location)
     const voicesPage = paginate(voices, sectionPage.voice)
 
-    const renderPagination = (type: 'character' | 'location' | 'voice', page: number, totalPages: number) => {
+    const renderPagination = (type: SectionType, page: number, totalPages: number) => {
         if (totalPages <= 1) return null
         return (
             <div className="mt-4 flex items-center justify-end gap-2">
-                <button
+                <Button
                     onClick={() => setPage(type, page - 1)}
                     disabled={page <= 1}
-                    className="glass-btn-base glass-btn-secondary px-3 py-1.5 text-xs rounded-md disabled:opacity-40 disabled:cursor-not-allowed"
+                    size="sm"
+                    variant="outline"
                 >
                     {t('pagination.previous')}
-                </button>
-                <span className="text-xs text-[var(--glass-text-tertiary)]">
+                </Button>
+                <span className="text-xs text-muted-foreground">
                     {page} / {totalPages}
                 </span>
-                <button
+                <Button
                     onClick={() => setPage(type, page + 1)}
                     disabled={page >= totalPages}
-                    className="glass-btn-base glass-btn-secondary px-3 py-1.5 text-xs rounded-md disabled:opacity-40 disabled:cursor-not-allowed"
+                    size="sm"
+                    variant="outline"
                 >
                     {t('pagination.next')}
-                </button>
+                </Button>
             </div>
         )
     }
 
     if (loading) {
         return (
-            <div className="flex-1 flex items-center justify-center py-20">
-                <TaskStatusInline state={loadingState} />
-            </div>
+            <Card className="flex min-h-[360px] flex-1 items-center justify-center">
+                <CardContent className="p-8">
+                    <TaskStatusInline state={loadingState} />
+                </CardContent>
+            </Card>
         )
     }
 
     const isEmpty = characters.length === 0 && locations.length === 0 && voices.length === 0
 
-    const tabs = [
+    const tabs: Array<{ id: FilterType; label: string }> = [
         { id: 'all', label: t('allAssets') },
         { id: 'character', label: t('characters') },
         { id: 'location', label: t('locations') },
@@ -177,138 +190,130 @@ export function AssetGrid({
     ]
 
     return (
-        <div className="flex-1 min-w-0">
-            {/* Header: 筛选 Tab + 操作按钮 */}
-            <div className="flex items-center justify-between mb-6">
-                {/* 左侧筛选 */}
-                {(() => {
-                    const tabIds = tabs.map(t => t.id)
-                    const activeIdx = tabIds.indexOf(filter)
-                    return (
-                        <div className="rounded-lg p-0.5" style={{ background: 'rgba(0,0,0,0.04)' }}>
-                            <div className="relative grid gap-1" style={{ gridTemplateColumns: `repeat(${tabs.length}, minmax(0, 1fr))` }}>
-                                <div
-                                    className="absolute bottom-0.5 top-0.5 rounded-md bg-white transition-transform duration-200"
-                                    style={{
-                                        boxShadow: '0 1px 4px rgba(0,0,0,0.15), 0 0 0 0.5px rgba(0,0,0,0.06)',
-                                        width: `calc(100% / ${tabs.length})`,
-                                        transform: `translateX(${Math.max(0, activeIdx) * 100}%)`,
-                                    }}
-                                />
-                                {tabs.map((tab) => (
-                                    <button
-                                        key={tab.id}
-                                        onClick={() => setFilter(tab.id as 'all' | 'character' | 'location' | 'voice')}
-                                        className={`relative z-[1] px-4 py-1.5 text-sm rounded-md transition-colors cursor-pointer ${filter === tab.id ? 'text-[var(--glass-text-primary)] font-medium' : 'text-[var(--glass-text-tertiary)] hover:text-[var(--glass-text-secondary)]'}`}
-                                    >
-                                        {tab.label}
-                                    </button>
-                                ))}
-                            </div>
-                        </div>
-                    )
-                })()}
+        <div className="min-w-0 flex-1 space-y-4">
+            <Card>
+                <CardContent className="flex flex-col gap-3 p-3 sm:flex-row sm:items-center sm:justify-between">
+                    <div className="grid w-full grid-cols-2 gap-1 rounded-lg border border-border bg-muted p-1 sm:w-auto sm:grid-cols-4">
+                        {tabs.map((tab) => (
+                            <Button
+                                key={tab.id}
+                                onClick={() => setFilter(tab.id)}
+                                variant={filter === tab.id ? 'secondary' : 'ghost'}
+                                size="sm"
+                                className="h-8 justify-center px-3 text-xs"
+                            >
+                                {tab.label}
+                            </Button>
+                        ))}
+                    </div>
 
-                {/* 右侧新建按钮 */}
-                <div className="flex items-center gap-3">
-                    <button
-                        onClick={onAddCharacter}
-                        className="glass-btn-base glass-btn-primary px-4 py-2 rounded-lg text-sm"
-                    >
-                        <PlusIcon className="w-4 h-4" />
-                        <span>{t('addCharacter')}</span>
-                    </button>
-                    <button
-                        onClick={onAddLocation}
-                        className="glass-btn-base glass-btn-primary px-4 py-2 rounded-lg text-sm"
-                    >
-                        <PlusIcon className="w-4 h-4" />
-                        <span>{t('addLocation')}</span>
-                    </button>
-                    <button
-                        onClick={onAddVoice}
-                        className="glass-btn-base glass-btn-tone-info px-4 py-2 rounded-lg text-sm"
-                    >
-                        <PlusIcon className="w-4 h-4" />
-                        <span>{t('addVoice')}</span>
-                    </button>
-                </div>
-            </div>
+                    <div className="grid w-full grid-cols-1 gap-2 sm:w-auto sm:grid-cols-3">
+                        <Button onClick={onAddCharacter} className="h-9 justify-center gap-1.5 text-sm">
+                            <PlusIcon className="h-4 w-4" />
+                            <span>{t('addCharacter')}</span>
+                        </Button>
+                        <Button onClick={onAddLocation} className="h-9 justify-center gap-1.5 text-sm">
+                            <PlusIcon className="h-4 w-4" />
+                            <span>{t('addLocation')}</span>
+                        </Button>
+                        <Button onClick={onAddVoice} variant="secondary" className="h-9 justify-center gap-1.5 text-sm">
+                            <PlusIcon className="h-4 w-4" />
+                            <span>{t('addVoice')}</span>
+                        </Button>
+                    </div>
+                </CardContent>
+            </Card>
 
             {isEmpty ? (
-                /* 空状态 */
-                <div className="glass-surface rounded-xl p-12 text-center">
-                    <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-[var(--glass-bg-muted)] flex items-center justify-center">
-                        <PlusIcon className="w-8 h-8 text-[var(--glass-text-tertiary)]" />
-                    </div>
-                    <p className="text-[var(--glass-text-secondary)] mb-2">{t('emptyState')}</p>
-                    <p className="text-sm text-[var(--glass-text-tertiary)]">{t('emptyStateHint')}</p>
-                </div>
+                <Card className="border-dashed">
+                    <CardContent className="py-14 text-center">
+                        <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-muted">
+                            <PlusIcon className="h-8 w-8 text-muted-foreground" />
+                        </div>
+                        <p className="mb-2 text-sm text-foreground">{t('emptyState')}</p>
+                        <p className="text-xs text-muted-foreground">{t('emptyStateHint')}</p>
+                    </CardContent>
+                </Card>
             ) : (
-                <div className="space-y-8">
-                    {/* 角色区块 */}
+                <div className="space-y-4">
                     {(filter === 'all' || filter === 'character') && characters.length > 0 && (
-                        <section>
-                            <h2 className="text-sm font-semibold text-[var(--glass-text-primary)] mb-3 flex items-center gap-2">
-                                {t('characters')}
-                                <span className="glass-chip glass-chip-neutral px-2 py-0.5">{characters.length}</span>
-                            </h2>
-                            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
-                                {charactersPage.items.map((character) => (
-                                    <CharacterCard
-                                        key={character.id}
-                                        character={character}
-                                        onImageClick={onImageClick}
-                                        onImageEdit={onImageEdit}
-                                        onVoiceDesign={onVoiceDesign}
-                                        onEdit={onCharacterEdit}
-                                        onVoiceSelect={onVoiceSelect}
-                                    />
-                                ))}
-                            </div>
-                            {renderPagination('character', charactersPage.page, charactersPage.totalPages)}
-                        </section>
+                        <Card>
+                            <CardHeader className="pb-2">
+                                <CardTitle className="flex items-center gap-2 text-sm">
+                                    {t('characters')}
+                                    <Badge variant="secondary" className="h-5 px-1.5 text-[10px]">
+                                        {characters.length}
+                                    </Badge>
+                                </CardTitle>
+                            </CardHeader>
+                            <CardContent className="pt-0">
+                                <div className={sectionGridClassName}>
+                                    {charactersPage.items.map((character) => (
+                                        <CharacterCard
+                                            key={character.id}
+                                            character={character}
+                                            onImageClick={onImageClick}
+                                            onImageEdit={onImageEdit}
+                                            onVoiceDesign={onVoiceDesign}
+                                            onEdit={onCharacterEdit}
+                                            onVoiceSelect={onVoiceSelect}
+                                        />
+                                    ))}
+                                </div>
+                                {renderPagination('character', charactersPage.page, charactersPage.totalPages)}
+                            </CardContent>
+                        </Card>
                     )}
 
-                    {/* 场景区块 */}
                     {(filter === 'all' || filter === 'location') && locations.length > 0 && (
-                        <section>
-                            <h2 className="text-sm font-semibold text-[var(--glass-text-primary)] mb-3 flex items-center gap-2">
-                                {t('locations')}
-                                <span className="glass-chip glass-chip-neutral px-2 py-0.5">{locations.length}</span>
-                            </h2>
-                            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                                {locationsPage.items.map((location) => (
-                                    <LocationCard
-                                        key={location.id}
-                                        location={location}
-                                        onImageClick={onImageClick}
-                                        onImageEdit={onImageEdit}
-                                        onEdit={onLocationEdit}
-                                    />
-                                ))}
-                            </div>
-                            {renderPagination('location', locationsPage.page, locationsPage.totalPages)}
-                        </section>
+                        <Card>
+                            <CardHeader className="pb-2">
+                                <CardTitle className="flex items-center gap-2 text-sm">
+                                    {t('locations')}
+                                    <Badge variant="secondary" className="h-5 px-1.5 text-[10px]">
+                                        {locations.length}
+                                    </Badge>
+                                </CardTitle>
+                            </CardHeader>
+                            <CardContent className="pt-0">
+                                <div className={sectionGridClassName}>
+                                    {locationsPage.items.map((location) => (
+                                        <LocationCard
+                                            key={location.id}
+                                            location={location}
+                                            onImageClick={onImageClick}
+                                            onImageEdit={onImageEdit}
+                                            onEdit={onLocationEdit}
+                                        />
+                                    ))}
+                                </div>
+                                {renderPagination('location', locationsPage.page, locationsPage.totalPages)}
+                            </CardContent>
+                        </Card>
                     )}
 
-                    {/* 音色区块 */}
                     {(filter === 'all' || filter === 'voice') && voices.length > 0 && (
-                        <section>
-                            <h2 className="text-sm font-semibold text-[var(--glass-text-primary)] mb-3 flex items-center gap-2">
-                                {t('voices')}
-                                <span className="glass-chip glass-chip-info px-2 py-0.5">{voices.length}</span>
-                            </h2>
-                            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
-                                {voicesPage.items.map((voice) => (
-                                    <VoiceCard
-                                        key={voice.id}
-                                        voice={voice}
-                                    />
-                                ))}
-                            </div>
-                            {renderPagination('voice', voicesPage.page, voicesPage.totalPages)}
-                        </section>
+                        <Card>
+                            <CardHeader className="pb-2">
+                                <CardTitle className="flex items-center gap-2 text-sm">
+                                    {t('voices')}
+                                    <Badge variant="secondary" className="h-5 px-1.5 text-[10px]">
+                                        {voices.length}
+                                    </Badge>
+                                </CardTitle>
+                            </CardHeader>
+                            <CardContent className="pt-0">
+                                <div className={sectionGridClassName}>
+                                    {voicesPage.items.map((voice) => (
+                                        <VoiceCard
+                                            key={voice.id}
+                                            voice={voice}
+                                        />
+                                    ))}
+                                </div>
+                                {renderPagination('voice', voicesPage.page, voicesPage.totalPages)}
+                            </CardContent>
+                        </Card>
                     )}
                 </div>
             )}

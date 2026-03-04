@@ -129,12 +129,26 @@ export const ERROR_CATALOG = {
     userMessageKey: 'errors.WATCHDOG_TIMEOUT',
     defaultMessage: 'Task heartbeat timeout',
   },
+  QUEUE_STUCK_TIMEOUT: {
+    httpStatus: 500,
+    retryable: true,
+    category: ERROR_CATEGORY.SYSTEM,
+    userMessageKey: 'errors.QUEUE_STUCK_TIMEOUT',
+    defaultMessage: 'Task queued timeout',
+  },
   WORKER_EXECUTION_ERROR: {
     httpStatus: 500,
     retryable: true,
     category: ERROR_CATEGORY.SYSTEM,
     userMessageKey: 'errors.WORKER_EXECUTION_ERROR',
     defaultMessage: 'Worker execution failed',
+  },
+  WORKER_UNAVAILABLE: {
+    httpStatus: 503,
+    retryable: true,
+    category: ERROR_CATEGORY.SYSTEM,
+    userMessageKey: 'errors.WORKER_UNAVAILABLE',
+    defaultMessage: 'No active worker available',
   },
   INTERNAL_ERROR: {
     httpStatus: 500,

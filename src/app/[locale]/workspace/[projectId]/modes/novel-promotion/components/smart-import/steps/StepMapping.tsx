@@ -38,25 +38,25 @@ export default function StepMapping({
   return (
     <>
       {deleteConfirm.show && (
-        <div className="fixed inset-0 glass-overlay flex items-center justify-center z-50" onClick={onCloseDeleteConfirm}>
-          <div className="glass-surface-modal p-6 w-full max-w-sm" onClick={e => e.stopPropagation()}>
+        <div className="fixed inset-0 bg-black/45 flex items-center justify-center z-50" onClick={onCloseDeleteConfirm}>
+          <div className="rounded-xl border border-border bg-card shadow-lg p-6 w-full max-w-sm" onClick={e => e.stopPropagation()}>
             <div className="text-center mb-6">
-              <div className="w-12 h-12 bg-[var(--glass-tone-danger-bg)] rounded-full flex items-center justify-center mx-auto mb-4">
-                <AppIcon name="trash" className="w-6 h-6 text-[var(--glass-tone-danger-fg)]" />
+              <div className="w-12 h-12 bg-destructive/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                <AppIcon name="trash" className="w-6 h-6 text-destructive" />
               </div>
-              <h3 className="text-lg font-bold text-[var(--glass-text-primary)] mb-2">{t('preview.deleteConfirm.title')}</h3>
-              <p className="text-[var(--glass-text-secondary)]">{t('preview.deleteConfirm.message', { title: deleteConfirm.title })}</p>
+              <h3 className="text-lg font-bold text-foreground mb-2">{t('preview.deleteConfirm.title')}</h3>
+              <p className="text-muted-foreground">{t('preview.deleteConfirm.message', { title: deleteConfirm.title })}</p>
             </div>
             <div className="flex gap-3">
               <button
                 onClick={onCloseDeleteConfirm}
-                className="flex-1 px-4 py-2.5 border border-[var(--glass-stroke-strong)] rounded-lg font-medium hover:bg-[var(--glass-bg-muted)] transition-colors"
+                className="flex-1 px-4 py-2.5 border border-border rounded-lg font-medium hover:bg-muted transition-colors"
               >
                 {t('preview.deleteConfirm.cancel')}
               </button>
               <button
                 onClick={onConfirmDeleteEpisode}
-                className="flex-1 px-4 py-2.5 bg-[var(--glass-tone-danger-fg)] text-white rounded-lg font-medium hover:bg-[var(--glass-tone-danger-fg)] transition-colors"
+                className="flex-1 px-4 py-2.5 bg-destructive text-white rounded-lg font-medium hover:bg-destructive transition-colors"
               >
                 {t('preview.deleteConfirm.confirm')}
               </button>
@@ -67,10 +67,10 @@ export default function StepMapping({
 
       <div className="grid lg:grid-cols-3 gap-6">
         <div className="lg:col-span-1">
-          <div className="bg-[var(--glass-bg-surface)] rounded-2xl border border-[var(--glass-stroke-base)] p-6 sticky top-6">
+          <div className="bg-card rounded-2xl border border-border p-6 sticky top-6">
             <div className="flex items-center justify-between mb-4">
               <h3 className="font-semibold text-lg">{t('preview.episodeList')}</h3>
-              <span className="text-sm text-[var(--glass-text-tertiary)]">{episodes.length} {t('preview.episodeList')}</span>
+              <span className="text-sm text-muted-foreground">{episodes.length} {t('preview.episodeList')}</span>
             </div>
 
             <div className="space-y-3 max-h-[400px] overflow-y-auto">
@@ -79,8 +79,8 @@ export default function StepMapping({
                   key={idx}
                   onClick={() => onSelectEpisode(idx)}
                   className={`p-4 rounded-xl transition-all duration-200 cursor-pointer relative group ${selectedEpisode === idx
-                    ? 'bg-[var(--glass-tone-info-bg)] border-2 border-[var(--glass-stroke-focus)]'
-                    : 'bg-[var(--glass-bg-surface)] border border-[var(--glass-stroke-base)] hover:border-[var(--glass-stroke-focus)]'
+                    ? 'bg-primary/10 border-2 border-primary/40'
+                    : 'bg-card border border-border hover:border-primary/40'
                     }`}
                 >
                   <div className="flex items-center justify-between mb-2">
@@ -95,10 +95,10 @@ export default function StepMapping({
                         }
                       }}
                       onClick={(e) => e.stopPropagation()}
-                      className={`font-semibold bg-transparent border-b border-transparent hover:border-[var(--glass-stroke-strong)] focus:border-[var(--glass-stroke-focus)] focus:outline-none w-24 ${selectedEpisode === idx ? 'text-[var(--glass-tone-info-fg)]' : 'text-[var(--glass-text-secondary)]'}`}
+                      className={`font-semibold bg-transparent border-b border-transparent hover:border-border focus:border-primary/40 focus:outline-none w-24 ${selectedEpisode === idx ? 'text-primary' : 'text-muted-foreground'}`}
                     />
                     <div className="flex items-center gap-2">
-                      <span className={`text-xs px-2 py-0.5 rounded-full ${selectedEpisode === idx ? 'bg-[var(--glass-accent-from)] text-white' : 'bg-[var(--glass-bg-muted)] text-[var(--glass-text-secondary)]'
+                      <span className={`text-xs px-2 py-0.5 rounded-full ${selectedEpisode === idx ? 'bg-primary text-white' : 'bg-muted text-muted-foreground'
                         }`}>
                         {ep.wordCount.toLocaleString()} {t('upload.words')}
                       </span>
@@ -108,7 +108,7 @@ export default function StepMapping({
                             e.stopPropagation()
                             onOpenDeleteConfirm(idx, t('episode', { num: ep.number }))
                           }}
-                          className="opacity-0 group-hover:opacity-100 p-1 text-[var(--glass-tone-danger-fg)] hover:bg-[var(--glass-tone-danger-bg)] rounded transition-all"
+                          className="opacity-0 group-hover:opacity-100 p-1 text-destructive hover:bg-destructive/10 rounded transition-all"
                           title={t('preview.deleteEpisode')}
                         >
                           <AppIcon name="trash" className="w-4 h-4" />
@@ -122,7 +122,7 @@ export default function StepMapping({
                     onChange={(e) => onUpdateEpisodeTitle(idx, e.target.value)}
                     onClick={(e) => e.stopPropagation()}
                     placeholder={t('preview.episodePlaceholder')}
-                    className="text-sm text-[var(--glass-text-secondary)] font-medium w-full bg-transparent border-b border-transparent hover:border-[var(--glass-stroke-strong)] focus:border-[var(--glass-stroke-focus)] focus:outline-none"
+                    className="text-sm text-muted-foreground font-medium w-full bg-transparent border-b border-transparent hover:border-border focus:border-primary/40 focus:outline-none"
                   />
                   <input
                     type="text"
@@ -130,7 +130,7 @@ export default function StepMapping({
                     onChange={(e) => onUpdateEpisodeSummary(idx, e.target.value)}
                     onClick={(e) => e.stopPropagation()}
                     placeholder={t('preview.summaryPlaceholder')}
-                    className="text-xs text-[var(--glass-text-tertiary)] w-full bg-transparent border-b border-transparent hover:border-[var(--glass-stroke-strong)] focus:border-[var(--glass-stroke-focus)] focus:outline-none mt-1"
+                    className="text-xs text-muted-foreground w-full bg-transparent border-b border-transparent hover:border-border focus:border-primary/40 focus:outline-none mt-1"
                   />
                 </div>
               ))}
@@ -138,15 +138,15 @@ export default function StepMapping({
 
             <button
               onClick={onAddEpisode}
-              className="w-full mt-4 py-3 border-2 border-dashed border-[var(--glass-stroke-strong)] rounded-xl text-[var(--glass-text-tertiary)] hover:border-[var(--glass-stroke-focus)] hover:text-[var(--glass-tone-info-fg)] hover:bg-[var(--glass-tone-info-bg)] transition-all duration-200 flex items-center justify-center gap-2"
+              className="w-full mt-4 py-3 border-2 border-dashed border-border rounded-xl text-muted-foreground hover:border-primary/40 hover:text-primary hover:bg-primary/10 transition-all duration-200 flex items-center justify-center gap-2"
             >
               <AppIcon name="plus" className="w-5 h-5" />
               {t('preview.addEpisode')}
             </button>
 
-            <div className="mt-4 pt-4 border-t border-[var(--glass-stroke-base)] space-y-2">
+            <div className="mt-4 pt-4 border-t border-border space-y-2">
               <div className="flex justify-between text-sm">
-                <span className="text-[var(--glass-text-secondary)]">{t('preview.averageWords')}</span>
+                <span className="text-muted-foreground">{t('preview.averageWords')}</span>
                 <span className="font-semibold">
                   {episodes.length > 0 ? Math.round(episodes.reduce((sum, ep) => sum + ep.wordCount, 0) / episodes.length).toLocaleString() : 0} {t('upload.words')}
                 </span>
@@ -157,39 +157,39 @@ export default function StepMapping({
 
         <div className="lg:col-span-2">
           {episodes[selectedEpisode] && (
-            <div className="bg-[var(--glass-bg-surface)] rounded-2xl border border-[var(--glass-stroke-base)] p-6">
+            <div className="bg-card rounded-2xl border border-border p-6">
               <div className="flex items-center justify-between mb-6">
                 <div className="flex items-center gap-4">
                   <input
                     type="text"
                     value={episodes[selectedEpisode].title}
                     onChange={(e) => onUpdateEpisodeTitle(selectedEpisode, e.target.value)}
-                    className="text-2xl font-semibold border-b-2 border-transparent hover:border-[var(--glass-stroke-base)] focus:border-[var(--glass-stroke-focus)] focus:outline-none transition-colors duration-200 px-2"
+                    className="text-2xl font-semibold border-b-2 border-transparent hover:border-border focus:border-primary/40 focus:outline-none transition-colors duration-200 px-2"
                   />
-                  <span className="text-sm text-[var(--glass-text-tertiary)]">{t('episode', { num: episodes[selectedEpisode].number })}</span>
+                  <span className="text-sm text-muted-foreground">{t('episode', { num: episodes[selectedEpisode].number })}</span>
                 </div>
-                <span className="text-sm text-[var(--glass-text-tertiary)]">{episodes[selectedEpisode].wordCount.toLocaleString()} {t('upload.words')}</span>
+                <span className="text-sm text-muted-foreground">{episodes[selectedEpisode].wordCount.toLocaleString()} {t('upload.words')}</span>
               </div>
 
               <div>
                 <div className="flex items-center justify-between mb-3">
-                  <label className="text-sm font-semibold text-[var(--glass-text-secondary)]">{t('preview.episodeContent')}</label>
-                  <span className="text-sm text-[var(--glass-text-tertiary)]">{episodes[selectedEpisode].wordCount.toLocaleString()} {t('upload.words')}</span>
+                  <label className="text-sm font-semibold text-muted-foreground">{t('preview.episodeContent')}</label>
+                  <span className="text-sm text-muted-foreground">{episodes[selectedEpisode].wordCount.toLocaleString()} {t('upload.words')}</span>
                 </div>
                 <textarea
                   rows={16}
                   value={episodes[selectedEpisode].content}
                   onChange={(e) => onUpdateEpisodeContent(selectedEpisode, e.target.value)}
-                  className="w-full border border-[var(--glass-stroke-strong)] rounded-xl p-4 focus:outline-none focus:ring-2 focus:ring-[var(--glass-focus-ring-strong)] focus:border-[var(--glass-stroke-focus)] resize-none font-mono text-sm leading-relaxed"
+                  className="w-full border border-border rounded-xl p-4 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary/40 resize-none font-mono text-sm leading-relaxed"
                 />
               </div>
 
-              <div className="mt-4 p-4 bg-[var(--glass-tone-info-bg)] border border-[var(--glass-stroke-focus)] rounded-xl">
+              <div className="mt-4 p-4 bg-primary/10 border border-primary/40 rounded-xl">
                 <div className="flex items-start gap-3">
-                  <AppIcon name="info" className="w-5 h-5 text-[var(--glass-tone-info-fg)] flex-shrink-0 mt-0.5" />
+                  <AppIcon name="info" className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
                   <div className="flex-1">
-                    <p className="font-medium text-[var(--glass-text-primary)] mb-1">{t('plotSummary')}</p>
-                    <p className="text-sm text-[var(--glass-text-primary)]">
+                    <p className="font-medium text-foreground mb-1">{t('plotSummary')}</p>
+                    <p className="text-sm text-foreground">
                       {episodes[selectedEpisode].summary || t('preview.summaryPlaceholder')}
                     </p>
                   </div>

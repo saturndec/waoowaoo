@@ -49,7 +49,9 @@ export function useSplitProjectEpisodes(projectId: string) {
           content: string
           wordCount: number
         }>
-      }>(response)
+      }>(response, {
+        intervalMs: 1500,
+      })
     },
   })
 }

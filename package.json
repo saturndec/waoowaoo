@@ -99,6 +99,9 @@
     "@next-auth/prisma-adapter": "^1.0.7",
     "@openrouter/sdk": "^0.3.11",
     "@prisma/client": "^6.19.2",
+    "@radix-ui/react-dialog": "^1.1.15",
+    "@radix-ui/react-select": "^2.2.6",
+    "@radix-ui/react-slot": "^1.2.4",
     "@remotion/cli": "^4.0.405",
     "@remotion/player": "^4.0.405",
     "@tanstack/react-query": "^5.90.20",
@@ -111,6 +114,8 @@
     "archiver": "^7.0.1",
     "bcryptjs": "^3.0.2",
     "bullmq": "^5.67.3",
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
     "cos-nodejs-sdk-v5": "^2.15.4",
     "express": "^5.2.1",
     "file-saver": "^2.0.5",
@@ -127,7 +132,8 @@
     "react": "19.1.0",
     "react-dom": "19.1.0",
     "react-hot-toast": "^2.6.0",
-    "remotion": "^4.0.405"
+    "remotion": "^4.0.405",
+    "tailwind-merge": "^3.5.0"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",

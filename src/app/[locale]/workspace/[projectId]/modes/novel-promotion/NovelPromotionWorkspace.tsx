@@ -28,7 +28,7 @@ function NovelPromotionWorkspaceContent(props: NovelPromotionWorkspaceProps) {
   } = props
 
   if (!vm.project.projectData) {
-    return <div className="text-center text-[var(--glass-text-secondary)]">{vm.i18n.tc('loading')}</div>
+    return <div className="text-center text-muted-foreground">{vm.i18n.tc('loading')}</div>
   }
 
   return (

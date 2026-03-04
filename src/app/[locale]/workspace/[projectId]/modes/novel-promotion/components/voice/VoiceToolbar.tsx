@@ -2,6 +2,8 @@
 import { useTranslations } from 'next-intl'
 import TaskStatusInline from '@/components/task/TaskStatusInline'
 import { resolveTaskPresentationState } from '@/lib/task/presentation'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent } from '@/components/ui/card'
 
 interface VoiceToolbarProps {
     onBack?: () => void
@@ -53,56 +55,62 @@ export default function VoiceToolbar({
         : null
 
     return (
-        <div className="glass-surface-elevated p-6">
-            <div className="flex items-center justify-between">
+        <Card>
+            <CardContent className="p-6">
+            <div className="flex items-center justify-between gap-3">
                 <div className="flex items-center gap-4">
-                    <button
+                    <Button
                         onClick={onBack}
-                        className="flex items-center gap-2 px-5 py-2.5 bg-[var(--glass-bg-surface)] text-[var(--glass-text-secondary)] font-medium rounded-xl border border-[var(--glass-stroke-base)] hover:bg-[var(--glass-bg-muted)] hover:text-[var(--glass-tone-info-fg)] transition-all"
+                        variant="outline"
+                        className="h-10 gap-2 px-5 font-medium hover:text-primary"
                     >
                         {t("toolbar.back")}
-                    </button>
-                    <button
+                    </Button>
+                    <Button
                         onClick={onAnalyze}
                         disabled={analyzing}
-                        className="glass-btn-base glass-btn-primary flex items-center gap-2 px-5 py-2.5 font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="h-10 gap-2 px-5 font-medium"
                     >
                         {analyzing ? t("assets.stage.analyzing") : t("toolbar.analyzeLines")}
-                    </button>
-                    <button
+                    </Button>
+                    <Button
                         onClick={onAddLine}
-                        className="glass-btn-base glass-btn-secondary flex items-center gap-2 px-5 py-2.5 font-medium border border-[var(--glass-stroke-base)]"
+                        variant="outline"
+                        className="h-10 gap-2 px-5 font-medium"
                     >
                         {t("toolbar.addLine")}
-                    </button>
-                    <button
+                    </Button>
+                    <Button
                         onClick={onGenerateAll}
                         disabled={isBatchSubmitting || !allSpeakersHaveVoice || totalLines === 0}
-                        className="glass-btn-base glass-btn-tone-success flex items-center gap-2 px-5 py-2.5 font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                        variant="secondary"
+                        className="h-10 gap-2 px-5 font-medium disabled:opacity-50"
                         title={!allSpeakersHaveVoice ? t("toolbar.uploadReferenceHint") : ''}
                     >
                         {isBatchSubmitting ? (
                             <>
-                                <TaskStatusInline state={voiceTaskRunningState} className="text-white [&>span]:text-white [&_svg]:text-white" />
-                                <span className="text-xs text-white/90">({runningCount})</span>
+                                <TaskStatusInline state={voiceTaskRunningState} className="[&>span]:text-foreground [&_svg]:text-foreground" />
+                                <span className="text-xs text-muted-foreground">({runningCount})</span>
                             </>
                         ) : t("toolbar.generateAll")}
-                    </button>
-                    <button
+                    </Button>
+                    <Button
                         onClick={onDownloadAll}
                         disabled={linesWithAudio === 0 || isDownloading}
-                        className="glass-btn-base glass-btn-tone-info flex items-center gap-2 px-5 py-2.5 font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                        variant="secondary"
+                        className="h-10 gap-2 px-5 font-medium disabled:opacity-50"
                         title={linesWithAudio === 0 ? t("toolbar.noDownload") : t("toolbar.downloadCount", { count: linesWithAudio })}
                     >
                         {isDownloading ? (
-                            <TaskStatusInline state={voiceDownloadRunningState} className="text-white [&>span]:text-white [&_svg]:text-white" />
+                            <TaskStatusInline state={voiceDownloadRunningState} className="[&>span]:text-foreground [&_svg]:text-foreground" />
                         ) : t("toolbar.downloadAll")}
-                    </button>
+                    </Button>
                 </div>
-                <div className="text-sm text-[var(--glass-text-tertiary)]">
+                <div className="text-sm text-muted-foreground">
                     {t("toolbar.stats", { total: totalLines, withVoice: linesWithVoice, withAudio: linesWithAudio })}
                 </div>
             </div>
-        </div>
+            </CardContent>
+        </Card>
     )
 }

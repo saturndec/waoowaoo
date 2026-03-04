@@ -33,24 +33,24 @@ export default function ConfirmDialog({
   const typeStyles = {
     danger: {
       icon: (
-        <AppIcon name="alert" className="w-6 h-6 text-[var(--glass-tone-danger-fg)]" />
+        <AppIcon name="alert" className="w-6 h-6 text-destructive" />
       ),
-      confirmBg: 'glass-btn-tone-danger',
-      iconBg: 'bg-[var(--glass-tone-danger-bg)]'
+      confirmBg: 'bg-destructive/10 text-destructive hover:bg-destructive/20',
+      iconBg: 'bg-destructive/10'
     },
     warning: {
       icon: (
-        <AppIcon name="alert" className="w-6 h-6 text-[var(--glass-tone-warning-fg)]" />
+        <AppIcon name="alert" className="w-6 h-6 text-amber-700" />
       ),
-      confirmBg: 'glass-btn-tone-warning',
-      iconBg: 'bg-[var(--glass-tone-warning-bg)]'
+      confirmBg: 'bg-amber-100 text-amber-700 hover:bg-amber-200',
+      iconBg: 'bg-amber-100'
     },
     info: {
       icon: (
-        <AppIcon name="info" className="w-6 h-6 text-[var(--glass-tone-info-fg)]" />
+        <AppIcon name="info" className="w-6 h-6 text-primary" />
       ),
-      confirmBg: 'glass-btn-tone-info',
-      iconBg: 'bg-[var(--glass-tone-info-bg)]'
+      confirmBg: 'bg-primary/10 text-primary hover:bg-primary/15',
+      iconBg: 'bg-primary/10'
     }
   }
 
@@ -60,14 +60,14 @@ export default function ConfirmDialog({
     <>
       {/* 背景遮罩 */}
       <div
-        className="fixed inset-0 z-50 glass-overlay animate-fade-in"
+        className="fixed inset-0 z-50 bg-black/45 animate-fade-in"
         onClick={onCancel}
       />
 
       {/* 对话框 */}
       <div className="fixed inset-0 z-50 flex items-center justify-center p-4 pointer-events-none">
         <div
-          className="glass-surface-modal max-w-md w-full p-6 pointer-events-auto animate-scale-in"
+          className="rounded-xl border border-border bg-card shadow-lg max-w-md w-full p-6 pointer-events-auto animate-scale-in"
           onClick={(e) => e.stopPropagation()}
         >
           {/* 图标 */}
@@ -76,12 +76,12 @@ export default function ConfirmDialog({
           </div>
 
           {/* 标题 */}
-          <h3 className="mb-2 text-xl font-semibold text-[var(--glass-text-primary)]">
+          <h3 className="mb-2 text-xl font-semibold text-foreground">
             {title}
           </h3>
 
           {/* 消息 */}
-          <p className="mb-6 text-[var(--glass-text-secondary)]">
+          <p className="mb-6 text-muted-foreground">
             {message}
           </p>
 
@@ -89,13 +89,13 @@ export default function ConfirmDialog({
           <div className="flex gap-3">
             <button
               onClick={onCancel}
-              className="glass-btn-base glass-btn-secondary flex-1 px-4 py-2.5 font-medium rounded-xl"
+              className="inline-flex items-center justify-center border border-input bg-background hover:bg-accent hover:text-accent-foreground flex-1 px-4 py-2.5 font-medium rounded-xl"
             >
               {finalCancelText}
             </button>
             <button
               onClick={onConfirm}
-              className={`glass-btn-base flex-1 px-4 py-2.5 font-medium rounded-xl ${currentStyle.confirmBg}`}
+              className={`inline-flex items-center justify-center flex-1 px-4 py-2.5 font-medium rounded-xl ${currentStyle.confirmBg}`}
             >
               {finalConfirmText}
             </button>

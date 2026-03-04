@@ -33,19 +33,19 @@ export default function PanelVariantModalSuggestionList({
   return (
     <div>
       <div className="flex items-center justify-between mb-3">
-        <h3 className="text-sm font-medium text-[var(--glass-text-primary)] flex items-center gap-2">
+        <h3 className="text-sm font-medium text-foreground flex items-center gap-2">
           {t('variant.aiRecommend')}
           {isAnalyzing && (
             <TaskStatusInline
               state={analyzeTaskRunningState}
-              className="text-[var(--glass-tone-info-fg)] [&>span]:text-[var(--glass-tone-info-fg)] [&_svg]:text-[var(--glass-tone-info-fg)]"
+              className="text-primary [&>span]:text-primary [&_svg]:text-primary"
             />
           )}
         </h3>
         {!isAnalyzing && suggestions.length > 0 && (
           <button
             onClick={onReanalyze}
-            className="text-xs text-[var(--glass-tone-info-fg)] hover:text-[var(--glass-text-primary)] flex items-center gap-1"
+            className="text-xs text-primary hover:text-foreground flex items-center gap-1"
           >
             {t('variant.reanalyze')}
           </button>
@@ -53,7 +53,7 @@ export default function PanelVariantModalSuggestionList({
       </div>
 
       {error && (
-        <div className="p-3 bg-[var(--glass-tone-danger-bg)] text-[var(--glass-tone-danger-fg)] text-sm rounded-lg mb-3 border border-[var(--glass-stroke-danger)]">
+        <div className="p-3 bg-destructive/10 text-destructive text-sm rounded-lg mb-3 border border-destructive/30">
           {error}
         </div>
       )}
@@ -62,29 +62,29 @@ export default function PanelVariantModalSuggestionList({
         {suggestions.map((suggestion) => (
           <div
             key={suggestion.id}
-            className={`p-3 border rounded-lg transition-colors cursor-pointer ${selectedVariantId === suggestion.id ? 'border-[var(--glass-stroke-focus)] bg-[var(--glass-tone-info-bg)]' : 'border-[var(--glass-stroke-base)] hover:border-[var(--glass-stroke-focus)] hover:bg-[var(--glass-bg-muted)]'}`}
+            className={`p-3 border rounded-lg transition-colors cursor-pointer ${selectedVariantId === suggestion.id ? 'border-primary/40 bg-primary/10' : 'border-border hover:border-primary/40 hover:bg-muted'}`}
             onClick={() => !isSubmittingVariantTask && onSelectVariant(suggestion)}
           >
             <div className="flex items-start justify-between">
               <div className="flex-1">
                 <div className="flex items-center gap-2">
-                  <span className="text-xs text-[var(--glass-tone-warning-fg)]">{renderScore(suggestion.creative_score)}</span>
-                  <h4 className="text-sm font-medium text-[var(--glass-text-primary)]">{suggestion.title}</h4>
+                  <span className="text-xs text-amber-700">{renderScore(suggestion.creative_score)}</span>
+                  <h4 className="text-sm font-medium text-foreground">{suggestion.title}</h4>
                 </div>
-                <p className="text-xs text-[var(--glass-text-secondary)] mt-1">{suggestion.description}</p>
+                <p className="text-xs text-muted-foreground mt-1">{suggestion.description}</p>
                 <div className="flex gap-2 mt-1">
-                  <span className="text-xs text-[var(--glass-text-tertiary)]">{t('variant.shotType')} {suggestion.shot_type}</span>
-                  <span className="text-xs text-[var(--glass-text-tertiary)]">{t('variant.cameraMove')} {suggestion.camera_move}</span>
+                  <span className="text-xs text-muted-foreground">{t('variant.shotType')} {suggestion.shot_type}</span>
+                  <span className="text-xs text-muted-foreground">{t('variant.cameraMove')} {suggestion.camera_move}</span>
                 </div>
               </div>
               <button
                 disabled={isSubmittingVariantTask}
-                className={`glass-btn-base px-3 py-1 text-xs rounded-lg ${isSubmittingVariantTask && selectedVariantId === suggestion.id ? 'glass-btn-soft text-[var(--glass-text-tertiary)]' : 'glass-btn-primary text-white'}`}
+                className={`inline-flex items-center justify-center px-3 py-1 text-xs rounded-lg ${isSubmittingVariantTask && selectedVariantId === suggestion.id ? 'border border-border bg-muted/50 hover:bg-muted text-muted-foreground' : 'bg-primary text-primary-foreground hover:bg-primary/90 text-white'}`}
               >
                 {isSubmittingVariantTask && selectedVariantId === suggestion.id ? (
                   <TaskStatusInline
                     state={variantTaskRunningState}
-                    className="text-[var(--glass-text-tertiary)] [&>span]:text-[var(--glass-text-tertiary)] [&_svg]:text-[var(--glass-text-tertiary)]"
+                    className="text-muted-foreground [&>span]:text-muted-foreground [&_svg]:text-muted-foreground"
                   />
                 ) : t('candidate.select')}
               </button>
@@ -93,7 +93,7 @@ export default function PanelVariantModalSuggestionList({
         ))}
 
         {!isAnalyzing && suggestions.length === 0 && !error && (
-          <div className="text-center py-8 text-[var(--glass-text-tertiary)] text-sm">
+          <div className="text-center py-8 text-muted-foreground text-sm">
             {t('variant.clickToAnalyze')}
           </div>
         )}

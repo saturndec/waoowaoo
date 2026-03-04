@@ -238,7 +238,7 @@ export function useVoiceStageRuntime({
   if (loading) {
     return (
       <div className="flex items-center justify-center py-20">
-        <div className="text-[var(--glass-text-tertiary)]">{t('common.loading')}</div>
+        <div className="text-muted-foreground">{t('common.loading')}</div>
       </div>
     )
   }

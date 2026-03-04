@@ -1,7 +1,7 @@
 import { createScopedLogger } from '@/lib/logging/core'
 import { prisma } from '@/lib/prisma'
 import { addTaskJob } from '@/lib/task/queues'
-import { resolveTaskLocaleFromBody } from '@/lib/task/resolve-locale'
+import { normalizeTaskPayloadLocale, resolveRecoverableTaskLocale } from '@/lib/task/recover-locale'
 import { markTaskFailed } from '@/lib/task/service'
 import { publishTaskEvent } from '@/lib/task/publisher'
 import { TASK_EVENT_TYPE, TASK_TYPE, type TaskType } from '@/lib/task/types'
@@ -53,7 +53,10 @@ async function recoverQueuedTasks() {
       continue
     }
     try {
-      const locale = resolveTaskLocaleFromBody(task.payload)
+      const locale = await resolveRecoverableTaskLocale({
+        taskId: task.id,
+        payload: task.payload,
+      })
       if (!locale) {
         await markTaskFailed(task.id, 'TASK_LOCALE_REQUIRED', 'task locale is missing')
         logger.error({
@@ -67,6 +70,7 @@ async function recoverQueuedTasks() {
         })
         continue
       }
+      const normalizedPayload = normalizeTaskPayloadLocale(task.payload, locale)
 
       await addTaskJob({
         taskId: task.id,
@@ -76,7 +80,7 @@ async function recoverQueuedTasks() {
         episodeId: task.episodeId,
         targetType: task.targetType,
         targetId: task.targetId,
-        payload: toTaskPayload(task.payload),
+        payload: toTaskPayload(normalizedPayload),
         userId: task.userId,
       })
       await prisma.task.update({
@@ -85,6 +89,7 @@ async function recoverQueuedTasks() {
           enqueuedAt: new Date(),
           enqueueAttempts: { increment: 1 },
           lastEnqueueError: null,
+          payload: normalizedPayload,
         },
       })
       logger.info({

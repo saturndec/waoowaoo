@@ -1,6 +1,7 @@
 'use client'
 
 import { AppIcon } from '@/components/ui/icons'
+import { Button } from '@/components/ui/button'
 
 interface WorkspaceTopActionsProps {
   onOpenAssetLibrary: () => void
@@ -20,28 +21,34 @@ export default function WorkspaceTopActions({
   refreshTitle,
 }: WorkspaceTopActionsProps) {
   return (
-    <div className="fixed top-20 right-6 z-50 flex gap-3">
-      <button
+    <div className="fixed right-6 top-20 z-50 flex gap-3">
+      <Button
+        type="button"
         onClick={onOpenAssetLibrary}
-        className="glass-btn-base glass-btn-secondary flex items-center gap-2 px-4 py-3 rounded-3xl text-[var(--glass-text-primary)]"
+        variant="secondary"
+        className="h-11 rounded-full px-4 text-foreground shadow-sm"
       >
         <AppIcon name="package" className="h-5 w-5" />
-        <span className="font-semibold text-sm hidden md:inline tracking-[0.01em]">{assetLibraryLabel}</span>
-      </button>
-      <button
+        <span className="hidden text-sm font-semibold tracking-[0.01em] md:inline">{assetLibraryLabel}</span>
+      </Button>
+      <Button
+        type="button"
         onClick={onOpenSettings}
-        className="glass-btn-base glass-btn-secondary flex items-center gap-2 px-4 py-3 rounded-3xl text-[var(--glass-text-primary)]"
+        variant="secondary"
+        className="h-11 rounded-full px-4 text-foreground shadow-sm"
       >
         <AppIcon name="settingsHexMinor" className="h-5 w-5" />
-        <span className="font-semibold text-sm hidden md:inline tracking-[0.01em]">{settingsLabel}</span>
-      </button>
-      <button
+        <span className="hidden text-sm font-semibold tracking-[0.01em] md:inline">{settingsLabel}</span>
+      </Button>
+      <Button
+        type="button"
         onClick={onRefresh}
-        className="glass-btn-base glass-btn-secondary flex items-center gap-2 px-4 py-3 rounded-3xl text-[var(--glass-text-primary)]"
+        variant="secondary"
+        className="h-11 w-11 rounded-full p-0 text-foreground shadow-sm"
         title={refreshTitle}
       >
-        <AppIcon name="refresh" className="w-5 h-5" />
-      </button>
+        <AppIcon name="refresh" className="h-5 w-5" />
+      </Button>
     </div>
   )
 }

@@ -2,7 +2,8 @@ import { Prisma } from '@prisma/client'
 import { prisma } from '@/lib/prisma'
 import { withPrismaRetry } from '@/lib/prisma-retry'
 import { rollbackTaskBilling } from '@/lib/billing'
-import { locales } from '@/i18n/routing'
+import { normalizeTaskPayloadLocale, resolveRecoverableTaskLocale } from './recover-locale'
+import { resolveTaskLocaleFromBody } from './resolve-locale'
 import { TASK_STATUS, type CreateTaskInput, type TaskBillingInfo, type TaskStatus } from './types'
 
 const ACTIVE_STATUSES: TaskStatus[] = [TASK_STATUS.QUEUED, TASK_STATUS.PROCESSING]
@@ -28,30 +29,6 @@ function isPrismaKnownError(error: unknown): error is { code?: string } {
 
 function isActiveStatus(status: string) {
   return status === TASK_STATUS.QUEUED || status === TASK_STATUS.PROCESSING
-}
-
-function toObject(value: unknown): Record<string, unknown> {
-  if (!value || typeof value !== 'object' || Array.isArray(value)) return {}
-  return value as Record<string, unknown>
-}
-
-function normalizeLocale(value: unknown): string | null {
-  if (typeof value !== 'string') return null
-  const normalized = value.trim().toLowerCase()
-  if (!normalized) return null
-  for (const locale of locales) {
-    if (normalized === locale || normalized.startsWith(`${locale}-`)) {
-      return locale
-    }
-  }
-  return null
-}
-
-function hasTaskLocale(payload: unknown): boolean {
-  const payloadObject = toObject(payload)
-  const payloadMeta = toObject(payloadObject.meta)
-  const locale = normalizeLocale(payloadMeta.locale) || normalizeLocale(payloadObject.locale)
-  return locale !== null
 }
 
 function toNullableJson(value?: Prisma.InputJsonValue | Record<string, unknown> | TaskBillingInfo | null) {
@@ -174,9 +151,16 @@ export async function createTask(input: CreateTaskInput) {
 
     if (existing) {
       if (isActiveStatus(existing.status)) {
-        if (!hasTaskLocale(existing.payload)) {
+        const recoveredLocale = await resolveRecoverableTaskLocale({
+          taskId: existing.id,
+          payload: existing.payload,
+        })
+        if (!recoveredLocale) {
           await failTaskWithMissingLocale(existing)
         } else {
+          if (!resolveTaskLocaleFromBody(existing.payload)) {
+            await updateTaskPayload(existing.id, normalizeTaskPayloadLocale(existing.payload, recoveredLocale))
+          }
           // 校验 BullMQ Job 是否真的还活着，防止 DB 与队列状态脱节导致永久卡死
           const jobAlive = await verifyJobAlive(existing.id)
           if (jobAlive) {
@@ -246,9 +230,16 @@ export async function createTask(input: CreateTaskInput) {
 
       if (collided) {
         if (isActiveStatus(collided.status)) {
-          if (!hasTaskLocale(collided.payload)) {
+          const recoveredLocale = await resolveRecoverableTaskLocale({
+            taskId: collided.id,
+            payload: collided.payload,
+          })
+          if (!recoveredLocale) {
             await failTaskWithMissingLocale(collided)
           } else {
+            if (!resolveTaskLocaleFromBody(collided.payload)) {
+              await updateTaskPayload(collided.id, normalizeTaskPayloadLocale(collided.payload, recoveredLocale))
+            }
             // P2002 竞态路径：同样校验 BullMQ Job 状态
             const jobAlive = await verifyJobAlive(collided.id)
             if (jobAlive) {
@@ -588,6 +579,83 @@ export async function sweepStaleTasks(params: {
         errorMessage: failure.errorMessage,
         finishedAt,
         heartbeatAt: null,
+      },
+    })
+    if (updated.count > 0) {
+      timedOut.push({
+        ...task,
+        errorCode: failure.errorCode,
+        errorMessage: failure.errorMessage,
+      })
+    }
+  }
+
+  return timedOut
+}
+
+export async function sweepStaleQueuedTasks(params: {
+  queuedThresholdMs: number
+  limit?: number
+}) {
+  const limit = Math.max(1, params.limit || 200)
+  const queuedBefore = new Date(Date.now() - Math.max(1, params.queuedThresholdMs))
+
+  const staleQueued = await taskModel.findMany({
+    where: {
+      status: TASK_STATUS.QUEUED,
+      OR: [
+        { enqueuedAt: { lt: queuedBefore } },
+        {
+          enqueuedAt: null,
+          queuedAt: { lt: queuedBefore },
+        },
+      ],
+    },
+    orderBy: { updatedAt: 'asc' },
+    take: limit,
+    select: {
+      id: true,
+      userId: true,
+      projectId: true,
+      episodeId: true,
+      type: true,
+      targetType: true,
+      targetId: true,
+      billingInfo: true,
+    },
+  })
+
+  if (staleQueued.length === 0) return []
+
+  const finishedAt = new Date()
+  const timedOut: Array<typeof staleQueued[number] & {
+    errorCode: string
+    errorMessage: string
+  }> = []
+
+  for (const task of staleQueued) {
+    const rollbackResult = await rollbackTaskBillingForTask({
+      taskId: task.id,
+      billingInfo: task.billingInfo,
+    })
+    const failure = resolveCompensationFailure(
+      rollbackResult,
+      'QUEUE_STUCK_TIMEOUT',
+      '任务排队超时，系统已终止该任务',
+    )
+
+    const updated = await taskModel.updateMany({
+      where: {
+        id: task.id,
+        status: TASK_STATUS.QUEUED,
+      },
+      data: {
+        status: TASK_STATUS.FAILED,
+        errorCode: failure.errorCode,
+        errorMessage: failure.errorMessage,
+        finishedAt,
+        heartbeatAt: null,
+        dedupeKey: null,
       },
     })
     if (updated.count > 0) {

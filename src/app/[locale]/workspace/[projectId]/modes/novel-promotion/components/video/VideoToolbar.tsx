@@ -3,6 +3,8 @@ import { useTranslations } from 'next-intl'
 import TaskStatusInline from '@/components/task/TaskStatusInline'
 import { resolveTaskPresentationState } from '@/lib/task/presentation'
 import { AppIcon } from '@/components/ui/icons'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent } from '@/components/ui/card'
 
 interface VideoToolbarProps {
   totalPanels: number
@@ -49,30 +51,31 @@ export default function VideoToolbar({
     })
     : null
   return (
-    <div className="glass-surface p-4">
-      <div className="flex items-center justify-between">
+    <Card>
+      <CardContent className="p-4">
+      <div className="flex items-center justify-between gap-3">
         <div className="flex items-center gap-4">
-          <span className="text-sm font-semibold text-[var(--glass-text-secondary)]">
+          <span className="text-sm font-semibold text-foreground">
              {t('toolbar.title')}
           </span>
-          <span className="text-sm text-[var(--glass-text-tertiary)]">
+          <span className="text-sm text-muted-foreground">
             {t('toolbar.totalShots', { count: totalPanels })}
             {runningCount > 0 && (
-              <span className="text-[var(--glass-tone-info-fg)] ml-2 animate-pulse">({t('toolbar.generatingShots', { count: runningCount })})</span>
+              <span className="ml-2 animate-pulse text-primary">({t('toolbar.generatingShots', { count: runningCount })})</span>
             )}
             {videosWithUrl > 0 && (
-              <span className="text-[var(--glass-tone-success-fg)] ml-2">({t('toolbar.completedShots', { count: videosWithUrl })})</span>
+              <span className="ml-2 text-emerald-700">({t('toolbar.completedShots', { count: videosWithUrl })})</span>
             )}
             {failedCount > 0 && (
-              <span className="text-[var(--glass-tone-danger-fg)] ml-2">({t('toolbar.failedShots', { count: failedCount })})</span>
+              <span className="ml-2 text-destructive">({t('toolbar.failedShots', { count: failedCount })})</span>
             )}
           </span>
         </div>
         <div className="flex items-center gap-2">
-          <button
+          <Button
             onClick={onGenerateAll}
             disabled={isAnyTaskRunning}
-            className="glass-btn-base glass-btn-primary flex items-center gap-2 px-4 py-2 text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+            className="h-9 gap-2 px-4 text-sm font-medium"
           >
             {isAnyTaskRunning ? (
               <TaskStatusInline state={videoTaskRunningState} className="text-white [&>span]:text-white [&_svg]:text-white" />
@@ -82,42 +85,46 @@ export default function VideoToolbar({
                 <span>{t('toolbar.generateAll')}</span>
               </>
             )}
-          </button>
-          <button
+          </Button>
+          <Button
             onClick={onDownloadAll}
             disabled={videosWithUrl === 0 || isDownloading}
-            className="glass-btn-base glass-btn-tone-info flex items-center gap-2 px-4 py-2 text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+            variant="secondary"
+            className="h-9 gap-2 px-4 text-sm font-medium"
             title={videosWithUrl === 0 ? t('toolbar.noVideos') : t('toolbar.downloadCount', { count: videosWithUrl })}
           >
             {isDownloading ? (
-              <TaskStatusInline state={videoDownloadState} className="text-white [&>span]:text-white [&_svg]:text-white" />
+              <TaskStatusInline state={videoDownloadState} className="[&>span]:text-foreground [&_svg]:text-foreground" />
             ) : (
               <>
                 <AppIcon name="image" className="w-4 h-4" />
                 <span>{t('toolbar.downloadAll')}</span>
               </>
             )}
-          </button>
+          </Button>
           {onEnterEditor && (
-            <button
+            <Button
               onClick={onEnterEditor}
               disabled={!videosReady}
-              className="glass-btn-base glass-btn-secondary flex items-center gap-2 px-4 py-2 text-sm font-medium border border-[var(--glass-stroke-base)] disabled:opacity-50 disabled:cursor-not-allowed"
+              variant="outline"
+              className="h-9 gap-2 px-4 text-sm font-medium"
               title={videosReady ? t('toolbar.enterEditor') : t('panelCard.needVideo')}
             >
               <AppIcon name="wandOff" className="w-4 h-4" />
               <span>{t('toolbar.enterEdit')}</span>
-            </button>
+            </Button>
           )}
-          <button
+          <Button
             onClick={onBack}
-            className="glass-btn-base glass-btn-secondary flex items-center gap-2 px-4 py-2 text-sm font-medium border border-[var(--glass-stroke-base)] hover:text-[var(--glass-tone-info-fg)]"
+            variant="outline"
+            className="h-9 gap-2 px-4 text-sm font-medium hover:text-primary"
           >
             <AppIcon name="chevronLeft" className="w-4 h-4" />
             <span>{t('toolbar.back')}</span>
-          </button>
+          </Button>
         </div>
       </div>
-    </div>
+      </CardContent>
+    </Card>
   )
 }

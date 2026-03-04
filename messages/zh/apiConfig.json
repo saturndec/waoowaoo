@@ -42,6 +42,8 @@
   "lipsyncDefault": "口型同步模型",
   "selectDefault": "请选择",
   "providerPool": "厂商资源池",
+  "builtinProviders": "内置厂商",
+  "customProviders": "用户自定义厂商",
   "providerIdExists": "该提供商 ID 已存在",
   "presetProviderCannotDelete": "预设提供商不能删除",
   "confirmDeleteProvider": "确定删除这个提供商吗？",

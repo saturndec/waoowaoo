@@ -61,9 +61,9 @@ export function usePromptStageActions({
   const isAnyTaskRunning = runningCount > 0 || isBatchSubmitting
 
   const getGenerateButtonToneClass = (shot: NovelPromotionShot) => {
-    if (shot.imageUrl) return 'glass-btn-tone-success'
-    if (isShotTaskRunning(shot)) return 'glass-btn-soft'
-    return 'glass-btn-primary'
+    if (shot.imageUrl) return 'bg-emerald-100 text-emerald-700 hover:bg-emerald-200'
+    if (isShotTaskRunning(shot)) return 'border border-border bg-muted/50 hover:bg-muted'
+    return 'bg-primary text-primary-foreground hover:bg-primary/90'
   }
 
   const getShotRunningState = useCallback((shot: NovelPromotionShot) => {

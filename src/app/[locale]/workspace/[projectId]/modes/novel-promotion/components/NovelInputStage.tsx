@@ -53,18 +53,18 @@ function RatioSelector({
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
-        className="glass-input-base px-3 py-2.5 flex w-full items-center justify-between gap-2 cursor-pointer transition-colors"
+        className="w-full rounded-md border border-input bg-background px-3 py-2.5 flex w-full items-center justify-between gap-2 cursor-pointer transition-colors"
       >
         <div className="flex items-center gap-3">
           <RatioIcon ratio={value} size={20} selected />
-          <span className="text-sm text-[var(--glass-text-primary)] font-medium">{selectedOption?.label || value}</span>
+          <span className="text-sm text-foreground font-medium">{selectedOption?.label || value}</span>
         </div>
-        <AppIcon name="chevronDown" className={`w-4 h-4 text-[var(--glass-text-tertiary)] transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+        <AppIcon name="chevronDown" className={`w-4 h-4 text-muted-foreground transition-transform ${isOpen ? 'rotate-180' : ''}`} />
       </button>
 
       {/* 下拉面板 - 横向网格布局 */}
       {isOpen && (
-        <div className="glass-surface-modal absolute z-50 mt-1 left-0 right-0 p-3 max-h-60 overflow-y-auto custom-scrollbar" style={{ minWidth: '280px' }}>
+        <div className="rounded-xl border border-border bg-card shadow-lg absolute z-50 mt-1 left-0 right-0 p-3 max-h-60 overflow-y-auto custom-scrollbar" style={{ minWidth: '280px' }}>
           <div className="grid grid-cols-5 gap-2">
             {options.map((option) => (
               <button
@@ -74,13 +74,13 @@ function RatioSelector({
                   onChange(option.value)
                   setIsOpen(false)
                 }}
-                className={`flex flex-col items-center gap-1.5 p-2 rounded-lg hover:bg-[var(--glass-bg-muted)]/70 transition-colors ${value === option.value
-                  ? 'bg-[var(--glass-tone-info-bg)] shadow-[0_0_0_1px_rgba(79,128,255,0.35)]'
+                className={`flex flex-col items-center gap-1.5 p-2 rounded-lg hover:bg-muted/70 transition-colors ${value === option.value
+                  ? 'bg-primary/10 shadow-[0_0_0_1px_rgba(79,128,255,0.35)]'
                   : ''
                   }`}
               >
                 <RatioIcon ratio={option.value} size={28} selected={value === option.value} />
-                <span className={`text-xs ${value === option.value ? 'text-[var(--glass-tone-info-fg)] font-medium' : 'text-[var(--glass-text-secondary)]'}`}>
+                <span className={`text-xs ${value === option.value ? 'text-primary font-medium' : 'text-muted-foreground'}`}>
                   {option.label}
                 </span>
               </button>
@@ -125,18 +125,18 @@ function StyleSelector({
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
-        className="glass-input-base px-3 py-2.5 flex w-full items-center justify-between gap-2 cursor-pointer transition-colors"
+        className="w-full rounded-md border border-input bg-background px-3 py-2.5 flex w-full items-center justify-between gap-2 cursor-pointer transition-colors"
       >
         <div className="flex items-center gap-3">
           <span className="text-lg">{selectedOption.preview}</span>
-          <span className="text-sm text-[var(--glass-text-primary)] font-medium">{selectedOption.label}</span>
+          <span className="text-sm text-foreground font-medium">{selectedOption.label}</span>
         </div>
-        <AppIcon name="chevronDown" className={`w-4 h-4 text-[var(--glass-text-tertiary)] transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+        <AppIcon name="chevronDown" className={`w-4 h-4 text-muted-foreground transition-transform ${isOpen ? 'rotate-180' : ''}`} />
       </button>
 
       {/* 下拉面板 */}
       {isOpen && (
-        <div className="glass-surface-modal absolute z-50 mt-1 left-0 right-0 p-3">
+        <div className="rounded-xl border border-border bg-card shadow-lg absolute z-50 mt-1 left-0 right-0 p-3">
           <div className="grid grid-cols-2 gap-2">
             {options.map((option) => (
               <button
@@ -147,8 +147,8 @@ function StyleSelector({
                   setIsOpen(false)
                 }}
                 className={`flex items-center gap-2 p-3 rounded-lg text-left transition-all ${value === option.value
-                  ? 'bg-[var(--glass-tone-info-bg)] text-[var(--glass-tone-info-fg)] shadow-[0_0_0_1px_rgba(79,128,255,0.35)]'
-                  : 'hover:bg-[var(--glass-bg-muted)] text-[var(--glass-text-secondary)]'
+                  ? 'bg-primary/10 text-primary shadow-[0_0_0_1px_rgba(79,128,255,0.35)]'
+                  : 'hover:bg-muted text-muted-foreground'
                   }`}
               >
                 <span className="text-lg">{option.preview}</span>
@@ -214,19 +214,19 @@ export default function NovelInputStage({
       {/* 当前编辑剧集提示 - 顶部居中醒目显示 */}
       {episodeName && (
         <div className="text-center py-1">
-          <div className="text-lg font-semibold text-[var(--glass-text-primary)]">
+          <div className="text-lg font-semibold text-foreground">
             {t("storyInput.currentEditing", { name: episodeName })}
           </div>
-          <div className="text-sm text-[var(--glass-text-tertiary)] mt-1">{t("storyInput.editingTip")}</div>
+          <div className="text-sm text-muted-foreground mt-1">{t("storyInput.editingTip")}</div>
         </div>
       )}
 
       {/* 主输入区域 */}
-      <div className="glass-surface-elevated overflow-hidden">
+      <div className="rounded-xl border border-border bg-card shadow-md overflow-hidden">
         <div className="p-6">
           {/* 字数统计 */}
           <div className="flex items-center justify-end mb-3">
-            <span className="glass-chip glass-chip-neutral text-xs">
+            <span className="inline-flex items-center rounded-full bg-muted px-2 py-0.5 text-xs font-medium text-muted-foreground text-xs">
               {t("storyInput.wordCount")} {novelText.length}
             </span>
           </div>
@@ -244,19 +244,19 @@ AI 将根据您的文本智能分析：
 
 例如：
 清晨，阳光透过窗帘洒进房间。小明揉着惺忪的睡眼从床上坐起，看了一眼床头的闹钟——已经八点了！他猛地跳下床，手忙脚乱地开始穿衣服...`}
-            className="glass-textarea-base custom-scrollbar h-80 px-4 py-3 text-base resize-none placeholder:text-[var(--glass-text-tertiary)]"
+            className="w-full rounded-md border border-input bg-background custom-scrollbar h-80 px-4 py-3 text-base resize-none placeholder:text-muted-foreground"
             disabled={isSubmittingTask || isSwitchingStage}
           />
 
           {/* 资产库引导提示 */}
-          <div className="mt-5 p-4 glass-surface-soft">
+          <div className="mt-5 p-4 rounded-xl border border-border bg-muted/30">
             <div className="flex items-start gap-3">
-              <div className="w-10 h-10 glass-surface-soft rounded-xl flex items-center justify-center flex-shrink-0">
-                <AppIcon name="folderCards" className="w-5 h-5 text-[var(--glass-text-secondary)]" />
+              <div className="w-10 h-10 rounded-xl border border-border bg-muted/30 rounded-xl flex items-center justify-center flex-shrink-0">
+                <AppIcon name="folderCards" className="w-5 h-5 text-muted-foreground" />
               </div>
               <div className="flex-1 min-w-0">
-                <div className="font-semibold text-[var(--glass-text-secondary)] mb-1">{t("storyInput.assetLibraryTip.title")}</div>
-                <p className="text-sm text-[var(--glass-text-tertiary)] leading-relaxed">
+                <div className="font-semibold text-muted-foreground mb-1">{t("storyInput.assetLibraryTip.title")}</div>
+                <p className="text-sm text-muted-foreground leading-relaxed">
                   {t("storyInput.assetLibraryTip.description")}
                 </p>
               </div>
@@ -266,11 +266,11 @@ AI 将根据您的文本智能分析：
       </div>
 
       {/* 画面比例与视觉风格配置 */}
-      <div className="glass-surface p-6 relative z-10">
+      <div className="rounded-xl border border-border bg-card p-6 relative z-10">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* 画面比例 */}
           <div className="space-y-3">
-            <h3 className="text-sm font-semibold text-[var(--glass-text-muted)] tracking-[0.01em]">{t("storyInput.videoRatio")}</h3>
+            <h3 className="text-sm font-semibold text-muted-foreground tracking-[0.01em]">{t("storyInput.videoRatio")}</h3>
             <RatioSelector
               value={videoRatio}
               onChange={(value) => onVideoRatioChange?.(value)}
@@ -280,7 +280,7 @@ AI 将根据您的文本智能分析：
 
           {/* 视觉风格 */}
           <div className="space-y-3">
-            <h3 className="text-sm font-semibold text-[var(--glass-text-muted)] tracking-[0.01em]">{t("storyInput.visualStyle")}</h3>
+            <h3 className="text-sm font-semibold text-muted-foreground tracking-[0.01em]">{t("storyInput.visualStyle")}</h3>
             <StyleSelector
               value={artStyle}
               onChange={(value) => onArtStyleChange?.(value)}
@@ -288,32 +288,32 @@ AI 将根据您的文本智能分析：
             />
           </div>
         </div>
-        <p className="text-xs text-[var(--glass-text-tertiary)] mt-4 text-center">
+        <p className="text-xs text-muted-foreground mt-4 text-center">
           {t("storyInput.moreConfig")}
         </p>
       </div>
 
       {/* 旁白开关 + 操作按钮 */}
-      <div className="glass-surface p-6">
+      <div className="rounded-xl border border-border bg-card p-6">
         {/* 旁白开关 */}
         {onEnableNarrationChange && (
-          <div className="glass-surface-soft flex items-center justify-between p-4 rounded-xl mb-6">
+          <div className="rounded-xl border border-border bg-muted/30 flex items-center justify-between p-4 rounded-xl mb-6">
             <div className="flex items-center gap-3">
-              <span className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-[var(--glass-tone-info-bg)] text-[var(--glass-tone-info-fg)] font-semibold text-sm">VO</span>
+              <span className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-primary/10 text-primary font-semibold text-sm">VO</span>
               <div>
-                <div className="font-medium text-[var(--glass-text-primary)]">{t("storyInput.narration.title")}</div>
-                <div className="text-xs text-[var(--glass-text-tertiary)]">{t("storyInput.narration.description")}</div>
+                <div className="font-medium text-foreground">{t("storyInput.narration.title")}</div>
+                <div className="text-xs text-muted-foreground">{t("storyInput.narration.description")}</div>
               </div>
             </div>
             <button
               onClick={() => onEnableNarrationChange(!enableNarration)}
               className={`relative w-14 h-8 rounded-full transition-colors ${enableNarration
-                ? 'bg-[var(--glass-accent-from)]'
-                : 'bg-[var(--glass-stroke-strong)]'
+                ? 'bg-primary'
+                : 'bg-border'
                 }`}
             >
               <span
-                className={`absolute top-1 left-1 w-6 h-6 bg-[var(--glass-bg-surface)] rounded-full shadow-sm transition-transform ${enableNarration ? 'translate-x-6' : 'translate-x-0'
+                className={`absolute top-1 left-1 w-6 h-6 bg-card rounded-full shadow-sm transition-transform ${enableNarration ? 'translate-x-6' : 'translate-x-0'
                   }`}
               />
             </button>
@@ -324,7 +324,7 @@ AI 将根据您的文本智能分析：
         <button
           onClick={onNext}
           disabled={!hasContent || isSubmittingTask || isSwitchingStage}
-          className="glass-btn-base glass-btn-primary w-full py-4 text-white font-semibold disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2"
+          className="inline-flex items-center justify-center rounded-md bg-primary px-3 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 w-full py-4 text-white font-semibold disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2"
         >
           {isSwitchingStage ? (
             <TaskStatusInline state={stageSwitchingState} className="text-white [&>span]:text-white [&_svg]:text-white" />
@@ -335,7 +335,7 @@ AI 将根据您的文本智能分析：
             </>
           )}
         </button>
-        <p className="text-center text-xs text-[var(--glass-text-tertiary)] mt-3">
+        <p className="text-center text-xs text-muted-foreground mt-3">
           {hasContent ? t("storyInput.ready") : t("storyInput.pleaseInput")}
         </p>
       </div>
