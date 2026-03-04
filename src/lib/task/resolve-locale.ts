@@ -39,6 +39,21 @@ function readLocaleFromHeader(request: NextRequest): Locale | null {
   return normalizeCandidate(first)
 }
 
+/** 从 Referer 的路径中解析 locale（如 https://host/zh/workspace/... → zh） */
+function readLocaleFromReferer(request: NextRequest): Locale | null {
+  const referer = request.headers.get('referer') || request.headers.get('origin') || ''
+  if (!referer) return null
+  try {
+    const pathname = new URL(referer).pathname
+    const match = pathname.match(/^\/(zh|en)(\/|$)/)
+    const segment = match?.[1]
+    if (segment) return normalizeCandidate(segment)
+  } catch {
+    // invalid URL
+  }
+  return null
+}
+
 export function resolveTaskLocaleFromBody(body?: unknown): Locale | null {
   return readLocaleFromPayload(body)
 }
@@ -46,6 +61,8 @@ export function resolveTaskLocaleFromBody(body?: unknown): Locale | null {
 export function resolveTaskLocale(request: NextRequest, body?: unknown): Locale | null {
   const payloadLocale = resolveTaskLocaleFromBody(body)
   if (payloadLocale) return payloadLocale
+  const refererLocale = readLocaleFromReferer(request)
+  if (refererLocale) return refererLocale
   return readLocaleFromHeader(request)
 }
 
