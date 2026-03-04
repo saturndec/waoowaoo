@@ -18,6 +18,29 @@ function mergeLocaleHeader(init?: RequestInit): RequestInit {
   return { ...init, headers }
 }
 
+/**
+ * 将 locale 注入到 JSON body 的 meta.locale 字段。
+ * Accept-Language 在浏览器中受系统语言控制，不可靠，body 优先级更高。
+ */
+function mergeLocaleBody(init: RequestInit): RequestInit {
+  if (!init.body || typeof init.body !== 'string') return init
+  try {
+    const parsed = JSON.parse(init.body) as Record<string, unknown>
+    const meta = (parsed.meta && typeof parsed.meta === 'object' && !Array.isArray(parsed.meta))
+      ? (parsed.meta as Record<string, unknown>)
+      : {}
+    if (meta.locale) return init
+    const locale = getPageLocale()
+    return { ...init, body: JSON.stringify({ ...parsed, meta: { ...meta, locale } }) }
+  } catch {
+    return init
+  }
+}
+
+function mergeLocale(init: RequestInit): RequestInit {
+  return mergeLocaleHeader(mergeLocaleBody(init))
+}
+
 export type MutationRequestError = Error & {
   status?: number
   payload?: Record<string, unknown>
@@ -49,7 +72,7 @@ export async function requestJsonWithError<T>(
   init: RequestInit,
   fallbackMessage: string,
 ): Promise<T> {
-  const response = await fetch(input, mergeLocaleHeader(init))
+  const response = await fetch(input, mergeLocale(init))
   const data = await parseJsonSafe(response)
   if (!response.ok) {
     throw createRequestError(response.status, data, fallbackMessage)
@@ -62,7 +85,7 @@ export async function requestVoidWithError(
   init: RequestInit,
   fallbackMessage: string,
 ): Promise<void> {
-  const response = await fetch(input, mergeLocaleHeader(init))
+  const response = await fetch(input, mergeLocale(init))
   if (response.ok) return
   const data = await parseJsonSafe(response)
   throw createRequestError(response.status, data, fallbackMessage)
@@ -73,7 +96,7 @@ export async function requestTaskResponseWithError(
   init: RequestInit,
   fallbackMessage: string,
 ): Promise<Response> {
-  const response = await fetch(input, mergeLocaleHeader(init))
+  const response = await fetch(input, mergeLocale(init))
   if (response.ok) return response
   const data = await parseJsonSafe(response)
   throw createRequestError(response.status, data, fallbackMessage)
@@ -84,7 +107,7 @@ export async function requestBlobWithError(
   init: RequestInit,
   fallbackMessage: string,
 ): Promise<Blob> {
-  const response = await fetch(input, mergeLocaleHeader(init))
+  const response = await fetch(input, mergeLocale(init))
   if (response.ok) {
     return await response.blob()
   }
