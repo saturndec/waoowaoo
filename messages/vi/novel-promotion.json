@@ -8,79 +8,79 @@
     "editorComingSoon": "Sắp ra mắt, theo dõi chúng tôi để cập nhật"
   },
   "buttons": {
-    "assetLibrary": "Thư viện tài nguyên",
+    "assetLibrary": "Thư viện Tài nguyên",
     "settings": "Cài đặt",
-    "refreshData": "Làm mới dữ liệu",
-    "enterVideoGeneration": "Vào tạo video →"
+    "refreshData": "Làm mới Dữ liệu",
+    "enterVideoGeneration": "Vào Tạo Video →"
   },
   "smartImport": {
-    "title": "Bắt đầu hành trình sáng tạo",
+    "title": "Bắt đầu Hành trình Sáng tạo",
     "subtitle": "Đầu tiên, chọn phương thức sáng tạo của bạn",
     "manualCreate": {
-      "title": "Tạo từ tập 1",
+      "title": "Tạo từ Tập 1",
       "description": "Bắt đầu từ tập 1, phù hợp cho sáng tạo theo tập hoặc video ngắn đơn lẻ",
-      "button": "Bắt đầu sáng tạo"
+      "button": "Bắt đầu Sáng tạo"
     },
     "smartImport": {
-      "title": "Nhập thông minh toàn bộ sách",
-      "description": "Tải lên tiểu thuyết hoặc kịch bản hoàn chỉnh, AI tự động nhận dạng cấu trúc chương và chia thành các tập.",
-      "button": "Nhập ngay",
-      "recommended": "Khuyến nghị"
+      "title": "Nhập Thông minh Toàn bộ Sách",
+      "description": "Tải lên toàn bộ tiểu thuyết hoặc kịch bản, AI tự động nhận dạng cấu trúc chương và chia thành các tập.",
+      "button": "Nhập Ngay",
+      "recommended": "Khuyên dùng"
     },
     "upload": {
-      "title": "Tải lên tài liệu gốc",
-      "subtitle": "AI sẵn sàng, tự động chia tập và định dạng",
+      "title": "Tải lên Tài liệu Gốc",
+      "subtitle": "AI đã sẵn sàng, tự động chia tập và định dạng",
       "maxWords": "(Tối đa 30.000 từ)",
-      "textInput": "Nhập nội dung văn bản",
-      "documentUpload": "Tải lên tài liệu đầy đủ",
-      "placeholder": "Dán nội dung chương tiểu thuyết hoặc kịch bản của bạn vào đây...",
-      "filePlaceholder": "Chế độ tải lên tệp",
+      "textInput": "Nhập Nội dung Văn bản",
+      "documentUpload": "Tải lên Tài liệu Hoàn chỉnh",
+      "placeholder": "Dán chương tiểu thuyết hoặc nội dung kịch bản của bạn tại đây...",
+      "filePlaceholder": "Chế độ tệp đã tải lên",
       "clickUpload": "Nhấn để tải lên tài liệu",
       "clearTextFirst": "Vui lòng xóa văn bản bên trái trước",
       "supportedFormats": "Hỗ trợ định dạng Word, TXT",
       "preview": "Xem trước",
-      "expandPreview": "Mở rộng thêm",
+      "expandPreview": "Mở rộng Thêm",
       "collapsePreview": "Thu gọn",
-      "deleteFile": "Xóa tệp",
-      "startAnalysis": "Bắt đầu phân tích thông minh",
+      "deleteFile": "Xóa Tệp",
+      "startAnalysis": "Bắt đầu Phân tích Thông minh",
       "back": "Quay lại",
       "words": "từ"
     },
     "analyzing": {
-      "title": "AI đang phân tích câu chuyện của bạn",
-      "description": "Đang nhận dạng cấu trúc chương, chia tập thông minh...",
-      "autoSave": "Sẽ tự động lưu sau khi phân tích hoàn thành"
+      "title": "AI đang Phân tích Câu chuyện của Bạn",
+      "description": "Nhận dạng cấu trúc chương, đang chia tập thông minh...",
+      "autoSave": "Sẽ tự động lưu sau khi phân tích hoàn tất"
     },
     "preview": {
-      "title": "Chia tập thông minh hoàn thành",
-      "episodeCount": "Tự động chia thành {count} tập",
+      "title": "Chia Tập Thông minh Hoàn tất",
+      "episodeCount": "Đã tự động chia thành {count} tập",
       "totalWords": "Tổng cộng {count} từ",
       "autoSaved": "✓ Đã tự động lưu",
       "reanalyze": "Phân tích lại",
-      "confirm": "Xác nhận hoàn thành",
+      "confirm": "Xác nhận Hoàn tất",
       "saving": "Đang lưu...",
-      "episodeList": "Danh sách tập",
-      "addEpisode": "Thêm tập",
+      "episodeList": "Danh sách Tập",
+      "addEpisode": "Thêm Tập",
       "averageWords": "Trung bình mỗi tập",
-      "episodeContent": "Nội dung tập",
+      "episodeContent": "Nội dung Tập",
       "episodePlaceholder": "Nhập tiêu đề tập...",
       "summaryPlaceholder": "Nhập tóm tắt cốt truyện...",
-      "newEpisode": "Tập mới",
-      "deleteEpisode": "Xóa tập",
+      "newEpisode": "Tập Mới",
+      "deleteEpisode": "Xóa Tập",
       "deleteConfirm": {
-        "title": "Xác nhận xóa",
+        "title": "Xác nhận Xóa",
         "message": "Bạn có chắc muốn xóa \"{title}\"?",
         "cancel": "Hủy",
-        "confirm": "Xác nhận xóa"
+        "confirm": "Xác nhận Xóa"
       },
       "tip": {
-        "title": "Mẹo",
-        "content": "Bạn có thể trực tiếp chỉnh sửa tiêu đề, tóm tắt và nội dung. Sau khi nhấn [Xác nhận hoàn thành], các tập sẽ được nhập chính thức vào dự án"
+        "title": "Gợi ý",
+        "content": "Bạn có thể trực tiếp chỉnh sửa tiêu đề, tóm tắt và nội dung. Sau khi nhấn [Xác nhận Hoàn tất], các tập sẽ được chính thức nhập vào dự án"
       }
     },
     "errors": {
       "fileTooLarge": "Tệp quá lớn, vui lòng tải lên tệp nhỏ hơn 10MB",
-      "docNotSupported": "Định dạng .doc không được hỗ trợ, vui lòng chuyển đổi sang .docx trong Word",
+      "docNotSupported": "Không hỗ trợ định dạng .doc, vui lòng chuyển đổi sang .docx trong Word",
       "fileEmpty": "Nội dung tệp trống",
       "fileReadError": "Đọc tệp thất bại, vui lòng thử lại",
       "uploadFirst": "Vui lòng tải lên hoặc dán nội dung trước",
@@ -91,20 +91,20 @@
   },
   "storyInput": {
     "currentEditing": "Đang chỉnh sửa: {name}",
-    "editingTip": "Quy trình sau đây chỉ áp dụng cho tập này. Chuyển tập ở góc trên bên trái nếu cần",
+    "editingTip": "Quy trình sau chỉ áp dụng cho tập này. Chuyển tập ở góc trên bên trái nếu cần",
     "wordCount": "Số từ:",
     "assetLibraryTip": {
-      "title": "Cần nhân vật và bối cảnh tùy chỉnh?",
-      "description": "Nhấn nút 「Thư viện tài nguyên」 ở góc trên bên phải để tải lên tài liệu thiết lập tài nguyên hoặc thêm nhân vật/bối cảnh thủ công. AI sẽ ưu tiên sử dụng thiết lập từ thư viện tài nguyên để phân tích."
+      "title": "Cần tùy chỉnh nhân vật và bối cảnh?",
+      "description": "Nhấn nút \"Thư viện Tài nguyên\" ở góc trên bên phải để tải lên tài liệu cài đặt tài nguyên hoặc thêm nhân vật/bối cảnh thủ công. AI sẽ ưu tiên sử dụng cài đặt từ thư viện tài nguyên để phân tích."
     },
-    "videoRatio": "Tỷ lệ video",
-    "visualStyle": "Phong cách hình ảnh",
-    "moreConfig": "Để có thêm tùy chọn cấu hình, nhấn nút 「Cài đặt」 ở góc trên bên phải",
+    "videoRatio": "Tỷ lệ Video",
+    "visualStyle": "Phong cách Hình ảnh",
+    "moreConfig": "Để có thêm tùy chọn cấu hình, nhấn nút \"Cài đặt\" ở góc trên bên phải",
     "narration": {
-      "title": "Bật thuyết minh",
-      "description": "Tạo giọng thuyết minh TTS để thêm bình luận cho video của bạn"
+      "title": "Bật Lời bình Tường thuật",
+      "description": "Tạo giọng nói TTS tường thuật để thêm lời bình cho video"
     },
-    "creating": "AI đang sáng tạo...",
+    "creating": "AI đang Sáng tạo...",
     "ready": "✓ Cấu hình hoàn tất, sẵn sàng cho bước tiếp theo",
     "pleaseInput": "Vui lòng nhập nội dung kịch bản trước"
   },
@@ -118,22 +118,22 @@
     "batchVideoFailed": "Tạo video hàng loạt thất bại",
     "updateFailed": "Cập nhật thất bại",
     "saveFailed": "Lưu thất bại",
-    "storyToScriptRunning": "Đang chạy Câu chuyện→Kịch bản V2",
-    "scriptToStoryboardRunning": "Đang chạy Kịch bản→Storyboard V2",
-    "storyToScriptFailed": "Chuyển đổi câu chuyện sang kịch bản thất bại",
-    "scriptToStoryboardFailed": "Chuyển đổi kịch bản sang storyboard thất bại",
-    "taskStreamTimeout": "Tác vụ đã hết thời gian chờ. Tác vụ có thể vẫn đang chạy ở nền -- vui lòng kiểm tra trạng thái hoặc thử lại"
+    "storyToScriptRunning": "Story→Script V2 đang chạy",
+    "scriptToStoryboardRunning": "Script→Storyboard V2 đang chạy",
+    "storyToScriptFailed": "Chuyển truyện thành kịch bản thất bại",
+    "scriptToStoryboardFailed": "Chuyển kịch bản thành storyboard thất bại",
+    "taskStreamTimeout": "Tác vụ đã hết thời gian. Tác vụ có thể vẫn đang chạy ngầm -- vui lòng kiểm tra trạng thái hoặc thử lại"
   },
   "rebuildConfirm": {
     "storyToScript": {
-      "title": "Luồng kịch bản sẽ được xây dựng lại",
-      "message": "Phát hiện dữ liệu storyboard phía sau cho tập này ({storyboardCount} storyboard, {panelCount} khung hình). Tiếp tục sẽ xóa và xây dựng lại dữ liệu này. Tiếp tục?"
+      "title": "Quy trình Kịch bản sẽ được Xây dựng lại",
+      "message": "Phát hiện dữ liệu storyboard hạ nguồn cho tập này ({storyboardCount} storyboard, {panelCount} khung hình). Tiếp tục sẽ xóa và xây dựng lại dữ liệu này. Tiếp tục?"
     },
     "scriptToStoryboard": {
-      "title": "Dữ liệu storyboard sẽ được xây dựng lại",
+      "title": "Dữ liệu Storyboard sẽ được Xây dựng lại",
       "message": "Phát hiện dữ liệu storyboard hiện có cho tập này ({storyboardCount} storyboard, {panelCount} khung hình). Tiếp tục sẽ xóa storyboard hiện tại và tạo lại. Tiếp tục?"
     },
-    "confirm": "Tiếp tục và xóa",
+    "confirm": "Tiếp tục và Xóa",
     "cancel": "Hủy"
   }
 }
