@@ -1,0 +1,18 @@
+{
+  "storyboard": "Kich ban phan canh",
+  "storyboard_candidate": "Phan canh du kien",
+  "character": "Nhan vat",
+  "location": "Dia diem",
+  "video": "Video",
+  "analyze": "Phan tich",
+  "analyze_character": "Phan tich nhan vat",
+  "analyze_location": "Phan tich dia diem",
+  "clips": "Tach clip",
+  "storyboard_text_plan": "Lap ke hoach phan canh",
+  "storyboard_text_detail": "Chi tiet phan canh",
+  "tts": "Chuyen van ban thanh giong noi",
+  "regenerate": "Tao lai",
+  "voice-generate": "Tao giong noi",
+  "voice-design": "Thiet ke giong noi",
+  "lip-sync": "Dong bo khau hinh"
+}

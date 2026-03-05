@@ -1,0 +1,15 @@
+{
+  "transactionType": "Loai giao dich",
+  "startDate": "Ngay bat dau",
+  "endDate": "Ngay ket thuc",
+  "all": "Tat ca",
+  "income": "Thu nhap",
+  "expense": "Chi tieu",
+  "reset": "Dat lai",
+  "filter": "Loc",
+  "noRecords": "Khong co ban ghi",
+  "accountRecharge": "Nap tai khoan",
+  "serviceConsumption": "Su dung dich vu",
+  "balance": "So du",
+  "allTypes": "Tat ca loai"
+}

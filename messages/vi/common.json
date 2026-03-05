@@ -1,0 +1,134 @@
+{
+    "appName": "waoowaoo",
+    "betaVersion": "Beta v0.2",
+    "loading": "Đang tải...",
+    "save": "Lưu",
+    "cancel": "Hủy",
+    "confirm": "Xác nhận",
+    "delete": "Xóa",
+    "edit": "Chỉnh sửa",
+    "search": "Tìm kiếm",
+    "clear": "Xóa",
+    "close": "Đóng",
+    "back": "Quay lại",
+    "next": "Tiếp",
+    "previous": "Trước",
+    "submit": "Gửi",
+    "reset": "Đặt lại",
+    "generate": "Tạo",
+    "regenerate": "Tạo lại",
+    "preview": "Xem trước",
+    "download": "Tải xuống",
+    "upload": "Tải lên",
+    "select": "Chọn",
+    "add": "Thêm",
+    "remove": "Xóa",
+    "refresh": "Làm mới",
+    "expand": "Mở rộng",
+    "collapse": "Thu gọn",
+    "all": "Tất cả",
+    "none": "Không",
+    "success": "Thành công",
+    "error": "Lỗi",
+    "warning": "Cảnh báo",
+    "info": "Thông tin",
+    "copy": "Sao chép",
+    "paste": "Dán",
+    "apply": "Áp dụng",
+    "autoSave": "Tự động lưu",
+    "saved": "Đã lưu",
+    "episode": "Tập",
+    "project": "Dự án",
+    "editEpisodeName": "Sửa tên tập",
+    "deleteEpisode": "Xóa tập",
+    "deleteEpisodeConfirm": "Xác nhận xóa",
+    "newEpisode": "Tập mới",
+    "optional": "(Tùy chọn)",
+    "rename": "Đổi tên",
+    "dragToReorder": "Kéo để sắp xếp lại",
+    "episodeNamePlaceholder": "Nhập tên tập...",
+    "cancelSelection": "Hủy chọn",
+    "referenceImage": "Ảnh tham chiếu",
+    "previewLarge": "Xem lớn",
+    "viewOriginal": "Xem gốc",
+    "schemeN": "Phương án {n}",
+    "insufficientBalance": "Số dư không đủ",
+    "insufficientBalanceDetail": "Số dư tài khoản không đủ, vui lòng nạp tiền để tiếp tục",
+    "operationFailed": "Thao tác thất bại",
+    "pleaseRetry": "Vui lòng thử lại",
+    "recommended": "Khuyến nghị",
+    "language": {
+        "select": "Chọn ngôn ngữ",
+        "zh": "Tiếng Trung",
+        "en": "Tiếng Anh",
+        "switchConfirmTitle": "Đổi ngôn ngữ?",
+        "switchConfirmMessage": "Chuyển sang {targetLanguage} sẽ cập nhật không chỉ giao diện mà còn toàn bộ prompt, tạo kịch bản và đầu ra quy trình làm việc. Tiếp tục?",
+        "switchConfirmAction": "Đổi ngay"
+    },
+    "taskStatus": {
+        "intent": {
+            "generate": {
+                "running": {
+                    "image": "Đang tạo",
+                    "video": "Đang tạo",
+                    "audio": "Đang tạo",
+                    "text": "Đang tạo"
+                }
+            },
+            "regenerate": {
+                "running": {
+                    "image": "Đang tạo lại",
+                    "video": "Đang tạo lại",
+                    "audio": "Đang tạo lại",
+                    "text": "Đang tạo lại"
+                }
+            },
+            "modify": {
+                "running": {
+                    "image": "Đang chỉnh sửa",
+                    "video": "Đang chỉnh sửa",
+                    "audio": "Đang chỉnh sửa",
+                    "text": "Đang chỉnh sửa"
+                }
+            },
+            "analyze": {
+                "running": {
+                    "image": "Đang phân tích",
+                    "video": "Đang phân tích",
+                    "audio": "Đang phân tích",
+                    "text": "Đang phân tích"
+                }
+            },
+            "build": {
+                "running": {
+                    "image": "Đang xây dựng",
+                    "video": "Đang xây dựng",
+                    "audio": "Đang xây dựng",
+                    "text": "Đang xây dựng"
+                }
+            },
+            "convert": {
+                "running": {
+                    "image": "Đang chuyển đổi",
+                    "video": "Đang chuyển đổi",
+                    "audio": "Đang chuyển đổi",
+                    "text": "Đang chuyển đổi"
+                }
+            },
+            "process": {
+                "running": {
+                    "image": "Đang xử lý",
+                    "video": "Đang xử lý",
+                    "audio": "Đang xử lý",
+                    "text": "Đang xử lý"
+                }
+            }
+        },
+        "failed": {
+            "image": "Thất bại",
+            "video": "Thất bại",
+            "audio": "Thất bại",
+            "text": "Thất bại"
+        }
+    }
+}

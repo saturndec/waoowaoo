@@ -31,10 +31,11 @@ export function getAspectRatioConfig(ratio: string) {
 }
 
 export const ANALYSIS_MODELS = [
+  { value: 'anthropic/claude-opus-4-6', label: 'Claude Opus 4.6 (Thinking)' },
+  { value: 'anthropic/claude-sonnet-4.5', label: 'Claude Sonnet 4.5' },
+  { value: 'anthropic/claude-sonnet-4', label: 'Claude Sonnet 4' },
   { value: 'google/gemini-3-pro-preview', label: 'Gemini 3 Pro' },
   { value: 'google/gemini-3-flash-preview', label: 'Gemini 3 Flash' },
-  { value: 'anthropic/claude-sonnet-4.5', label: 'Claude Sonnet 4.5' },
-  { value: 'anthropic/claude-sonnet-4', label: 'Claude Sonnet 4' }
 ]
 
 export const IMAGE_MODELS = [

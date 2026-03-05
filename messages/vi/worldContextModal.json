@@ -1,0 +1,6 @@
+{
+    "title": "Cài đặt thế giới & nhân vật",
+    "description": "Định nghĩa ngoại hình nhân vật, phong cách cảnh và mô tả môi trường chung",
+    "placeholder": "Ví dụ:\n【Nhân vật chính】Minh, 25 tuổi, tóc đen ngắn, luôn mặc áo khoác denim bạc màu, đôi mắt u buồn.\n【Nữ chính】Lan, 22 tuổi, tóc đỏ buộc hai bên, tính cách hoạt bát, thích mặc váy phong cách Lolita.\n【Bối cảnh】Thành phố Cyberpunk năm 2077, đèn neon nhấp nháy, mưa quanh năm...",
+    "hint": "Các cài đặt này sẽ được kế thừa bởi tất cả các tập như tài liệu tham khảo cho AI vẽ tranh."
+}

@@ -1,17 +1,17 @@
 import { defineRouting } from 'next-intl/routing';
 
-export const locales = ['zh', 'en'] as const;
+export const locales = ['vi', 'zh', 'en'] as const;
 export type Locale = (typeof locales)[number];
 
-export const defaultLocale: Locale = 'zh';
+export const defaultLocale: Locale = 'vi';
 
 export const routing = defineRouting({
-    // 支持的所有语言
+    // Tất cả ngôn ngữ được hỗ trợ
     locales,
 
-    // 默认语言
+    // Ngôn ngữ mặc định
     defaultLocale,
 
-    // URL 路径策略: 始终显示语言前缀
+    // Chiến lược URL: luôn hiển thị tiền tố ngôn ngữ
     localePrefix: 'always'
 });

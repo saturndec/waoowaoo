@@ -20,7 +20,7 @@ export const config = {
     matcher: [
         // 匹配根路径和所有带语言前缀的路径
         '/',
-        '/(zh|en)/:path*',
+        '/(vi|zh|en)/:path*',
         // 匹配所有其他路径（用于重定向到带语言前缀的路径）
         '/((?!api|m|_next/static|_next/image|favicon.ico|.*\\.png|.*\\.jpg|.*\\.jpeg|.*\\.svg|.*\\.gif|.*\\.ico).*)'
     ]

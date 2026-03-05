@@ -118,13 +118,16 @@ export async function testLlmConnection(payload: TestConnectionPayload): Promise
       await testGoogleAI(apiKey)
       return { provider, message: 'google 连接成功' }
     case 'anthropic': {
+      // Sử dụng Claude proxy URL từ env hoặc fallback sang Anthropic API
+      const proxyBaseUrl = process.env.CLAUDE_PROXY_BASE_URL || 'https://api.anthropic.com/v1'
+      const proxyApiKey = apiKey || process.env.CLAUDE_PROXY_API_KEY || ''
       const tested = await testOpenAICompatibleConnection({
-        apiKey,
-        baseURL: 'https://api.anthropic.com/v1',
-        model: requestedModel || 'claude-3-haiku-20240307',
-        defaultHeaders: { 'anthropic-version': '2023-06-01' },
+        apiKey: proxyApiKey,
+        baseURL: proxyBaseUrl,
+        model: requestedModel || 'claude-haiku-4-5-20251001',
+        defaultHeaders: proxyBaseUrl.includes('anthropic.com') ? { 'anthropic-version': '2023-06-01' } : undefined,
       })
-      return { provider, message: 'anthropic 连接成功', ...tested }
+      return { provider, message: 'Kết nối Anthropic thành công', ...tested }
     }
     case 'openai': {
       const tested = await testOpenAICompatibleConnection({

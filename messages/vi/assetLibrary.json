@@ -1,0 +1,14 @@
+{
+  "title": "Thư viện tài nguyên",
+  "button": "Tài nguyên",
+  "characters": "Nhân vật",
+  "locations": "Bối cảnh",
+  "noCharacters": "Không có nhân vật",
+  "noLocations": "Không có bối cảnh",
+  "addCharacter": "Thêm nhân vật",
+  "addLocation": "Thêm bối cảnh",
+  "generateImage": "Tạo hình ảnh",
+  "regenerateImage": "Tạo lại",
+  "analyzeAssets": "Phân tích tài nguyên",
+  "analyzing": "Đang phân tích..."
+}

@@ -1,0 +1,18 @@
+{
+    "selectCharacter": "Chọn nhân vật từ Asset Hub",
+    "selectLocation": "Chọn bối cảnh từ Asset Hub",
+    "selectVoice": "Chọn giọng nói từ Asset Hub",
+    "searchPlaceholder": "Tìm kiếm theo tên hoặc thư mục...",
+    "noAssets": "Không có tài nguyên trong Asset Hub",
+    "createInAssetHub": "Vui lòng tạo nhân vật/bối cảnh/giọng nói trong Asset Hub trước",
+    "noSearchResults": "Không tìm thấy tài nguyên phù hợp",
+    "appearances": "ngoại hình",
+    "images": "hình ảnh",
+    "cancel": "Hủy",
+    "confirmCopy": "Xác nhận sao chép",
+    "copyFromGlobal": "Sao chép từ Asset Hub",
+    "copySuccess": "Sao chép thành công",
+    "copyFailed": "Sao chép thất bại",
+    "preview": "Xem trước",
+    "stop": "Dừng"
+}

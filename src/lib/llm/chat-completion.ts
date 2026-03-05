@@ -10,6 +10,7 @@ import { getInternalLLMStreamCallbacks } from '../llm-observe/internal-stream-co
 import type { ChatCompletionOptions } from './types'
 import { extractGoogleParts, extractGoogleUsage, GoogleEmptyResponseError } from './providers/google'
 import { buildOpenAIChatCompletion } from './providers/openai-compat'
+import { anthropicChatCompletion } from './providers/anthropic'
 import { getCompletionParts } from './completion-parts'
 import {
   buildReasoningAwareContent,
@@ -176,6 +177,36 @@ export async function chatCompletion(
         return completion
       }
 
+
+      if (providerKey === 'anthropic') {
+        const completion = await anthropicChatCompletion(resolvedModelId, messages, {
+          temperature,
+          reasoning,
+          reasoningEffort,
+        })
+        const completionParts = getCompletionParts(completion)
+        logLlmRawOutput({
+          userId,
+          projectId,
+          provider: 'anthropic',
+          modelId: resolvedModelId,
+          modelKey: selection.modelKey,
+          stream: false,
+          action: options.action,
+          text: completionParts.text,
+          reasoning: completionParts.reasoning,
+          usage: completionUsageSummary(completion),
+        })
+        recordCompletionUsage(resolvedModelId, completion)
+        llmLogger.info({
+          action: 'llm.call.success',
+          message: 'llm call succeeded',
+          provider: 'anthropic',
+          durationMs: Date.now() - attemptStartedAt,
+          details: { model: resolvedModelId, attempt, maxRetries },
+        })
+        return completion
+      }
 
       if (providerKey === 'ark') {
         const { apiKey } = await getProviderConfig(userId, provider)

@@ -1,0 +1,26 @@
+{
+  "title": "waoowaoo",
+  "subtitle": "Studio Phim & Truyền hình AI",
+  "enterWorkspace": "Vào không gian làm việc",
+  "getStarted": "Bắt đầu",
+  "learnMore": "Tìm hiểu thêm",
+  "features": {
+    "title": "Giải phóng sáng tạo vô hạn",
+    "subtitle": "AI hỗ trợ toàn bộ quy trình, từ kịch bản đến phim hoàn chỉnh",
+    "character": {
+      "title": "Xưởng nhân vật",
+      "description": "Tạo nhân vật anime độc đáo với tính nhất quán cao"
+    },
+    "storyboard": {
+      "title": "Storyboard thông minh",
+      "description": "Chuyển văn bản thành storyboard chỉ với một cú nhấp, kiểm soát tường thuật chính xác"
+    },
+    "world": {
+      "title": "Xây dựng thế giới",
+      "description": "Tạo cảnh sống động để xây dựng bối cảnh câu chuyện hoành tráng"
+    }
+  },
+  "footer": {
+    "copyright": "2026 waoowaoo AI. Bảo lưu mọi quyền."
+  }
+}

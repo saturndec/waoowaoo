@@ -1,0 +1,19 @@
+{
+    "UNAUTHORIZED": "Vui long dang nhap truoc",
+    "FORBIDDEN": "Truy cap bi tu choi",
+    "NOT_FOUND": "Khong tim thay tai nguyen",
+    "INSUFFICIENT_BALANCE": "So du API khong du. Vui long nap them va thu lai",
+    "RATE_LIMIT": "Qua nhieu yeu cau. Vui long thu lai sau {retryAfter} giay",
+    "QUOTA_EXCEEDED": "Da vuot qua han muc. Vui long thu lai sau",
+    "GENERATION_FAILED": "Tao that bai. Vui long thu lai",
+    "GENERATION_TIMEOUT": "Tao bi het thoi gian. Vui long thu lai",
+    "SENSITIVE_CONTENT": "Noi dung co the chua tai lieu nhay cam",
+    "INVALID_PARAMS": "Tham so khong hop le",
+    "MISSING_CONFIG": "Vui long hoan thanh cau hinh mo hinh truoc",
+    "INTERNAL_ERROR": "Loi may chu. Vui long thu lai sau",
+    "NETWORK_ERROR": "Loi mang. Vui long kiem tra ket noi cua ban",
+    "EXTERNAL_ERROR": "Dich vu ben ngoai tam thoi khong kha dung. Vui long thu lai sau",
+    "TASK_NOT_READY": "Tac vu van dang xu ly",
+    "NO_RESULT": "Tac vu khong co ket qua",
+    "CONFLICT": "Xung dot trang thai tai nguyen"
+}

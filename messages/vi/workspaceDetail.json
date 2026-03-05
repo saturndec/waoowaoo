@@ -1,0 +1,24 @@
+{
+  "globalAssets": "Tai nguyen chung",
+  "createFailed": "Tao that bai",
+  "deleteFailed": "Xoa that bai",
+  "renameFailed": "Doi ten that bai",
+  "refreshFailed": "Lam moi that bai",
+  "projectNotFound": "Khong tim thay du an",
+  "backToWorkspace": "Quay lai khong gian lam viec",
+  "episode": "Tap",
+  "sidebar": {
+    "dragToMove": "Keo de di chuyen vi tri",
+    "listTitle": "Danh sach tap",
+    "episodeCount": "{count} tap",
+    "empty": "Chua co tap nao. Tao tap moi ben duoi.",
+    "save": "Luu",
+    "deleteConfirm": "Xoa \"{name}\"?",
+    "delete": "Xoa",
+    "cancel": "Huy",
+    "rename": "Doi ten",
+    "newEpisodePlaceholder": "Nhap ten tap...",
+    "create": "Tao",
+    "addEpisode": "Them tap"
+  }
+}

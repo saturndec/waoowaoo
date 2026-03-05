@@ -74,7 +74,11 @@ type PresetModel = Omit<CustomModel, 'enabled' | 'modelKey' | 'price'>
 
 // 预设模型
 export const PRESET_MODELS: PresetModel[] = [
-    // 文本模型
+    // Anthropic (Claude Proxy) - mô hình phân tích chính
+    { modelId: 'claude-opus-4-6', name: 'Claude Opus 4.6 (Thinking)', type: 'llm', provider: 'anthropic' },
+    { modelId: 'claude-sonnet-4-6', name: 'Claude Sonnet 4.6', type: 'llm', provider: 'anthropic' },
+    { modelId: 'claude-sonnet-4-5-20250514', name: 'Claude Sonnet 4.5', type: 'llm', provider: 'anthropic' },
+    // OpenRouter - mô hình văn bản
     { modelId: 'google/gemini-3.1-pro-preview', name: 'Gemini 3.1 Pro', type: 'llm', provider: 'openrouter' },
     { modelId: 'google/gemini-3-pro-preview', name: 'Gemini 3 Pro', type: 'llm', provider: 'openrouter' },
     { modelId: 'google/gemini-3-flash-preview', name: 'Gemini 3 Flash', type: 'llm', provider: 'openrouter' },
@@ -160,6 +164,7 @@ export function isPresetComingSoonModelKey(modelKey: string): boolean {
 
 // 预设提供商（API Key 唯一归属于 provider id）
 export const PRESET_PROVIDERS: Omit<Provider, 'apiKey' | 'hasApiKey'>[] = [
+    { id: 'anthropic', name: 'Anthropic (Claude Proxy)' },
     { id: 'ark', name: 'Volcengine Ark' },
     { id: 'google', name: 'Google AI Studio' },
     { id: 'openrouter', name: 'OpenRouter', baseUrl: 'https://openrouter.ai/api/v1' },

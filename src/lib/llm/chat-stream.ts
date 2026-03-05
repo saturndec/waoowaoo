@@ -9,6 +9,7 @@ import {
 import type { ChatCompletionOptions, ChatCompletionStreamCallbacks } from './types'
 import { extractGoogleParts, extractGoogleUsage, GoogleEmptyResponseError } from './providers/google'
 import { buildOpenAIChatCompletion } from './providers/openai-compat'
+import { anthropicChatCompletionStream } from './providers/anthropic'
 import {
   buildReasoningAwareContent,
   extractStreamDeltaParts,
@@ -205,6 +206,26 @@ export async function chatCompletionStream(
       return completion
     }
 
+
+    if (providerKey === 'anthropic') {
+      return await anthropicChatCompletionStream(
+        resolvedModelId,
+        messages,
+        {
+          temperature,
+          reasoning: options.reasoning ?? true,
+          reasoningEffort: options.reasoningEffort || 'high',
+        },
+        callbacks,
+        streamStep,
+        {
+          userId,
+          projectId,
+          modelKey: selection.modelKey,
+          action: options.action,
+        },
+      )
+    }
 
     if (providerKey === 'ark') {
       const { apiKey } = await getProviderConfig(userId, provider)
