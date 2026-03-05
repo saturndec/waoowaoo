@@ -18,6 +18,13 @@
     "minimize": "最小化",
     "iteration": "迭代: {count}"
   },
+  "chat": {
+    "title": "导演对话",
+    "inputPlaceholder": "请求导演创建剧本、分镜、生成资源...",
+    "send": "发送",
+    "clear": "清除",
+    "emptyState": "开始与AI导演对话。请求分析小说、创建剧本、生成分镜等。"
+  },
   "phases": {
     "planning": "规划中",
     "analyzing": "分析小说",

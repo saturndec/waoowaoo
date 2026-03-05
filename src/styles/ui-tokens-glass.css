@@ -77,6 +77,58 @@
   --glass-ghost-hover-bg: rgba(255, 255, 255, 0.5);
 }
 
+/* ========= Dark Mode ========= */
+[data-theme='dark'] {
+  --glass-bg-canvas: #0f1117;
+  --glass-bg-surface: rgba(30, 33, 44, 0.88);
+  --glass-bg-surface-strong: rgba(36, 39, 52, 0.94);
+  --glass-bg-surface-modal: rgba(24, 27, 38, 0.97);
+  --glass-bg-muted: rgba(40, 44, 58, 0.86);
+  --glass-bg-nav: rgba(20, 23, 34, 0.96);
+  --glass-text-primary: #e8eaed;
+  --glass-text-secondary: #c4c7cc;
+  --glass-text-tertiary: #8b8f99;
+  --glass-text-on-accent: #ffffff;
+
+  --glass-stroke-soft: rgba(255, 255, 255, 0.08);
+  --glass-stroke-base: rgba(148, 163, 194, 0.18);
+  --glass-stroke-strong: rgba(148, 163, 194, 0.28);
+  --glass-stroke-focus: rgba(96, 165, 250, 0.64);
+  --glass-stroke-danger: rgba(248, 113, 113, 0.64);
+  --glass-stroke-warning: rgba(251, 191, 36, 0.62);
+  --glass-stroke-success: rgba(52, 211, 153, 0.62);
+
+  --glass-shadow-sm: 0 2px 10px rgba(0, 0, 0, 0.25);
+  --glass-shadow-md: 0 6px 18px rgba(0, 0, 0, 0.35);
+  --glass-shadow-lg: 0 10px 24px rgba(0, 0, 0, 0.4);
+  --glass-shadow-modal: 0 14px 34px rgba(0, 0, 0, 0.5);
+  --glass-shadow-nav: 0 8px 18px rgba(0, 0, 0, 0.35);
+
+  --glass-tone-neutral-bg: rgba(148, 163, 184, 0.14);
+  --glass-tone-neutral-fg: #94a3b8;
+  --glass-tone-info-bg: rgba(96, 165, 250, 0.18);
+  --glass-tone-info-fg: #60a5fa;
+  --glass-tone-success-bg: rgba(52, 211, 153, 0.18);
+  --glass-tone-success-fg: #34d399;
+  --glass-tone-warning-bg: rgba(251, 191, 36, 0.2);
+  --glass-tone-warning-fg: #fbbf24;
+  --glass-tone-danger-bg: rgba(248, 113, 113, 0.18);
+  --glass-tone-danger-fg: #f87171;
+
+  --glass-overlay-soft: rgba(0, 0, 0, 0.4);
+  --glass-overlay: rgba(0, 0, 0, 0.55);
+  --glass-overlay-strong: rgba(0, 0, 0, 0.7);
+
+  --glass-accent-from: #3b82f6;
+  --glass-accent-to: #60a5fa;
+  --glass-accent-shadow-soft: rgba(59, 130, 246, 0.2);
+  --glass-accent-shadow-strong: rgba(59, 130, 246, 0.3);
+  --glass-focus-ring: rgba(59, 130, 246, 0.2);
+  --glass-focus-ring-strong: rgba(59, 130, 246, 0.28);
+  --glass-danger-ring: rgba(248, 113, 113, 0.18);
+  --glass-ghost-hover-bg: rgba(255, 255, 255, 0.08);
+}
+
 /* Low-cost preset for performance-sensitive environments */
 [data-glass-preset='subtle'] {
   --glass-bg-surface: rgba(255, 255, 255, 0.92);

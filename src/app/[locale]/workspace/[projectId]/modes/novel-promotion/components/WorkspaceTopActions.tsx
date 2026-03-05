@@ -1,6 +1,7 @@
 'use client'
 
 import { AppIcon } from '@/components/ui/icons'
+import { useTheme } from '@/components/providers/ThemeProvider'
 
 interface WorkspaceTopActionsProps {
   onOpenAssetLibrary: () => void
@@ -25,6 +26,8 @@ export default function WorkspaceTopActions({
   directorLabel,
   directorRunning,
 }: WorkspaceTopActionsProps) {
+  const { theme, toggleTheme } = useTheme()
+
   return (
     <div className="fixed top-20 right-6 z-50 flex gap-3">
       {onStartDirector && (
@@ -58,6 +61,13 @@ export default function WorkspaceTopActions({
       >
         <AppIcon name="settingsHexMinor" className="h-5 w-5" />
         <span className="font-semibold text-sm hidden md:inline tracking-[0.01em]">{settingsLabel}</span>
+      </button>
+      <button
+        onClick={toggleTheme}
+        className="glass-btn-base glass-btn-secondary flex items-center gap-2 px-4 py-3 rounded-3xl text-[var(--glass-text-primary)]"
+        title={theme === 'light' ? 'Dark mode' : 'Light mode'}
+      >
+        <AppIcon name={theme === 'light' ? 'moon' : 'sun'} className="w-5 h-5" />
       </button>
       <button
         onClick={onRefresh}

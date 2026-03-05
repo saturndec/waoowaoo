@@ -29,6 +29,9 @@ import type {
 } from './types'
 import { DEFAULT_DIRECTOR_CONFIG } from './types'
 import { AGENT_TOOLS, buildToolDefinitionsForLLM } from './tools'
+import { getSpecialistForPhase, getAllSpecialistAgents } from './specialist-registry'
+import { runQualityReview } from './quality-reviewer'
+import type { QualityReviewResult } from './specialist-types'
 import { submitTask } from '@/lib/task/submitter'
 import { TASK_TYPE } from '@/lib/task/types'
 import type { Locale } from '@/i18n/routing'
@@ -105,7 +108,18 @@ When the entire production is complete, end with [PRODUCTION_COMPLETE].
 Always respond in English.`,
   }
 
-  return localePrompts[locale] || localePrompts.vi
+  const specialists = getAllSpecialistAgents()
+  const specialistInfo = specialists
+    .map((s) => `- **${s.name}** (${s.type}): ${s.description} | Tools: ${s.tools.join(', ')}`)
+    .join('\n')
+
+  const specialistBlock = locale === 'vi'
+    ? `\n\n## Specialist Agents\nBạn có các specialist agents sau để delegate công việc:\n${specialistInfo}\n\nKhi gọi review_quality, Quality Reviewer Agent sẽ tự động đánh giá và trả về kết quả chi tiết.`
+    : locale === 'zh'
+      ? `\n\n## 专业Agent\n可用的专业agent:\n${specialistInfo}`
+      : `\n\n## Specialist Agents\nAvailable specialist agents:\n${specialistInfo}\n\nWhen calling review_quality, the Quality Reviewer Agent automatically evaluates and returns detailed results.`
+
+  return (localePrompts[locale] || localePrompts.vi) + specialistBlock
 }
 
 // =====================================================
@@ -189,24 +203,72 @@ export function createDefaultToolExecutor(locale: Locale = 'vi'): ToolExecutor {
       }
     }
 
-    // review_quality và get_project_status là internal agent tools — không submit task
-    if (toolCall.name === 'review_quality' || toolCall.name === 'get_project_status') {
+    // get_project_status — internal status tool with specialist info
+    if (toolCall.name === 'get_project_status') {
+      const specialists = getAllSpecialistAgents()
       return {
         toolCallId: toolCall.id,
         name: toolCall.name,
         success: true,
         output: {
-          message: `Internal tool ${toolCall.name} executed`,
+          message: 'Project status retrieved',
           phase: state.phase,
           iterationCount: state.iterationCount,
           artifacts: state.artifacts,
-          ...(toolCall.name === 'get_project_status'
-            ? {
-                completedSteps: state.decisions.length,
-                currentPhase: state.phase,
-              }
-            : {}),
+          completedSteps: state.decisions.length,
+          currentPhase: state.phase,
+          availableSpecialists: specialists.map((s) => ({
+            type: s.type,
+            name: s.name,
+            phase: s.phase,
+            tools: s.tools,
+          })),
         },
+      }
+    }
+
+    // review_quality — delegate to Quality Reviewer specialist agent
+    if (toolCall.name === 'review_quality') {
+      try {
+        const targetType = String(toolCall.arguments.targetType || 'overall')
+        const criteria = String(toolCall.arguments.criteria || 'all')
+
+        const criteriaList = criteria === 'all'
+          ? ['consistency', 'quality', 'pacing', 'emotion', 'coherence', 'visual_match'] as const
+          : [criteria] as const
+
+        const reviewResult: QualityReviewResult = await runQualityReview(
+          {
+            targetType: targetType as 'script' | 'storyboard' | 'character_images' | 'panel_images' | 'videos' | 'voices' | 'overall',
+            criteria: [...criteriaList] as ('consistency' | 'quality' | 'pacing' | 'emotion' | 'coherence' | 'visual_match')[],
+            context: {
+              projectId: state.projectId,
+              episodeId: state.episodeId,
+              artifacts: state.artifacts,
+            },
+            strictness: 'moderate',
+          },
+          state,
+          locale,
+        )
+
+        return {
+          toolCallId: toolCall.id,
+          name: toolCall.name,
+          success: true,
+          output: {
+            ...reviewResult,
+            reviewedBy: 'quality_reviewer_specialist',
+          },
+        }
+      } catch (error) {
+        return {
+          toolCallId: toolCall.id,
+          name: toolCall.name,
+          success: false,
+          output: {},
+          error: error instanceof Error ? error.message : String(error),
+        }
       }
     }
 

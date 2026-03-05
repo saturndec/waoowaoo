@@ -18,6 +18,13 @@
     "minimize": "Thu nhỏ",
     "iteration": "Vòng lặp: {count}"
   },
+  "chat": {
+    "title": "Chat Director",
+    "inputPlaceholder": "Yêu cầu Director tạo kịch bản, storyboard, tạo tài nguyên...",
+    "send": "Gửi",
+    "clear": "Xóa",
+    "emptyState": "Bắt đầu trò chuyện với AI Director. Yêu cầu phân tích truyện, tạo kịch bản, tạo storyboard và hơn thế nữa."
+  },
   "phases": {
     "planning": "Lên kế hoạch",
     "analyzing": "Phân tích truyện",

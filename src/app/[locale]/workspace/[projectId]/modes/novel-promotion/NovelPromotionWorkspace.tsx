@@ -143,7 +143,10 @@ function NovelPromotionWorkspaceContent(props: NovelPromotionWorkspaceProps) {
           onMinimize={() => setDirectorMinimized(true)}
           onMaximize={() => setDirectorMinimized(false)}
           onStop={director.stop}
-          onReset={director.reset}
+          onReset={() => {
+            director.reset()
+            setDirectorMinimized(false)
+          }}
         />
       </div>
     </div>

@@ -18,6 +18,13 @@
     "minimize": "Minimize",
     "iteration": "Iteration: {count}"
   },
+  "chat": {
+    "title": "Director Chat",
+    "inputPlaceholder": "Ask the Director to create scripts, storyboards, generate assets...",
+    "send": "Send",
+    "clear": "Clear",
+    "emptyState": "Start a conversation with the AI Director. Ask it to analyze your novel, create scripts, generate storyboards, and more."
+  },
   "phases": {
     "planning": "Planning",
     "analyzing": "Analyzing Novel",
