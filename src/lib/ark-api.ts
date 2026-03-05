@@ -13,7 +13,7 @@ import { logInfo as _ulogInfo, logError as _ulogError } from '@/lib/logging/core
 const ARK_BASE_URL = 'https://ark.cn-beijing.volces.com/api/v3'
 
 // 超时配置
-const DEFAULT_TIMEOUT_MS = 60 * 1000  // 60秒
+const DEFAULT_TIMEOUT_MS = 300 * 1000  // 300秒
 const MAX_RETRIES = 3
 const RETRY_DELAY_BASE_MS = 2000  // 2秒起始延迟
 

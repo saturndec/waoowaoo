@@ -16,6 +16,7 @@ function inferEmptyResponse(message: string): boolean {
     || normalized.includes('empty response')
     || normalized.includes('no meaningful content')
     || normalized.includes('channel:empty_response')
+    || normalized.includes('llm_empty_response')
 }
 
 export function toAiRuntimeError(input: unknown): AiRuntimeError {

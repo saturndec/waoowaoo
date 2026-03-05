@@ -211,6 +211,9 @@ export async function chatCompletionStream(
       const client = new OpenAI({
         baseURL: 'https://ark.cn-beijing.volces.com/api/v3',
         apiKey,
+        defaultHeaders: {
+          'User-Agent': 'waoowaoo/0.1',
+        },
       })
       const useReasoning = options.reasoning ?? true
       const extraParams: Record<string, unknown> = {}
@@ -639,6 +642,9 @@ export async function chatCompletionStream(
       const client = new OpenAI({
         baseURL: config.baseUrl,
         apiKey: config.apiKey,
+        defaultHeaders: {
+          'User-Agent': 'waoowaoo/0.1',
+        },
       })
 
       const extraParams: Record<string, unknown> = {}

@@ -160,10 +160,10 @@ export async function submitTask(params: {
   }
 
   let preparedBillingInfo = (task.billingInfo || resolvedBillingInfo || null) as TaskBillingInfo | null
-  if (!deduped && isBillableTaskType(params.type) && (!computedBillingInfo || !computedBillingInfo.billable)) {
-    await markTaskFailed(task.id, 'INVALID_PARAMS', `missing server-generated billingInfo for billable task type: ${params.type}`)
+  if (!deduped && isBillableTaskType(params.type) && (!preparedBillingInfo || !preparedBillingInfo.billable)) {
+    await markTaskFailed(task.id, 'INVALID_PARAMS', `missing billingInfo for billable task type: ${params.type}`)
     throw new ApiError('INVALID_PARAMS', {
-      message: `missing server-generated billingInfo for billable task type: ${params.type}`,
+      message: `missing billingInfo for billable task type: ${params.type}`,
     })
   }
 

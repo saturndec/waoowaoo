@@ -15,6 +15,7 @@ type ErrorLike = {
   message?: unknown
   details?: unknown
   provider?: unknown
+  type?: unknown
 }
 
 function toMessage(value: unknown): string {
@@ -57,6 +58,18 @@ function buildNormalizedError(
   }
 }
 
+function isChallengeForbidden(errorLike: ErrorLike, lowerMessage: string): boolean {
+  const is403 = typeof errorLike.status === 'number' && errorLike.status === 403
+  if (!is403) return false
+
+  if (containsAny(lowerMessage, ['cf-challenge', 'cloudflare', 'challenge', 'captcha', 'turnstile', 'bot detection', 'anti-bot'])) {
+    return true
+  }
+
+  const type = typeof errorLike.type === 'string' ? errorLike.type.toLowerCase() : ''
+  return containsAny(type, ['challenge', 'captcha', 'anti_bot', 'anti-bot'])
+}
+
 function inferCodeFromMessage(message: string): UnifiedErrorCode | null {
   const upper = message.toUpperCase()
   const explicitMatch = upper.match(/\b([A-Z_]{3,})\b/)
@@ -66,6 +79,7 @@ function inferCodeFromMessage(message: string): UnifiedErrorCode | null {
 
   if (containsAny(message, ['task cancelled', 'canceled by user', 'cancelled by user', '任务已取消'])) return 'CONFLICT'
   if (containsAny(message, ['unauthorized', 'not authenticated', 'need login', '401'])) return 'UNAUTHORIZED'
+  if (containsAny(message, ['cf-challenge', 'cloudflare', 'challenge', 'captcha', 'turnstile', 'bot detection', 'anti-bot'])) return 'EXTERNAL_ERROR'
   if (containsAny(message, ['forbidden', 'permission denied', '403'])) return 'FORBIDDEN'
   if (containsAny(message, ['not found', '不存在', 'missing record'])) return 'NOT_FOUND'
   if (containsAny(message, ['invalid', 'missing', 'required', 'bad request', 'fieldinvalid'])) return 'INVALID_PARAMS'
@@ -144,7 +158,12 @@ export function normalizeAnyError(input: unknown, options: NormalizeOptions = {}
 
   if (typeof errorLike.status === 'number') {
     if (errorLike.status === 401) return buildNormalizedError('UNAUTHORIZED', message, options.details, provider)
-    if (errorLike.status === 403) return buildNormalizedError('FORBIDDEN', message, options.details, provider)
+    if (errorLike.status === 403) {
+      if (isChallengeForbidden(errorLike, lowerMessage)) {
+        return buildNormalizedError('EXTERNAL_ERROR', message, options.details, provider)
+      }
+      return buildNormalizedError('FORBIDDEN', message, options.details, provider)
+    }
     if (errorLike.status === 404) return buildNormalizedError('NOT_FOUND', message, options.details, provider)
     if (errorLike.status === 409) return buildNormalizedError('CONFLICT', message, options.details, provider)
     if (errorLike.status === 422) return buildNormalizedError('SENSITIVE_CONTENT', message, options.details, provider)

@@ -242,6 +242,9 @@ export class OpenAICompatibleVideoGenerator extends BaseVideoGenerator {
       const client = new OpenAI({
         apiKey: config.apiKey,
         baseURL: config.baseUrl,
+        defaultHeaders: {
+          'User-Agent': 'waoowaoo/0.1',
+        },
       })
       const sdkPayload = {
         ...requestPayload,

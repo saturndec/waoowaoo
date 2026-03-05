@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 const openAIState = vi.hoisted(() => ({
+  constructorArgs: [] as Array<Record<string, unknown> | undefined>,
   create: vi.fn(),
   toFile: vi.fn(async () => ({ name: 'reference-file' })),
 }))
@@ -15,6 +16,10 @@ const imageUrlToBase64Mock = vi.hoisted(() => vi.fn(async () => 'data:image/png;
 
 vi.mock('openai', () => ({
   default: class OpenAI {
+    constructor(config?: Record<string, unknown>) {
+      openAIState.constructorArgs.push(config)
+    }
+
     videos = {
       create: openAIState.create,
     }
@@ -35,6 +40,7 @@ import { OpenAICompatibleVideoGenerator } from '@/lib/generators/video/openai-co
 describe('OpenAICompatibleVideoGenerator', () => {
   beforeEach(() => {
     vi.clearAllMocks()
+    openAIState.constructorArgs = []
     getProviderConfigMock.mockResolvedValue({
       id: 'openai-compatible:oa-1',
       apiKey: 'oa-key',
@@ -162,5 +168,23 @@ describe('OpenAICompatibleVideoGenerator', () => {
 
     expect(result.success).toBe(false)
     expect(result.error).toContain('OPENAI_VIDEO_ASPECT_RATIO_UNSUPPORTED')
+  })
+
+  it('injects User-Agent header for openai-compatible video requests', async () => {
+    openAIState.create.mockResolvedValueOnce({ id: 'vid_ua' })
+
+    const generator = new OpenAICompatibleVideoGenerator('openai-compatible:oa-1')
+    const result = await generator.generate({
+      userId: 'user-1',
+      imageUrl: 'https://example.com/seed.png',
+      prompt: 'animate this character',
+    })
+
+    expect(result.success).toBe(true)
+    expect(openAIState.constructorArgs[0]).toMatchObject({
+      defaultHeaders: {
+        'User-Agent': 'waoowaoo/0.1',
+      },
+    })
   })
 })

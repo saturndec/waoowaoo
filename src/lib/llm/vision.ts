@@ -180,6 +180,9 @@ export async function chatCompletionWithVision(
       const client = new OpenAI({
         baseURL: config.baseUrl,
         apiKey: config.apiKey,
+        defaultHeaders: {
+          'User-Agent': 'waoowaoo/0.1',
+        },
       })
 
       const content: OpenAiVisionContentItem[] = []

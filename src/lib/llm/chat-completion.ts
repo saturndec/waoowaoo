@@ -182,6 +182,9 @@ export async function chatCompletion(
         const client = new OpenAI({
           baseURL: 'https://ark.cn-beijing.volces.com/api/v3',
           apiKey,
+          defaultHeaders: {
+            'User-Agent': 'waoowaoo/0.1',
+          },
         })
         const extraParams: Record<string, unknown> = {}
         if (supportsArkReasoningEffort(resolvedModelId)) {
@@ -307,6 +310,9 @@ export async function chatCompletion(
       const client = new OpenAI({
         baseURL: config.baseUrl,
         apiKey: config.apiKey,
+        defaultHeaders: {
+          'User-Agent': 'waoowaoo/0.1',
+        },
       })
 
       const extraParams: Record<string, unknown> = {}

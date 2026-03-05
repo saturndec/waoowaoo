@@ -19,4 +19,23 @@ describe('normalizeAnyError network termination mapping', () => {
     expect(normalized.code).toBe('NETWORK_ERROR')
     expect(normalized.retryable).toBe(true)
   })
+
+  it('maps challenge-like 403 to EXTERNAL_ERROR for retry', () => {
+    const normalized = normalizeAnyError({
+      status: 403,
+      message: 'Cloudflare challenge required',
+      type: 'challenge_required',
+    })
+    expect(normalized.code).toBe('EXTERNAL_ERROR')
+    expect(normalized.retryable).toBe(true)
+  })
+
+  it('keeps normal 403 as FORBIDDEN', () => {
+    const normalized = normalizeAnyError({
+      status: 403,
+      message: 'forbidden',
+    })
+    expect(normalized.code).toBe('FORBIDDEN')
+    expect(normalized.retryable).toBe(false)
+  })
 })

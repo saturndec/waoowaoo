@@ -33,7 +33,7 @@ async function handleConfirmProfile(
   const character = await prisma.novelPromotionCharacter.findFirst({
     where: {
       id: characterId,
-      novelPromotionProjectId: project.novelPromotionData!.id,
+      novelPromotionProjectId: project.novelPromotionData.id,
     },
   })
   if (!character) {
@@ -91,7 +91,7 @@ async function handleConfirmProfile(
     async () =>
       await executeAiTextStep({
         userId: job.data.userId,
-        model: project.novelPromotionData!.analysisModel!,
+        model: project.novelPromotionData.analysisModel,
         messages: [{ role: 'user', content: promptTemplate }],
         temperature: 0.7,
         projectId: job.data.projectId,
@@ -176,7 +176,7 @@ async function handleBatchConfirmProfile(job: Job<TaskJobData>) {
 
   const unconfirmedCharacters = await prisma.novelPromotionCharacter.findMany({
     where: {
-      novelPromotionProjectId: project.novelPromotionData!.id,
+      novelPromotionProjectId: project.novelPromotionData.id,
       profileConfirmed: false,
       profileData: { not: null },
     },
