@@ -236,7 +236,7 @@ export default function NovelInputStage({
           <textarea
             value={novelText}
             onChange={(e) => onNovelTextChange(e.target.value)}
-            placeholder={tStoryboard('fixes.novelInputPlaceholder')}
+            placeholder={tStoryboard('fixes.novelInputPlaceHolder')}
             className="glass-textarea-base custom-scrollbar h-80 px-4 py-3 text-base resize-none placeholder:text-[var(--glass-text-tertiary)]"
             disabled={isSubmittingTask || isSwitchingStage}
           />

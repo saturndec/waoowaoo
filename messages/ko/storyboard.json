@@ -374,5 +374,13 @@
   "firstLastFrame": {
     "placeholder": "첫 번째/마지막 프레임 비디오 프롬프트를 입력하세요...",
     "modelTitle": "첫 번째/마지막 프레임 모델"
+  },
+  "fixes": {
+    "novelInputPlaceHolder": "각본 또는 소설 내용을 입력하세요...",
+    "novelInputPlaceholder": "각본 또는 소설 내용을 입력하세요...",
+    "segmentWithTitle": "분절 [{title}]",
+    "groupFailedTitle": "경고 실패한",
+    "previewSeparator": ", ",
+    "hintWrapped": "({hint})"
   }
 }

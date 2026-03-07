@@ -374,5 +374,13 @@
   "firstLastFrame": {
     "placeholder": "Enter first/last frame video prompt...",
     "modelTitle": "First/Last Frame Model"
+  },
+  "fixes": {
+    "novelInputPlaceHolder": "Enter your screenplay or novel content...",
+    "novelInputPlaceholder": "Enter your screenplay or novel content...",
+    "segmentWithTitle": "Segment [{title}]",
+    "groupFailedTitle": "Warning Failed",
+    "previewSeparator": ", ",
+    "hintWrapped": "({hint})"
   }
 }

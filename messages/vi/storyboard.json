@@ -374,5 +374,13 @@
   "firstLastFrame": {
     "placeholder": "Nhập lời nhắc video khung hình đầu tiên/cuối cùng...",
     "modelTitle": "Mô hình khung đầu tiên/cuối cùng"
+  },
+  "fixes": {
+    "novelInputPlaceHolder": "Nhập nội dung kịch bản hoặc tiểu thuyết của bạn...",
+    "novelInputPlaceholder": "Nhập nội dung kịch bản hoặc tiểu thuyết của bạn...",
+    "segmentWithTitle": "Phân đoạn [{title}]",
+    "groupFailedTitle": "Cảnh báo Thất bại",
+    "previewSeparator": ", ",
+    "hintWrapped": "({hint})"
   }
 }

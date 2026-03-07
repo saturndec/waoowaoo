@@ -374,5 +374,13 @@
   "firstLastFrame": {
     "placeholder": "输入首尾帧视频提示词...",
     "modelTitle": "首尾帧模型"
+  },
+  "fixes": {
+    "novelInputPlaceHolder": "请输入您的剧本或小说内容...",
+    "novelInputPlaceholder": "请输入您的剧本或小说内容...",
+    "segmentWithTitle": "片段【{title}】",
+    "groupFailedTitle": "警告 失败",
+    "previewSeparator": "，",
+    "hintWrapped": "（{hint}）"
   }
 }
