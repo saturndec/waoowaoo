@@ -79,7 +79,7 @@ export default function WorkspaceRunStreamConsoles({
         <button
           type="button"
           onClick={() => onStoryToScriptMinimizedChange(false)}
-          className="fixed right-6 bottom-6 z-[120] glass-surface-modal rounded-2xl px-4 py-3 text-sm font-medium text-[var(--glass-tone-info-fg)]"
+          className="fixed right-3 left-3 sm:left-auto sm:right-6 bottom-4 sm:bottom-6 z-[120] glass-surface-modal rounded-2xl px-4 py-3 text-sm font-medium text-[var(--glass-tone-info-fg)]"
         >
           {t('runConsole.storyToScriptRunning')}
         </button>
@@ -128,7 +128,7 @@ export default function WorkspaceRunStreamConsoles({
         <button
           type="button"
           onClick={() => onScriptToStoryboardMinimizedChange(false)}
-          className="fixed right-6 bottom-20 z-[120] glass-surface-modal rounded-2xl px-4 py-3 text-sm font-medium text-[var(--glass-tone-info-fg)]"
+          className="fixed right-3 left-3 sm:left-auto sm:right-6 bottom-16 sm:bottom-20 z-[120] glass-surface-modal rounded-2xl px-4 py-3 text-sm font-medium text-[var(--glass-tone-info-fg)]"
         >
           {t('runConsole.scriptToStoryboardRunning')}
         </button>

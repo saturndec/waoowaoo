@@ -429,7 +429,7 @@ export default function ScriptViewAssetsPanel({
 
           {showAddChar && mounted && createPortal(
             <div ref={charEditorPopoverRef} className="fixed right-4 bottom-4 z-[80] glass-surface-modal w-[min(24rem,calc(100vw-2rem))] h-[min(560px,calc(100vh-2rem))] p-3 animate-fadeIn flex flex-col shadow-2xl">
-              <div className="shrink-0 text-xs text-[var(--glass-text-tertiary)]">{tCommon('edit')} · {tScript('asset.activeCharacters')}</div>
+              <div className="shrink-0 text-xs text-[var(--glass-text-tertiary)]">{tCommon('edit')}{tScript('asset.editorSeparator')}{tScript('asset.activeCharacters')}</div>
               <div className="mt-3 flex-1 min-h-0 space-y-4 overflow-y-auto pr-1 custom-scrollbar">
                 {isAllClipsMode && (
                   <div className="rounded-lg border border-[var(--glass-stroke-base)] bg-[var(--glass-bg-muted)]/40 p-2 text-[11px] text-[var(--glass-text-tertiary)]">
@@ -442,7 +442,7 @@ export default function ScriptViewAssetsPanel({
                   return (
                     <div key={c.id} className="space-y-2">
                       <div className="text-xs font-semibold text-[var(--glass-text-primary)]">{c.name}</div>
-                      <div className="grid grid-cols-3 gap-2">
+                      <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                         {sortedAppearances.map((appearance) => {
                           const currentAppearanceName = appearance.changeReason || tAssets('character.primary')
                           const appearanceKey = `${c.id}::${currentAppearanceName}`
@@ -531,7 +531,7 @@ export default function ScriptViewAssetsPanel({
           {activeCharIds.length === 0 ? (
             <div className="text-center text-[var(--glass-text-tertiary)] text-sm py-4">{tScript('screenplay.noCharacter')}</div>
           ) : (
-            <div className="grid grid-cols-3 gap-3">
+            <div className="grid grid-cols-2 xl:grid-cols-3 gap-3">
               {characters
                 .filter((c) => activeCharIds.includes(c.id))
                 .flatMap((char) => {
@@ -582,7 +582,7 @@ export default function ScriptViewAssetsPanel({
 
           {showAddLoc && mounted && createPortal(
             <div ref={locEditorPopoverRef} className="fixed right-4 bottom-4 z-[80] glass-surface-modal w-[min(24rem,calc(100vw-2rem))] h-[min(560px,calc(100vh-2rem))] p-3 animate-fadeIn flex flex-col shadow-2xl">
-              <div className="shrink-0 text-xs text-[var(--glass-text-tertiary)]">{tCommon('edit')} · {tScript('asset.activeLocations')}</div>
+              <div className="shrink-0 text-xs text-[var(--glass-text-tertiary)]">{tCommon('edit')}{tScript('asset.editorSeparator')}{tScript('asset.activeLocations')}</div>
               <div className="mt-3 flex-1 min-h-0 overflow-y-auto pr-1 custom-scrollbar">
                 {isAllClipsMode && (
                   <div className="mb-3 rounded-lg border border-[var(--glass-stroke-base)] bg-[var(--glass-bg-muted)]/40 p-2 text-[11px] text-[var(--glass-text-tertiary)]">

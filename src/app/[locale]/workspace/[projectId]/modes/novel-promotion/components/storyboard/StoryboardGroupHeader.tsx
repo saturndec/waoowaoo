@@ -28,7 +28,7 @@ export default function StoryboardGroupHeader({
   const t = useTranslations('storyboard')
 
   return (
-    <div className="flex items-center gap-4">
+    <div className="flex items-start gap-3 sm:gap-4 min-w-0">
       <div className="flex flex-col gap-1">
         <button
           onClick={onMoveUp}
@@ -56,9 +56,9 @@ export default function StoryboardGroupHeader({
       <div className="glass-surface-soft flex h-12 w-12 items-center justify-center rounded-2xl text-2xl font-bold text-[var(--glass-tone-info-fg)]">
         {sbIndex + 1}
       </div>
-      <div>
-        <h3 className="text-sm font-medium text-[var(--glass-text-secondary)]">
-          {t('group.segmentWithTitle', { title: formatClipTitle(clip) })}
+      <div className="min-w-0">
+        <h3 className="text-sm font-medium text-[var(--glass-text-secondary)] break-words">
+          {t('fixes.segmentWithTitle', { title: formatClipTitle(clip) })}
         </h3>
         <p className="mt-0.5 line-clamp-1 text-xs text-[var(--glass-text-tertiary)]">{clip?.summary}</p>
       </div>

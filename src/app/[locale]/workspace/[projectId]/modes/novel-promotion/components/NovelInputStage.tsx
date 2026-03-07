@@ -65,7 +65,7 @@ function RatioSelector({
       {/* 下拉面板 - 横向网格布局 */}
       {isOpen && (
         <div className="glass-surface-modal absolute z-50 mt-1 left-0 right-0 p-3 max-h-60 overflow-y-auto custom-scrollbar" style={{ minWidth: '280px' }}>
-          <div className="grid grid-cols-5 gap-2">
+          <div className="grid grid-cols-3 sm:grid-cols-5 gap-2">
             {options.map((option) => (
               <button
                 key={option.value}
@@ -198,6 +198,7 @@ export default function NovelInputStage({
   onArtStyleChange
 }: NovelInputStageProps) {
   const t = useTranslations('novelPromotion')
+  const tStoryboard = useTranslations('storyboard')
   const hasContent = novelText.trim().length > 0
   const stageSwitchingState = isSwitchingStage
     ? resolveTaskPresentationState({
@@ -235,7 +236,7 @@ export default function NovelInputStage({
           <textarea
             value={novelText}
             onChange={(e) => onNovelTextChange(e.target.value)}
-            placeholder={t('storyInput.placeholder')}
+            placeholder={tStoryboard('fixes.novelInputPlaceholder')}
             className="glass-textarea-base custom-scrollbar h-80 px-4 py-3 text-base resize-none placeholder:text-[var(--glass-text-tertiary)]"
             disabled={isSubmittingTask || isSwitchingStage}
           />
@@ -289,7 +290,7 @@ export default function NovelInputStage({
       <div className="glass-surface p-6">
         {/* 旁白开关 */}
         {onEnableNarrationChange && (
-          <div className="glass-surface-soft flex items-center justify-between p-4 rounded-xl mb-6">
+          <div className="glass-surface-soft flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-4 rounded-xl mb-6">
             <div className="flex items-center gap-3">
               <span className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-[var(--glass-tone-info-bg)] text-[var(--glass-tone-info-fg)] font-semibold text-sm">VO</span>
               <div>

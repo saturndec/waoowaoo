@@ -44,10 +44,10 @@ export default function AIDataModalFormPane({
   onActingCharacterChange,
 }: AIDataModalFormPaneProps) {
   return (
-    <div className="w-1/2 border-r border-[var(--glass-stroke-base)] overflow-y-auto p-6 space-y-5">
+    <div className="w-full lg:w-1/2 lg:border-r border-[var(--glass-stroke-base)] overflow-y-auto p-4 sm:p-6 space-y-5">
       <div className="text-sm font-medium text-[var(--glass-text-secondary)] mb-3">{t('aiData.basicData')}</div>
 
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
           <label className="block text-xs font-medium text-[var(--glass-text-secondary)] mb-1">{t('aiData.shotType')}</label>
           <input
@@ -171,7 +171,7 @@ export default function AIDataModalFormPane({
                 {photographyRules.characters.map((character, index) => (
                   <div key={index} className="p-3 bg-[var(--glass-bg-muted)] rounded-lg border border-[var(--glass-stroke-base)]">
                     <div className="text-xs font-medium text-[var(--glass-tone-info-fg)] mb-2">{character.name}</div>
-                    <div className="grid grid-cols-3 gap-2">
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
                       <div>
                         <label className="block text-[10px] text-[var(--glass-text-tertiary)] mb-0.5">{t('aiData.position')}</label>
                         <input

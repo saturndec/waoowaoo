@@ -71,7 +71,7 @@ function NavItem({
                 onAuxClick={handleAuxClick}
                 disabled={disabled}
                 className={`
-                    relative flex min-h-[52px] items-center gap-1 px-6 pt-3.5 pb-4 transition-all duration-300 ease-out
+                    relative flex min-h-[46px] sm:min-h-[52px] items-center gap-1 px-3 sm:px-6 pt-2.5 sm:pt-3.5 pb-3 sm:pb-4 transition-all duration-300 ease-out
                     ${disabled
                         ? 'cursor-not-allowed'
                         : active
@@ -85,7 +85,7 @@ function NavItem({
                         {label}
                     </span>
                 ) : (
-                    <span className="text-base font-semibold">{label}</span>
+                    <span className="text-sm sm:text-base font-semibold">{label}</span>
                 )}
                 {/* 底部指示条 */}
                 <span className={`absolute bottom-1.5 left-1/2 -translate-x-1/2 h-[3px] rounded-full transition-all duration-300 ease-out
@@ -133,9 +133,9 @@ export function CapsuleNav({ items, activeId, onItemClick, projectId, episodeId 
     }
 
     return (
-        <nav className="fixed top-20 left-1/2 -translate-x-1/2 z-50 animate-fadeInDown">
+        <nav className="fixed top-20 left-1/2 -translate-x-1/2 z-50 w-[calc(100vw-1rem)] sm:w-auto animate-fadeInDown">
             <div
-                className="flex rounded-full px-2 py-1"
+                className="flex overflow-x-auto rounded-full px-1.5 sm:px-2 py-1 no-scrollbar"
                 style={{
                     background: 'rgba(255,255,255,0.55)',
                     backdropFilter: 'blur(24px) saturate(1.6)',
@@ -215,10 +215,10 @@ export function EpisodeSelector({
     if (!currentEp) return null
 
     return (
-        <div className="fixed top-20 left-6 z-[60]" ref={menuRef}>
+        <div className="fixed top-20 left-3 sm:left-6 z-[60] max-w-[calc(100vw-0.75rem)] sm:max-w-none" ref={menuRef}>
             <button
                 onClick={() => setIsOpen(!isOpen)}
-                className="glass-btn-base glass-btn-secondary flex items-center gap-3 px-4 py-3 transition-all group"
+                className="glass-btn-base glass-btn-secondary flex items-center gap-2 sm:gap-3 px-3 sm:px-4 py-2.5 sm:py-3 transition-all group w-full sm:w-auto"
                 style={{ borderRadius: '1.5rem' }}
             >
                 <div className="glass-surface-soft flex h-10 w-10 items-center justify-center rounded-xl text-xs font-bold text-[var(--glass-tone-info-fg)]">

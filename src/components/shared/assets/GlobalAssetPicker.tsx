@@ -266,8 +266,8 @@ export default function GlobalAssetPicker({
     const hasNoAssets = type === 'character' ? characters.length === 0 : type === 'location' ? locations.length === 0 : voices.length === 0
 
     return (
-        <div className="fixed inset-0 glass-overlay flex items-center justify-center z-50">
-            <div className="glass-surface-modal w-[600px] max-h-[80vh] flex flex-col">
+        <div className="fixed inset-0 glass-overlay flex items-center justify-center z-50 p-3 sm:p-4">
+            <div className="glass-surface-modal w-full max-w-[600px] max-h-[85vh] flex flex-col">
                 {/* 头部 */}
                 <div className="flex items-center justify-between px-6 py-4 border-b border-[var(--glass-stroke-base)]">
                     <h2 className="text-lg font-semibold text-[var(--glass-text-primary)]">
@@ -315,7 +315,7 @@ export default function GlobalAssetPicker({
                             <p>{t('noSearchResults')}</p>
                         </div>
                     ) : (
-                        <div className="grid grid-cols-3 gap-3">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                             {type === 'character' ? (
                                 filteredCharacters.map((char) => {
                                     const charPreview = getCharacterPreview(char)

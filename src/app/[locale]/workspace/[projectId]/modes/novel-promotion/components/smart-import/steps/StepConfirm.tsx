@@ -23,19 +23,20 @@ export default function StepConfirm({
   onConfirmWithGlobalAnalysis,
 }: StepConfirmProps) {
   const t = useTranslations('smartImport')
+  const tStoryboard = useTranslations('storyboard')
 
   return (
     <div className="bg-[var(--glass-bg-surface)] rounded-2xl border border-[var(--glass-stroke-base)] p-6 mb-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
         <div>
           <h2 className="text-2xl font-semibold mb-2">{t('preview.title')}</h2>
           <p className="text-[var(--glass-text-secondary)]">
-            {t('preview.episodeCount', { count: episodes.length })}{t('preview.separator')}
+            {t('preview.episodeCount', { count: episodes.length })}{tStoryboard('fixes.previewSeparator')}
             {t('preview.totalWords', { count: episodes.reduce((sum, ep) => sum + ep.wordCount, 0).toLocaleString() })}
             <span className="text-[var(--glass-tone-success-fg)] ml-2">{t('preview.autoSaved')}</span>
           </p>
         </div>
-        <div className="flex gap-3">
+        <div className="flex flex-col sm:flex-row gap-3">
           <button
             onClick={onReanalyze}
             className="px-5 py-2.5 border border-[var(--glass-stroke-strong)] rounded-lg font-medium hover:bg-[var(--glass-bg-muted)] transition-colors duration-200"

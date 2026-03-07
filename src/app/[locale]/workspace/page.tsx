@@ -276,33 +276,35 @@ export default function WorkspacePage() {
           </div>
 
           {/* 搜索框 */}
-          <div className="flex gap-2">
+          <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
             <input
               type="text"
               value={searchInput}
               onChange={(e) => setSearchInput(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
               placeholder={t('searchPlaceholder')}
-              className="glass-input-base w-64 px-3 py-2"
+              className="glass-input-base w-full sm:w-64 px-3 py-2"
             />
-            <button
-              onClick={handleSearch}
-              className="glass-btn-base glass-btn-primary px-4 py-2"
-            >
-              {t('searchButton')}
-            </button>
-            {searchQuery && (
+            <div className="flex gap-2">
               <button
-                onClick={() => {
-                  setSearchInput('')
-                  setSearchQuery('')
-                  setPagination(prev => ({ ...prev, page: 1 }))
-                }}
-                className="glass-btn-base glass-btn-secondary px-4 py-2"
+                onClick={handleSearch}
+                className="glass-btn-base glass-btn-primary px-4 py-2"
               >
-                {t('clearButton')}
+                {t('searchButton')}
               </button>
-            )}
+              {searchQuery && (
+                <button
+                  onClick={() => {
+                    setSearchInput('')
+                    setSearchQuery('')
+                    setPagination(prev => ({ ...prev, page: 1 }))
+                  }}
+                  className="glass-btn-base glass-btn-secondary px-4 py-2"
+                >
+                  {t('clearButton')}
+                </button>
+              )}
+            </div>
           </div>
         </div>
 
@@ -517,8 +519,8 @@ export default function WorkspacePage() {
 
       {/* Create Project Modal - 简化版，只有名称和描述 */}
       {showCreateModal && (
-        <div className="fixed inset-0 glass-overlay flex items-center justify-center z-50 backdrop-blur-sm">
-          <div className="glass-surface-modal p-6 w-full max-w-md mx-4">
+        <div className="fixed inset-0 glass-overlay flex items-center justify-center z-50 backdrop-blur-sm p-3 sm:p-4">
+          <div className="glass-surface-modal p-5 sm:p-6 w-full max-w-md max-h-[85vh] overflow-y-auto">
             <h2 className="text-xl font-bold text-[var(--glass-text-primary)] mb-4">{t('createProject')}</h2>
             <form onSubmit={handleCreateProject}>
               <div className="mb-4">
@@ -578,8 +580,8 @@ export default function WorkspacePage() {
 
       {/* Edit Project Modal */}
       {showEditModal && editingProject && (
-        <div className="fixed inset-0 glass-overlay flex items-center justify-center z-50 backdrop-blur-sm">
-          <div className="glass-surface-modal p-6 w-full max-w-md mx-4">
+        <div className="fixed inset-0 glass-overlay flex items-center justify-center z-50 backdrop-blur-sm p-3 sm:p-4">
+          <div className="glass-surface-modal p-5 sm:p-6 w-full max-w-md max-h-[85vh] overflow-y-auto">
             <h2 className="text-xl font-bold text-[var(--glass-text-primary)] mb-4">{t('editProject')}</h2>
             <form onSubmit={handleEditProject}>
               <div className="mb-4">

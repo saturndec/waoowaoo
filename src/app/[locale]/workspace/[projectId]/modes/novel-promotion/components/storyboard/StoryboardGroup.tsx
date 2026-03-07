@@ -140,7 +140,7 @@ export default function StoryboardGroup({
       {failedError && (
         <StoryboardGroupFailedAlert
           failedError={failedError}
-          title={`${t('group.warning')} ${t('group.failed')}`}
+          title={t('fixes.groupFailedTitle')}
           closeTitle={t('common.cancel')}
           onClose={onCloseError}
         />
@@ -153,7 +153,7 @@ export default function StoryboardGroup({
         />
       )}
 
-      <div className="mb-4 pb-2 flex items-start justify-between">
+      <div className="mb-4 pb-2 flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
         <StoryboardGroupHeader
           clip={clip}
           sbIndex={sbIndex}

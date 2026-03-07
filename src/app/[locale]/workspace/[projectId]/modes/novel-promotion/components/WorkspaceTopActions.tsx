@@ -20,24 +20,24 @@ export default function WorkspaceTopActions({
   refreshTitle,
 }: WorkspaceTopActionsProps) {
   return (
-    <div className="fixed top-20 right-6 z-50 flex gap-3">
+    <div className="fixed top-32 sm:top-20 right-3 sm:right-6 z-50 flex flex-col sm:flex-row gap-2 sm:gap-3">
       <button
         onClick={onOpenAssetLibrary}
-        className="glass-btn-base glass-btn-secondary flex items-center gap-2 px-4 py-3 rounded-3xl text-[var(--glass-text-primary)]"
+        className="glass-btn-base glass-btn-secondary flex items-center justify-center gap-2 px-3 sm:px-4 py-2.5 sm:py-3 rounded-3xl text-[var(--glass-text-primary)]"
       >
         <AppIcon name="package" className="h-5 w-5" />
-        <span className="font-semibold text-sm hidden md:inline tracking-[0.01em]">{assetLibraryLabel}</span>
+        <span className="font-semibold text-sm hidden lg:inline tracking-[0.01em]">{assetLibraryLabel}</span>
       </button>
       <button
         onClick={onOpenSettings}
-        className="glass-btn-base glass-btn-secondary flex items-center gap-2 px-4 py-3 rounded-3xl text-[var(--glass-text-primary)]"
+        className="glass-btn-base glass-btn-secondary flex items-center justify-center gap-2 px-3 sm:px-4 py-2.5 sm:py-3 rounded-3xl text-[var(--glass-text-primary)]"
       >
         <AppIcon name="settingsHexMinor" className="h-5 w-5" />
-        <span className="font-semibold text-sm hidden md:inline tracking-[0.01em]">{settingsLabel}</span>
+        <span className="font-semibold text-sm hidden lg:inline tracking-[0.01em]">{settingsLabel}</span>
       </button>
       <button
         onClick={onRefresh}
-        className="glass-btn-base glass-btn-secondary flex items-center gap-2 px-4 py-3 rounded-3xl text-[var(--glass-text-primary)]"
+        className="glass-btn-base glass-btn-secondary flex items-center justify-center gap-2 px-3 sm:px-4 py-2.5 sm:py-3 rounded-3xl text-[var(--glass-text-primary)]"
         title={refreshTitle}
       >
         <AppIcon name="refresh" className="w-5 h-5" />

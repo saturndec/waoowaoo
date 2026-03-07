@@ -18,8 +18,8 @@ export default function ProgressToast({ show, message, step }: ProgressToastProp
   })
 
   return (
-    <div className="fixed bottom-8 right-8 z-50 animate-slide-up">
-      <div className="glass-surface-modal min-w-[320px] p-4">
+    <div className="fixed bottom-4 right-3 left-3 sm:left-auto sm:bottom-8 sm:right-8 z-50 animate-slide-up">
+      <div className="glass-surface-modal min-w-0 sm:min-w-[320px] p-4">
         <div className="flex items-start space-x-3">
           {/* Loading Spinner */}
           <div className="flex-shrink-0 mt-0.5">

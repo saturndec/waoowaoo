@@ -23,6 +23,7 @@ export default function SpeakerVoiceStatus({
     embedded = false
 }: SpeakerVoiceStatusProps) {
     const t = useTranslations('voice')
+    const tStoryboard = useTranslations('storyboard')
 
     if (speakers.length === 0) return null
 
@@ -56,7 +57,7 @@ export default function SpeakerVoiceStatus({
                         return (
                             <div
                                 key={speaker}
-                                className="w-full sm:w-[280px] max-w-full flex items-center gap-1.5 rounded-xl border border-[var(--glass-stroke-base)] bg-[var(--glass-bg-surface-strong)] px-3 py-2"
+                                className="w-full sm:w-[280px] max-w-full flex flex-wrap items-center gap-2 rounded-xl border border-[var(--glass-stroke-base)] bg-[var(--glass-bg-surface-strong)] px-3 py-2"
                             >
                                 <div className="min-w-0">
                                     <div className="text-sm font-semibold text-[var(--glass-text-primary)] truncate">{speaker}</div>
@@ -95,7 +96,7 @@ export default function SpeakerVoiceStatus({
                 <span className="w-1.5 h-5 bg-[var(--glass-accent-from)] rounded-full" />
                 {t("speakerVoice.title")}
                 <span className="text-sm font-normal text-[var(--glass-text-tertiary)] ml-2">
-                    {t("speakerVoice.hintWrapped", { hint: t("speakerVoice.hint") })}
+                    {tStoryboard("fixes.hintWrapped", { hint: t("speakerVoice.hint") })}
                 </span>
             </h3>
             <div className="flex flex-wrap gap-2">
@@ -105,7 +106,7 @@ export default function SpeakerVoiceStatus({
                     const hasCharacter = hasSpeakerCharacter ? hasSpeakerCharacter(speaker) : true
 
                     return (
-                        <div key={speaker} className="w-full sm:w-[280px] max-w-full flex items-center gap-1.5 px-3 py-2 rounded-xl border border-[var(--glass-stroke-base)] bg-[var(--glass-bg-surface-strong)]">
+                        <div key={speaker} className="w-full sm:w-[280px] max-w-full flex flex-wrap items-center gap-2 px-3 py-2 rounded-xl border border-[var(--glass-stroke-base)] bg-[var(--glass-bg-surface-strong)]">
                             <div className="min-w-0">
                                 <div className="font-semibold text-[var(--glass-text-primary)] truncate" title={speaker}>{speaker}</div>
                                 <div className="text-xs text-[var(--glass-text-tertiary)]">{t("speakerVoice.linesCount", { count: speakerStats[speaker] })}</div>

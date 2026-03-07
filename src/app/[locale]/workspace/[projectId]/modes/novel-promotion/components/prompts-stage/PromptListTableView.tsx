@@ -29,7 +29,7 @@ export default function PromptListTableView({ runtime }: PromptListTableViewProp
   return (
     <div className="card-base overflow-hidden">
       <div className="overflow-x-auto">
-        <table className="min-w-full divide-y divide-[var(--glass-stroke-soft)]">
+        <table className="min-w-[640px] w-full divide-y divide-[var(--glass-stroke-soft)]">
           <thead className="bg-[var(--glass-bg-muted)]">
             <tr>
               <th className="px-4 py-3 text-left text-xs font-medium text-[var(--glass-text-tertiary)] uppercase tracking-wider">{t('panel.shot')}</th>
