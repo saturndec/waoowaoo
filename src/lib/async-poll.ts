@@ -30,6 +30,7 @@ export interface PollResult {
     resultUrl?: string
     imageUrl?: string
     videoUrl?: string
+    audioUrl?: string
     downloadHeaders?: Record<string, string>
     error?: string
 }
@@ -48,7 +49,7 @@ function getErrorMessage(error: unknown): string {
  */
 export function parseExternalId(externalId: string): {
     provider: 'FAL' | 'ARK' | 'GEMINI' | 'GOOGLE' | 'MINIMAX' | 'VIDU' | 'OPENAI' | 'OCOMPAT' | 'BAILIAN' | 'SILICONFLOW' | 'UNKNOWN'
-    type: 'VIDEO' | 'IMAGE' | 'BATCH' | 'UNKNOWN'
+    type: 'VIDEO' | 'IMAGE' | 'AUDIO' | 'BATCH' | 'UNKNOWN'
     endpoint?: string
     requestId: string
     providerToken?: string
@@ -123,12 +124,12 @@ export function parseExternalId(externalId: string): {
         const parts = externalId.split(':')
         const type = parts[1]
         const requestId = parts.slice(2).join(':')
-        if ((type !== 'VIDEO' && type !== 'IMAGE') || !requestId) {
+        if ((type !== 'VIDEO' && type !== 'IMAGE' && type !== 'AUDIO') || !requestId) {
             throw new Error(`无效 MINIMAX externalId: "${externalId}"，应为 MINIMAX:TYPE:taskId`)
         }
         return {
             provider: 'MINIMAX',
-            type: type as 'VIDEO' | 'IMAGE',
+            type: type as 'VIDEO' | 'IMAGE' | 'AUDIO',
             requestId,
         }
     }
@@ -240,7 +241,7 @@ export async function pollAsyncTask(
         case 'GOOGLE':
             return await pollGoogleVideoTask(parsed.requestId, userId)
         case 'MINIMAX':
-            return await pollMinimaxTask(parsed.requestId, userId)
+            return await pollMinimaxTask(parsed.requestId, userId, parsed.type)
         case 'VIDU':
             return await pollViduTask(parsed.requestId, userId)
         case 'OPENAI':
@@ -308,7 +309,7 @@ function resolveOCompatModelKey(providerId: string, token: string): string {
 }
 
 async function pollOCompatTask(
-    type: 'VIDEO' | 'IMAGE' | 'BATCH' | 'UNKNOWN',
+    type: 'VIDEO' | 'IMAGE' | 'AUDIO' | 'BATCH' | 'UNKNOWN',
     taskId: string,
     userId: string,
     providerToken?: string,
@@ -558,16 +559,18 @@ async function pollGoogleVideoTask(
  */
 async function pollMinimaxTask(
     taskId: string,
-    userId: string
+    userId: string,
+    type: string = 'VIDEO'
 ): Promise<PollResult> {
     const { apiKey } = await getProviderConfig(userId, 'minimax')
-    const result = await queryMinimaxTaskStatus(taskId, apiKey)
+    const result = await queryMinimaxTaskStatus(taskId, apiKey, type)
 
     return {
         status: result.status,
         videoUrl: result.videoUrl,
+        audioUrl: result.audioUrl,
         imageUrl: result.imageUrl,
-        resultUrl: result.videoUrl || result.imageUrl,
+        resultUrl: result.videoUrl || result.audioUrl || result.imageUrl,
         error: result.error
     }
 }
@@ -577,12 +580,17 @@ async function pollMinimaxTask(
  */
 async function queryMinimaxTaskStatus(
     taskId: string,
-    apiKey: string
-): Promise<{ status: 'pending' | 'completed' | 'failed'; videoUrl?: string; imageUrl?: string; error?: string }> {
+    apiKey: string,
+    type: string = 'VIDEO'
+): Promise<{ status: 'pending' | 'completed' | 'failed'; videoUrl?: string; audioUrl?: string; imageUrl?: string; error?: string }> {
     const logPrefix = '[MiniMax Query]'
 
+    const queryEndpoint = type === 'AUDIO'
+        ? `https://api.minimaxi.com/v1/query/t2a_async_query_v2?task_id=${taskId}`
+        : `https://api.minimaxi.com/v1/query/video_generation?task_id=${taskId}`
+
     try {
-        const response = await fetch(`https://api.minimaxi.com/v1/query/video_generation?task_id=${taskId}`, {
+        const response = await fetch(queryEndpoint, {
             headers: {
                 'Authorization': `Bearer ${apiKey}`
             }
@@ -617,7 +625,7 @@ async function queryMinimaxTaskStatus(
                 _ulogError(`${logPrefix} task_id=${taskId} 成功但无file_id`)
                 return {
                     status: 'failed',
-                    error: '任务完成但未返回视频'
+                    error: '任务完成但未返回结果'
                 }
             }
 
@@ -646,15 +654,16 @@ async function queryMinimaxTaskStatus(
                     _ulogError(`${logPrefix} 文件检索成功但无download_url:`, fileData)
                     return {
                         status: 'failed',
-                        error: '无法获取视频下载链接'
+                        error: '无法获取下载链接'
                     }
                 }
 
                 _ulogInfo(`${logPrefix} 获取下载URL成功: ${downloadUrl.substring(0, 80)}...`)
-                return {
-                    status: 'completed',
-                    videoUrl: downloadUrl
+
+                if (type === 'AUDIO') {
+                    return { status: 'completed', audioUrl: downloadUrl }
                 }
+                return { status: 'completed', videoUrl: downloadUrl }
             } catch (error: unknown) {
                 const errorMessage = getErrorMessage(error)
                 _ulogError(`${logPrefix} 文件检索异常:`, error)
@@ -949,7 +958,7 @@ async function queryViduTaskStatus(
  */
 export function formatExternalId(
     provider: 'FAL' | 'ARK' | 'GEMINI' | 'GOOGLE' | 'MINIMAX' | 'VIDU' | 'OPENAI' | 'OCOMPAT' | 'BAILIAN' | 'SILICONFLOW',
-    type: 'VIDEO' | 'IMAGE' | 'BATCH',
+    type: 'VIDEO' | 'IMAGE' | 'AUDIO' | 'BATCH',
     requestId: string,
     endpoint?: string,
     providerToken?: string,

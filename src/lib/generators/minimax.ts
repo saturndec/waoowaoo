@@ -85,6 +85,14 @@ const MINIMAX_VIDEO_MODEL_SPECS: Record<string, MinimaxVideoModelSpec> = {
             { resolution: '720P', durations: [6] },
         ],
     },
+    's2v-01': {
+        apiModel: 'S2V-01',
+        supportsImageInput: true,
+        supportsFirstLastFrame: false,
+        normalRules: [
+            { resolution: '1080P', durations: [6] },
+        ],
+    },
 }
 
 function isNonEmptyString(value: unknown): value is string {
