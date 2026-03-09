@@ -284,6 +284,43 @@ const ROUTE_CASES: ReadonlyArray<LLMRouteCase> = [
     expectedProjectId: 'project-1',
   },
   {
+    routeFile: 'src/app/api/novel-promotion/[projectId]/quick-manga/route.ts',
+    body: {
+      episodeId: 'episode-1',
+      stage: 'story-to-script',
+      content: 'quick manga story content',
+      quickManga: {
+        enabled: true,
+        preset: 'action-battle',
+        layout: 'cinematic',
+        colorMode: 'black-white',
+        style: 'manga ink',
+      },
+    },
+    params: { projectId: 'project-1' },
+    expectedTaskType: TASK_TYPE.STORY_TO_SCRIPT_RUN,
+    expectedTargetType: 'NovelPromotionEpisode',
+    expectedProjectId: 'project-1',
+  },
+  {
+    routeFile: 'src/app/api/novel-promotion/[projectId]/quick-manga/route.ts',
+    body: {
+      episodeId: 'episode-1',
+      stage: 'script-to-storyboard',
+      quickManga: {
+        enabled: true,
+        preset: 'action-battle',
+        layout: 'cinematic',
+        colorMode: 'black-white',
+        style: 'manga ink',
+      },
+    },
+    params: { projectId: 'project-1' },
+    expectedTaskType: TASK_TYPE.SCRIPT_TO_STORYBOARD_RUN,
+    expectedTargetType: 'NovelPromotionEpisode',
+    expectedProjectId: 'project-1',
+  },
+  {
     routeFile: 'src/app/api/novel-promotion/[projectId]/story-to-script-stream/route.ts',
     body: { episodeId: 'episode-1', content: 'story text' },
     params: { projectId: 'project-1' },
@@ -327,7 +364,7 @@ describe('api contract - llm observe routes (behavior)', () => {
   })
 
   it('keeps expected coverage size', () => {
-    expect(ROUTE_CASES.length).toBe(22)
+    expect(ROUTE_CASES.length).toBe(24)
   })
 
   for (const routeCase of ROUTE_CASES) {

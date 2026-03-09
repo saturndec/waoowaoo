@@ -1,6 +1,7 @@
 import { buildCharactersIntroduction } from '@/lib/constants'
 import { normalizeAnyError } from '@/lib/errors/normalize'
 import { createScopedLogger } from '@/lib/logging/core'
+import { buildQuickMangaStoryboardInput, type QuickMangaOptions } from '@/lib/novel-promotion/quick-manga'
 import {
   type ActingDirection,
   type CharacterAsset,
@@ -58,6 +59,10 @@ export type ScriptToStoryboardOrchestratorInput = {
     locations: LocationAsset[]
   }
   promptTemplates: ScriptToStoryboardPromptTemplates
+  quickManga?: {
+    options: QuickMangaOptions
+    style?: string | null
+  } | null
   runStep: (
     meta: ScriptToStoryboardStepMeta,
     prompt: string,
@@ -260,7 +265,7 @@ async function runStepWithRetry<T>(
 export async function runScriptToStoryboardOrchestrator(
   input: ScriptToStoryboardOrchestratorInput,
 ): Promise<ScriptToStoryboardOrchestratorResult> {
-  const { clips, novelPromotionData, promptTemplates, runStep } = input
+  const { clips, novelPromotionData, promptTemplates, runStep, quickManga } = input
   if (!Array.isArray(clips) || clips.length === 0) {
     throw new Error('No clips found')
   }
@@ -279,13 +284,20 @@ export async function runScriptToStoryboardOrchestrator(
       if (!clipContent) {
         throw new Error(`Clip ${formatClipId(clip)} content is empty`)
       }
+      const clipContentForPrompt = quickManga
+        ? buildQuickMangaStoryboardInput({
+          clipContent,
+          options: quickManga.options,
+          artStyle: quickManga.style,
+        })
+        : clipContent
       const clipCharacters = parseClipCharacters(clip.characters)
       const filteredAppearanceList = getFilteredAppearanceList(novelPromotionData.characters || [], clipCharacters)
       const filteredFullDescription = getFilteredFullDescription(novelPromotionData.characters || [], clipCharacters)
       const clipJson = JSON.stringify(
         {
           id: clip.id,
-          content: clipContent,
+          content: clipContentForPrompt,
           characters: clipCharacters,
           location: clip.location || null,
         },
@@ -305,7 +317,7 @@ export async function runScriptToStoryboardOrchestrator(
       if (screenplay) {
         phase1Prompt = phase1Prompt.replace('{clip_content}', `【剧本格式】\n${JSON.stringify(screenplay, null, 2)}`)
       } else {
-        phase1Prompt = phase1Prompt.replace('{clip_content}', clipContent)
+        phase1Prompt = phase1Prompt.replace('{clip_content}', clipContentForPrompt)
       }
 
       const phase1Meta = withStepMeta(

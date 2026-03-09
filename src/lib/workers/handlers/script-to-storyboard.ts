@@ -31,6 +31,7 @@ import {
 } from './script-to-storyboard-helpers'
 import { buildPrompt, getPromptTemplate, PROMPT_IDS } from '@/lib/prompt-i18n'
 import { resolveAnalysisModel } from './resolve-analysis-model'
+import { readQuickMangaOptionsFromPayload } from '@/lib/novel-promotion/quick-manga-contract'
 
 type AnyObj = Record<string, unknown>
 const MAX_VOICE_ANALYZE_ATTEMPTS = 2
@@ -187,6 +188,13 @@ export async function handleScriptToStoryboardTask(job: Job<TaskJobData>) {
   const payloadMeta = typeof payload.meta === 'object' && payload.meta !== null
     ? (payload.meta as AnyObj)
     : {}
+  const quickMangaOptions = readQuickMangaOptionsFromPayload(payload)
+  const quickManga = quickMangaOptions.enabled
+    ? {
+      options: quickMangaOptions,
+      style: quickMangaOptions.style,
+    }
+    : null
   const runId = typeof payload.runId === 'string' && payload.runId.trim()
     ? payload.runId.trim()
     : (typeof payloadMeta.runId === 'string' ? payloadMeta.runId.trim() : '')
@@ -238,6 +246,7 @@ export async function handleScriptToStoryboardTask(job: Job<TaskJobData>) {
                       phase2ActingTemplate,
                       phase3DetailTemplate,
                     },
+                    quickManga,
                     runStep,
                   })
 

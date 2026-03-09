@@ -31,6 +31,7 @@ function resolveChainTest(routeFile: string): string {
     || routeFile.includes('/script-to-storyboard')
     || routeFile.includes('/screenplay-conversion')
     || routeFile.includes('/reference-to-character')
+    || routeFile.includes('/quick-manga/')
   ) {
     return 'tests/integration/chain/text.chain.test.ts'
   }
