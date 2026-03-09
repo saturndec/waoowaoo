@@ -92,6 +92,7 @@ export async function chatCompletionStream(
     temperature,
     action: options.action,
     messages,
+    promptTelemetry: options.promptTelemetry,
   })
 
   try {

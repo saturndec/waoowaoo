@@ -95,6 +95,7 @@ export async function chatCompletion(
     temperature,
     action: options.action,
     messages,
+    promptTelemetry: options.promptTelemetry,
   })
 
   let lastError: Error | null = null

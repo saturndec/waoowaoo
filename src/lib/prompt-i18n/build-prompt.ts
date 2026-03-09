@@ -1,7 +1,13 @@
 import { PROMPT_CATALOG } from './catalog'
 import { PromptI18nError } from './errors'
 import { getPromptTemplate } from './template-store'
-import type { BuildPromptInput } from './types'
+import { buildPromptRoutingTelemetry, resolvePromptLanguageRoute } from './policy'
+import type {
+  BuildPromptInput,
+  BuildPromptWithPolicyInput,
+  BuildPromptWithPolicyResult,
+  PromptTemplateLocale,
+} from './types'
 
 const SINGLE_PLACEHOLDER_PATTERN = /\{([A-Za-z0-9_]+)\}/g
 const DOUBLE_PLACEHOLDER_PATTERN = /\{\{([A-Za-z0-9_]+)\}\}/g
@@ -31,8 +37,12 @@ function replaceAllPlaceholders(template: string, key: string, value: string): s
   return template.replace(pattern, value)
 }
 
-export function buildPrompt(input: BuildPromptInput): string {
-  const { promptId, locale, variables = {} } = input
+function renderPromptTemplate(input: {
+  promptId: BuildPromptInput['promptId']
+  templateLocale: PromptTemplateLocale
+  variables: Record<string, string>
+}): string {
+  const { promptId, templateLocale, variables } = input
   const entry = PROMPT_CATALOG[promptId]
   if (!entry) {
     throw new PromptI18nError(
@@ -42,7 +52,7 @@ export function buildPrompt(input: BuildPromptInput): string {
     )
   }
 
-  const template = getPromptTemplate(promptId, locale)
+  const template = getPromptTemplate(promptId, templateLocale)
 
   const templatePlaceholders = extractPlaceholders(template)
   const defined = new Set(entry.variableKeys)
@@ -95,4 +105,80 @@ export function buildPrompt(input: BuildPromptInput): string {
   }
 
   return rendered
+}
+
+function appendLanguageGuardrails(input: {
+  prompt: string
+  outputLocale: BuildPromptInput['locale']
+  requireEnglishContract: boolean
+}): string {
+  const { prompt, outputLocale, requireEnglishContract } = input
+  const outputLanguageName = outputLocale === 'zh'
+    ? 'Chinese'
+    : outputLocale === 'vi'
+      ? 'Vietnamese'
+      : outputLocale === 'ko'
+        ? 'Korean'
+        : 'English'
+
+  const lines = [
+    '',
+    '[Prompt Policy]',
+    '- Keep system/output contract keys, enums, and schema in stable English.',
+    `- Narrative and natural-language content should be in ${outputLanguageName}.`,
+  ]
+
+  if (requireEnglishContract) {
+    lines.push('- contract_valid must remain true for downstream parser/schema checks.')
+  }
+
+  return `${prompt}${lines.join('\n')}`
+}
+
+export function buildPrompt(input: BuildPromptInput): string {
+  const { promptId, locale, variables = {} } = input
+  const templateLocale: PromptTemplateLocale = locale === 'zh' ? 'zh' : 'en'
+  return renderPromptTemplate({
+    promptId,
+    templateLocale,
+    variables,
+  })
+}
+
+export function buildPromptWithPolicy(input: BuildPromptWithPolicyInput): BuildPromptWithPolicyResult {
+  const {
+    promptId,
+    locale,
+    variables = {},
+    policyContext,
+    requireEnglishContract = true,
+  } = input
+
+  const route = resolvePromptLanguageRoute({
+    promptId,
+    locale,
+    context: policyContext,
+  })
+
+  const rendered = renderPromptTemplate({
+    promptId,
+    templateLocale: route.templateLocale,
+    variables,
+  })
+
+  const prompt = appendLanguageGuardrails({
+    prompt: rendered,
+    outputLocale: route.outputLocale,
+    requireEnglishContract,
+  })
+
+  const telemetry = buildPromptRoutingTelemetry({
+    route,
+    contractValid: true,
+  })
+
+  return {
+    prompt,
+    telemetry,
+  }
 }

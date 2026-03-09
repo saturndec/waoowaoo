@@ -59,6 +59,7 @@ export async function executeAiTextStep(input: AiStepExecutionInput): Promise<Ai
         streamStepTitle: input.meta.stepTitle,
         streamStepIndex: input.meta.stepIndex,
         streamStepTotal: input.meta.stepTotal,
+        promptTelemetry: input.promptTelemetry,
       },
     )
 
@@ -68,6 +69,7 @@ export async function executeAiTextStep(input: AiStepExecutionInput): Promise<Ai
       reasoning: parts.reasoning,
       usage: extractUsage(completion),
       completion,
+      promptTelemetry: input.promptTelemetry,
     }
   } catch (error) {
     throw toAiRuntimeError(error)

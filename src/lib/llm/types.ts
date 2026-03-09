@@ -15,6 +15,16 @@ export interface ChatCompletionOptions {
     streamStepTitle?: string
     streamStepIndex?: number
     streamStepTotal?: number
+    // Prompt routing telemetry (VAT-41 P0)
+    promptTelemetry?: {
+      prompt_language: 'zh' | 'en'
+      output_language: 'zh' | 'en' | 'vi' | 'ko'
+      contract_language: 'en'
+      contract_valid: boolean
+      fallback_applied: boolean
+      fallback_reason?: string
+      route_reason: string
+    }
     // 内部保护位：避免 chatCompletion 与 chatCompletionStream 互相递归
     __skipAutoStream?: boolean
 }

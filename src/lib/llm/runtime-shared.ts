@@ -2,6 +2,7 @@ import OpenAI from 'openai'
 import { createScopedLogger } from '@/lib/logging/core'
 import { resolveModelSelection } from '../api-config'
 import { recordTextUsage as recordBillingTextUsage } from '@/lib/billing/runtime-usage'
+import type { AiPromptTelemetry } from '@/lib/ai-runtime/types'
 
 export const llmLogger = createScopedLogger({
   module: 'llm.client',
@@ -48,6 +49,7 @@ export function logLlmRawInput(params: {
   temperature: number
   action?: string
   messages: LlmRawMessage[]
+  promptTelemetry?: AiPromptTelemetry
 }) {
   llmLogger.info({
     audit: true,
@@ -68,6 +70,7 @@ export function logLlmRawInput(params: {
         reasoning: params.reasoning,
         reasoningEffort: params.reasoningEffort,
       },
+      promptPolicy: params.promptTelemetry || null,
       messages: params.messages,
     },
   })

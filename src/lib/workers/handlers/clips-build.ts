@@ -8,8 +8,9 @@ import { reportTaskProgress } from '@/lib/workers/shared'
 import { assertTaskActive } from '@/lib/workers/utils'
 import { createWorkerLLMStreamCallbacks, createWorkerLLMStreamContext } from './llm-stream'
 import type { TaskJobData } from '@/lib/task/types'
-import { buildPrompt, PROMPT_IDS } from '@/lib/prompt-i18n'
+import { buildPromptWithPolicy, PROMPT_IDS } from '@/lib/prompt-i18n'
 import { resolveAnalysisModel } from './resolve-analysis-model'
+import { parseModelKeyStrict } from '@/lib/model-config-contract'
 
 function parseClipArrayResponse(responseText: string): Array<Record<string, unknown>> {
   let cleaned = responseText.trim()
@@ -111,7 +112,8 @@ export async function handleClipsBuildTask(job: Job<TaskJobData>) {
     ? novelData.characters.map((item) => item.name).join('、')
     : '无'
   const charactersIntroduction = buildCharactersIntroduction(novelData.characters)
-  const promptTemplateBase = buildPrompt({
+  const parsedModel = parseModelKeyStrict(analysisModel)
+  const promptPolicy = buildPromptWithPolicy({
     promptId: PROMPT_IDS.NP_AGENT_CLIP,
     locale: job.data.locale,
     variables: {
@@ -120,8 +122,16 @@ export async function handleClipsBuildTask(job: Job<TaskJobData>) {
       characters_lib_name: charactersLibName,
       characters_introduction: charactersIntroduction,
     },
+    policyContext: {
+      modelKey: analysisModel,
+      provider: parsedModel?.provider || null,
+      action: 'split_clips',
+      taskType: job.data.type,
+      profile: 'balanced',
+    },
+    requireEnglishContract: true,
   })
-  const promptTemplate = `${promptTemplateBase}${CLIP_BOUNDARY_SUFFIX}`
+  const promptTemplate = `${promptPolicy.prompt}${CLIP_BOUNDARY_SUFFIX}`
 
   await reportTaskProgress(job, 20, {
     stage: 'clips_build_prepare',
@@ -159,7 +169,14 @@ export async function handleClipsBuildTask(job: Job<TaskJobData>) {
               stepTitle: '片段切分',
               stepIndex: 1,
               stepTotal: 1,
+              promptPolicy: {
+                modelKey: analysisModel,
+                provider: parsedModel?.provider || null,
+                taskType: job.data.type,
+                profile: 'balanced',
+              },
             },
+            promptTelemetry: promptPolicy.telemetry,
           }),
       )
 

@@ -44,7 +44,17 @@ vi.mock('@/lib/workers/handlers/llm-stream', () => ({
 }))
 vi.mock('@/lib/prompt-i18n', () => ({
   PROMPT_IDS: { NP_AGENT_CLIP: 'np_agent_clip' },
-  buildPrompt: vi.fn(() => 'clip-split-prompt'),
+  buildPromptWithPolicy: vi.fn(() => ({
+    prompt: 'clip-split-prompt',
+    telemetry: {
+      prompt_language: 'en',
+      output_language: 'zh',
+      contract_language: 'en',
+      contract_valid: true,
+      fallback_applied: true,
+      route_reason: 'test',
+    },
+  })),
 }))
 vi.mock('@/lib/novel-promotion/story-to-script/clip-matching', () => ({
   createClipContentMatcher: (content: string) => ({

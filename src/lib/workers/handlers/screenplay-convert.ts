@@ -15,8 +15,9 @@ import {
   parseScreenplayPayload,
   readText,
 } from './screenplay-convert-helpers'
-import { getPromptTemplate, PROMPT_IDS } from '@/lib/prompt-i18n'
+import { buildPromptWithPolicy, PROMPT_IDS } from '@/lib/prompt-i18n'
 import { resolveAnalysisModel } from './resolve-analysis-model'
+import { parseModelKeyStrict } from '@/lib/model-config-contract'
 
 const MAX_SCREENPLAY_ATTEMPTS = 2
 
@@ -77,7 +78,7 @@ export async function handleScreenplayConvertTask(job: Job<TaskJobData>) {
     throw new Error('No clips found, please split clips first')
   }
 
-  const screenplayPromptTemplate = getPromptTemplate(PROMPT_IDS.NP_SCREENPLAY_CONVERSION, job.data.locale)
+  const parsedModel = parseModelKeyStrict(analysisModel)
   const charactersLibName = novelData.characters.map((item) => item.name).join('、') || '无'
   const locationsLibName = novelData.locations.map((item) => item.name).join('、') || '无'
   const charactersIntroduction = buildCharactersIntroduction(novelData.characters)
@@ -124,12 +125,26 @@ export async function handleScreenplayConvertTask(job: Job<TaskJobData>) {
         throw new Error(`clip ${clip.id} content is empty`)
       }
 
-      const prompt = screenplayPromptTemplate
-        .replace('{clip_content}', clipContent)
-        .replace('{locations_lib_name}', locationsLibName)
-        .replace('{characters_lib_name}', charactersLibName)
-        .replace('{characters_introduction}', charactersIntroduction)
-        .replace('{clip_id}', clip.id)
+      const promptPolicy = buildPromptWithPolicy({
+        promptId: PROMPT_IDS.NP_SCREENPLAY_CONVERSION,
+        locale: job.data.locale,
+        variables: {
+          clip_content: clipContent,
+          locations_lib_name: locationsLibName,
+          characters_lib_name: charactersLibName,
+          characters_introduction: charactersIntroduction,
+          clip_id: clip.id,
+        },
+        policyContext: {
+          modelKey: analysisModel,
+          provider: parsedModel?.provider || null,
+          action: 'screenplay_conversion',
+          taskType: job.data.type,
+          profile: 'balanced',
+        },
+        requireEnglishContract: true,
+      })
+      const prompt = promptPolicy.prompt
 
       // 记录 prompt 输入
       onProjectNameAvailable(projectId, project.name)
@@ -161,7 +176,14 @@ export async function handleScreenplayConvertTask(job: Job<TaskJobData>) {
                       stepTitle,
                       stepIndex,
                       stepTotal: total,
+                      promptPolicy: {
+                        modelKey: analysisModel,
+                        provider: parsedModel?.provider || null,
+                        taskType: job.data.type,
+                        profile: 'balanced',
+                      },
                     },
+                    promptTelemetry: promptPolicy.telemetry,
                   }),
               )
             } finally {

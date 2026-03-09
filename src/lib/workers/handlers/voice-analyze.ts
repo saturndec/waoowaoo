@@ -12,8 +12,9 @@ import {
   parseVoiceLinesJson,
   type VoiceLinePayload,
 } from './voice-analyze-helpers'
-import { buildPrompt, PROMPT_IDS } from '@/lib/prompt-i18n'
+import { buildPromptWithPolicy, PROMPT_IDS } from '@/lib/prompt-i18n'
 import { resolveAnalysisModel } from './resolve-analysis-model'
+import { parseModelKeyStrict } from '@/lib/model-config-contract'
 
 const MAX_VOICE_ANALYZE_ATTEMPTS = 2
 
@@ -93,7 +94,8 @@ export async function handleVoiceAnalyzeTask(job: Job<TaskJobData>) {
     : '无'
   const charactersIntroduction = buildCharactersIntroduction(novelPromotionData.characters)
   const storyboardJson = buildStoryboardJson(episode.storyboards || [])
-  const promptTemplate = buildPrompt({
+  const parsedModel = parseModelKeyStrict(analysisModel)
+  const promptPolicy = buildPromptWithPolicy({
     promptId: PROMPT_IDS.NP_VOICE_ANALYSIS,
     locale: job.data.locale,
     variables: {
@@ -102,7 +104,16 @@ export async function handleVoiceAnalyzeTask(job: Job<TaskJobData>) {
       characters_introduction: charactersIntroduction,
       storyboard_json: storyboardJson,
     },
+    policyContext: {
+      modelKey: analysisModel,
+      provider: parsedModel?.provider || null,
+      action: 'voice_analyze',
+      taskType: job.data.type,
+      profile: 'balanced',
+    },
+    requireEnglishContract: true,
   })
+  const promptTemplate = promptPolicy.prompt
 
   await reportTaskProgress(job, 20, {
     stage: 'voice_analyze_prepare',
@@ -153,7 +164,14 @@ export async function handleVoiceAnalyzeTask(job: Job<TaskJobData>) {
                 stepTitle: '台词分析',
                 stepIndex: 1,
                 stepTotal: 1,
+                promptPolicy: {
+                  modelKey: analysisModel,
+                  provider: parsedModel?.provider || null,
+                  taskType: job.data.type,
+                  profile: 'balanced',
+                },
               },
+              promptTelemetry: promptPolicy.telemetry,
             }),
         )
 

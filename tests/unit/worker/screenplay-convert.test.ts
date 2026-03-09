@@ -51,7 +51,17 @@ vi.mock('@/lib/workers/handlers/screenplay-convert-helpers', () => ({
 }))
 vi.mock('@/lib/prompt-i18n', () => ({
   PROMPT_IDS: { NP_SCREENPLAY_CONVERSION: 'np_screenplay_conversion' },
-  getPromptTemplate: vi.fn(() => 'screenplay-template-{clip_content}-{clip_id}'),
+  buildPromptWithPolicy: vi.fn((input: { variables: { clip_content: string; clip_id: string } }) => ({
+    prompt: `screenplay-template-${input.variables.clip_content}-${input.variables.clip_id}`,
+    telemetry: {
+      prompt_language: 'en',
+      output_language: 'zh',
+      contract_language: 'en',
+      contract_valid: true,
+      fallback_applied: true,
+      route_reason: 'test',
+    },
+  })),
 }))
 
 import { handleScreenplayConvertTask } from '@/lib/workers/handlers/screenplay-convert'

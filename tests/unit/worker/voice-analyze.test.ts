@@ -54,7 +54,17 @@ vi.mock('@/lib/workers/handlers/voice-analyze-helpers', () => ({
 }))
 vi.mock('@/lib/prompt-i18n', () => ({
   PROMPT_IDS: { NP_VOICE_ANALYSIS: 'np_voice_analysis' },
-  buildPrompt: vi.fn(() => 'voice-analysis-prompt'),
+  buildPromptWithPolicy: vi.fn(() => ({
+    prompt: 'voice-analysis-prompt',
+    telemetry: {
+      prompt_language: 'en',
+      output_language: 'zh',
+      contract_language: 'en',
+      contract_valid: true,
+      fallback_applied: true,
+      route_reason: 'test',
+    },
+  })),
 }))
 
 import { handleVoiceAnalyzeTask } from '@/lib/workers/handlers/voice-analyze'

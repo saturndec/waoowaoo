@@ -16,12 +16,30 @@ export type AiRuntimeError = Error & {
   cause?: unknown
 }
 
+export type AiPromptPolicyContext = {
+  modelKey?: string | null
+  provider?: string | null
+  taskType?: string | null
+  profile?: 'balanced' | 'en-first' | 'zh-preferred'
+}
+
+export type AiPromptTelemetry = {
+  prompt_language: 'zh' | 'en'
+  output_language: 'zh' | 'en' | 'vi' | 'ko'
+  contract_language: 'en'
+  contract_valid: boolean
+  fallback_applied: boolean
+  fallback_reason?: string
+  route_reason: string
+}
+
 export type AiStepMeta = {
   stepId: string
   stepAttempt?: number
   stepTitle: string
   stepIndex: number
   stepTotal: number
+  promptPolicy?: AiPromptPolicyContext
 }
 
 export type AiTextMessages = Array<{
@@ -36,6 +54,7 @@ export type AiStepExecutionInput = {
   projectId: string
   action: string
   meta: AiStepMeta
+  promptTelemetry?: AiPromptTelemetry
   temperature?: number
   reasoning?: boolean
   reasoningEffort?: 'minimal' | 'low' | 'medium' | 'high'
@@ -50,6 +69,7 @@ export type AiStepExecutionResult = {
     totalTokens: number
   }
   completion: OpenAI.Chat.Completions.ChatCompletion
+  promptTelemetry?: AiPromptTelemetry
 }
 
 export type AiVisionStepExecutionInput = {

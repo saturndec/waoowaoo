@@ -9,7 +9,8 @@ import { getUserModelConfig } from '@/lib/config-service'
 import { createTextMarkerMatcher } from '@/lib/novel-promotion/story-to-script/clip-matching'
 import { createWorkerLLMStreamCallbacks, createWorkerLLMStreamContext } from './llm-stream'
 import type { TaskJobData } from '@/lib/task/types'
-import { buildPrompt, PROMPT_IDS } from '@/lib/prompt-i18n'
+import { buildPromptWithPolicy, PROMPT_IDS } from '@/lib/prompt-i18n'
+import { parseModelKeyStrict } from '@/lib/model-config-contract'
 
 type EpisodeSplit = {
   number?: number
@@ -105,14 +106,23 @@ export async function handleEpisodeSplitTask(job: Job<TaskJobData>) {
     throw new Error('请先在设置页面配置分析模型')
   }
 
-  const promptBase = buildPrompt({
+  const parsedModel = parseModelKeyStrict(analysisModel)
+  const promptPolicy = buildPromptWithPolicy({
     promptId: PROMPT_IDS.NP_EPISODE_SPLIT,
     locale: job.data.locale,
     variables: {
       CONTENT: content,
     },
+    policyContext: {
+      modelKey: analysisModel,
+      provider: parsedModel?.provider || null,
+      action: 'episode_split',
+      taskType: job.data.type,
+      profile: 'balanced',
+    },
+    requireEnglishContract: true,
   })
-  const prompt = `${promptBase}${EPISODE_SPLIT_BOUNDARY_SUFFIX}`
+  const prompt = `${promptPolicy.prompt}${EPISODE_SPLIT_BOUNDARY_SUFFIX}`
 
   await reportTaskProgress(job, 20, {
     stage: 'episode_split_prepare',
@@ -155,7 +165,14 @@ export async function handleEpisodeSplitTask(job: Job<TaskJobData>) {
                 stepTitle: '智能分集',
                 stepIndex: 1,
                 stepTotal: 1,
+                promptPolicy: {
+                  modelKey: analysisModel,
+                  provider: parsedModel?.provider || null,
+                  taskType: job.data.type,
+                  profile: 'balanced',
+                },
               },
+              promptTelemetry: promptPolicy.telemetry,
             }),
         )
 
