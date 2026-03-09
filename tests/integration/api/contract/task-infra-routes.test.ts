@@ -37,6 +37,10 @@ const withPrismaRetryMock = vi.hoisted(() => vi.fn(async <T>(fn: () => Promise<T
 const listEventsAfterMock = vi.hoisted(() => vi.fn(async () => []))
 const listTaskLifecycleEventsMock = vi.hoisted(() => vi.fn(async () => []))
 const addChannelListenerMock = vi.hoisted(() => vi.fn(async () => async () => undefined))
+const getRunByIdMock = vi.hoisted(() => vi.fn())
+const requestRunCancelMock = vi.hoisted(() => vi.fn())
+const publishRunEventMock = vi.hoisted(() => vi.fn(async () => undefined))
+const listRunEventsAfterSeqMock = vi.hoisted(() => vi.fn(async () => []))
 const subscriberState = vi.hoisted(() => ({
   listener: null as ((message: string) => void) | null,
 }))
@@ -103,6 +107,16 @@ vi.mock('@/lib/prisma', () => ({
   },
 }))
 
+vi.mock('@/lib/run-runtime/service', () => ({
+  getRunById: getRunByIdMock,
+  requestRunCancel: requestRunCancelMock,
+  listRunEventsAfterSeq: listRunEventsAfterSeqMock,
+}))
+
+vi.mock('@/lib/run-runtime/publisher', () => ({
+  publishRunEvent: publishRunEventMock,
+}))
+
 const baseTask: TaskRecord = {
   id: 'task-1',
   userId: 'user-1',
@@ -148,6 +162,21 @@ describe('api contract - task infra routes (behavior)', () => {
       return async () => undefined
     })
     listTaskLifecycleEventsMock.mockResolvedValue([])
+    getRunByIdMock.mockResolvedValue({
+      id: 'run-1',
+      userId: 'user-1',
+      projectId: 'project-1',
+      taskId: 'task-1',
+      status: 'running',
+    })
+    requestRunCancelMock.mockResolvedValue({
+      id: 'run-1',
+      userId: 'user-1',
+      projectId: 'project-1',
+      taskId: 'task-1',
+      status: 'canceling',
+    })
+    listRunEventsAfterSeqMock.mockResolvedValue([])
   })
 
   it('GET /api/tasks: unauthenticated -> 401; authenticated -> 200 with caller-owned tasks', async () => {
@@ -442,5 +471,64 @@ describe('api contract - task infra routes (behavior)', () => {
     expect(merged).toContain('"lifecycleType":"completed"')
     expect(merged).toContain('"taskId":"task-1"')
     await reader!.cancel()
+  })
+
+  it('GET /api/runs/[runId]/events: returns ordered run events for replay offset', async () => {
+    const { GET } = await import('@/app/api/runs/[runId]/events/route')
+    listRunEventsAfterSeqMock.mockResolvedValueOnce([
+      {
+        seq: 11,
+        eventType: 'step.start',
+        stepKey: 'clip_1_phase1',
+        payload: { message: 'running' },
+      },
+    ])
+
+    const req = buildMockRequest({
+      path: '/api/runs/run-1/events',
+      method: 'GET',
+      query: { afterSeq: '10', limit: '50' },
+    })
+    const res = await GET(req, { params: Promise.resolve({ runId: 'run-1' }) })
+
+    expect(res.status).toBe(200)
+    expect(listRunEventsAfterSeqMock).toHaveBeenCalledWith({
+      runId: 'run-1',
+      userId: 'user-1',
+      afterSeq: 10,
+      limit: 50,
+    })
+
+    const payload = await res.json() as { runId: string; afterSeq: number; events: Array<{ seq: number; eventType: string }> }
+    expect(payload.runId).toBe('run-1')
+    expect(payload.afterSeq).toBe(10)
+    expect(payload.events[0]?.seq).toBe(11)
+    expect(payload.events[0]?.eventType).toBe('step.start')
+  })
+
+  it('POST /api/runs/[runId]/cancel: remains idempotent for already-canceling run', async () => {
+    const { POST } = await import('@/app/api/runs/[runId]/cancel/route')
+    getRunByIdMock.mockResolvedValueOnce({
+      id: 'run-1',
+      userId: 'user-1',
+      projectId: 'project-1',
+      taskId: 'task-1',
+      status: 'canceling',
+    })
+
+    const req = buildMockRequest({
+      path: '/api/runs/run-1/cancel',
+      method: 'POST',
+    })
+    const res = await POST(req, { params: Promise.resolve({ runId: 'run-1' }) })
+
+    expect(res.status).toBe(200)
+    expect(requestRunCancelMock).not.toHaveBeenCalled()
+    expect(cancelTaskMock).not.toHaveBeenCalled()
+    expect(publishRunEventMock).not.toHaveBeenCalled()
+
+    const payload = await res.json() as { success: boolean; run: { status: string } }
+    expect(payload.success).toBe(true)
+    expect(payload.run.status).toBe('canceling')
   })
 })

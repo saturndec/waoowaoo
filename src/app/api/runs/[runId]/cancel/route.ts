@@ -20,6 +20,18 @@ export const POST = apiHandler(async (
     throw new ApiError('NOT_FOUND')
   }
 
+  if (
+    run.status === RUN_STATUS.CANCELING
+    || run.status === RUN_STATUS.CANCELED
+    || run.status === RUN_STATUS.COMPLETED
+    || run.status === RUN_STATUS.FAILED
+  ) {
+    return NextResponse.json({
+      success: true,
+      run,
+    })
+  }
+
   const cancelledRun = await requestRunCancel({
     runId,
     userId: session.user.id,
@@ -32,20 +44,15 @@ export const POST = apiHandler(async (
     await cancelTask(cancelledRun.taskId, 'Run cancelled by user')
   }
 
-  if (
-    cancelledRun.status === RUN_STATUS.CANCELING ||
-    cancelledRun.status === RUN_STATUS.CANCELED
-  ) {
-    await publishRunEvent({
-      runId: cancelledRun.id,
-      projectId: cancelledRun.projectId,
-      userId: cancelledRun.userId,
-      eventType: RUN_EVENT_TYPE.RUN_CANCELED,
-      payload: {
-        message: 'Run cancelled by user',
-      },
-    })
-  }
+  await publishRunEvent({
+    runId: cancelledRun.id,
+    projectId: cancelledRun.projectId,
+    userId: cancelledRun.userId,
+    eventType: RUN_EVENT_TYPE.RUN_CANCELED,
+    payload: {
+      message: 'Run cancelled by user',
+    },
+  })
 
   return NextResponse.json({
     success: true,
