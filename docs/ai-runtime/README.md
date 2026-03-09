@@ -12,6 +12,8 @@
 6. [06-运维与排障](./06-operations-runbook.md)
 7. [07-测试与验收](./07-testing-acceptance.md)
 8. [08-当前差距与后续动作](./08-open-gaps.md)
+9. [09-User API English Contract](./09-user-api-english-contract.md)
+10. [10-Message Catalog & API Contract Normalization](./10-message-catalog-api-contract-normalization.md)
 
 ## 单一事实源
 

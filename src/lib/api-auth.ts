@@ -11,6 +11,7 @@ import { prisma } from '@/lib/prisma'
 import { withPrismaRetry } from '@/lib/prisma-retry'
 import { extractModelKey } from '@/lib/config-service'
 import { getErrorSpec, type UnifiedErrorCode } from '@/lib/errors/codes'
+import { buildErrorMessageContract } from '@/lib/errors/contract'
 import { getLogContext, setLogContext } from '@/lib/logging/context'
 
 // ============================================================
@@ -122,20 +123,25 @@ export type ProjectAuthContext = ProjectAuthContextWithIncludes<ProjectAuthInclu
 
 function buildErrorResponse(code: UnifiedErrorCode, message?: string, details: Record<string, unknown> = {}) {
     const spec = getErrorSpec(code)
-    const finalMessage = message?.trim() || spec.defaultMessage
+    const contract = buildErrorMessageContract({
+        code,
+        message,
+    })
     return NextResponse.json(
         {
             success: false,
             error: {
                 code,
-                message: finalMessage,
+                message: contract.message,
+                messageKey: contract.messageKey,
+                defaultMessage: contract.defaultMessage,
                 retryable: spec.retryable,
                 category: spec.category,
-                userMessageKey: spec.userMessageKey,
+                userMessageKey: contract.messageKey,
                 details,
             },
             code,
-            message: finalMessage,
+            message: contract.message,
             ...details,
         },
         { status: spec.httpStatus },

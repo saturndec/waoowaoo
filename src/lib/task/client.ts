@@ -1,4 +1,4 @@
-import { resolveTaskErrorMessage } from './error-message'
+import { resolveTaskErrorSummary } from './error-message'
 
 type TaskStatus = 'queued' | 'processing' | 'completed' | 'failed'
 
@@ -48,7 +48,8 @@ export async function waitForTaskResult(taskId: string, options: WaitTaskOptions
     })
     if (!response.ok) {
       const errorPayload = await response.json().catch(() => null)
-      throw new Error(resolveTaskErrorMessage(errorPayload, `Task fetch failed: ${taskId}`))
+      const summary = resolveTaskErrorSummary(errorPayload, `Task fetch failed: ${taskId}`)
+      throw new Error(summary.message)
     }
 
     const payload = (await response.json()) as TaskSnapshotResponse
@@ -63,10 +64,12 @@ export async function waitForTaskResult(taskId: string, options: WaitTaskOptions
       return task.result || { success: true }
     }
     if (task.status === 'failed') {
-      throw new Error(resolveTaskErrorMessage(task, `Task ${task.status}`))
+      const summary = resolveTaskErrorSummary(task, `Task ${task.status}`)
+      throw new Error(summary.message)
     }
     if (task.status !== 'queued' && task.status !== 'processing') {
-      throw new Error(resolveTaskErrorMessage(task, `Task ${task.status}`))
+      const summary = resolveTaskErrorSummary(task, `Task ${task.status}`)
+      throw new Error(summary.message)
     }
 
     await sleep(intervalMs)
@@ -76,7 +79,8 @@ export async function waitForTaskResult(taskId: string, options: WaitTaskOptions
 export async function resolveTaskResponse<T = Record<string, unknown>>(response: Response, options?: WaitTaskOptions) {
   const data = await response.json().catch(() => null)
   if (!response.ok) {
-    throw new Error(resolveTaskErrorMessage(data, 'Request failed'))
+    const summary = resolveTaskErrorSummary(data, 'Request failed')
+    throw new Error(summary.message)
   }
   if (isAsyncTaskResponse(data)) {
     return await waitForTaskResult(data.taskId, options) as T

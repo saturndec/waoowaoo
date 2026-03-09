@@ -2,6 +2,7 @@ import { createScopedLogger } from '@/lib/logging/core'
 import { withLogContext } from '@/lib/logging/context'
 import { NextRequest, NextResponse } from 'next/server'
 import { getErrorSpec, type UnifiedErrorCode } from '@/lib/errors/codes'
+import { buildErrorMessageContract } from '@/lib/errors/contract'
 import { normalizeAnyError } from '@/lib/errors/normalize'
 import { publishTaskEvent, publishTaskStreamEvent } from '@/lib/task/publisher'
 import { TASK_EVENT_TYPE } from '@/lib/task/types'
@@ -396,23 +397,29 @@ export class ApiError extends Error {
   details?: Record<string, unknown>
   retryable: boolean
   category: string
+  messageKey: string
   userMessageKey: string
+  defaultMessage: string
 
   constructor(code: ApiErrorCode, details?: Record<string, unknown>) {
     const spec = getErrorSpec(code)
-    const message =
-      typeof details?.message === 'string' && details.message.trim()
-        ? details.message.trim()
-        : spec.defaultMessage
+    const contract = buildErrorMessageContract({
+      code,
+      message: details?.message,
+      messageKey: details?.messageKey,
+      userMessageKey: details?.userMessageKey,
+    })
 
-    super(message)
+    super(contract.message)
     this.name = 'ApiError'
     this.code = code
     this.status = spec.httpStatus
     this.details = details
     this.retryable = spec.retryable
     this.category = spec.category
-    this.userMessageKey = spec.userMessageKey
+    this.messageKey = contract.messageKey
+    this.userMessageKey = contract.messageKey
+    this.defaultMessage = contract.defaultMessage
   }
 }
 
@@ -426,7 +433,9 @@ export function normalizeError(error: unknown): ApiError {
     ...(normalized.details || {}),
     retryable: normalized.retryable,
     category: normalized.category,
+    messageKey: normalized.messageKey,
     userMessageKey: normalized.userMessageKey,
+    defaultMessage: normalized.defaultMessage,
     provider: normalized.provider || undefined,
     message: normalized.message,
   }
@@ -535,6 +544,8 @@ export function apiHandler<TParams extends RouteParams>(handler: ApiHandler<TPar
               error: {
                 code: apiError.code,
                 message: apiError.message,
+                messageKey: apiError.messageKey,
+                defaultMessage: apiError.defaultMessage,
                 retryable: apiError.retryable,
                 category: apiError.category,
                 userMessageKey: apiError.userMessageKey,

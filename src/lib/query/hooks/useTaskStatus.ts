@@ -17,6 +17,8 @@ export type TaskItem = {
   error?: {
     code: string
     message: string
+    messageKey?: string
+    defaultMessage?: string
     retryable: boolean
     category: string
     userMessageKey: string

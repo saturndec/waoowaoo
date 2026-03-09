@@ -1,10 +1,13 @@
 import { normalizeTaskError } from '@/lib/errors/normalize'
 import { isKnownErrorCode, type UnifiedErrorCode } from '@/lib/errors/codes'
+import { buildErrorMessageContract } from '@/lib/errors/contract'
 import { getUserMessageByCode } from '@/lib/errors/user-messages'
 
 export type TaskErrorSummary = {
   code: string | null
   message: string
+  messageKey: string | null
+  defaultMessage: string | null
   cancelled: boolean
 }
 
@@ -76,12 +79,28 @@ export function resolveTaskErrorSummary(payload: unknown, fallbackMessage = 'Tas
     looksCancelledMessage(message)
 
   if (cancelled) {
+    const cancelledContract = buildErrorMessageContract({
+      code: 'CONFLICT',
+      message: 'Task cancelled by user',
+    })
     return {
       code: normalized?.code || 'CONFLICT',
-      message: 'Task cancelled by user',
+      message: cancelledContract.message,
+      messageKey: cancelledContract.messageKey,
+      defaultMessage: cancelledContract.defaultMessage,
       cancelled: true,
     }
   }
+
+  const resolvedCode = normalized?.code || (isKnownErrorCode(code) ? (code as UnifiedErrorCode) : null)
+  const contract = resolvedCode
+    ? buildErrorMessageContract({
+      code: resolvedCode,
+      message: normalizedMessage || message || undefined,
+      messageKey: sourceError.messageKey,
+      userMessageKey: sourceError.userMessageKey || sourceError.messageKey,
+    })
+    : null
 
   const userFriendlyMessage =
     normalized?.code && isKnownErrorCode(normalized.code)
@@ -90,7 +109,9 @@ export function resolveTaskErrorSummary(payload: unknown, fallbackMessage = 'Tas
 
   return {
     code: normalized?.code || code || null,
-    message: message || userFriendlyMessage || normalizedMessage || fallbackMessage,
+    message: message || userFriendlyMessage || contract?.message || normalizedMessage || fallbackMessage,
+    messageKey: contract?.messageKey || null,
+    defaultMessage: contract?.defaultMessage || null,
     cancelled: false,
   }
 }

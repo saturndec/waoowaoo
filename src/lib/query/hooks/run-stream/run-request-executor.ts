@@ -1,7 +1,7 @@
 import type { MutableRefObject } from 'react'
 import type { RunStreamEvent } from '@/lib/novel-promotion/run-stream/types'
 import { isAsyncTaskResponse } from '@/lib/task/client'
-import { resolveTaskErrorMessage } from '@/lib/task/error-message'
+import { resolveTaskErrorSummary } from '@/lib/task/error-message'
 import { toObject, toTerminalRunResult } from './event-parser'
 import { streamSSEBody } from './run-stream-sse-body'
 import { fetchRunEventsPage, toRunStreamEventFromRunApi } from './run-event-adapter'
@@ -124,7 +124,8 @@ export async function executeRunRequest(args: RunRequestExecutorArgs): Promise<R
     if (!response.ok) {
       const jsonPayload = await response.clone().json().catch(() => null)
       if (jsonPayload && typeof jsonPayload === 'object') {
-        throw new Error(resolveTaskErrorMessage(jsonPayload as Record<string, unknown>, `HTTP ${response.status}`))
+        const summary = resolveTaskErrorSummary(jsonPayload as Record<string, unknown>, `HTTP ${response.status}`)
+        throw new Error(summary.message)
       }
       const message = await response.text().catch(() => '')
       throw new Error(message || `HTTP ${response.status}`)

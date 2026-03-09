@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { useLocale, useTranslations } from 'next-intl'
 import { GlassModalShell } from '@/components/ui/primitives'
 import { resolveTaskPresentationState } from '@/lib/task/presentation'
+import { resolveTaskErrorSummary } from '@/lib/task/error-message'
 import type { CapabilityValue } from '@/lib/model-config-contract'
 import {
   encodeModelKey,
@@ -211,12 +212,20 @@ export function ApiConfigTabContainer() {
     const data = await response.json().catch(() => ({})) as {
       success?: boolean
       models?: Array<{ modelId: string; name: string; type: 'llm' | 'image' | 'video' | 'audio' }>
+      code?: string
       message?: string
-      error?: { message?: string }
+      error?: {
+        code?: string
+        message?: string
+        messageKey?: string
+        defaultMessage?: string
+        details?: Record<string, unknown>
+      }
     }
 
     if (!response.ok || !data.success) {
-      throw new Error(data.error?.message || data.message || t('fetchModelsFailed'))
+      const summary = resolveTaskErrorSummary(data, t('fetchModelsFailed'))
+      throw new Error(summary.message)
     }
 
     let importedCount = 0

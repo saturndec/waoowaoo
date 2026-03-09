@@ -18,6 +18,8 @@ type ApiErrorPayload = {
     | {
         code?: string
         message?: string
+        messageKey?: string
+        defaultMessage?: string
         retryable?: boolean
         category?: string
         userMessageKey?: string

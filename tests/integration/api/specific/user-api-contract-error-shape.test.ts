@@ -36,6 +36,8 @@ describe('api specific - user API english error contract shape', () => {
       error?: {
         code?: string
         message?: string
+        messageKey?: string
+        defaultMessage?: string
         retryable?: boolean
         category?: string
         userMessageKey?: string
@@ -52,6 +54,8 @@ describe('api specific - user API english error contract shape', () => {
     expect(body.error?.message).toBe('extraHeadersJson must be a valid JSON object')
     expect(body.error?.retryable).toBe(false)
     expect(body.error?.category).toBe('VALIDATION')
+    expect(body.error?.messageKey).toBe('errors.INVALID_PARAMS')
+    expect(body.error?.defaultMessage).toBe('Invalid parameters')
     expect(body.error?.userMessageKey).toBe('errors.INVALID_PARAMS')
     expect(body.error?.details?.code).toBe('CONNECTION_EXTRA_HEADERS_JSON_INVALID')
     expect(body.error?.details?.field).toBe('extraHeadersJson')
@@ -81,6 +85,8 @@ describe('api specific - user API english error contract shape', () => {
       error?: {
         code?: string
         message?: string
+        messageKey?: string
+        defaultMessage?: string
         details?: Record<string, unknown>
       }
       code?: string
@@ -92,6 +98,8 @@ describe('api specific - user API english error contract shape', () => {
     expect(typeof body.requestId).toBe('string')
     expect(body.error?.code).toBe('INVALID_PARAMS')
     expect(body.error?.message).toBe('only openai-compatible is supported for fetch-models')
+    expect(body.error?.messageKey).toBe('errors.INVALID_PARAMS')
+    expect(body.error?.defaultMessage).toBe('Invalid parameters')
     expect(body.error?.details?.code).toBe('FETCH_MODELS_PROVIDER_UNSUPPORTED')
     expect(body.error?.details?.field).toBe('providerId')
     expect(body.code).toBe('INVALID_PARAMS')

@@ -1,5 +1,5 @@
 import type { QueryClient, QueryKey } from '@tanstack/react-query'
-import { resolveTaskErrorMessage } from '@/lib/task/error-message'
+import { resolveTaskErrorSummary } from '@/lib/task/error-message'
 
 /** 从当前页面 URL 提取 locale 前缀（/zh|en|vi|ko/...），默认 zh */
 export function getPageLocale(): string {
@@ -22,6 +22,9 @@ export type MutationRequestError = Error & {
   status?: number
   payload?: Record<string, unknown>
   detail?: string
+  code?: string | null
+  messageKey?: string | null
+  defaultMessage?: string | null
 }
 
 async function parseJsonSafe(response: Response): Promise<Record<string, unknown>> {
@@ -35,9 +38,13 @@ function createRequestError(
   payload: Record<string, unknown>,
   fallbackMessage: string,
 ): MutationRequestError {
-  const error = new Error(resolveTaskErrorMessage(payload, fallbackMessage)) as MutationRequestError
+  const summary = resolveTaskErrorSummary(payload, fallbackMessage)
+  const error = new Error(summary.message) as MutationRequestError
   error.status = status
   error.payload = payload
+  error.code = summary.code
+  error.messageKey = summary.messageKey
+  error.defaultMessage = summary.defaultMessage
   if (typeof payload.detail === 'string') {
     error.detail = payload.detail
   }

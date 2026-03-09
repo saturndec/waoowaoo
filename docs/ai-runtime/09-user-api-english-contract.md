@@ -26,6 +26,8 @@ This contract applies to user-facing backend APIs in `/api/user/*` that power co
   "requestId": "req_xxx",
   "error": {
     "code": "INVALID_PARAMS",
+    "messageKey": "errors.INVALID_PARAMS",
+    "defaultMessage": "Invalid parameters",
     "message": "baseUrl is required",
     "retryable": false,
     "category": "VALIDATION",
@@ -43,7 +45,7 @@ This contract applies to user-facing backend APIs in `/api/user/*` that power co
 
 ## English-contract-first rule
 
-1. API contract fields (`error.message`, `message`, `details.code`, `details.field`) MUST be stable English values.
+1. API contract fields (`error.code`, `error.messageKey`, `error.defaultMessage`, `error.message`, top-level `message`, `details.code`, `details.field`) MUST be stable English values.
 2. UI localization remains independent and should rely on `error.code`/`userMessageKey` for translated display.
 3. No locale-dependent API message text.
 

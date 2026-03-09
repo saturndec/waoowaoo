@@ -10,6 +10,8 @@ describe('task error message normalization', () => {
     expect(summary.cancelled).toBe(true)
     expect(summary.code).toBe('CONFLICT')
     expect(summary.message).toBe('Task cancelled by user')
+    expect(summary.messageKey).toBe('errors.CONFLICT')
+    expect(summary.defaultMessage).toBe('Conflict')
   })
 
   it('keeps cancelled semantics from normalized task error details', () => {
@@ -23,9 +25,20 @@ describe('task error message normalization', () => {
     expect(summary.cancelled).toBe(true)
     expect(summary.code).toBe('CONFLICT')
     expect(summary.message).toBe('Task cancelled by user')
+    expect(summary.messageKey).toBe('errors.CONFLICT')
   })
 
   it('extracts nested error message from payload', () => {
+    const summary = resolveTaskErrorSummary({
+      error: {
+        code: 'EXTERNAL_ERROR',
+        details: {
+          message: 'provider failed',
+        },
+      },
+    }, 'fallback')
+    expect(summary.message).toBe('provider failed')
+    expect(summary.messageKey).toBe('errors.EXTERNAL_ERROR')
     const message = resolveTaskErrorMessage({
       error: {
         details: {
