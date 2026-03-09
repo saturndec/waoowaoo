@@ -1,5 +1,5 @@
 {
-  "title": "waoowaoo",
+  "title": "AI Factory",
   "subtitle": "AI Film & TV Studio",
   "enterWorkspace": "Enter Workspace",
   "getStarted": "Get Started",
@@ -21,6 +21,6 @@
     }
   },
   "footer": {
-    "copyright": "2026 waoowaoo AI. All rights reserved."
+    "copyright": "2026 AI Factory. All rights reserved."
   }
 }

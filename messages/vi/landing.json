@@ -1,26 +1,26 @@
 {
-    "title": "waoowaoo",
-    "subtitle": "Xưởng phim và truyền hình AI",
-    "enterWorkspace": "Nhập không gian làm việc",
-    "getStarted": "Bắt đầu",
-    "learnMore": "Tìm hiểu thêm",
-    "features": {
-        "title": "Giải phóng sự sáng tạo vô hạn",
-        "subtitle": "Hỗ trợ AI toàn bộ quá trình, từ kịch bản đến bản cắt cuối cùng",
-        "character": {
-            "title": "Xưởng nhân vật",
-            "description": "Tạo nhân vật anime độc ​​đáo với tính nhất quán cao"
-        },
-        "storyboard": {
-            "title": "Bảng phân cảnh thông minh",
-            "description": "Văn bản chỉ bằng một cú nhấp chuột vào bảng phân cảnh, điều khiển tường thuật chính xác"
-        },
-        "world": {
-            "title": "Tòa nhà thế giới",
-            "description": "Tạo cảnh nhập vai để xây dựng bối cảnh câu chuyện hoành tráng"
-        }
+  "title": "AI Factory",
+  "subtitle": "Xưởng phim và truyền hình AI",
+  "enterWorkspace": "Nhập không gian làm việc",
+  "getStarted": "Bắt đầu",
+  "learnMore": "Tìm hiểu thêm",
+  "features": {
+    "title": "Giải phóng sự sáng tạo vô hạn",
+    "subtitle": "Hỗ trợ AI toàn bộ quá trình, từ kịch bản đến bản cắt cuối cùng",
+    "character": {
+      "title": "Xưởng nhân vật",
+      "description": "Tạo nhân vật anime độc ​​đáo với tính nhất quán cao"
     },
-    "footer": {
-        "copyright": "2026 waowaoo AI. Mọi quyền được bảo lưu."
+    "storyboard": {
+      "title": "Bảng phân cảnh thông minh",
+      "description": "Văn bản chỉ bằng một cú nhấp chuột vào bảng phân cảnh, điều khiển tường thuật chính xác"
+    },
+    "world": {
+      "title": "Tòa nhà thế giới",
+      "description": "Tạo cảnh nhập vai để xây dựng bối cảnh câu chuyện hoành tráng"
     }
+  },
+  "footer": {
+    "copyright": "2026 AI Factory. Mọi quyền được bảo lưu."
+  }
 }

@@ -1,26 +1,26 @@
 {
-    "title": "waoowaoo",
-    "subtitle": "AI 영화 및 TV 스튜디오",
-    "enterWorkspace": "작업공간 입력",
-    "getStarted": "시작하기",
-    "learnMore": "자세히 알아보기",
-    "features": {
-        "title": "무한한 창의력을 발휘하세요",
-        "subtitle": "스크립트부터 최종 컷까지 전체 프로세스 AI 지원",
-        "character": {
-            "title": "캐릭터 워크숍",
-            "description": "높은 일관성으로 독특한 애니메이션 캐릭터를 만들어보세요"
-        },
-        "storyboard": {
-            "title": "스마트 스토리보드",
-            "description": "원클릭 텍스트를 스토리보드에 추가하고 정확한 내러티브 제어"
-        },
-        "world": {
-            "title": "월드 빌딩",
-            "description": "웅장한 스토리 배경을 구축하기 위한 몰입형 장면 생성"
-        }
+  "title": "AI Factory",
+  "subtitle": "AI 영화 및 TV 스튜디오",
+  "enterWorkspace": "작업공간 입력",
+  "getStarted": "시작하기",
+  "learnMore": "자세히 알아보기",
+  "features": {
+    "title": "무한한 창의력을 발휘하세요",
+    "subtitle": "스크립트부터 최종 컷까지 전체 프로세스 AI 지원",
+    "character": {
+      "title": "캐릭터 워크숍",
+      "description": "높은 일관성으로 독특한 애니메이션 캐릭터를 만들어보세요"
     },
-    "footer": {
-        "copyright": "2026 와오와오 AI. 모든 권리 보유."
+    "storyboard": {
+      "title": "스마트 스토리보드",
+      "description": "원클릭 텍스트를 스토리보드에 추가하고 정확한 내러티브 제어"
+    },
+    "world": {
+      "title": "월드 빌딩",
+      "description": "웅장한 스토리 배경을 구축하기 위한 몰입형 장면 생성"
     }
+  },
+  "footer": {
+    "copyright": "2026 AI Factory. 모든 권리 보유."
+  }
 }
