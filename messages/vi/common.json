@@ -1,0 +1,149 @@
+{
+    "appName": "waoowaoo",
+    "betaVersion": "Beta v{version}",
+    "updateNotice": {
+        "title": "Phiên bản mới",
+        "subtitle": "Hiện tại v{current} · Mới nhất v{latest}",
+        "description": "Phiên bản mới đã được phát hành trên GitHub Releases. Xem nhật ký thay đổi để cập nhật an toàn.",
+        "releaseName": "Phiên bản",
+        "publishedAt": "Ngày phát hành",
+        "updateTag": "Cập nhật",
+        "viewRelease": "Xem cập nhật",
+        "remindLater": "Nhắc sau",
+        "close": "Đóng",
+        "openDialog": "Mở hộp thoại cập nhật",
+        "checkUpdate": "Kiểm tra cập nhật",
+        "upToDate": "Đã là phiên bản mới nhất"
+    },
+    "loading": "Đang tải...",
+    "save": "Lưu",
+    "cancel": "Huỷ",
+    "confirm": "Xác nhận",
+    "delete": "Xoá",
+    "edit": "Chỉnh sửa",
+    "search": "Tìm kiếm",
+    "clear": "Xoá",
+    "close": "Đóng",
+    "back": "Quay lại",
+    "next": "Tiếp theo",
+    "previous": "Quay lại",
+    "submit": "Gửi",
+    "reset": "Đặt lại",
+    "generate": "Tạo",
+    "regenerate": "Tạo lại",
+    "preview": "Xem trước",
+    "download": "Tải xuống",
+    "upload": "Tải lên",
+    "select": "Chọn",
+    "add": "Thêm",
+    "remove": "Xoá",
+    "refresh": "Làm mới",
+    "expand": "Mở rộng",
+    "collapse": "Thu gọn",
+    "all": "Tất cả",
+    "none": "Không có",
+    "success": "Thành công",
+    "error": "Lỗi",
+    "warning": "Cảnh báo",
+    "info": "Thông tin",
+    "copy": "Sao chép",
+    "paste": "Dán",
+    "apply": "Áp dụng",
+    "autoSave": "Tự động lưu",
+    "saved": "Đã lưu",
+    "episode": "Tập phim",
+    "project": "Dự án",
+    "editEpisodeName": "Sửa tên tập phim",
+    "deleteEpisode": "Xoá tập phim",
+    "deleteEpisodeConfirm": "Xác nhận xoá",
+    "newEpisode": "Tập phim mới",
+    "optional": "(Tuỳ chọn)",
+    "rename": "Đổi tên",
+    "dragToReorder": "Kéo để sắp xếp",
+    "episodeNamePlaceholder": "Nhập tên tập phim...",
+    "cancelSelection": "Huỷ chọn",
+    "referenceImage": "Ảnh tham chiếu",
+    "previewLarge": "Xem ảnh lớn",
+    "viewOriginal": "Xem ảnh gốc",
+    "schemeN": "Phương án {n}",
+    "insufficientBalance": "Số dư không đủ",
+    "insufficientBalanceDetail": "Số dư tài khoản không đủ, vui lòng nạp tiền để tiếp tục",
+    "operationFailed": "Thao tác thất bại",
+    "pleaseRetry": "Vui lòng thử lại",
+    "recommended": "Đề xuất",
+    "language": {
+        "select": "Chọn ngôn ngữ",
+        "zh": "Tiếng Trung",
+        "en": "Tiếng Anh",
+        "vi": "Tiếng Việt",
+        "switchConfirmTitle": "Chuyển ngôn ngữ?",
+        "switchConfirmMessage": "Chuyển sang {targetLanguage} sẽ thay đổi không chỉ giao diện mà còn toàn bộ prompt, tạo kịch bản và đầu ra workflow. Tiếp tục?",
+        "switchConfirmAction": "Chuyển ngay"
+    },
+    "taskStatus": {
+        "intent": {
+            "generate": {
+                "running": {
+                    "image": "Đang tạo",
+                    "video": "Đang tạo",
+                    "audio": "Đang tạo",
+                    "text": "Đang tạo"
+                }
+            },
+            "regenerate": {
+                "running": {
+                    "image": "Đang tạo lại",
+                    "video": "Đang tạo lại",
+                    "audio": "Đang tạo lại",
+                    "text": "Đang tạo lại"
+                }
+            },
+            "modify": {
+                "running": {
+                    "image": "Đang chỉnh sửa",
+                    "video": "Đang chỉnh sửa",
+                    "audio": "Đang chỉnh sửa",
+                    "text": "Đang chỉnh sửa"
+                }
+            },
+            "analyze": {
+                "running": {
+                    "image": "Đang phân tích",
+                    "video": "Đang phân tích",
+                    "audio": "Đang phân tích",
+                    "text": "Đang phân tích"
+                }
+            },
+            "build": {
+                "running": {
+                    "image": "Đang xây dựng",
+                    "video": "Đang xây dựng",
+                    "audio": "Đang xây dựng",
+                    "text": "Đang xây dựng"
+                }
+            },
+            "convert": {
+                "running": {
+                    "image": "Đang chuyển đổi",
+                    "video": "Đang chuyển đổi",
+                    "audio": "Đang chuyển đổi",
+                    "text": "Đang chuyển đổi"
+                }
+            },
+            "process": {
+                "running": {
+                    "image": "Đang xử lý",
+                    "video": "Đang xử lý",
+                    "audio": "Đang xử lý",
+                    "text": "Đang xử lý"
+                }
+            }
+        },
+        "failed": {
+            "image": "Thất bại",
+            "video": "Thất bại",
+            "audio": "Thất bại",
+            "text": "Thất bại"
+        }
+    }
+}

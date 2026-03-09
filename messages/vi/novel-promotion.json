@@ -1,0 +1,167 @@
+{
+  "stages": {
+    "story": "Câu chuyện",
+    "script": "Kịch bản",
+    "storyboard": "Phân cảnh",
+    "video": "Thành phẩm",
+    "editor": "Biên tập AI",
+    "editorComingSoon": "Đang phát triển, theo dõi chúng tôi để nhận thông tin mới nhất"
+  },
+  "buttons": {
+    "assetLibrary": "Thư viện tài sản",
+    "settings": "Cấu hình dự án",
+    "refreshData": "Làm mới dữ liệu dự án",
+    "enterVideoGeneration": "Vào tạo video →"
+  },
+  "smartImport": {
+    "title": "Bắt đầu hành trình sáng tạo",
+    "subtitle": "Đầu tiên, chọn cách sáng tạo của bạn",
+    "manualCreate": {
+      "title": "Bắt đầu từ tập đầu tiên",
+      "description": "Bắt đầu từ tập 1, phù hợp cho sản xuất video ngắn từng tập",
+      "button": "Bắt đầu sáng tạo"
+    },
+    "smartImport": {
+      "title": "Nhập thông minh toàn bộ sách",
+      "description": "Tải lên toàn bộ tiểu thuyết hoặc kịch bản, AI tự động nhận diện cấu trúc chương, phân tập thông minh một chạm.",
+      "button": "Nhập ngay",
+      "recommended": "Đề xuất"
+    },
+    "upload": {
+      "title": "Tải lên tài liệu gốc",
+      "subtitle": "AI đã sẵn sàng, phân tập và định dạng tự động một chạm",
+      "maxWords": "(Hỗ trợ tối đa 30.000 từ)",
+      "textInput": "Nhập nội dung văn bản",
+      "documentUpload": "Tải lên tài liệu đầy đủ",
+      "placeholder": "Dán nội dung chương tiểu thuyết hoặc kịch bản tại đây...",
+      "filePlaceholder": "Chế độ file đã tải lên",
+      "clickUpload": "Nhấn để tải lên tài liệu",
+      "clearTextFirst": "Vui lòng xoá văn bản bên trái trước",
+      "supportedFormats": "Hỗ trợ Word, TXT",
+      "preview": "Xem trước",
+      "expandPreview": "Mở rộng xem thêm",
+      "collapsePreview": "Thu gọn xem trước",
+      "deleteFile": "Xoá file",
+      "startAnalysis": "Bắt đầu phân tích thông minh",
+      "back": "Quay lại",
+      "words": "từ"
+    },
+    "analyzing": {
+      "title": "AI đang phân tích câu chuyện của bạn",
+      "description": "Đang nhận diện cấu trúc chương, phân tập thông minh...",
+      "autoSave": "Sẽ tự động lưu khi phân tích xong"
+    },
+    "preview": {
+      "title": "Phân tập thông minh hoàn thành",
+      "episodeCount": "Đã tự động chia thành {count} tập",
+      "totalWords": "Tổng {count} từ",
+      "autoSaved": "✓ Đã tự động lưu",
+      "reanalyze": "Phân tích lại",
+      "confirm": "Xác nhận hoàn thành",
+      "saving": "Đang lưu...",
+      "episodeList": "Danh sách tập phim",
+      "addEpisode": "Thêm tập phim",
+      "averageWords": "Trung bình mỗi tập",
+      "episodeContent": "Nội dung tập phim",
+      "episodePlaceholder": "Nhập tiêu đề tập phim...",
+      "summaryPlaceholder": "Nhập tóm tắt cốt truyện...",
+      "newEpisode": "Tập mới",
+      "deleteEpisode": "Xoá tập phim",
+      "deleteConfirm": {
+        "title": "Xác nhận xoá",
+        "message": "Bạn có chắc muốn xoá \"{title}\"?",
+        "cancel": "Huỷ",
+        "confirm": "Xác nhận xoá"
+      },
+      "tip": {
+        "title": "Gợi ý",
+        "content": "Bạn có thể chỉnh sửa trực tiếp tiêu đề, tóm tắt và nội dung. Nhấn【Xác nhận hoàn thành】để chính thức nhập tập phim vào dự án"
+      }
+    },
+    "errors": {
+      "fileTooLarge": "File quá lớn, vui lòng tải file nhỏ hơn 10MB",
+      "docNotSupported": "Không hỗ trợ .doc, vui lòng dùng Word chuyển sang .docx",
+      "fileEmpty": "Nội dung file trống",
+      "fileReadError": "Đọc file thất bại, vui lòng thử lại",
+      "uploadFirst": "Vui lòng tải lên hoặc dán nội dung trước",
+      "analyzeFailed": "Phân tích thất bại",
+      "saveFailed": "Lưu thất bại"
+    },
+    "cancelConfirm": "Bạn có chắc muốn huỷ? Các tập đã phân tích sẽ bị xoá."
+  },
+  "storyInput": {
+    "currentEditing": "Đang chỉnh sửa: {name}",
+    "editingTip": "Quy trình sản xuất bên dưới chỉ áp dụng cho tập này, nếu có tập khác hãy chuyển ở góc trên trái",
+    "wordCount": "Số từ:",
+    "assetLibraryTip": {
+      "title": "Cần tuỳ chỉnh nhân vật và bối cảnh?",
+      "description": "Nhấn nút \"Thư viện tài sản\" ở góc trên phải, có thể tải lên tài liệu thiết kế tài sản hoặc thêm nhân vật/bối cảnh thủ công. AI sẽ ưu tiên sử dụng thiết kế trong thư viện tài sản để phân tích."
+    },
+    "videoRatio": "Tỷ lệ hình ảnh",
+    "videoRatioHint": "Chọn tỷ lệ hình ảnh phù hợp để thích ứng tốt hơn với nền tảng phân phối và loại nội dung",
+    "ratioUsage": {
+      "1_1": "1:1: Hình vuông, phù hợp cho avatar, ảnh bìa, bìa mạng xã hội",
+      "9_16": "9:16: Video dọc, phù hợp TikTok, Shorts và nền tảng video ngắn",
+      "16_9": "16:9: Video ngang, phù hợp YouTube và phát trên máy tính",
+      "4_3": "4:3: Tỷ lệ TV truyền thống, phù hợp nội dung cần cắt bảo thủ",
+      "3_4": "3:4: Hình hơi dọc, phù hợp pha trộn ảnh + video",
+      "2_3": "2:3: Hình dọc, phù hợp poster, tranh nhân vật",
+      "3_2": "3:2: Hình hơi ngang, phù hợp video phong cảnh, kịch",
+      "4_5": "4:5: Poster dọc, phù hợp ảnh luồng tin mạng xã hội",
+      "5_4": "5:4: Poster ngang, phù hợp Banner PC",
+      "21_9": "21:9: Siêu rộng kiểu rạp chiếu phim, phù hợp phim cảm xúc và cảnh toàn cảnh"
+    },
+    "ratioUsageTag": {
+      "1_1": "Vuông · Avatar/Bìa",
+      "9_16": "Dọc · Video ngắn",
+      "16_9": "Ngang · Video dài",
+      "4_3": "Ngang · TV truyền thống",
+      "3_4": "Dọc · Ảnh + video",
+      "2_3": "Dọc · Poster/Tranh",
+      "3_2": "Ngang · Phong cảnh/Kịch",
+      "4_5": "Dọc · Ảnh luồng tin",
+      "5_4": "Ngang · Banner",
+      "21_9": "Siêu rộng · Phim"
+    },
+    "visualStyle": "Phong cách hình ảnh",
+    "visualStyleHint": "Chọn phong cách hình ảnh theo đối tượng, ví dụ: phong cách thực tế phù hợp kịch tình tiết, phong cách anime phù hợp nội dung 2D",
+    "currentConfigSummary": "Cấu hình hiện tại: {ratio} · {style}, tất cả nội dung tạo sau sẽ dùng kết hợp này",
+    "assetLibraryRatioNote": "Tỷ lệ thư viện tài sản không bị ảnh hưởng",
+    "moreConfig": "Thêm cấu hình hãy nhấn nút \"Cấu hình\" ở góc trên phải",
+    "narration": {
+      "title": "Bật lời dẫn",
+      "description": "Tạo giọng nói TTS lời dẫn, thêm thuyết minh cho video"
+    },
+    "creating": "AI đang sáng tạo...",
+    "ready": "✓ Cấu hình hoàn tất, có thể tiếp tục bước tiếp theo",
+    "pleaseInput": "Vui lòng nhập nội dung kịch bản trước"
+  },
+  "execution": {
+    "selectEpisode": "Vui lòng chọn tập phim trước",
+    "fillContentFirst": "Vui lòng nhập nội dung trước",
+    "requestAborted": "Yêu cầu đã bị gián đoạn (có thể do làm mới trang)",
+    "analysisFailed": "Phân tích tài sản thất bại",
+    "prepareFailed": "Chuẩn bị thất bại",
+    "generationFailed": "Tạo thất bại",
+    "batchVideoFailed": "Tạo video hàng loạt thất bại",
+    "updateFailed": "Cập nhật thất bại",
+    "saveFailed": "Lưu thất bại",
+    "storyToScriptRunning": "Story→Script V2 đang chạy",
+    "scriptToStoryboardRunning": "Script→Storyboard V2 đang chạy",
+    "storyToScriptFailed": "Chuyển nội dung sang kịch bản thất bại",
+    "scriptToStoryboardFailed": "Chuyển kịch bản sang phân cảnh thất bại",
+    "taskStreamTimeout": "Tác vụ quá thời gian, hãy kiểm tra xem tác vụ có đang chạy không, hoặc kích hoạt lại"
+  },
+  "rebuildConfirm": {
+    "storyToScript": {
+      "title": "Sẽ xây dựng lại quy trình kịch bản",
+      "message": "Phát hiện tập hiện tại đã có dữ liệu phân cảnh downstream ({storyboardCount} phân cảnh, {panelCount} góc quay). Tiếp tục sẽ xoá dữ liệu này và tạo lại, bạn có muốn tiếp tục?"
+    },
+    "scriptToStoryboard": {
+      "title": "Sẽ xây dựng lại dữ liệu phân cảnh",
+      "message": "Phát hiện tập hiện tại đã có dữ liệu phân cảnh ({storyboardCount} phân cảnh, {panelCount} góc quay). Tiếp tục sẽ xoá phân cảnh hiện tại và tạo lại, bạn có muốn tiếp tục?"
+    },
+    "confirm": "Tiếp tục và xoá",
+    "cancel": "Huỷ"
+  }
+}

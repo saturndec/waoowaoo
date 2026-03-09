@@ -1,0 +1,37 @@
+{
+  "globalAssets": "Tài sản chung",
+  "createFailed": "Tạo thất bại",
+  "deleteFailed": "Xoá thất bại",
+  "renameFailed": "Đổi tên thất bại",
+  "refreshFailed": "Làm mới thất bại",
+  "projectNotFound": "Dự án không tồn tại",
+  "backToWorkspace": "Quay về không gian làm việc",
+  "episode": "Tập phim",
+  "modelSetup": {
+    "title": "Trước khi bắt đầu sáng tạo, vui lòng cấu hình model mặc định",
+    "description": "Tài khoản hiện tại chưa có model phân tích mặc định, phân tập thông minh và các quy trình AI sẽ không hoạt động. Vui lòng hoàn tất cấu hình model.",
+    "configureNow": "Cấu hình model phân tích ngay",
+    "goProfile": "Đến cài đặt cá nhân",
+    "modalTitle": "Cấu hình model phân tích mặc định",
+    "modalDescription": "Vui lòng chọn model văn bản khả dụng làm model phân tích mặc định.",
+    "selectModelLabel": "Model phân tích mặc định",
+    "selectModelPlaceholder": "Chọn model phân tích",
+    "selectModelFirst": "Vui lòng chọn model phân tích trước",
+    "noModelOptions": "Hiện không có model văn bản khả dụng, vui lòng cấu hình Provider và model trong cài đặt cá nhân.",
+    "saveFailed": "Lưu model phân tích mặc định thất bại, vui lòng thử lại sau"
+  },
+  "sidebar": {
+    "dragToMove": "Kéo để sắp xếp",
+    "listTitle": "Danh sách tập phim",
+    "episodeCount": "{count} tập",
+    "empty": "Chưa có tập phim, nhấn bên dưới để tạo",
+    "save": "Lưu",
+    "deleteConfirm": "Xác nhận xoá \"{name}\"?",
+    "delete": "Xoá",
+    "cancel": "Huỷ",
+    "rename": "Đổi tên",
+    "newEpisodePlaceholder": "Nhập tên tập phim...",
+    "create": "Tạo",
+    "addEpisode": "Thêm tập phim"
+  }
+}

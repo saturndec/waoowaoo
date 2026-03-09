@@ -75,6 +75,7 @@
         "select": "Select language",
         "zh": "Chinese",
         "en": "English",
+        "vi": "Vietnamese",
         "switchConfirmTitle": "Switch language?",
         "switchConfirmMessage": "Switching to {targetLanguage} will update not only interface text, but also end-to-end prompts, script generation, and workflow outputs. Continue?",
         "switchConfirmAction": "Switch now"

@@ -75,6 +75,7 @@
         "select": "选择语言",
         "zh": "中文",
         "en": "English",
+        "vi": "Tiếng Việt",
         "switchConfirmTitle": "切换语言？",
         "switchConfirmMessage": "切换到 {targetLanguage} 后，不仅界面文字会改变，整条流程的提示词模板、剧本生成和任务输出语言也会同步切换。是否继续？",
         "switchConfirmAction": "确认切换"

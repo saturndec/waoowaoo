@@ -1,9 +1,9 @@
 import { defineRouting } from 'next-intl/routing';
 
-export const locales = ['zh', 'en'] as const;
+export const locales = ['zh', 'en', 'vi'] as const;
 export type Locale = (typeof locales)[number];
 
-export const defaultLocale: Locale = 'zh';
+export const defaultLocale: Locale = 'vi';
 
 export const routing = defineRouting({
     // 支持的所有语言

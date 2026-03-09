@@ -1,0 +1,6 @@
+{
+    "title": "Thế giới quan & Nhân vật",
+    "description": "Định nghĩa mô tả ngoại hình nhân vật, phong cách bối cảnh và môi trường chung toàn cục",
+    "placeholder": "Ví dụ:\n【Nam chính】Nguyên, 25 tuổi, tóc đen ngắn, luôn mặc áo khoác jean đã bạc, ánh mắt u buồn.\n【Nữ chính】Linh, 22 tuổi, tóc đỏ buộc đuôi ngựa đôi, tính cách hoạt bát, thích mặc váy phong cách Lolita.\n【Bối cảnh】Thành phố cyberpunk năm 2077, đèn neon nhấp nháy, mưa suốt năm...",
+    "hint": "Các thiết lập này sẽ được kế thừa bởi tất cả tập phim, làm tham chiếu cơ bản cho AI vẽ."
+}

@@ -1,0 +1,27 @@
+{
+  "title": "waoowaoo",
+  "subtitle": "AI Phim Studio",
+  "enterWorkspace": "Vào không gian làm việc",
+  "loading": "Đang tải...",
+  "getStarted": "Trải nghiệm ngay",
+  "learnMore": "Tìm hiểu thêm",
+  "features": {
+    "title": "Giải phóng sức sáng tạo vô hạn",
+    "subtitle": "AI hỗ trợ toàn quy trình, từ kịch bản đến thành phẩm",
+    "character": {
+      "title": "Xưởng nhân vật",
+      "description": "Tạo nhân vật hoạt hình độc đáo, giữ tính nhất quán cao"
+    },
+    "storyboard": {
+      "title": "Phân cảnh thông minh",
+      "description": "Chuyển văn bản thành phân cảnh một chạm, kiểm soát nhịp kể chuyện chính xác"
+    },
+    "world": {
+      "title": "Xây dựng thế giới",
+      "description": "Tạo bối cảnh nhập vai, xây dựng nền câu chuyện hoành tráng"
+    }
+  },
+  "footer": {
+    "copyright": "2026 waoowaoo AI. All rights reserved."
+  }
+}

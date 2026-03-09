@@ -1,0 +1,70 @@
+{
+    "title": "Xem kịch bản",
+    "scriptBreakdown": "Phân tích kịch bản",
+    "splitCount": "Đã chia {count} phân cảnh",
+    "noClips": "Chưa có phân cảnh, hãy tạo từ chế độ xem truyện trước",
+    "segment": {
+        "title": "Đoạn {index}",
+        "selected": "(Đã chọn)"
+    },
+    "inSceneAssets": "Tài sản trong cảnh",
+    "currentSelected": "Đang chọn: Đoạn {number}",
+    "assetView": {
+        "allClips": "Tất cả đoạn",
+        "viewingClip": "Xem đoạn {number}"
+    },
+    "asset": {
+        "generateCharacter": "Nhấn để tạo hình ảnh →",
+        "generateLocation": "Nhấn để tạo bối cảnh →",
+        "removeCharacterConfirm": "Bạn có chắc muốn xoá nhân vật này khỏi đoạn hiện tại?",
+        "removeLocationConfirm": "Bạn có chắc muốn xoá bối cảnh này khỏi đoạn hiện tại?",
+        "removeFromClip": "Xoá khỏi đoạn hiện tại",
+        "noAudio": "Không có âm thanh",
+        "playing": "Đang phát",
+        "listen": "Nghe thử",
+        "activeCharacters": "Nhân vật xuất hiện",
+        "activeLocations": "Bối cảnh xuất hiện",
+        "selectCharacter": "Chọn nhân vật/hình ảnh để thêm",
+        "selectLocation": "Chọn bối cảnh để thêm",
+        "loadingAssets": "Đang tải tài sản...",
+        "appearanceCount": "{count} hình ảnh",
+        "added": "Đã thêm",
+        "primary": "Hình ảnh chính",
+        "subAppearance": "Hình ảnh phụ",
+        "defaultAppearance": "Hình ảnh ban đầu",
+        "clickToRemove": "Nhấn để xoá {name}",
+        "clickToAdd": "Nhấn để thêm {name}"
+    },
+    "screenplay": {
+        "scene": "Cảnh {number}",
+        "location": "Bối cảnh:",
+        "locationTime": "Thời gian:",
+        "day": "Ngày",
+        "night": "Đêm",
+        "dawn": "Bình minh",
+        "dusk": "Hoàng hôn",
+        "dialogue": "Đối thoại",
+        "action": "Hành động",
+        "narration": "Lời dẫn",
+        "content": "Nội dung gốc",
+        "noContent": "Chưa có nội dung",
+        "clickToEdit": "Nhấn để chỉnh sửa",
+        "interior": "Nội cảnh",
+        "exterior": "Ngoại cảnh",
+        "characters": "Nhân vật xuất hiện",
+        "noCharacter": "Chưa có thông tin nhân vật",
+        "noLocation": "Chưa có bối cảnh xuất hiện",
+        "noCharacterInClip": "Chưa có nhân vật xuất hiện"
+    },
+    "confirm": {
+        "removeCharacter": "Bạn có chắc muốn xoá nhân vật này khỏi đoạn hiện tại?",
+        "removeLocation": "Bạn có chắc muốn xoá bối cảnh này khỏi đoạn hiện tại?"
+    },
+    "generate": {
+        "missingAssets": "Còn {count} tài sản chưa tạo hình ảnh",
+        "missingAssetsTip": "Vui lòng trước tiên trong",
+        "missingAssetsTipLink": "tạo hình ảnh cho tất cả nhân vật và bối cảnh xuất hiện",
+        "generating": "Đang tạo hình ảnh...",
+        "startGenerate": "Xác nhận và bắt đầu vẽ →"
+    }
+}

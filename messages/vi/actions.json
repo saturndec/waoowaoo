@@ -1,0 +1,18 @@
+{
+  "storyboard": "Ảnh phân cảnh",
+  "storyboard_candidate": "Ứng viên phân cảnh",
+  "character": "Ảnh nhân vật",
+  "location": "Ảnh bối cảnh",
+  "video": "Video",
+  "analyze": "Phân tích",
+  "analyze_character": "Phân tích nhân vật",
+  "analyze_location": "Phân tích bối cảnh",
+  "clips": "Cắt đoạn",
+  "storyboard_text_plan": "Lên kế hoạch phân cảnh",
+  "storyboard_text_detail": "Chi tiết phân cảnh",
+  "tts": "Tổng hợp giọng nói",
+  "regenerate": "Tạo lại",
+  "voice-generate": "Tạo lồng tiếng",
+  "voice-design": "Thiết kế giọng nói",
+  "lip-sync": "Đồng bộ khẩu hình"
+}

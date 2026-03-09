@@ -1,0 +1,22 @@
+{
+    "UNAUTHORIZED": "Vui lòng đăng nhập trước",
+    "FORBIDDEN": "Không có quyền truy cập",
+    "NOT_FOUND": "Tài nguyên không tồn tại",
+    "INSUFFICIENT_BALANCE": "Số dư API không đủ, vui lòng nạp tiền và thử lại",
+    "RATE_LIMIT": "Yêu cầu quá thường xuyên, vui lòng thử lại sau {retryAfter} giây",
+    "MODEL_NOT_OPEN": "Quyền model chưa được kích hoạt. Vui lòng truy cập trang quản lý model và kích hoạt tất cả model",
+    "MODEL_NOT_REGISTERED": "Model chưa đăng ký, vui lòng thêm model khả dụng trong cấu hình",
+    "QUOTA_EXCEEDED": "Hạn mức đã hết, vui lòng thử lại sau",
+    "GENERATION_FAILED": "Tạo thất bại, vui lòng thử lại",
+    "GENERATION_TIMEOUT": "Tạo quá thời gian, vui lòng thử lại",
+    "SENSITIVE_CONTENT": "Nội dung có thể chứa thông tin nhạy cảm",
+    "INVALID_PARAMS": "Tham số không hợp lệ",
+    "MISSING_CONFIG": "Vui lòng hoàn tất cấu hình model trước",
+    "INTERNAL_ERROR": "Lỗi máy chủ, vui lòng thử lại sau",
+    "NETWORK_ERROR": "Lỗi mạng, vui lòng kiểm tra kết nối",
+    "EMPTY_RESPONSE": "Model trả về phản hồi trống (không có nội dung hợp lệ), vui lòng thử lại sau",
+    "EXTERNAL_ERROR": "Dịch vụ bên ngoài tạm thời không khả dụng, vui lòng thử lại sau",
+    "TASK_NOT_READY": "Tác vụ đang xử lý",
+    "NO_RESULT": "Tác vụ không có kết quả",
+    "CONFLICT": "Xung đột trạng thái tài nguyên"
+}

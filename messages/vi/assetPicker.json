@@ -1,0 +1,18 @@
+{
+    "selectCharacter": "Chọn nhân vật từ trung tâm tài sản",
+    "selectLocation": "Chọn bối cảnh từ trung tâm tài sản",
+    "selectVoice": "Chọn giọng nói từ trung tâm tài sản",
+    "searchPlaceholder": "Tìm kiếm tên tài sản hoặc thư mục...",
+    "noAssets": "Trung tâm tài sản chưa có tài sản",
+    "createInAssetHub": "Vui lòng tạo nhân vật/bối cảnh/giọng nói trong trung tâm tài sản trước",
+    "noSearchResults": "Không tìm thấy tài sản phù hợp",
+    "appearances": "hình ảnh",
+    "images": "ảnh",
+    "cancel": "Huỷ",
+    "confirmCopy": "Xác nhận sao chép",
+    "copyFromGlobal": "Sao chép từ trung tâm tài sản",
+    "copySuccess": "Sao chép thành công",
+    "copyFailed": "Sao chép thất bại",
+    "preview": "Nghe thử",
+    "stop": "Dừng"
+}
