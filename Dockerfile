@@ -4,7 +4,9 @@ WORKDIR /app
 
 COPY package.json package-lock.json ./
 COPY prisma ./prisma
-RUN npm ci
+RUN npm config set registry https://registry.npmjs.org \
+    && npm config set replace-registry-host always \
+    && npm ci --no-audit --no-fund
 
 # ==================== Stage 2: Build ====================
 FROM node:20-alpine AS builder
