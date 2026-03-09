@@ -70,10 +70,69 @@ const STAGE_LABELS: Record<string, string> = {
   llm_proxy_submit: 'progress.stage.llmProxySubmit',
   llm_proxy_execute: 'progress.stage.llmProxyExecute',
   llm_proxy_persist: 'progress.stage.llmProxyPersist',
+  analyze_global_prepare: 'progress.stage.analyzeGlobalPrepare',
+  analyze_global_chunk: 'progress.stage.analyzeGlobalChunk',
+  analyze_global_done: 'progress.stage.analyzeGlobalDone',
+  analyze_novel_prepare: 'progress.stage.analyzeNovelPrepare',
+  analyze_novel_characters_done: 'progress.stage.analyzeNovelCharactersDone',
+  analyze_novel_locations_done: 'progress.stage.analyzeNovelLocationsDone',
+  analyze_novel_persist: 'progress.stage.analyzeNovelPersist',
+  analyze_novel_done: 'progress.stage.analyzeNovelDone',
+  asset_hub_ai_design_prepare: 'progress.stage.assetHubAiDesignPrepare',
+  asset_hub_ai_design_done: 'progress.stage.assetHubAiDesignDone',
+  asset_hub_ai_modify_prepare: 'progress.stage.assetHubAiModifyPrepare',
+  asset_hub_ai_modify_done: 'progress.stage.assetHubAiModifyDone',
+  ai_modify_appearance_prepare: 'progress.stage.aiModifyAppearancePrepare',
+  ai_modify_appearance_done: 'progress.stage.aiModifyAppearanceDone',
+  ai_modify_location_prepare: 'progress.stage.aiModifyLocationPrepare',
+  ai_modify_location_done: 'progress.stage.aiModifyLocationDone',
+  ai_modify_shot_prompt_prepare: 'progress.stage.aiModifyShotPromptPrepare',
+  ai_modify_shot_prompt_done: 'progress.stage.aiModifyShotPromptDone',
+  analyze_shot_variants_prepare: 'progress.stage.analyzeShotVariantsPrepare',
+  analyze_shot_variants_done: 'progress.stage.analyzeShotVariantsDone',
+  character_profile_confirm_prepare: 'progress.stage.characterProfileConfirmPrepare',
+  character_profile_confirm_persist: 'progress.stage.characterProfileConfirmPersist',
+  character_profile_confirm_done: 'progress.stage.characterProfileConfirmDone',
+  character_profile_batch_prepare: 'progress.stage.characterProfileBatchPrepare',
+  character_profile_batch_loop_character: 'progress.stage.characterProfileBatchLoopCharacter',
+  character_profile_batch_done: 'progress.stage.characterProfileBatchDone',
+  clips_build_prepare: 'progress.stage.clipsBuildPrepare',
+  clips_build_persist: 'progress.stage.clipsBuildPersist',
+  clips_build_done: 'progress.stage.clipsBuildDone',
+  episode_split_prepare: 'progress.stage.episodeSplitPrepare',
+  episode_split_parse: 'progress.stage.episodeSplitParse',
+  episode_split_match: 'progress.stage.episodeSplitMatch',
+  episode_split_done: 'progress.stage.episodeSplitDone',
+  reference_to_character_prepare: 'progress.stage.referenceToCharacterPrepare',
+  reference_to_character_extract: 'progress.stage.referenceToCharacterExtract',
+  reference_to_character_extract_done: 'progress.stage.referenceToCharacterExtractDone',
+  reference_to_character_generate: 'progress.stage.referenceToCharacterGenerate',
+  reference_to_character_done: 'progress.stage.referenceToCharacterDone',
+  screenplay_convert_prepare: 'progress.stage.screenplayConvertPrepare',
+  screenplay_convert_step: 'progress.stage.screenplayConvertStep',
+  screenplay_convert_done: 'progress.stage.screenplayConvertDone',
+  voice_analyze_prepare: 'progress.stage.voiceAnalyzePrepare',
+  voice_analyze_persist: 'progress.stage.voiceAnalyzePersist',
+  voice_analyze_persist_done: 'progress.stage.voiceAnalyzePersistDone',
+  reconciled: 'progress.stage.reconciled',
+  watchdog_timeout: 'progress.stage.watchdogTimeout',
+  cancelled: 'progress.stage.cancelled',
 }
 
 function asString(value: unknown): string | null {
   return typeof value === 'string' && value.trim() ? value.trim() : null
+}
+
+export function isProgressContractKey(value: string | null) {
+  return !!value && value.startsWith('progress.')
+}
+
+export function normalizeTaskStageLabel(stage?: string | null, stageLabel?: string | null) {
+  const mapped = getTaskStageLabel(stage)
+  if (mapped) return mapped
+  const normalizedStageLabel = asString(stageLabel)
+  if (isProgressContractKey(normalizedStageLabel)) return normalizedStageLabel
+  return null
 }
 
 export function getTaskTypeLabel(taskType?: string | null) {
@@ -83,7 +142,7 @@ export function getTaskTypeLabel(taskType?: string | null) {
 
 export function getTaskStageLabel(stage?: string | null) {
   if (!stage) return null
-  return STAGE_LABELS[stage] || stage
+  return STAGE_LABELS[stage] || null
 }
 
 export function buildTaskProgressMessage(params: {
@@ -93,10 +152,11 @@ export function buildTaskProgressMessage(params: {
   payload?: Record<string, unknown> | null
 }) {
   const payloadMessage = asString(params.payload?.message)
-  if (payloadMessage) return payloadMessage
+  if (isProgressContractKey(payloadMessage)) return payloadMessage
 
   const stage = asString(params.payload?.stage)
-  const stageLabel = getTaskStageLabel(stage)
+  const payloadStageLabel = asString(params.payload?.stageLabel)
+  const stageLabel = normalizeTaskStageLabel(stage, payloadStageLabel)
 
   if (params.eventType === TASK_EVENT_TYPE.CREATED) {
     return 'progress.runtime.taskCreated'

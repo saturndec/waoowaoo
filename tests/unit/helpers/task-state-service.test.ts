@@ -8,6 +8,7 @@ import {
   resolveTargetState,
   toProgress,
 } from '@/lib/task/state-service'
+import { getTaskStageLabel } from '@/lib/task/progress-message'
 
 describe('task state service helpers', () => {
   it('normalizes primitive parsing helpers', () => {
@@ -55,7 +56,32 @@ describe('task state service helpers', () => {
     expect(state.runningTaskId).toBe('task-1')
     expect(state.progress).toBe(42)
     expect(state.stage).toBe('image_generating')
-    expect(state.stageLabel).toBe('Generating')
+    expect(state.stageLabel).toBeNull()
+  })
+
+  it('normalizes legacy localized stageLabel into stable progress key', () => {
+    const state = resolveTargetState(
+      { targetType: 'GlobalCharacter', targetId: 'c1' },
+      [
+        {
+          id: 'task-legacy-1',
+          type: 'analyze_global',
+          status: 'processing',
+          progress: 42,
+          payload: {
+            stage: 'analyze_global_prepare',
+            stageLabel: '准备全局资产分析参数',
+            ui: { intent: 'process', hasOutputAtStart: false },
+          },
+          errorCode: null,
+          errorMessage: null,
+          updatedAt: new Date('2026-02-25T00:00:00.000Z'),
+        },
+      ],
+    )
+
+    expect(state.stage).toBe('analyze_global_prepare')
+    expect(state.stageLabel).toBe(getTaskStageLabel('analyze_global_prepare'))
   })
 
   it('resolves failed state and normalizes error', () => {

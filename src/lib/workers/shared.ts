@@ -14,7 +14,12 @@ import {
 } from '@/lib/task/service'
 import { publishTaskEvent, publishTaskStreamEvent } from '@/lib/task/publisher'
 import { TASK_EVENT_TYPE, TASK_TYPE, type TaskBillingInfo, type TaskJobData } from '@/lib/task/types'
-import { buildTaskProgressMessage, getTaskStageLabel } from '@/lib/task/progress-message'
+import {
+  buildTaskProgressMessage,
+  getTaskStageLabel,
+  isProgressContractKey,
+  normalizeTaskStageLabel,
+} from '@/lib/task/progress-message'
 import { normalizeAnyError } from '@/lib/errors/normalize'
 import { rollbackTaskBilling, settleTaskBilling } from '@/lib/billing'
 import { withTextUsageCollection } from '@/lib/billing/runtime-usage'
@@ -501,13 +506,23 @@ export async function reportTaskProgress(job: Job<TaskJobData>, progress: number
   const logger = buildWorkerLogger(job.data, job.queueName)
   const nextPayload: Record<string, unknown> = withFlowFields(job.data, payload)
   const stage = typeof nextPayload.stage === 'string' ? nextPayload.stage : null
-  if (stage && typeof nextPayload.stageLabel !== 'string') {
-    nextPayload.stageLabel = getTaskStageLabel(stage)
+  const providedStageLabel = typeof nextPayload.stageLabel === 'string' ? nextPayload.stageLabel : null
+  const normalizedStageLabel = normalizeTaskStageLabel(stage, providedStageLabel)
+  if (normalizedStageLabel) {
+    nextPayload.stageLabel = normalizedStageLabel
+  } else {
+    delete nextPayload.stageLabel
+    if (stage) {
+      const fallbackStageLabel = getTaskStageLabel(stage)
+      if (fallbackStageLabel) {
+        nextPayload.stageLabel = fallbackStageLabel
+      }
+    }
   }
   if (typeof nextPayload.displayMode !== 'string') {
     nextPayload.displayMode = 'loading'
   }
-  if (typeof nextPayload.message !== 'string') {
+  if (typeof nextPayload.message !== 'string' || !isProgressContractKey(nextPayload.message)) {
     nextPayload.message = buildTaskProgressMessage({
       eventType: TASK_EVENT_TYPE.PROGRESS,
       taskType: job.data.type,

@@ -291,9 +291,13 @@ export async function submitTask(params: {
         payload: {
           stage: 'enqueue_failed',
           stageLabel: 'progress.stage.enqueueFailed',
-          message: failedMessage,
+          message: 'progress.runtime.taskFailed',
           compensationFailed,
           errorCode: failedCode,
+          error: {
+            code: failedCode,
+            message: failedMessage,
+          },
         },
         persist: false,
       })

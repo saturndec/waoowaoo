@@ -8,6 +8,7 @@ import {
   type SSEEvent,
 } from './types'
 import { coerceTaskIntent, resolveTaskIntent } from './intent'
+import { isProgressContractKey, normalizeTaskStageLabel } from './progress-message'
 import { mapTaskSSEEventToRunEvents } from '@/lib/run-runtime/task-bridge'
 import { publishRunEvent } from '@/lib/run-runtime/publisher'
 
@@ -82,8 +83,22 @@ function normalizeLifecyclePayload(
   const payloadUi = next.ui && typeof next.ui === 'object' && !Array.isArray(next.ui)
     ? (next.ui as Record<string, unknown>)
     : null
+  const stage = typeof next.stage === 'string' ? next.stage : null
+  const stageLabel = typeof next.stageLabel === 'string' ? next.stageLabel : null
+
   next.lifecycleType = lifecycleType
   next.intent = coerceTaskIntent(next.intent ?? payloadUi?.intent, taskType)
+
+  const normalizedStageLabel = normalizeTaskStageLabel(stage, stageLabel)
+  if (normalizedStageLabel) {
+    next.stageLabel = normalizedStageLabel
+  } else {
+    delete next.stageLabel
+  }
+
+  if (typeof next.message === 'string' && !isProgressContractKey(next.message)) {
+    delete next.message
+  }
 
   return next
 }
@@ -120,10 +135,14 @@ function normalizeStreamPayload(
   taskType: string | null | undefined,
   payload?: Record<string, unknown> | null,
 ): Record<string, unknown> {
-  return {
+  const next: Record<string, unknown> = {
     ...(payload || {}),
     intent: resolveTaskIntent(taskType),
   }
+  if (typeof next.message === 'string' && !isProgressContractKey(next.message)) {
+    delete next.message
+  }
+  return next
 }
 
 function buildStreamEvent(params: {

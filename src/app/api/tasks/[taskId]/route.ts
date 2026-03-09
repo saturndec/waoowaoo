@@ -73,9 +73,13 @@ export const DELETE = apiHandler(async (
       payload: {
         ...toObject(updatedTask.payload),
         stage: 'cancelled',
-        stageLabel: '任务已取消',
+        stageLabel: 'progress.stage.cancelled',
         cancelled: true,
-        message: updatedTask.errorMessage || 'Task cancelled by user'},
+        message: 'progress.runtime.taskFailed',
+        error: {
+          code: updatedTask.errorCode || 'TASK_CANCELLED',
+          message: updatedTask.errorMessage || 'Task cancelled by user',
+        }},
       persist: false})
   }
 

@@ -135,8 +135,12 @@ async function failOrphanedTask(
             episodeId: task.episodeId,
             payload: {
                 stage: 'reconciled',
-                stageLabel: '任务已自动恢复',
-                message: errorMessage,
+                stageLabel: 'progress.stage.reconciled',
+                message: 'progress.runtime.taskFailed',
+                error: {
+                    code: errorCode,
+                    message: errorMessage,
+                },
                 compensationFailed,
             },
             persist: false,
@@ -244,8 +248,12 @@ export function startTaskWatchdog() {
                     episodeId: task.episodeId || null,
                     payload: {
                         stage: 'watchdog_timeout',
-                        stageLabel: '任务超时已终止',
-                        message: task.errorMessage,
+                        stageLabel: 'progress.stage.watchdogTimeout',
+                        message: 'progress.runtime.taskFailed',
+                        error: {
+                            code: task.errorCode,
+                            message: task.errorMessage,
+                        },
                         errorCode: task.errorCode,
                         compensationFailed: task.errorCode === 'BILLING_COMPENSATION_FAILED',
                     },

@@ -1,6 +1,7 @@
 import { prisma } from '@/lib/prisma'
 import { normalizeTaskError } from '@/lib/errors/normalize'
 import { coerceTaskIntent, type TaskIntent } from './intent'
+import { normalizeTaskStageLabel } from './progress-message'
 
 export type TaskTargetQuery = {
   targetType: string
@@ -65,9 +66,11 @@ export function extractTaskStateFields(task: {
 }) {
   const payload = asObject(task.payload)
   const payloadUi = asObject(payload?.ui)
+  const stage = asNonEmptyString(payload?.stage)
+  const stageLabel = normalizeTaskStageLabel(stage, asNonEmptyString(payload?.stageLabel))
   return {
-    stage: asNonEmptyString(payload?.stage),
-    stageLabel: asNonEmptyString(payload?.stageLabel),
+    stage,
+    stageLabel,
     hasOutputAtStart: asBoolean(payloadUi?.hasOutputAtStart),
     intent: coerceTaskIntent(payloadUi?.intent ?? payload?.intent, task.type),
     progress: toProgress(task.progress),

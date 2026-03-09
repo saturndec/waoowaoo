@@ -21,9 +21,16 @@ vi.mock('@/lib/redis', () => ({
   redis: {
     publish: redisPublishMock,
   },
+  shouldSkipRedisInBuild: () => false,
+  shouldSuppressRedisErrorInBuild: () => false,
 }))
 
-import { listEventsAfter, listTaskLifecycleEvents, publishTaskStreamEvent } from '@/lib/task/publisher'
+import {
+  listEventsAfter,
+  listTaskLifecycleEvents,
+  publishTaskEvent,
+  publishTaskStreamEvent,
+} from '@/lib/task/publisher'
 
 describe('task publisher replay', () => {
   beforeEach(() => {
@@ -146,6 +153,79 @@ describe('task publisher replay', () => {
     expect(redisPublishMock).toHaveBeenCalledTimes(1)
     expect(message?.id).toBe('99')
     expect(message?.type).toBe('task.stream')
+  })
+
+  it('normalizes lifecycle payload to stable stage/message contract', async () => {
+    taskEventCreateMock.mockResolvedValueOnce({
+      id: 200,
+      taskId: 'task-legacy-lifecycle',
+      projectId: 'project-1',
+      userId: 'user-1',
+      eventType: 'task.processing',
+      payload: {
+        lifecycleType: 'task.processing',
+        stage: 'analyze_global_prepare',
+        stageLabel: '准备全局资产分析参数',
+      },
+      createdAt: new Date('2026-02-27T00:00:03.000Z'),
+    })
+    redisPublishMock.mockResolvedValueOnce(1)
+
+    const message = await publishTaskEvent({
+      taskId: 'task-legacy-lifecycle',
+      projectId: 'project-1',
+      userId: 'user-1',
+      type: 'task.processing',
+      taskType: 'analyze_global',
+      targetType: 'GlobalCharacter',
+      targetId: 'global-1',
+      payload: {
+        stage: 'analyze_global_prepare',
+        stageLabel: '准备全局资产分析参数',
+        message: '共 3 个切片',
+      },
+      persist: true,
+    })
+
+    expect(message?.payload?.stageLabel).toBe('progress.stage.analyzeGlobalPrepare')
+    expect((message?.payload as Record<string, unknown>)?.message).toBeUndefined()
+  })
+
+  it('drops localized stream message and keeps stable contract payload', async () => {
+    taskEventCreateMock.mockResolvedValueOnce({
+      id: 201,
+      taskId: 'task-legacy-stream',
+      projectId: 'project-1',
+      userId: 'user-1',
+      eventType: 'task.stream',
+      payload: {
+        message: '模型输出中',
+      },
+      createdAt: new Date('2026-02-27T00:00:04.000Z'),
+    })
+    redisPublishMock.mockResolvedValueOnce(1)
+
+    const message = await publishTaskStreamEvent({
+      taskId: 'task-legacy-stream',
+      projectId: 'project-1',
+      userId: 'user-1',
+      taskType: 'story_to_script_run',
+      targetType: 'NovelPromotionEpisode',
+      targetId: 'episode-1',
+      payload: {
+        stepId: 'step-1',
+        message: '模型输出中',
+        stream: {
+          kind: 'text',
+          seq: 1,
+          lane: 'main',
+          delta: 'hello',
+        },
+      },
+      persist: true,
+    })
+
+    expect((message?.payload as Record<string, unknown>)?.message).toBeUndefined()
   })
 
   it('replays lifecycle + stream rows in listEventsAfter', async () => {
