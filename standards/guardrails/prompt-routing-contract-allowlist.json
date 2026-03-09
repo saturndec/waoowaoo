@@ -1,0 +1,6 @@
+{
+  "version": 1,
+  "owner": "vat-fullstack",
+  "description": "Temporary exceptions for prompt routing contract guardrails. Each entry must include owner/reason/expiresAt.",
+  "entries": []
+}

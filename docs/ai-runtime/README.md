@@ -14,6 +14,7 @@
 8. [08-当前差距与后续动作](./08-open-gaps.md)
 9. [09-User API English Contract](./09-user-api-english-contract.md)
 10. [10-Message Catalog & API Contract Normalization](./10-message-catalog-api-contract-normalization.md)
+11. [11-Prompt Routing Contract Guardrails & Telemetry](./11-prompt-routing-contract-guardrails.md)
 
 ## 单一事实源
 
