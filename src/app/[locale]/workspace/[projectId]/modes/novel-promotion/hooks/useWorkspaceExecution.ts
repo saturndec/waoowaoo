@@ -6,8 +6,15 @@ import {
   useAnalyzeProjectAssets,
   useScriptToStoryboardRunStream,
   useStoryToScriptRunStream,
+  useQuickMangaHistory,
 } from '@/lib/query/hooks'
 import { buildQuickMangaStoryInput, type QuickMangaOptions } from '@/lib/novel-promotion/quick-manga'
+import {
+  buildQuickMangaContinuityContext,
+  buildQuickMangaPayloadFromHistory,
+  resolveQuickMangaRegenerateStoryContent,
+} from '@/lib/novel-promotion/quick-manga-regenerate'
+import type { QuickMangaHistoryItem } from '@/lib/query/hooks/useQuickMangaHistory'
 
 interface UseWorkspaceExecutionParams {
   projectId: string
@@ -21,6 +28,7 @@ interface UseWorkspaceExecutionParams {
   onUpdateConfig: (key: string, value: unknown) => Promise<void>
   onStageChange: (stage: string) => void
   onOpenAssetLibrary: (focusCharacterId?: string | null, refreshAssets?: boolean) => void
+  onQuickMangaRegenerate: (history: QuickMangaHistoryItem) => Promise<void>
 }
 
 function isAbortError(err: unknown): boolean {
@@ -45,6 +53,7 @@ export function useWorkspaceExecution({
   onUpdateConfig,
   onStageChange,
   onOpenAssetLibrary,
+  onQuickMangaRegenerate,
 }: UseWorkspaceExecutionParams) {
   const analyzeProjectAssetsMutation = useAnalyzeProjectAssets(projectId)
 
@@ -58,6 +67,12 @@ export function useWorkspaceExecution({
 
   const storyToScriptStream = useStoryToScriptRunStream({ projectId, episodeId })
   const scriptToStoryboardStream = useScriptToStoryboardRunStream({ projectId, episodeId })
+  const quickMangaHistoryQuery = useQuickMangaHistory({
+    projectId,
+    status: 'all',
+    limit: 20,
+    enabled: quickManga.enabled,
+  })
 
   const handleGenerateTTS = useCallback(async () => {
     _ulogInfo('[NovelPromotionWorkspace] TTS is disabled, skip generate request')
@@ -173,6 +188,85 @@ export function useWorkspaceExecution({
     }
   }, [analysisModel, episodeId, onRefresh, onStageChange, scriptToStoryboardStream, t])
 
+  const runQuickMangaRegenerateFlow = useCallback(async (history: QuickMangaHistoryItem) => {
+    if (!episodeId) {
+      alert(t('execution.selectEpisode'))
+      return
+    }
+
+    if (!history?.options?.enabled) {
+      alert(t('storyInput.quickManga.regenerate.invalidSource'))
+      return
+    }
+
+    const previousRun = quickMangaHistoryQuery.data?.find((item) => item.runId === history.runId)
+
+    const resolvedContent = resolveQuickMangaRegenerateStoryContent({
+      previousContent: previousRun?.preview.inputSnippet || history.preview.inputSnippet,
+      fallbackContent: novelText,
+    })
+
+    if (!resolvedContent) {
+      alert(t('storyInput.quickManga.regenerate.missingContent'))
+      return
+    }
+
+    const continuityContext = buildQuickMangaContinuityContext({
+      source: history,
+      fallbackContentUsed: resolvedContent.fallbackUsed,
+    })
+
+    const quickMangaPayload = buildQuickMangaPayloadFromHistory(history)
+
+    const mergedStoryContent = buildQuickMangaStoryInput({
+      storyContent: resolvedContent.content,
+      options: quickMangaPayload,
+      artStyle: quickMangaPayload.style,
+    })
+
+    try {
+      setIsTransitioning(true)
+      setStoryToScriptConsoleMinimized(false)
+      setTransitionProgress({ message: t('execution.storyToScriptRunning'), step: 'streaming' })
+
+      const runResult = await storyToScriptStream.run({
+        episodeId,
+        content: mergedStoryContent,
+        model: analysisModel || undefined,
+        temperature: 0.7,
+        reasoning: true,
+        quickManga: quickMangaPayload,
+        continuity: continuityContext,
+      })
+
+      if (runResult.status !== 'completed') {
+        throw new Error(runResult.errorMessage || t('storyInput.quickManga.regenerate.failed'))
+      }
+
+      await onQuickMangaRegenerate(history)
+      await onRefresh()
+      onStageChange('script')
+    } catch (err: unknown) {
+      const message = isAbortError(err)
+        ? t('execution.requestAborted')
+        : getErrorMessage(err)
+      alert(`${t('storyInput.quickManga.regenerate.failed')}: ${message}`)
+    } finally {
+      setIsTransitioning(false)
+      setTransitionProgress({ message: '', step: '' })
+    }
+  }, [
+    analysisModel,
+    episodeId,
+    novelText,
+    onQuickMangaRegenerate,
+    onRefresh,
+    onStageChange,
+    quickMangaHistoryQuery.data,
+    storyToScriptStream,
+    t,
+  ])
+
   const showCreatingToast = useMemo(() => (
     storyToScriptStream.isRunning ||
     storyToScriptStream.isRecoveredRunning ||
@@ -205,6 +299,7 @@ export function useWorkspaceExecution({
     handleAnalyzeAssets,
     runStoryToScriptFlow,
     runScriptToStoryboardFlow,
+    runQuickMangaRegenerateFlow,
     showCreatingToast,
   }
 }

@@ -8,8 +8,18 @@ import {
   type QuickMangaStage,
 } from '@/lib/novel-promotion/quick-manga-contract'
 import { buildQuickMangaStoryInput } from '@/lib/novel-promotion/quick-manga'
+import { listRuns } from '@/lib/run-runtime/service'
 
 export const runtime = 'nodejs'
+
+function toObject(value: unknown): Record<string, unknown> {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return {}
+  return value as Record<string, unknown>
+}
+
+function readString(value: unknown): string {
+  return typeof value === 'string' ? value.trim() : ''
+}
 
 function buildDedupeKey(params: {
   stage: QuickMangaStage
@@ -64,11 +74,57 @@ export const POST = apiHandler(async (
     style: parsed.options.style,
   }
 
+  let continuity = parsed.continuity
+  if (continuity?.shortcut === 'history-regenerate') {
+    const sourceRunId = readString(continuity.sourceRunId)
+    if (!sourceRunId) {
+      throw new ApiError('INVALID_PARAMS', {
+        code: 'QUICK_MANGA_SOURCE_RUN_REQUIRED',
+        message: 'source run id is required for regenerate shortcut',
+      })
+    }
+
+    const runs = await listRuns({
+      userId: session.user.id,
+      projectId,
+      limit: 100,
+    })
+    const sourceRun = runs.find((run) => run.id === sourceRunId)
+    if (!sourceRun) {
+      throw new ApiError('NOT_FOUND', {
+        code: 'QUICK_MANGA_SOURCE_RUN_NOT_FOUND',
+        message: 'source run not found',
+      })
+    }
+
+    const sourceQuickManga = toObject(toObject(sourceRun.input).quickManga)
+    if (sourceQuickManga.enabled !== true) {
+      throw new ApiError('INVALID_PARAMS', {
+        code: 'QUICK_MANGA_SOURCE_INVALID',
+        message: 'source run quick manga metadata is missing',
+      })
+    }
+
+    continuity = {
+      sourceRunId,
+      sourceStage: continuity.sourceStage,
+      shortcut: 'history-regenerate',
+      fallbackContentUsed: continuity.fallbackContentUsed === true,
+      reusedOptions: {
+        preset: continuity.reusedOptions.preset,
+        layout: continuity.reusedOptions.layout,
+        colorMode: continuity.reusedOptions.colorMode,
+        style: continuity.reusedOptions.style || quickMangaPayload.style,
+      },
+    }
+  }
+
   const normalizedBody = {
     ...body,
     episodeId: parsed.episodeId,
     quickManga: quickMangaPayload,
     quickMangaStage: parsed.stage,
+    continuity,
     content: parsed.stage === 'story-to-script'
       ? buildQuickMangaStoryInput({
         storyContent: parsed.content || '',
