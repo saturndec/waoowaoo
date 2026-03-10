@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { buildMockRequest } from '../../../helpers/request'
+import { buildMockRequest, callRoute } from '../../../helpers/request'
 
 type AuthState = { authenticated: boolean }
 
@@ -25,9 +25,29 @@ const prismaMock = vi.hoisted(() => ({
       id: 'project-1',
       ...data,
     })),
+    findUnique: vi.fn(async () => ({
+      id: 'project-1',
+      name: 'Project 1',
+      description: null,
+      mode: 'novel-promotion',
+      userId: 'user-1',
+      createdAt: new Date('2026-03-10T00:00:00.000Z'),
+      updatedAt: new Date('2026-03-10T00:00:00.000Z'),
+      lastAccessedAt: null,
+      user: { id: 'user-1' },
+    })),
+    update: vi.fn(async () => ({})),
   },
   novelPromotionProject: {
     create: vi.fn(async ({ data }: { data: Record<string, unknown> }) => ({ id: 'np-1', ...data })),
+    findUnique: vi.fn(async () => ({
+      id: 'np-1',
+      projectId: 'project-1',
+      capabilityOverrides: null,
+      episodes: [],
+      characters: [],
+      locations: [],
+    })),
   },
 }))
 
@@ -151,5 +171,76 @@ describe('api contract - /api/projects POST projectMode compatibility', () => {
     const res = await POST(req)
     expect(res.status).toBe(201)
     expect(logProjectActionMock).not.toHaveBeenCalled()
+  })
+
+  it('persists sourceType/sourceContent via onboarding context bridge for dual-journey create', async () => {
+    const { POST } = await import('@/app/api/projects/route')
+    const req = buildMockRequest({
+      path: '/api/projects',
+      method: 'POST',
+      body: {
+        name: 'Manga Story Source',
+        description: 'desc',
+        journeyType: 'manga_webtoon',
+        entryIntent: 'manga_story_to_panels',
+        sourceType: 'story_text',
+        sourceContent: 'Panel 1 setup and dialogue',
+      },
+    })
+
+    const res = await POST(req)
+    expect(res.status).toBe(201)
+    expect(prismaMock.novelPromotionProject.create).toHaveBeenCalledWith(expect.objectContaining({
+      data: expect.objectContaining({
+        projectId: 'project-1',
+        capabilityOverrides: expect.any(String),
+      }),
+    }))
+
+    const createArg = prismaMock.novelPromotionProject.create.mock.calls[0]?.[0]
+    const capabilityOverrides = String(createArg?.data?.capabilityOverrides || '{}')
+    const parsed = JSON.parse(capabilityOverrides)
+
+    expect(parsed.__workspaceOnboardingContext).toMatchObject({
+      journeyType: 'manga_webtoon',
+      entryIntent: 'manga_story_to_panels',
+      sourceType: 'story_text',
+      sourceContent: 'Panel 1 setup and dialogue',
+    })
+  })
+
+  it('returns onboardingContext in GET /api/projects/[projectId]/data response', async () => {
+    prismaMock.novelPromotionProject.findUnique.mockResolvedValueOnce({
+      id: 'np-1',
+      projectId: 'project-1',
+      capabilityOverrides: JSON.stringify({
+        __workspaceOnboardingContext: {
+          journeyType: 'manga_webtoon',
+          entryIntent: 'manga_story_to_panels',
+          sourceType: 'import_script',
+          sourceContent: 'SCENE 1',
+          capturedAt: '2026-03-10T16:00:00.000Z',
+        },
+      }),
+      episodes: [],
+      characters: [],
+      locations: [],
+    })
+
+    const { GET } = await import('@/app/api/projects/[projectId]/data/route')
+    const res = await callRoute(GET, {
+      path: '/api/projects/project-1/data',
+      method: 'GET',
+      context: { params: Promise.resolve({ projectId: 'project-1' }) },
+    })
+
+    expect(res.status).toBe(200)
+    const payload = await res.json()
+    expect(payload?.project?.novelPromotionData?.onboardingContext).toMatchObject({
+      journeyType: 'manga_webtoon',
+      entryIntent: 'manga_story_to_panels',
+      sourceType: 'import_script',
+      sourceContent: 'SCENE 1',
+    })
   })
 })

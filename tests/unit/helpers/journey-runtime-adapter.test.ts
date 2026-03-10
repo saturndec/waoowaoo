@@ -46,6 +46,8 @@ describe('journey runtime adapter', () => {
       projectMode: 'manga',
       journeyType: 'manga_webtoon',
       entryIntent: 'manga_story_to_panels',
+      sourceType: 'story_text',
+      sourceContent: 'abc',
     })
   })
 

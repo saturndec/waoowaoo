@@ -9,8 +9,9 @@ import {
   type WorkspaceProjectEntryMode,
 } from '@/lib/workspace/project-mode'
 import { resolveEntryIntentFromTemplate } from '@/lib/workspace/onboarding-templates'
+import { type OnboardingSourceType } from '@/lib/workspace/onboarding-context'
 
-export type JourneySourceType = 'blank' | 'story_text' | 'import_script'
+export type JourneySourceType = OnboardingSourceType
 
 export interface JourneyWizardDraft {
   name: string
@@ -54,6 +55,8 @@ export function toJourneyProjectCreatePayload(draft: JourneyWizardDraft): Projec
     entryMode: draft.entryMode,
     journeyType,
     entryIntent,
+    sourceType: draft.sourceType,
+    sourceContent: draft.sourceContent,
   })
 }
 

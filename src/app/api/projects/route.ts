@@ -9,6 +9,10 @@ import {
   type ProductJourneyType,
   type ProductEntryIntent,
 } from '@/lib/workspace/project-mode'
+import {
+  buildWorkspaceOnboardingContext,
+  mergeWorkspaceOnboardingContextIntoCapabilityOverrides,
+} from '@/lib/workspace/onboarding-context'
 
 // GET - 获取用户的项目（支持分页和搜索）
 export const GET = apiHandler(async (request: NextRequest) => {
@@ -169,12 +173,14 @@ export const POST = apiHandler(async (request: NextRequest) => {
   if (isErrorResponse(authResult)) return authResult
   const { session } = authResult
 
-  const { name, description, projectMode, journeyType, entryIntent } = await request.json() as {
+  const { name, description, projectMode, journeyType, entryIntent, sourceType, sourceContent } = await request.json() as {
     name?: string
     description?: string
     projectMode?: unknown
     journeyType?: unknown
     entryIntent?: unknown
+    sourceType?: unknown
+    sourceContent?: unknown
   }
 
   if (!name || name.trim().length === 0) {
@@ -223,6 +229,13 @@ export const POST = apiHandler(async (request: NextRequest) => {
     }
   })
 
+  const onboardingContext = buildWorkspaceOnboardingContext({
+    journeyType: normalizedJourneyType,
+    entryIntent: normalizedEntryIntent,
+    sourceType,
+    sourceContent,
+  })
+
   // 创建 novel-promotion 数据表，使用用户偏好作为默认值
   // 注意：不再自动创建默认剧集，由用户在选择界面决定：
   // - 手动创作 → 创建第一个空白剧集
@@ -231,6 +244,9 @@ export const POST = apiHandler(async (request: NextRequest) => {
   await prisma.novelPromotionProject.create({
     data: {
       projectId: project.id,
+      capabilityOverrides: mergeWorkspaceOnboardingContextIntoCapabilityOverrides({
+        onboardingContext,
+      }),
       ...(userPreference && {
         analysisModel: userPreference.analysisModel,
         characterModel: userPreference.characterModel,

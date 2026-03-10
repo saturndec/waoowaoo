@@ -25,6 +25,8 @@ describe('workspace project mode helpers', () => {
       projectMode: 'story',
       journeyType: 'film_video',
       entryIntent: 'film_story_studio',
+      sourceType: undefined,
+      sourceContent: undefined,
     })
   })
 
@@ -44,6 +46,29 @@ describe('workspace project mode helpers', () => {
       projectMode: 'manga',
       journeyType: 'manga_webtoon',
       entryIntent: 'manga_quickstart',
+      sourceType: undefined,
+      sourceContent: undefined,
+    })
+  })
+
+  it('keeps sourceType/sourceContent in create payload for onboarding runtime context bridge', () => {
+    expect(
+      toProjectCreatePayload({
+        name: '  Story source payload  ',
+        description: '  has source  ',
+        entryMode: 'story',
+        sourceType: 'story_text',
+        sourceContent: '  Once upon a midnight dreary  ',
+      }),
+    ).toEqual({
+      name: 'Story source payload',
+      description: 'has source',
+      mode: 'novel-promotion',
+      projectMode: 'story',
+      journeyType: 'film_video',
+      entryIntent: 'film_story_studio',
+      sourceType: 'story_text',
+      sourceContent: 'Once upon a midnight dreary',
     })
   })
 

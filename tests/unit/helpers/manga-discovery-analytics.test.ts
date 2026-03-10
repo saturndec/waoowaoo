@@ -112,4 +112,50 @@ describe('manga discovery analytics helper', () => {
       }),
     }))
   })
+
+  it('emits deep wizard telemetry events for view/next/back steps', () => {
+    trackWorkspaceJourneyEvent('workspace_wizard_step_view', {
+      wizardStep: 1,
+      journeyType: 'manga_webtoon',
+      locale: 'vi',
+    })
+    trackWorkspaceJourneyEvent('workspace_wizard_step_next', {
+      fromStep: 1,
+      toStep: 2,
+      journeyType: 'manga_webtoon',
+      entryIntent: 'manga_quickstart',
+      locale: 'vi',
+    })
+    trackWorkspaceJourneyEvent('workspace_wizard_step_back', {
+      fromStep: 2,
+      toStep: 1,
+      journeyType: 'manga_webtoon',
+      entryIntent: 'manga_quickstart',
+      locale: 'vi',
+    })
+
+    expect(logEvent).toHaveBeenNthCalledWith(1, expect.objectContaining({
+      message: 'workspace_wizard_step_view',
+      details: expect.objectContaining({
+        event: 'workspace_wizard_step_view',
+        wizardStep: 1,
+      }),
+    }))
+    expect(logEvent).toHaveBeenNthCalledWith(2, expect.objectContaining({
+      message: 'workspace_wizard_step_next',
+      details: expect.objectContaining({
+        event: 'workspace_wizard_step_next',
+        fromStep: 1,
+        toStep: 2,
+      }),
+    }))
+    expect(logEvent).toHaveBeenNthCalledWith(3, expect.objectContaining({
+      message: 'workspace_wizard_step_back',
+      details: expect.objectContaining({
+        event: 'workspace_wizard_step_back',
+        fromStep: 2,
+        toStep: 1,
+      }),
+    }))
+  })
 })

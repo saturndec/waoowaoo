@@ -120,6 +120,34 @@ export default function WorkspacePage() {
     : t('projectTypeStoryDesc')
 
   const [createWizardStep, setCreateWizardStep] = useState<1 | 2 | 3>(1)
+  const selectedTemplateId = selectedStarterTemplate?.id
+
+  const trackWizardStepEvent = useCallback((
+    event: 'workspace_wizard_step_view' | 'workspace_wizard_step_next' | 'workspace_wizard_step_back',
+    extra: Record<string, unknown> = {},
+  ) => {
+    const journeyType = mapEntryModeToJourneyType(formData.entryMode)
+    const templateId = selectedTemplateId || null
+    const entryIntent = resolveJourneyEntryIntent({
+      journeyType,
+      entryMode: formData.entryMode,
+      templateId: selectedTemplateId,
+      sourceType: formData.sourceType,
+    })
+
+    trackWorkspaceJourneyEvent(event, {
+      journeyType,
+      entryIntent,
+      projectMode: formData.entryMode,
+      templateId,
+      sourceType: formData.sourceType,
+      hasSourceContent: formData.sourceContent.trim().length > 0,
+      wizardStep: createWizardStep,
+      locale,
+      surface: 'create_project_modal',
+      ...extra,
+    })
+  }, [createWizardStep, formData.entryMode, formData.sourceContent, formData.sourceType, locale, selectedTemplateId])
 
   const canContinueToTemplateStep = formData.name.trim().length > 0
   const canContinueToSourceStep = Boolean(selectedStarterTemplate)
@@ -431,6 +459,12 @@ export default function WorkspacePage() {
     })
     setShowEditModal(true)
   }
+
+  useEffect(() => {
+    if (!showCreateModal) return
+
+    trackWizardStepEvent('workspace_wizard_step_view')
+  }, [createWizardStep, showCreateModal, trackWizardStepEvent])
 
   if (status === 'loading' || !session) {
     return (
@@ -912,7 +946,14 @@ export default function WorkspacePage() {
                   {createWizardStep > 1 && (
                     <button
                       type="button"
-                      onClick={() => setCreateWizardStep((prev) => (prev === 1 ? 1 : prev === 2 ? 1 : 2))}
+                      onClick={() => {
+                        const nextStep = createWizardStep === 2 ? 1 : 2
+                        trackWizardStepEvent('workspace_wizard_step_back', {
+                          fromStep: createWizardStep,
+                          toStep: nextStep,
+                        })
+                        setCreateWizardStep(nextStep as 1 | 2 | 3)
+                      }}
                       className="glass-btn-base glass-btn-secondary px-4 py-2.5"
                       disabled={createLoading}
                     >
@@ -928,7 +969,12 @@ export default function WorkspacePage() {
                       onClick={() => {
                         if (createWizardStep === 1 && !canContinueToTemplateStep) return
                         if (createWizardStep === 2 && !canContinueToSourceStep) return
-                        setCreateWizardStep((prev) => (prev === 1 ? 2 : 3))
+                        const nextStep = createWizardStep === 1 ? 2 : 3
+                        trackWizardStepEvent('workspace_wizard_step_next', {
+                          fromStep: createWizardStep,
+                          toStep: nextStep,
+                        })
+                        setCreateWizardStep(nextStep as 1 | 2 | 3)
                       }}
                       className="glass-btn-base glass-btn-primary px-4 py-2.5 disabled:opacity-50"
                       disabled={createLoading || (createWizardStep === 1 ? !canContinueToTemplateStep : !canContinueToSourceStep)}

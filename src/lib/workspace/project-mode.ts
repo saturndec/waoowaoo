@@ -18,6 +18,8 @@ export interface ProjectCreationInput extends ProductIntentContract {
   name: string
   description: string
   entryMode: WorkspaceProjectEntryMode
+  sourceType?: 'blank' | 'story_text' | 'import_script'
+  sourceContent?: string
 }
 
 export interface ProjectCreatePayload extends ProductIntentContract {
@@ -29,6 +31,11 @@ export interface ProjectCreatePayload extends ProductIntentContract {
    * Keep optional for backward compatibility with older clients.
    */
   projectMode?: WorkspaceProjectEntryMode
+  /**
+   * Dual-journey onboarding source context (additive, backward compatible).
+   */
+  sourceType?: 'blank' | 'story_text' | 'import_script'
+  sourceContent?: string
 }
 
 export function mapJourneyTypeToProjectMode(journeyType: ProductJourneyType): WorkspaceProjectEntryMode {
@@ -71,6 +78,8 @@ export function toProjectCreatePayload(input: ProjectCreationInput): ProjectCrea
     projectMode: input.entryMode,
     journeyType,
     entryIntent,
+    sourceType: input.sourceType,
+    sourceContent: input.sourceContent?.trim() || undefined,
   }
 }
 
