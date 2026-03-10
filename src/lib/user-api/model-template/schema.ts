@@ -450,11 +450,11 @@ export function parseOpenAICompatMediaTemplate(raw: unknown): {
     }
   }
 
-  if (raw.version !== 1) {
+  if (typeof raw.version !== 'number' || raw.version < 1) {
     issues.push({
       code: 'MODEL_TEMPLATE_INVALID',
       field: 'version',
-      message: 'version must be 1',
+      message: 'version must be a positive number',
     })
   }
 
