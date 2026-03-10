@@ -4,6 +4,7 @@ import path from 'node:path'
 import {
   buildStarterProjectName,
   getStarterTemplatesByMode,
+  resolveEntryIntentFromTemplate,
 } from '@/lib/workspace/onboarding-templates'
 
 type WorkspaceMessages = {
@@ -63,5 +64,12 @@ describe('manga onboarding template gallery (VAT-106)', () => {
   it('builds starter project name with date suffix for onboarding quick start', () => {
     const name = buildStarterProjectName('Manga Action Battle')
     expect(name).toMatch(/^Manga Action Battle \d{2}-\d{2}$/)
+  })
+
+  it('maps template selection to entryIntent semantics, with compatibility fallback', () => {
+    expect(resolveEntryIntentFromTemplate({ entryMode: 'manga', templateId: 'manga-action-battle' })).toBe('manga_story_to_panels')
+    expect(resolveEntryIntentFromTemplate({ entryMode: 'story', templateId: 'story-social-ad' })).toBe('video_ad_short')
+    expect(resolveEntryIntentFromTemplate({ entryMode: 'story', templateId: 'unknown-template' })).toBe('film_story_studio')
+    expect(resolveEntryIntentFromTemplate({ entryMode: 'manga' })).toBe('manga_quickstart')
   })
 })

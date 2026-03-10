@@ -13,7 +13,6 @@ import { resolveTaskPresentationState } from '@/lib/task/presentation'
 import { AppIcon, IconGradientDefs } from '@/components/ui/icons'
 import {
   buildProjectEntryUrl,
-  defaultEntryIntentByJourney,
   mapEntryModeToJourneyType,
   toProjectCreatePayload,
   type WorkspaceProjectEntryMode,
@@ -26,6 +25,7 @@ import { isWorkspaceDualJourneyEnabled } from '@/lib/workspace/feature-flags'
 import {
   buildStarterProjectName,
   getStarterTemplatesByMode,
+  resolveEntryIntentFromTemplate,
   type WorkspaceStarterTemplate,
 } from '@/lib/workspace/onboarding-templates'
 
@@ -104,6 +104,14 @@ export default function WorkspacePage() {
     if (starterTemplates.length === 0) return null
     return starterTemplates.find((template) => template.id === formData.starterTemplateId) || starterTemplates[0]
   }, [formData.starterTemplateId, starterTemplates])
+
+  const selectedJourneyTitle = formData.entryMode === 'manga'
+    ? t('projectTypeMangaTitle')
+    : t('projectTypeStoryTitle')
+
+  const selectedJourneyDescription = formData.entryMode === 'manga'
+    ? t('projectTypeMangaDesc')
+    : t('projectTypeStoryDesc')
 
   // 检查用户是否已登录
   useEffect(() => {
@@ -235,7 +243,10 @@ export default function WorkspacePage() {
     if (!normalizedName) return
 
     const journeyType = mapEntryModeToJourneyType(formData.entryMode)
-    const entryIntent = defaultEntryIntentByJourney(journeyType)
+    const entryIntent = resolveEntryIntentFromTemplate({
+      entryMode: formData.entryMode,
+      templateId: selectedStarterTemplate?.id,
+    })
 
     setCreateLoading(true)
     try {
@@ -453,16 +464,27 @@ export default function WorkspacePage() {
 
         {/* Projects Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          {/* New Project Card */}
+          {/* Film/Video Journey Card */}
           <div
             onClick={() => handleOpenCreateModal('story')}
-            className="glass-surface p-6 cursor-pointer group flex items-center justify-center bg-gradient-to-br from-blue-500/5 via-cyan-500/5 to-blue-600/5 hover:from-blue-500/10 hover:via-cyan-500/10 hover:to-blue-600/10 transition-all duration-300"
+            className="glass-surface p-6 cursor-pointer group relative overflow-hidden bg-gradient-to-br from-blue-500/10 via-cyan-500/10 to-blue-600/10 hover:from-blue-500/15 hover:via-cyan-500/15 hover:to-blue-600/15 transition-all duration-300"
           >
-            <div className="flex flex-col items-center gap-3">
-              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center shadow-lg shadow-blue-500/20 group-hover:shadow-blue-500/40 group-hover:scale-110 transition-all duration-300">
-                <AppIcon name="plus" className="w-6 h-6 text-white" />
+            <div className="absolute inset-0 pointer-events-none bg-[radial-gradient(circle_at_top_right,rgba(255,255,255,0.14),transparent_45%)]" />
+            <div className="relative z-10 flex h-full flex-col justify-between gap-4">
+              <div className="flex items-start justify-between gap-3">
+                <div>
+                  <div className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--glass-tone-info-fg)]">{t('journeyCardFilmLabel')}</div>
+                  <h3 className="mt-2 text-lg font-bold text-[var(--glass-text-primary)]">{t('projectTypeStoryTitle')}</h3>
+                  <p className="mt-2 text-sm text-[var(--glass-text-secondary)] leading-relaxed">{t('projectTypeStoryDesc')}</p>
+                </div>
+                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center shadow-lg shadow-blue-500/20 group-hover:scale-110 transition-transform duration-300">
+                  <AppIcon name="plus" className="w-6 h-6 text-white" />
+                </div>
               </div>
-              <span className="text-sm font-medium text-[var(--glass-text-secondary)] group-hover:text-[var(--glass-text-primary)] transition-colors">{t('newProject')}</span>
+              <div className="inline-flex items-center gap-2 text-sm font-medium text-[var(--glass-tone-info-fg)]">
+                <span>{t('createProject')}</span>
+                <AppIcon name="arrowRight" className="w-4 h-4" />
+              </div>
             </div>
           </div>
 
@@ -691,7 +713,12 @@ export default function WorkspacePage() {
         <div className="fixed inset-0 glass-overlay flex items-center justify-center z-50 backdrop-blur-sm p-3 sm:p-4 lg:p-6">
           <div className="glass-surface-modal w-full max-w-4xl max-h-[90vh] overflow-y-auto p-5 sm:p-6 lg:p-7">
             <h2 className="text-2xl font-bold text-[var(--glass-text-primary)] mb-1">{t('createProject')}</h2>
-            <p className="text-sm text-[var(--glass-text-tertiary)] mb-5">{t('projectTypeLabel')} + {t('projectName')}</p>
+            <p className="text-sm text-[var(--glass-text-tertiary)] mb-1">{t('projectTypeLabel')} + {t('projectName')}</p>
+            <div className="mb-5 rounded-lg border border-[var(--glass-border)]/60 bg-[var(--glass-background-secondary)]/35 px-3 py-2">
+              <p className="text-xs uppercase tracking-[0.14em] text-[var(--glass-text-tertiary)]">{t('journeyLaneLabel')}</p>
+              <p className="mt-1 text-sm font-semibold text-[var(--glass-text-primary)]">{selectedJourneyTitle}</p>
+              <p className="mt-1 text-xs text-[var(--glass-text-secondary)]">{selectedJourneyDescription}</p>
+            </div>
 
             <form onSubmit={handleCreateProject} className="space-y-5">
               <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
@@ -767,6 +794,10 @@ export default function WorkspacePage() {
                               const journeyType = mapEntryModeToJourneyType(formData.entryMode)
                               trackWorkspaceJourneyEvent('workspace_template_selected', {
                                 journeyType,
+                                entryIntent: resolveEntryIntentFromTemplate({
+                                  entryMode: formData.entryMode,
+                                  templateId: template.id,
+                                }),
                                 projectMode: formData.entryMode,
                                 templateId: template.id,
                                 locale,
