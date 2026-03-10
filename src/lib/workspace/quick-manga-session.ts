@@ -14,24 +14,36 @@ export function readQuickMangaSessionPreference(): boolean | null {
   const sessionStorageRef = getSessionStorageSafe()
   if (!sessionStorageRef) return null
 
-  const raw = sessionStorageRef.getItem(QUICK_MANGA_SESSION_KEY)
-  if (raw === '1') return true
-  if (raw === '0') return false
-  return null
+  try {
+    const raw = sessionStorageRef.getItem(QUICK_MANGA_SESSION_KEY)
+    if (raw === '1') return true
+    if (raw === '0') return false
+    return null
+  } catch {
+    return null
+  }
 }
 
 export function writeQuickMangaSessionPreference(enabled: boolean): void {
   const sessionStorageRef = getSessionStorageSafe()
   if (!sessionStorageRef) return
 
-  sessionStorageRef.setItem(QUICK_MANGA_SESSION_KEY, enabled ? '1' : '0')
+  try {
+    sessionStorageRef.setItem(QUICK_MANGA_SESSION_KEY, enabled ? '1' : '0')
+  } catch {
+    return
+  }
 }
 
 export function clearQuickMangaSessionPreference(): void {
   const sessionStorageRef = getSessionStorageSafe()
   if (!sessionStorageRef) return
 
-  sessionStorageRef.removeItem(QUICK_MANGA_SESSION_KEY)
+  try {
+    sessionStorageRef.removeItem(QUICK_MANGA_SESSION_KEY)
+  } catch {
+    return
+  }
 }
 
 export { QUICK_MANGA_SESSION_KEY }

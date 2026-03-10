@@ -55,4 +55,26 @@ describe('quick manga session preference helpers', () => {
     expect(() => writeQuickMangaSessionPreference(true)).not.toThrow()
     expect(() => clearQuickMangaSessionPreference()).not.toThrow()
   })
+
+  it('fails safe when storage operations throw', () => {
+    const throwingStorage = {
+      getItem: () => {
+        throw new Error('read blocked')
+      },
+      setItem: () => {
+        throw new Error('write blocked')
+      },
+      removeItem: () => {
+        throw new Error('clear blocked')
+      },
+    }
+
+    ;(globalThis as unknown as { window?: unknown }).window = {
+      sessionStorage: throwingStorage,
+    }
+
+    expect(readQuickMangaSessionPreference()).toBeNull()
+    expect(() => writeQuickMangaSessionPreference(true)).not.toThrow()
+    expect(() => clearQuickMangaSessionPreference()).not.toThrow()
+  })
 })
