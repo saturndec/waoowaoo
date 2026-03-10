@@ -29,6 +29,7 @@ import type {
   QuickMangaStyleLockProfile,
 } from '@/lib/novel-promotion/quick-manga-contract'
 import { shouldEnableQuickMangaFromSearchParams } from '@/lib/workspace/quick-manga-entry'
+import { resolveQuickMangaEnabledFromEntryAndSession } from '@/lib/workspace/quick-manga-editor-flow'
 import {
   readQuickMangaSessionPreference,
   writeQuickMangaSessionPreference,
@@ -77,11 +78,14 @@ export function useNovelPromotionWorkspaceController({
     const enabledFromEntry = shouldEnableQuickMangaFromSearchParams(searchParams)
     const sessionPreference = readQuickMangaSessionPreference()
 
-    if (!enabledFromEntry && sessionPreference == null) return
-
     setQuickManga((prev) => {
-      const nextEnabled = enabledFromEntry ? true : sessionPreference
-      if (typeof nextEnabled !== 'boolean' || prev.enabled === nextEnabled) return prev
+      const nextEnabled = resolveQuickMangaEnabledFromEntryAndSession({
+        currentEnabled: prev.enabled,
+        enabledFromEntry,
+        sessionPreference,
+      })
+
+      if (prev.enabled === nextEnabled) return prev
       return { ...prev, enabled: nextEnabled }
     })
   }, [searchParams])
