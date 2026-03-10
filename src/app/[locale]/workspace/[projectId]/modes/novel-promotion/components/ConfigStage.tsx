@@ -14,6 +14,7 @@ export default function ConfigStage() {
       <NovelInputStage
         novelText={novelText}
         episodeName={episodeName}
+        journeyType={runtime.journeyType}
         onNovelTextChange={runtime.onNovelTextChange}
         isSubmittingTask={runtime.isSubmittingTTS}
         isSwitchingStage={runtime.isTransitioning}
@@ -43,7 +44,9 @@ export default function ConfigStage() {
         onArtStyleChange={runtime.onArtStyleChange}
         onNext={runtime.onRunStoryToScript}
       />
-      <QuickMangaHistoryPanel enabled={runtime.quickMangaEnabled} />
+      {runtime.journeyType === 'manga_webtoon' && (
+        <QuickMangaHistoryPanel enabled={runtime.quickMangaEnabled} />
+      )}
     </div>
   )
 }

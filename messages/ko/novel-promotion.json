@@ -91,6 +91,18 @@
     "cancelConfirm": "정말로 취소하시겠습니까? 분석된 에피소드가 삭제됩니다."
   },
   "storyInput": {
+    "runtimeLane": {
+      "manga": {
+        "videoRatio": "읽기 레이아웃",
+        "visualStyle": "라인 / 잉크 스타일",
+        "moreConfig": "고급 기능(챕터 연속성, 스타일 락, 실행 히스토리)은 Manga 패널에서 관리할 수 있습니다"
+      },
+      "film": {
+        "videoRatio": "비디오 비율",
+        "visualStyle": "비주얼 스타일",
+        "moreConfig": "더 많은 구성 옵션을 보려면 오른쪽 상단의 「설정」 버튼을 클릭하세요."
+      }
+    },
     "currentEditing": "현재 수정 중: {name}",
     "editingTip": "다음 작업 흐름은 이 에피소드에만 적용됩니다. 필요한 경우 왼쪽 상단에서 에피소드를 전환하세요.",
     "wordCount": "단어 수:",

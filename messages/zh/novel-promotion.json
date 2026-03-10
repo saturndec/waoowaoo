@@ -91,6 +91,18 @@
     "cancelConfirm": "确定要取消吗？已分析的剧集将被清空。"
   },
   "storyInput": {
+    "runtimeLane": {
+      "manga": {
+        "videoRatio": "阅读布局",
+        "visualStyle": "线稿 / 墨色风格",
+        "moreConfig": "高级能力（章节连续性、风格锁定、运行历史）已集中在 Manga 面板"
+      },
+      "film": {
+        "videoRatio": "画面比例",
+        "visualStyle": "视觉风格",
+        "moreConfig": "更多配置请点击右上角「 配置」按钮"
+      }
+    },
     "currentEditing": "当前正在编辑：{name}",
     "editingTip": "以下制作流程仅针对本集,如有其他剧集请在左上角切换",
     "wordCount": "字数：",

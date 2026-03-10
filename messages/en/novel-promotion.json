@@ -91,6 +91,18 @@
     "cancelConfirm": "Are you sure you want to cancel? Analyzed episodes will be cleared."
   },
   "storyInput": {
+    "runtimeLane": {
+      "manga": {
+        "videoRatio": "Reading Layout",
+        "visualStyle": "Line / Ink Style",
+        "moreConfig": "Advanced lane controls (chapter continuity, style lock, run history) are available in the Manga panel"
+      },
+      "film": {
+        "videoRatio": "Video Ratio",
+        "visualStyle": "Visual Style",
+        "moreConfig": "For more configuration options, click the 「 Settings」 button in the top right"
+      }
+    },
     "currentEditing": "Currently editing: {name}",
     "editingTip": "The following workflow is for this episode only. Switch episodes in the top left if needed",
     "wordCount": "Word count:",

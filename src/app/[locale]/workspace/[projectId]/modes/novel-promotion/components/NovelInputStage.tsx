@@ -177,6 +177,7 @@ interface NovelInputStageProps {
   novelText: string
   // 当前剧集名称
   episodeName?: string
+  journeyType?: 'film_video' | 'manga_webtoon'
   // 回调函数
   onNovelTextChange: (value: string) => void
   onNext: () => void
@@ -217,6 +218,7 @@ interface NovelInputStageProps {
 export default function NovelInputStage({
   novelText,
   episodeName,
+  journeyType = 'film_video',
   onNovelTextChange,
   onNext,
   isSubmittingTask = false,
@@ -251,6 +253,7 @@ export default function NovelInputStage({
   const t = useTranslations('novelPromotion')
   const tStoryboard = useTranslations('storyboard')
   const hasContent = novelText.trim().length > 0
+  const isMangaJourney = journeyType === 'manga_webtoon'
   const quickMangaPresetOptions = [
     { value: 'auto', label: t('storyInput.manga.preset.options.auto') },
     { value: 'action-battle', label: t('storyInput.manga.preset.options.actionBattle') },
@@ -330,6 +333,7 @@ export default function NovelInputStage({
       </div>
 
       {/* Manga/Webtoon kickoff controls */}
+      {isMangaJourney && (
       <div className="glass-surface p-6 relative z-10 space-y-4">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div>
@@ -492,13 +496,19 @@ export default function NovelInputStage({
           </>
         )}
       </div>
+      )}
 
       {/* 画面比例与视觉风格配置 */}
       <div className="glass-surface p-6 relative z-10">
+        <div className="mb-4 rounded-xl border border-[var(--glass-stroke-soft)] bg-[var(--glass-bg-muted)]/15 px-3 py-2 text-xs text-[var(--glass-text-secondary)]">
+          {isMangaJourney ? t('storyInput.runtimeLane.manga.moreConfig') : t('storyInput.runtimeLane.film.moreConfig')}
+        </div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* 画面比例 */}
           <div className="space-y-3">
-            <h3 className="text-sm font-semibold text-[var(--glass-text-muted)] tracking-[0.01em]">{t("storyInput.videoRatio")}</h3>
+            <h3 className="text-sm font-semibold text-[var(--glass-text-muted)] tracking-[0.01em]">
+              {isMangaJourney ? t('storyInput.runtimeLane.manga.videoRatio') : t('storyInput.runtimeLane.film.videoRatio')}
+            </h3>
             <RatioSelector
               value={videoRatio}
               onChange={(value) => onVideoRatioChange?.(value)}
@@ -508,7 +518,9 @@ export default function NovelInputStage({
 
           {/* 视觉风格 */}
           <div className="space-y-3">
-            <h3 className="text-sm font-semibold text-[var(--glass-text-muted)] tracking-[0.01em]">{t("storyInput.visualStyle")}</h3>
+            <h3 className="text-sm font-semibold text-[var(--glass-text-muted)] tracking-[0.01em]">
+              {isMangaJourney ? t('storyInput.runtimeLane.manga.visualStyle') : t('storyInput.runtimeLane.film.visualStyle')}
+            </h3>
             <StyleSelector
               value={artStyle}
               onChange={(value) => onArtStyleChange?.(value)}

@@ -91,6 +91,18 @@
     "cancelConfirm": "Bạn có chắc chắn muốn hủy không? Các tập phim được phân tích sẽ bị xóa."
   },
   "storyInput": {
+    "runtimeLane": {
+      "manga": {
+        "videoRatio": "Bố cục đọc",
+        "visualStyle": "Phong cách nét / mực",
+        "moreConfig": "Tùy chọn nâng cao: continuity theo chương, style lock và lịch sử chạy có trong panel Manga"
+      },
+      "film": {
+        "videoRatio": "Tỷ lệ video",
+        "visualStyle": "Phong cách trực quan",
+        "moreConfig": "Để biết thêm tùy chọn cấu hình, hãy nhấp vào nút 「Cài đặt」 ở trên cùng bên phải"
+      }
+    },
     "currentEditing": "Hiện đang chỉnh sửa: {name}",
     "editingTip": "Quy trình làm việc sau đây chỉ dành cho tập này. Chuyển các tập ở trên cùng bên trái nếu cần",
     "wordCount": "Số từ:",

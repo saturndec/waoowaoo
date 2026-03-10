@@ -12,6 +12,10 @@ export type ScriptToStoryboardRunParams = {
   quickManga?: unknown
   quickMangaControls?: unknown
   continuity?: unknown
+  runtimeLane?: 'film_video' | 'manga_webtoon'
+  stageProfile?: 'story_to_script' | 'script_to_storyboard'
+  entryIntent?: 'film_story_studio' | 'video_ad_short' | 'cinematic_scene' | 'manga_quickstart' | 'manga_story_to_panels'
+  sourceType?: 'blank' | 'story_text' | 'import_script'
 }
 
 export type ScriptToStoryboardRunResult = RunResult
@@ -70,6 +74,10 @@ export function useScriptToStoryboardRunStream({ projectId, episodeId }: UseScri
       quickManga: params.quickManga,
       quickMangaControls: params.quickMangaControls,
       continuity: params.continuity,
+      runtimeLane: params.runtimeLane,
+      stageProfile: params.stageProfile,
+      entryIntent: params.entryIntent,
+      sourceType: params.sourceType,
       async: true,
       displayMode: 'detail',
     }),

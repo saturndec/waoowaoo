@@ -1,5 +1,8 @@
 import { describe, expect, it } from 'vitest'
-import { resolveQuickMangaEnabledFromEntryAndSession } from '@/lib/workspace/quick-manga-editor-flow'
+import {
+  resolveQuickMangaEnabledForRuntimeLane,
+  resolveQuickMangaEnabledFromEntryAndSession,
+} from '@/lib/workspace/quick-manga-editor-flow'
 
 describe('quick manga editor flow regression (VAT-89)', () => {
   it('forces enabled when opened from explicit quickManga entry param', () => {
@@ -36,5 +39,27 @@ describe('quick manga editor flow regression (VAT-89)', () => {
 
     expect(enabled).toBe(true)
     expect(disabled).toBe(false)
+  })
+
+  it('defaults quick manga ON for manga lane when there is no explicit entry/session override', () => {
+    const resolved = resolveQuickMangaEnabledForRuntimeLane({
+      journeyType: 'manga_webtoon',
+      currentEnabled: false,
+      enabledFromEntry: false,
+      sessionPreference: null,
+    })
+
+    expect(resolved).toBe(true)
+  })
+
+  it('keeps quick manga OFF baseline for film lane when there is no explicit entry/session override', () => {
+    const resolved = resolveQuickMangaEnabledForRuntimeLane({
+      journeyType: 'film_video',
+      currentEnabled: false,
+      enabledFromEntry: false,
+      sessionPreference: null,
+    })
+
+    expect(resolved).toBe(false)
   })
 })

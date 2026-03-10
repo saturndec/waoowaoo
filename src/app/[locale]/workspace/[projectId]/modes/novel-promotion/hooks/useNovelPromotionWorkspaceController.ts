@@ -29,7 +29,7 @@ import type {
   QuickMangaStyleLockProfile,
 } from '@/lib/novel-promotion/quick-manga-contract'
 import { shouldEnableQuickMangaFromSearchParams } from '@/lib/workspace/quick-manga-entry'
-import { resolveQuickMangaEnabledFromEntryAndSession } from '@/lib/workspace/quick-manga-editor-flow'
+import { resolveQuickMangaEnabledForRuntimeLane } from '@/lib/workspace/quick-manga-editor-flow'
 import {
   readQuickMangaSessionPreference,
   writeQuickMangaSessionPreference,
@@ -79,7 +79,8 @@ export function useNovelPromotionWorkspaceController({
     const sessionPreference = readQuickMangaSessionPreference()
 
     setQuickManga((prev) => {
-      const nextEnabled = resolveQuickMangaEnabledFromEntryAndSession({
+      const nextEnabled = resolveQuickMangaEnabledForRuntimeLane({
+        journeyType: projectSnapshot.journeyType,
         currentEnabled: prev.enabled,
         enabledFromEntry,
         sessionPreference,
@@ -88,7 +89,7 @@ export function useNovelPromotionWorkspaceController({
       if (prev.enabled === nextEnabled) return prev
       return { ...prev, enabled: nextEnabled }
     })
-  }, [searchParams])
+  }, [projectSnapshot.journeyType, searchParams])
 
   const handleQuickMangaEnabledChange = useCallback(async (enabled: boolean) => {
     writeQuickMangaSessionPreference(enabled)
@@ -245,6 +246,9 @@ export function useNovelPromotionWorkspaceController({
     analysisModel: projectSnapshot.analysisModel,
     novelText: projectSnapshot.novelText,
     quickManga,
+    journeyType: projectSnapshot.journeyType,
+    entryIntent: projectSnapshot.entryIntent,
+    sourceType: projectSnapshot.sourceType,
     artStyle: projectSnapshot.artStyle,
     t,
     onRefresh,

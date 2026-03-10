@@ -41,6 +41,8 @@ export function useWorkspaceProjectSnapshot({
       projectData?.onboardingContext?.journeyType === 'manga_webtoon'
         ? 'manga_webtoon'
         : 'film_video'
+    const entryIntent = projectData?.onboardingContext?.entryIntent
+    const sourceType = projectData?.onboardingContext?.sourceType
 
     return {
       projectData,
@@ -57,6 +59,8 @@ export function useWorkspaceProjectSnapshot({
       editModel: projectData?.editModel,
       videoModel: projectData?.videoModel,
       journeyType,
+      entryIntent,
+      sourceType,
       projectName: project.name,
       videoRatio: projectData?.videoRatio,
       capabilityOverrides,

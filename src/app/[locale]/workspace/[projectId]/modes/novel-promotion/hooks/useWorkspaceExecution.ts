@@ -9,6 +9,9 @@ import {
   useQuickMangaHistory,
 } from '@/lib/query/hooks'
 import { buildQuickMangaStoryInput, type QuickMangaOptions } from '@/lib/novel-promotion/quick-manga'
+import { buildJourneyGenerationStageConfig } from '@/lib/workspace/journey-generation-runtime'
+import type { ProductEntryIntent } from '@/lib/workspace/project-mode'
+import type { OnboardingSourceType } from '@/lib/workspace/onboarding-context'
 import type { QuickMangaGenerationControls } from '@/lib/novel-promotion/quick-manga-contract'
 import {
   buildQuickMangaContinuityContext,
@@ -26,6 +29,9 @@ interface UseWorkspaceExecutionParams {
   quickManga: QuickMangaOptions & {
     controls: QuickMangaGenerationControls
   }
+  journeyType: 'film_video' | 'manga_webtoon'
+  entryIntent?: ProductEntryIntent
+  sourceType?: OnboardingSourceType
   artStyle?: string | null
   t: (key: string) => string
   onRefresh: (options?: { scope?: string; mode?: string }) => Promise<void>
@@ -51,6 +57,9 @@ export function useWorkspaceExecution({
   analysisModel,
   novelText,
   quickManga,
+  journeyType,
+  entryIntent,
+  sourceType,
   artStyle,
   t,
   onRefresh,
@@ -116,16 +125,20 @@ export function useWorkspaceExecution({
       return
     }
 
-    const quickMangaPayload = {
-      enabled: quickManga.enabled,
-      preset: quickManga.preset,
-      layout: quickManga.layout,
-      colorMode: quickManga.colorMode,
-    }
+    const stageConfig = buildJourneyGenerationStageConfig({
+      context: {
+        journeyType,
+        entryIntent,
+        sourceType,
+      },
+      stage: 'story_to_script',
+      quickManga,
+      quickMangaControls: quickManga.controls,
+    })
 
     const mergedStoryContent = buildQuickMangaStoryInput({
       storyContent,
-      options: quickMangaPayload,
+      options: stageConfig.quickManga,
       artStyle,
     })
 
@@ -139,10 +152,15 @@ export function useWorkspaceExecution({
         episodeId,
         content: mergedStoryContent,
         model: analysisModel || undefined,
-        temperature: 0.7,
-        reasoning: true,
-        quickManga: quickMangaPayload,
-        quickMangaControls: quickManga.controls,
+        temperature: stageConfig.temperature,
+        reasoning: stageConfig.reasoning,
+        reasoningEffort: stageConfig.reasoningEffort,
+        quickManga: stageConfig.quickManga,
+        quickMangaControls: stageConfig.quickMangaControls,
+        runtimeLane: stageConfig.meta.runtimeLane,
+        stageProfile: stageConfig.meta.stageProfile,
+        entryIntent: stageConfig.meta.entryIntent,
+        sourceType: stageConfig.meta.sourceType,
       })
       if (runResult.status !== 'completed') {
         throw new Error(runResult.errorMessage || t('execution.storyToScriptFailed'))
@@ -165,7 +183,7 @@ export function useWorkspaceExecution({
       setIsTransitioning(false)
       setTransitionProgress({ message: '', step: '' })
     }
-  }, [analysisModel, artStyle, episodeId, novelText, onOpenAssetLibrary, onRefresh, onStageChange, onUpdateConfig, quickManga, storyToScriptStream, t])
+  }, [analysisModel, artStyle, entryIntent, episodeId, journeyType, novelText, onOpenAssetLibrary, onRefresh, onStageChange, onUpdateConfig, quickManga, sourceType, storyToScriptStream, t])
 
   const runScriptToStoryboardFlow = useCallback(async () => {
     if (!episodeId) {
@@ -177,18 +195,29 @@ export function useWorkspaceExecution({
       setScriptToStoryboardConsoleMinimized(false)
       setIsConfirmingAssets(true)
       setTransitionProgress({ message: t('execution.scriptToStoryboardRunning'), step: 'streaming' })
+      const stageConfig = buildJourneyGenerationStageConfig({
+        context: {
+          journeyType,
+          entryIntent,
+          sourceType,
+        },
+        stage: 'script_to_storyboard',
+        quickManga,
+        quickMangaControls: quickManga.controls,
+      })
+
       const runResult = await scriptToStoryboardStream.run({
         episodeId,
         model: analysisModel || undefined,
-        temperature: 0.7,
-        reasoning: true,
-        quickManga: {
-          enabled: quickManga.enabled,
-          preset: quickManga.preset,
-          layout: quickManga.layout,
-          colorMode: quickManga.colorMode,
-        },
-        quickMangaControls: quickManga.controls,
+        temperature: stageConfig.temperature,
+        reasoning: stageConfig.reasoning,
+        reasoningEffort: stageConfig.reasoningEffort,
+        quickManga: stageConfig.quickManga,
+        quickMangaControls: stageConfig.quickMangaControls,
+        runtimeLane: stageConfig.meta.runtimeLane,
+        stageProfile: stageConfig.meta.stageProfile,
+        entryIntent: stageConfig.meta.entryIntent,
+        sourceType: stageConfig.meta.sourceType,
       })
       if (runResult.status !== 'completed') {
         throw new Error(runResult.errorMessage || t('execution.scriptToStoryboardFailed'))
@@ -206,7 +235,7 @@ export function useWorkspaceExecution({
       setIsConfirmingAssets(false)
       setTransitionProgress({ message: '', step: '' })
     }
-  }, [analysisModel, episodeId, onRefresh, onStageChange, quickManga, scriptToStoryboardStream, t])
+  }, [analysisModel, entryIntent, episodeId, journeyType, onRefresh, onStageChange, quickManga, scriptToStoryboardStream, sourceType, t])
 
   const runQuickMangaRegenerateFlow = useCallback(async (history: QuickMangaHistoryItem) => {
     if (!episodeId) {
