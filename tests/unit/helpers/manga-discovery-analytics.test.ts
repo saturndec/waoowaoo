@@ -1,5 +1,8 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { trackWorkspaceMangaEvent } from '@/lib/workspace/manga-discovery-analytics'
+import {
+  trackWorkspaceJourneyEvent,
+  trackWorkspaceMangaEvent,
+} from '@/lib/workspace/manga-discovery-analytics'
 import { logEvent } from '@/lib/logging/core'
 
 vi.mock('@/lib/logging/core', () => ({
@@ -11,7 +14,30 @@ describe('manga discovery analytics helper', () => {
     vi.clearAllMocks()
   })
 
-  it('emits structured workspace manga discovery event', () => {
+  it('emits neutral journey taxonomy directly for comparative funnel analytics', () => {
+    trackWorkspaceJourneyEvent('workspace_journey_selected', {
+      surface: 'workspace_card',
+      locale: 'vi',
+      journeyType: 'film_video',
+      lane: 'story',
+    })
+
+    expect(logEvent).toHaveBeenCalledWith(expect.objectContaining({
+      level: 'INFO',
+      module: 'workspace',
+      action: 'WORKSPACE_JOURNEY_FUNNEL',
+      message: 'workspace_journey_selected',
+      details: expect.objectContaining({
+        event: 'workspace_journey_selected',
+        surface: 'workspace_card',
+        locale: 'vi',
+        journeyType: 'film_video',
+        lane: 'story',
+      }),
+    }))
+  })
+
+  it('bridges legacy manga click into neutral journey selection taxonomy', () => {
     trackWorkspaceMangaEvent('workspace_manga_cta_click', {
       surface: 'workspace_card',
       locale: 'vi',
@@ -20,28 +46,32 @@ describe('manga discovery analytics helper', () => {
     expect(logEvent).toHaveBeenCalledWith(expect.objectContaining({
       level: 'INFO',
       module: 'workspace',
-      action: 'WORKSPACE_MANGA_DISCOVERY',
-      message: 'workspace_manga_cta_click',
+      action: 'WORKSPACE_JOURNEY_FUNNEL',
+      message: 'workspace_journey_selected',
       details: expect.objectContaining({
-        event: 'workspace_manga_cta_click',
+        event: 'workspace_journey_selected',
         surface: 'workspace_card',
         locale: 'vi',
+        journeyType: 'manga_webtoon',
+        lane: 'manga',
+        legacyEvent: 'workspace_manga_cta_click',
       }),
     }))
   })
 
-  it('emits project created telemetry with selected mode', () => {
+  it('bridges project created telemetry with selected journey context', () => {
     trackWorkspaceMangaEvent('workspace_project_created', {
       surface: 'create_project_modal',
       locale: 'vi',
       projectMode: 'manga',
       projectId: 'project-123',
+      entryIntent: 'manga_quickstart',
     })
 
     expect(logEvent).toHaveBeenCalledWith(expect.objectContaining({
       level: 'INFO',
       module: 'workspace',
-      action: 'WORKSPACE_MANGA_DISCOVERY',
+      action: 'WORKSPACE_JOURNEY_FUNNEL',
       message: 'workspace_project_created',
       details: expect.objectContaining({
         event: 'workspace_project_created',
@@ -49,6 +79,10 @@ describe('manga discovery analytics helper', () => {
         locale: 'vi',
         projectMode: 'manga',
         projectId: 'project-123',
+        journeyType: 'manga_webtoon',
+        lane: 'manga',
+        entryIntent: 'manga_quickstart',
+        legacyEvent: 'workspace_project_created',
       }),
     }))
   })

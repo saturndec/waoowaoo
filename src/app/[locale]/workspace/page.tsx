@@ -13,10 +13,15 @@ import { resolveTaskPresentationState } from '@/lib/task/presentation'
 import { AppIcon, IconGradientDefs } from '@/components/ui/icons'
 import {
   buildProjectEntryUrl,
+  defaultEntryIntentByJourney,
+  mapEntryModeToJourneyType,
   toProjectCreatePayload,
   type WorkspaceProjectEntryMode,
 } from '@/lib/workspace/project-mode'
-import { trackWorkspaceMangaEvent } from '@/lib/workspace/manga-discovery-analytics'
+import {
+  trackWorkspaceJourneyEvent,
+  trackWorkspaceMangaEvent,
+} from '@/lib/workspace/manga-discovery-analytics'
 import {
   buildStarterProjectName,
   getStarterTemplatesByMode,
@@ -108,6 +113,12 @@ export default function WorkspacePage() {
   }, [session, status, router])
 
   useEffect(() => {
+    trackWorkspaceJourneyEvent('workspace_journey_card_view', {
+      surface: 'workspace_card',
+      locale,
+      journeyType: 'film_video',
+      lane: 'story',
+    })
     trackWorkspaceMangaEvent('workspace_manga_cta_view', {
       surface: 'workspace_card',
       locale,
@@ -158,6 +169,14 @@ export default function WorkspacePage() {
   }
 
   const handleOpenCreateModal = (entryMode: WorkspaceProjectEntryMode = 'story') => {
+    const journeyType = mapEntryModeToJourneyType(entryMode)
+    trackWorkspaceJourneyEvent('workspace_journey_selected', {
+      surface: 'workspace_card',
+      locale,
+      journeyType,
+      lane: entryMode,
+    })
+
     if (entryMode === 'manga') {
       trackWorkspaceMangaEvent('workspace_manga_cta_click', {
         surface: 'workspace_card',
@@ -178,11 +197,18 @@ export default function WorkspacePage() {
 
   const handleEntryModeChange = (entryMode: WorkspaceProjectEntryMode) => {
     const templates = getStarterTemplatesByMode(entryMode)
+    const journeyType = mapEntryModeToJourneyType(entryMode)
     setFormData((prev) => ({
       ...prev,
       entryMode,
       starterTemplateId: templates[0]?.id || '',
     }))
+    trackWorkspaceJourneyEvent('workspace_journey_selected', {
+      journeyType,
+      lane: entryMode,
+      locale,
+      surface: 'create_project_modal',
+    })
     trackWorkspaceMangaEvent('workspace_project_mode_selected', {
       projectMode: entryMode,
       locale,
@@ -199,11 +225,25 @@ export default function WorkspacePage() {
     const normalizedName = formData.name.trim() || fallbackProjectName
     if (!normalizedName) return
 
+    const journeyType = mapEntryModeToJourneyType(formData.entryMode)
+    const entryIntent = defaultEntryIntentByJourney(journeyType)
+
     setCreateLoading(true)
     try {
+      trackWorkspaceJourneyEvent('workspace_create_started', {
+        journeyType,
+        entryIntent,
+        projectMode: formData.entryMode,
+        templateId: selectedStarterTemplate?.id || null,
+        locale,
+        surface: 'create_project_modal',
+      })
+
       const createInput = {
         ...formData,
         name: normalizedName,
+        journeyType,
+        entryIntent,
       }
 
       const response = await fetch('/api/projects', {
@@ -226,11 +266,23 @@ export default function WorkspacePage() {
         setShowCreateModal(false)
         setFormData({ name: '', description: '', entryMode: 'story', starterTemplateId: '' })
 
+        trackWorkspaceJourneyEvent('workspace_project_created', {
+          journeyType,
+          entryIntent,
+          projectMode: formData.entryMode,
+          templateId: selectedStarterTemplate?.id || null,
+          locale,
+          surface: 'create_project_modal',
+          projectId: createdProjectId || null,
+        })
         trackWorkspaceMangaEvent('workspace_project_created', {
           projectMode: formData.entryMode,
           locale,
           surface: 'create_project_modal',
           projectId: createdProjectId || null,
+          journeyType,
+          entryIntent,
+          templateId: selectedStarterTemplate?.id || null,
         })
 
         if (createdProjectId) {
@@ -698,13 +750,21 @@ export default function WorkspacePage() {
                           <button
                             key={template.id}
                             type="button"
-                            onClick={() =>
+                            onClick={() => {
+                              const journeyType = mapEntryModeToJourneyType(formData.entryMode)
+                              trackWorkspaceJourneyEvent('workspace_template_selected', {
+                                journeyType,
+                                projectMode: formData.entryMode,
+                                templateId: template.id,
+                                locale,
+                                surface: 'create_project_modal',
+                              })
                               setFormData((prev) => ({
                                 ...prev,
                                 starterTemplateId: template.id,
                                 name: prev.name.trim() ? prev.name : buildStarterProjectName(t(template.titleKey)),
                               }))
-                            }
+                            }}
                             className={`w-full glass-btn-base px-3 py-2.5 text-left ${isActive ? 'glass-btn-primary ring-2 ring-[var(--glass-primary)]/30' : 'glass-btn-secondary'}`}
                           >
                             <div className="text-sm font-semibold text-[var(--glass-text-primary)] truncate">{t(template.titleKey)}</div>

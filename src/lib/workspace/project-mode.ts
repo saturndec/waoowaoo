@@ -35,6 +35,14 @@ export function mapJourneyTypeToProjectMode(journeyType: ProductJourneyType): Wo
   return journeyType === 'manga_webtoon' ? 'manga' : 'story'
 }
 
+export function mapEntryModeToJourneyType(entryMode: WorkspaceProjectEntryMode): ProductJourneyType {
+  return entryMode === 'manga' ? 'manga_webtoon' : 'film_video'
+}
+
+export function defaultEntryIntentByJourney(journeyType: ProductJourneyType): ProductEntryIntent {
+  return journeyType === 'manga_webtoon' ? 'manga_quickstart' : 'film_story_studio'
+}
+
 export function resolveProjectModeCompatibility(input: {
   projectMode?: unknown
   journeyType?: unknown
@@ -49,13 +57,16 @@ export function resolveProjectModeCompatibility(input: {
 }
 
 export function toProjectCreatePayload(input: ProjectCreationInput): ProjectCreatePayload {
+  const journeyType = input.journeyType ?? mapEntryModeToJourneyType(input.entryMode)
+  const entryIntent = input.entryIntent ?? defaultEntryIntentByJourney(journeyType)
+
   return {
     name: input.name.trim(),
     description: input.description.trim(),
     mode: 'novel-promotion',
     projectMode: input.entryMode,
-    journeyType: input.journeyType,
-    entryIntent: input.entryIntent,
+    journeyType,
+    entryIntent,
   }
 }
 

@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest'
 import {
   buildProjectEntryUrl,
+  defaultEntryIntentByJourney,
+  mapEntryModeToJourneyType,
   mapJourneyTypeToProjectMode,
   resolveProjectModeCompatibility,
   toProjectCreatePayload,
@@ -20,6 +22,8 @@ describe('workspace project mode helpers', () => {
       description: 'baseline flow',
       mode: 'novel-promotion',
       projectMode: 'story',
+      journeyType: 'film_video',
+      entryIntent: 'film_story_studio',
     })
   })
 
@@ -49,6 +53,16 @@ describe('workspace project mode helpers', () => {
   it('maps journeyType to compatibility projectMode deterministically', () => {
     expect(mapJourneyTypeToProjectMode('film_video')).toBe('story')
     expect(mapJourneyTypeToProjectMode('manga_webtoon')).toBe('manga')
+  })
+
+  it('maps entry mode to neutral journey type deterministically', () => {
+    expect(mapEntryModeToJourneyType('story')).toBe('film_video')
+    expect(mapEntryModeToJourneyType('manga')).toBe('manga_webtoon')
+  })
+
+  it('derives default entry intent from journey type', () => {
+    expect(defaultEntryIntentByJourney('film_video')).toBe('film_story_studio')
+    expect(defaultEntryIntentByJourney('manga_webtoon')).toBe('manga_quickstart')
   })
 
   it('prefers explicit projectMode over journeyType for backward compatibility', () => {
