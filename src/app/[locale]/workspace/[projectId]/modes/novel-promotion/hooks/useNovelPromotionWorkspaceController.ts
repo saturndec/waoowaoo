@@ -28,6 +28,7 @@ import type {
   QuickMangaContinuityMode,
   QuickMangaStyleLockProfile,
 } from '@/lib/novel-promotion/quick-manga-contract'
+import { shouldEnableQuickMangaFromSearchParams } from '@/lib/workspace/quick-manga-entry'
 
 export function useNovelPromotionWorkspaceController({
   project,
@@ -67,6 +68,15 @@ export function useNovelPromotionWorkspaceController({
     },
   }), [])
   const [quickManga, setQuickManga] = useState(quickMangaDefaults)
+
+  useEffect(() => {
+    if (!shouldEnableQuickMangaFromSearchParams(searchParams)) return
+
+    setQuickManga((prev) => {
+      if (prev.enabled) return prev
+      return { ...prev, enabled: true }
+    })
+  }, [searchParams])
 
   const handleQuickMangaEnabledChange = useCallback(async (enabled: boolean) => {
     setQuickManga((prev) => ({ ...prev, enabled }))

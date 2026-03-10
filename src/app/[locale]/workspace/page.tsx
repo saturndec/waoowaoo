@@ -11,6 +11,11 @@ import ConfirmDialog from '@/components/ConfirmDialog'
 import TaskStatusInline from '@/components/task/TaskStatusInline'
 import { resolveTaskPresentationState } from '@/lib/task/presentation'
 import { AppIcon, IconGradientDefs } from '@/components/ui/icons'
+import {
+  buildProjectEntryUrl,
+  toProjectCreatePayload,
+  type WorkspaceProjectEntryMode,
+} from '@/lib/workspace/project-mode'
 
 interface ProjectStats {
   episodes: number
@@ -54,7 +59,8 @@ export default function WorkspacePage() {
   const [createLoading, setCreateLoading] = useState(false)
   const [formData, setFormData] = useState({
     name: '',
-    description: ''
+    description: '',
+    entryMode: 'story' as WorkspaceProjectEntryMode,
   })
   const [editingProject, setEditingProject] = useState<Project | null>(null)
   const [showEditModal, setShowEditModal] = useState(false)
@@ -138,20 +144,24 @@ export default function WorkspacePage() {
         headers: {
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify({
-          ...formData,
-          mode: 'novel-promotion' // 固定为 novel-promotion
-        })
+        body: JSON.stringify(toProjectCreatePayload(formData))
       })
 
       if (response.ok) {
+        const data = await response.json()
+        const createdProjectId = typeof data?.project?.id === 'string' ? data.project.id : ''
+
         // 创建成功后刷新第一页
         setSearchQuery('')
         setSearchInput('')
         setPagination(prev => ({ ...prev, page: 1 }))
         fetchProjects(1, '')
         setShowCreateModal(false)
-        setFormData({ name: '', description: '' })
+        setFormData({ name: '', description: '', entryMode: 'story' })
+
+        if (createdProjectId) {
+          router.push(buildProjectEntryUrl(createdProjectId, formData.entryMode))
+        }
       } else {
         alert(t('createFailed'))
       }
@@ -318,6 +328,30 @@ export default function WorkspacePage() {
                 <AppIcon name="plus" className="w-6 h-6 text-white" />
               </div>
               <span className="text-sm font-medium text-[var(--glass-text-secondary)] group-hover:text-[var(--glass-text-primary)] transition-colors">{t('newProject')}</span>
+            </div>
+          </div>
+
+          {/* Manga CTA Card */}
+          <div
+            onClick={() => setShowCreateModal(true)}
+            className="glass-surface p-6 cursor-pointer group relative overflow-hidden bg-gradient-to-br from-fuchsia-500/10 via-pink-500/10 to-orange-400/10 hover:from-fuchsia-500/15 hover:via-pink-500/15 hover:to-orange-400/15 transition-all duration-300"
+          >
+            <div className="absolute inset-0 pointer-events-none bg-[radial-gradient(circle_at_top_right,rgba(255,255,255,0.14),transparent_45%)]" />
+            <div className="relative z-10 flex h-full flex-col justify-between gap-4">
+              <div className="flex items-start justify-between gap-3">
+                <div>
+                  <div className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--glass-tone-info-fg)]">Manga</div>
+                  <h3 className="mt-2 text-lg font-bold text-[var(--glass-text-primary)]">{t('projectTypeMangaTitle')}</h3>
+                  <p className="mt-2 text-sm text-[var(--glass-text-secondary)] leading-relaxed">{t('projectTypeMangaDesc')}</p>
+                </div>
+                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-fuchsia-500 to-orange-400 flex items-center justify-center shadow-lg shadow-fuchsia-500/20 group-hover:scale-110 transition-transform duration-300">
+                  <AppIcon name="sparkles" className="w-6 h-6 text-white" />
+                </div>
+              </div>
+              <div className="inline-flex items-center gap-2 text-sm font-medium text-[var(--glass-tone-info-fg)]">
+                <span>{t('createProject')}</span>
+                <AppIcon name="arrowRight" className="w-4 h-4" />
+              </div>
             </div>
           </div>
 
@@ -537,7 +571,7 @@ export default function WorkspacePage() {
                   autoFocus
                 />
               </div>
-              <div className="mb-6">
+              <div className="mb-4">
                 <label htmlFor="description" className="glass-field-label block mb-2">
                   {t('projectDescription')}
                 </label>
@@ -551,12 +585,33 @@ export default function WorkspacePage() {
                   maxLength={500}
                 />
               </div>
+              <div className="mb-6">
+                <span className="glass-field-label block mb-2">{t('projectTypeLabel')}</span>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setFormData((prev) => ({ ...prev, entryMode: 'story' }))}
+                    className={`glass-btn-base px-3 py-3 text-left ${formData.entryMode === 'story' ? 'glass-btn-primary' : 'glass-btn-secondary'}`}
+                  >
+                    <div className="text-sm font-semibold">{t('projectTypeStoryTitle')}</div>
+                    <div className="text-xs opacity-80 mt-1">{t('projectTypeStoryDesc')}</div>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setFormData((prev) => ({ ...prev, entryMode: 'manga' }))}
+                    className={`glass-btn-base px-3 py-3 text-left ${formData.entryMode === 'manga' ? 'glass-btn-primary' : 'glass-btn-secondary'}`}
+                  >
+                    <div className="text-sm font-semibold">{t('projectTypeMangaTitle')}</div>
+                    <div className="text-xs opacity-80 mt-1">{t('projectTypeMangaDesc')}</div>
+                  </button>
+                </div>
+              </div>
               <div className="flex justify-end space-x-3">
                 <button
                   type="button"
                   onClick={() => {
                     setShowCreateModal(false)
-                    setFormData({ name: '', description: '' })
+                    setFormData({ name: '', description: '', entryMode: 'story' })
                   }}
                   className="glass-btn-base glass-btn-secondary px-4 py-2"
                   disabled={createLoading}
