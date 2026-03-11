@@ -2,6 +2,10 @@ import {
   evaluateLayoutIntelligence,
   type LayoutIntelligenceDecision,
 } from '@/lib/novel-promotion/layout-intelligence'
+import {
+  getMangaPanelTemplateSpecById,
+  type MangaPanelTemplateSpec,
+} from '@/lib/workspace/manga-webtoon-layout-map'
 
 export type QuickMangaPreset = 'auto' | 'action-battle' | 'romance-drama' | 'slice-of-life' | 'comedy-4koma'
 
@@ -14,6 +18,7 @@ export interface QuickMangaOptions {
   preset: QuickMangaPreset
   layout: QuickMangaLayout
   colorMode: QuickMangaColorMode
+  panelTemplateId?: string | null
 }
 
 const PRESET_DIRECTIVE_LABEL: Record<QuickMangaPreset, string> = {
@@ -57,6 +62,29 @@ function buildLayoutIntelligenceBlock(decision: LayoutIntelligenceDecision) {
   ].join('\n')
 }
 
+function buildPanelTemplateDirectiveBlock(spec: MangaPanelTemplateSpec | null): string[] {
+  if (!spec) return []
+
+  return [
+    '[PANEL_TEMPLATE_V1]',
+    `Template Id: ${spec.id}`,
+    `Panel Layout Id: ${spec.metadata.panelLayoutId}`,
+    `Layout Family: ${spec.metadata.layoutFamily}`,
+    `Panel Slot Count: ${spec.metadata.panelSlotCount}`,
+    `Narrative Intent: ${spec.metadata.narrativeIntent}`,
+    `Reading Flow: ${spec.metadata.readingFlow}`,
+    `Suggested Color Mode: ${spec.metadata.suggestedColorMode}`,
+    `Suggested Style Preset: ${spec.metadata.suggestedStylePreset}`,
+    `Prompt Hint: ${spec.metadata.promptHint}`,
+    `Negative Prompt Hint: ${spec.metadata.negativePromptHint}`,
+    `Transition Style: ${spec.metadata.transitionStyle}`,
+    `Dialogue Density: ${spec.metadata.dialogueDensity}`,
+    `Use Case: ${spec.metadata.useCase}`,
+    `Template Image Path: ${spec.metadata.imagePath}`,
+    `Traceability: ${spec.traceability.layoutMapPath} :: ${spec.traceability.sourceTemplateFile}`,
+  ]
+}
+
 function buildQuickMangaDirective(params: {
   content: string
   options: QuickMangaOptions
@@ -65,10 +93,15 @@ function buildQuickMangaDirective(params: {
 }) {
   const styleLabel = params.artStyle?.trim() ? params.artStyle.trim() : 'auto'
 
+  const panelTemplateSpec = getMangaPanelTemplateSpecById(params.options.panelTemplateId)
+  const effectivePreset = panelTemplateSpec?.values.preset || params.options.preset
+  const effectiveLayout = panelTemplateSpec?.values.layout || params.options.layout
+  const effectiveColorMode = panelTemplateSpec?.values.colorMode || params.options.colorMode
+
   const layoutDecision = evaluateLayoutIntelligence({
     content: params.content,
-    preset: params.options.preset,
-    manualLayout: params.options.layout,
+    preset: effectivePreset,
+    manualLayout: effectiveLayout,
   })
 
   const phaseGuideline = params.phase === 'storyboard-refine'
@@ -77,13 +110,17 @@ function buildQuickMangaDirective(params: {
 
   return [
     '[QUICK_MANGA_ENTRY]',
-    `Preset: ${PRESET_DIRECTIVE_LABEL[params.options.preset]}`,
+    `Preset Input: ${PRESET_DIRECTIVE_LABEL[params.options.preset]}`,
+    `Preset Effective: ${PRESET_DIRECTIVE_LABEL[effectivePreset]}`,
     `Panel Layout Input: ${resolveLayoutLabel(params.options.layout)}`,
+    `Panel Layout Effective: ${resolveLayoutLabel(effectiveLayout)}`,
     `Panel Layout Resolved: ${resolveLayoutLabel(layoutDecision.chosenLayout)}`,
-    `Color Mode: ${COLOR_MODE_DIRECTIVE_LABEL[params.options.colorMode]}`,
+    `Color Mode Input: ${COLOR_MODE_DIRECTIVE_LABEL[params.options.colorMode]}`,
+    `Color Mode Effective: ${COLOR_MODE_DIRECTIVE_LABEL[effectiveColorMode]}`,
     `Visual Style: ${styleLabel}`,
     phaseGuideline,
     'Guideline: preserve dialogue intent and character continuity across panels.',
+    ...buildPanelTemplateDirectiveBlock(panelTemplateSpec),
     buildLayoutIntelligenceBlock(layoutDecision),
   ].join('\n')
 }

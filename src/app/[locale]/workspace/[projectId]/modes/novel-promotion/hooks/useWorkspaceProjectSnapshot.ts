@@ -82,6 +82,7 @@ export function useWorkspaceProjectSnapshot({
       quickMangaPreset: 'auto' as QuickMangaPreset,
       quickMangaLayout: 'auto' as QuickMangaLayout,
       quickMangaColorMode: 'auto' as QuickMangaColorMode,
+      quickMangaPanelTemplateId: null as string | null,
       quickMangaStyleLockEnabled: false,
       quickMangaStyleLockProfile: 'auto' as QuickMangaStyleLockProfile,
       quickMangaStyleLockStrength: 0.65,

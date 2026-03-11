@@ -61,6 +61,7 @@ function resolveQuickMangaForLane(params: {
       preset: params.quickManga.preset,
       layout: params.quickManga.layout,
       colorMode: params.quickManga.colorMode,
+      panelTemplateId: null,
     }
   }
 
@@ -69,6 +70,7 @@ function resolveQuickMangaForLane(params: {
     preset: params.quickManga.preset,
     layout: params.quickManga.layout,
     colorMode: params.quickManga.colorMode,
+    panelTemplateId: params.quickManga.panelTemplateId || null,
   }
 }
 

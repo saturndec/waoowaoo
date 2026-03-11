@@ -64,7 +64,9 @@ export function useNovelPromotionWorkspaceController({
     preset: 'auto' as QuickMangaPreset,
     layout: 'auto' as QuickMangaLayout,
     colorMode: 'auto' as QuickMangaColorMode,
+    panelTemplateId: null as string | null,
     controls: {
+      panelTemplateId: null as string | null,
       styleLock: {
         enabled: false,
         profile: 'auto' as QuickMangaStyleLockProfile,
@@ -150,6 +152,20 @@ export function useNovelPromotionWorkspaceController({
 
   const handleQuickMangaColorModeChange = useCallback(async (value: QuickMangaColorMode) => {
     setQuickManga((prev) => ({ ...prev, colorMode: value }))
+  }, [])
+
+  const handleQuickMangaPanelTemplateChange = useCallback(async (templateId: string | null) => {
+    setQuickManga((prev) => {
+      const resolved = typeof templateId === 'string' && templateId.trim() ? templateId.trim() : null
+      return {
+        ...prev,
+        panelTemplateId: resolved,
+        controls: {
+          ...prev.controls,
+          panelTemplateId: resolved,
+        },
+      }
+    })
   }, [])
 
   const handleQuickMangaStyleLockEnabledChange = useCallback(async (enabled: boolean) => {
@@ -412,6 +428,7 @@ export function useNovelPromotionWorkspaceController({
     quickMangaPreset: quickManga.preset,
     quickMangaLayout: quickManga.layout,
     quickMangaColorMode: quickManga.colorMode,
+    quickMangaPanelTemplateId: quickManga.panelTemplateId,
     quickMangaStyleLockEnabled: quickManga.controls.styleLock.enabled,
     quickMangaStyleLockProfile: quickManga.controls.styleLock.profile,
     quickMangaStyleLockStrength: quickManga.controls.styleLock.strength,
@@ -431,6 +448,7 @@ export function useNovelPromotionWorkspaceController({
     onQuickMangaPresetChange: handleQuickMangaPresetChange,
     onQuickMangaLayoutChange: handleQuickMangaLayoutChange,
     onQuickMangaColorModeChange: handleQuickMangaColorModeChange,
+    onQuickMangaPanelTemplateChange: handleQuickMangaPanelTemplateChange,
     onQuickMangaStyleLockEnabledChange: handleQuickMangaStyleLockEnabledChange,
     onQuickMangaStyleLockProfileChange: handleQuickMangaStyleLockProfileChange,
     onQuickMangaStyleLockStrengthChange: handleQuickMangaStyleLockStrengthChange,

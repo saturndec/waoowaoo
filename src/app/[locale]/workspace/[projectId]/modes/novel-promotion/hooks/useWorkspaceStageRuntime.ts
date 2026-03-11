@@ -27,6 +27,7 @@ interface UseWorkspaceStageRuntimeParams {
   quickMangaPreset: QuickMangaPreset
   quickMangaLayout: QuickMangaLayout
   quickMangaColorMode: QuickMangaColorMode
+  quickMangaPanelTemplateId: string | null
   quickMangaStyleLockEnabled: boolean
   quickMangaStyleLockProfile: QuickMangaStyleLockProfile
   quickMangaStyleLockStrength: number
@@ -53,6 +54,7 @@ interface UseWorkspaceStageRuntimeParams {
   onQuickMangaPresetChange: (value: QuickMangaPreset) => Promise<void>
   onQuickMangaLayoutChange: (value: QuickMangaLayout) => Promise<void>
   onQuickMangaColorModeChange: (value: QuickMangaColorMode) => Promise<void>
+  onQuickMangaPanelTemplateChange: (templateId: string | null) => Promise<void>
   onQuickMangaStyleLockEnabledChange: (enabled: boolean) => Promise<void>
   onQuickMangaStyleLockProfileChange: (value: QuickMangaStyleLockProfile) => Promise<void>
   onQuickMangaStyleLockStrengthChange: (value: number) => Promise<void>
@@ -103,6 +105,7 @@ export function useWorkspaceStageRuntime({
   quickMangaPreset,
   quickMangaLayout,
   quickMangaColorMode,
+  quickMangaPanelTemplateId,
   quickMangaStyleLockEnabled,
   quickMangaStyleLockProfile,
   quickMangaStyleLockStrength,
@@ -122,6 +125,7 @@ export function useWorkspaceStageRuntime({
   onQuickMangaPresetChange,
   onQuickMangaLayoutChange,
   onQuickMangaColorModeChange,
+  onQuickMangaPanelTemplateChange,
   onQuickMangaStyleLockEnabledChange,
   onQuickMangaStyleLockProfileChange,
   onQuickMangaStyleLockStrengthChange,
@@ -165,6 +169,7 @@ export function useWorkspaceStageRuntime({
     quickMangaPreset,
     quickMangaLayout,
     quickMangaColorMode,
+    quickMangaPanelTemplateId,
     quickMangaStyleLockEnabled,
     quickMangaStyleLockProfile,
     quickMangaStyleLockStrength,
@@ -175,6 +180,7 @@ export function useWorkspaceStageRuntime({
     onQuickMangaPresetChange,
     onQuickMangaLayoutChange,
     onQuickMangaColorModeChange,
+    onQuickMangaPanelTemplateChange,
     onQuickMangaStyleLockEnabledChange,
     onQuickMangaStyleLockProfileChange,
     onQuickMangaStyleLockStrengthChange,
@@ -229,6 +235,7 @@ export function useWorkspaceStageRuntime({
     onGenerateDemoSampleAssets,
     demoSampleAssetsPending,
     onQuickMangaLayoutChange,
+    onQuickMangaPanelTemplateChange,
     onQuickMangaPresetChange,
     onQuickMangaStyleLockEnabledChange,
     onQuickMangaStyleLockProfileChange,
@@ -242,6 +249,7 @@ export function useWorkspaceStageRuntime({
     quickMangaConflictPolicy,
     quickMangaEnabled,
     quickMangaLayout,
+    quickMangaPanelTemplateId,
     selectedCharacterStrategy,
     selectedEnvironmentId,
     quickMangaPreset,

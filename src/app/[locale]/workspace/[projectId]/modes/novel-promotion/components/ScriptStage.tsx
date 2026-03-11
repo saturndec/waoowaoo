@@ -19,6 +19,7 @@ export default function ScriptStage() {
           preset={runtime.quickMangaPreset}
           layout={runtime.quickMangaLayout}
           colorMode={runtime.quickMangaColorMode}
+          panelTemplateId={runtime.quickMangaPanelTemplateId}
           styleLockEnabled={runtime.quickMangaStyleLockEnabled}
           styleLockProfile={runtime.quickMangaStyleLockProfile}
           styleLockStrength={runtime.quickMangaStyleLockStrength}
@@ -27,6 +28,7 @@ export default function ScriptStage() {
           onPresetChange={runtime.onQuickMangaPresetChange}
           onLayoutChange={runtime.onQuickMangaLayoutChange}
           onColorModeChange={runtime.onQuickMangaColorModeChange}
+          onPanelTemplateChange={runtime.onQuickMangaPanelTemplateChange}
           onStyleLockEnabledChange={runtime.onQuickMangaStyleLockEnabledChange}
           onStyleLockProfileChange={runtime.onQuickMangaStyleLockProfileChange}
           onStyleLockStrengthChange={runtime.onQuickMangaStyleLockStrengthChange}

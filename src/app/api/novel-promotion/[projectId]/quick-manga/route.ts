@@ -28,6 +28,7 @@ function buildDedupeKey(params: {
     preset: string
     layout: string
     colorMode: string
+    panelTemplateId: string | null
     style: string | null
   }
 }) {
@@ -38,6 +39,7 @@ function buildDedupeKey(params: {
     params.options.preset,
     params.options.layout,
     params.options.colorMode,
+    params.options.panelTemplateId || 'none',
     params.options.style || 'auto',
   ].join(':')
 }
@@ -71,6 +73,7 @@ export const POST = apiHandler(async (
     preset: parsed.options.preset,
     layout: parsed.options.layout,
     colorMode: parsed.options.colorMode,
+    panelTemplateId: parsed.options.panelTemplateId,
     style: parsed.options.style,
   }
 
@@ -116,6 +119,7 @@ export const POST = apiHandler(async (
         preset: continuity.reusedOptions.preset,
         layout: continuity.reusedOptions.layout,
         colorMode: continuity.reusedOptions.colorMode,
+        panelTemplateId: continuity.reusedControls?.panelTemplateId || quickMangaPayload.panelTemplateId,
         style: continuity.reusedOptions.style || quickMangaPayload.style,
       },
       reusedControls: continuity.reusedControls || quickMangaControls,
@@ -156,6 +160,7 @@ export const POST = apiHandler(async (
         preset: parsed.options.preset,
         layout: parsed.options.layout,
         colorMode: parsed.options.colorMode,
+        panelTemplateId: parsed.options.panelTemplateId,
         style: parsed.options.style,
       },
     }),

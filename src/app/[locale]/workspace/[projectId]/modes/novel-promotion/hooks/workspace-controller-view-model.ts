@@ -36,6 +36,7 @@ interface ProjectSnapshotInput {
   quickMangaPreset: 'auto' | 'action-battle' | 'romance-drama' | 'slice-of-life' | 'comedy-4koma'
   quickMangaLayout: 'auto' | 'cinematic' | 'four-koma' | 'vertical-scroll' | 'splash-focus'
   quickMangaColorMode: 'auto' | 'full-color' | 'black-white' | 'limited-palette'
+  quickMangaPanelTemplateId: string | null
   quickMangaStyleLockEnabled: boolean
   quickMangaStyleLockProfile: 'auto' | 'line-consistent' | 'ink-contrast' | 'soft-tones'
   quickMangaStyleLockStrength: number

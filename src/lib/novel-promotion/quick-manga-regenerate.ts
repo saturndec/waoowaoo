@@ -79,18 +79,22 @@ export function resolveQuickMangaRegenerateStoryContent(params: {
   }
 }
 
-export function buildQuickMangaPayloadFromHistory(source: Pick<QuickMangaHistoryItem, 'options'>): QuickMangaRegeneratePayload {
+export function buildQuickMangaPayloadFromHistory(source: Pick<QuickMangaHistoryItem, 'options' | 'controls'>): QuickMangaRegeneratePayload {
   return {
     enabled: source.options.enabled === true,
     preset: toQuickMangaPreset(source.options.preset),
     layout: toQuickMangaLayout(source.options.layout),
     colorMode: toQuickMangaColorMode(source.options.colorMode),
+    panelTemplateId: source.controls.panelTemplateId || null,
     style: toTrimmedString(source.options.style) || null,
   }
 }
 
 export function buildQuickMangaGenerationControlsFromHistory(source: Pick<QuickMangaHistoryItem, 'controls'>): QuickMangaGenerationControls {
   return {
+    panelTemplateId: typeof source.controls.panelTemplateId === 'string' && source.controls.panelTemplateId.trim()
+      ? source.controls.panelTemplateId.trim()
+      : null,
     styleLock: {
       enabled: source.controls.styleLock.enabled === true,
       profile: source.controls.styleLock.profile,

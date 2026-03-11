@@ -58,6 +58,7 @@ export default function ConfigStage() {
             preset={runtime.quickMangaPreset}
             layout={runtime.quickMangaLayout}
             colorMode={runtime.quickMangaColorMode}
+            panelTemplateId={runtime.quickMangaPanelTemplateId}
             styleLockEnabled={runtime.quickMangaStyleLockEnabled}
             styleLockProfile={runtime.quickMangaStyleLockProfile}
             styleLockStrength={runtime.quickMangaStyleLockStrength}
@@ -66,6 +67,7 @@ export default function ConfigStage() {
             onPresetChange={runtime.onQuickMangaPresetChange}
             onLayoutChange={runtime.onQuickMangaLayoutChange}
             onColorModeChange={runtime.onQuickMangaColorModeChange}
+            onPanelTemplateChange={runtime.onQuickMangaPanelTemplateChange}
             onStyleLockEnabledChange={runtime.onQuickMangaStyleLockEnabledChange}
             onStyleLockProfileChange={runtime.onQuickMangaStyleLockProfileChange}
             onStyleLockStrengthChange={runtime.onQuickMangaStyleLockStrengthChange}

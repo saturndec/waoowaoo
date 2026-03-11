@@ -15,6 +15,7 @@ export type QuickMangaHistoryOptions = {
   preset: string
   layout: string
   colorMode: string
+  panelTemplateId: string | null
   style: string | null
 }
 
@@ -71,6 +72,7 @@ const QUICK_MANGA_DEFAULT_OPTIONS: QuickMangaHistoryOptions = {
   preset: 'auto',
   layout: 'auto',
   colorMode: 'auto',
+  panelTemplateId: null,
   style: null,
 }
 
@@ -92,6 +94,7 @@ function toQuickMangaOptions(value: unknown): QuickMangaHistoryOptions {
     preset: toStringOrNull(payload.preset) || 'auto',
     layout: toStringOrNull(payload.layout) || 'auto',
     colorMode: toStringOrNull(payload.colorMode) || 'auto',
+    panelTemplateId: toStringOrNull(payload.panelTemplateId),
     style: toStringOrNull(payload.style),
   }
 }

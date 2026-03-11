@@ -41,7 +41,9 @@ export interface WorkspaceStageRuntimeValue {
   quickMangaPreset: QuickMangaPreset
   quickMangaLayout: QuickMangaLayout
   quickMangaColorMode: QuickMangaColorMode
+  quickMangaPanelTemplateId: string | null
   quickMangaStyleLockEnabled: boolean
+  onQuickMangaPanelTemplateChange: (templateId: string | null) => Promise<void>
   quickMangaStyleLockProfile: QuickMangaStyleLockProfile
   quickMangaStyleLockStrength: number
   quickMangaChapterContinuityMode: QuickMangaContinuityMode

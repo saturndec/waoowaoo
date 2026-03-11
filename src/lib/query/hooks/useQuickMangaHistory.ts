@@ -18,9 +18,11 @@ export type QuickMangaHistoryItem = {
     preset: string
     layout: string
     colorMode: string
+    panelTemplateId: string | null
     style: string | null
   }
   controls: {
+    panelTemplateId: string | null
     styleLock: {
       enabled: boolean
       profile: 'auto' | 'line-consistent' | 'ink-contrast' | 'soft-tones'
