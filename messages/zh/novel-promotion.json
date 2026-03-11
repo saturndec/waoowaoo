@@ -5,7 +5,11 @@
     "storyboard": "分镜",
     "video": "成片",
     "editor": "AI剪辑",
-    "editorComingSoon": "开发中，关注我们获取最新消息"
+    "editorComingSoon": "开发中，关注我们获取最新消息",
+    "mangaKickoff": "漫画启动",
+    "panelScript": "分镜脚本",
+    "panelBoard": "分镜面板",
+    "webtoonPanels": "Webtoon 面板"
   },
   "buttons": {
     "assetLibrary": "资产库",

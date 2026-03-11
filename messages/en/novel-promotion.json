@@ -5,7 +5,11 @@
     "storyboard": "Storyboard",
     "video": "Video",
     "editor": "AI Editor",
-    "editorComingSoon": "Coming soon, follow us for updates"
+    "editorComingSoon": "Coming soon, follow us for updates",
+    "mangaKickoff": "Manga kickoff",
+    "panelScript": "Panel script",
+    "panelBoard": "Panel board",
+    "webtoonPanels": "Webtoon panel"
   },
   "buttons": {
     "assetLibrary": "Asset Library",

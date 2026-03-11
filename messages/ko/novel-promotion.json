@@ -5,7 +5,11 @@
     "storyboard": "스토리보드",
     "video": "동영상",
     "editor": "AI 에디터",
-    "editorComingSoon": "곧 출시됩니다. 업데이트를 받으려면 우리를 팔로우하세요."
+    "editorComingSoon": "곧 출시됩니다. 업데이트를 받으려면 우리를 팔로우하세요.",
+    "mangaKickoff": "만화 킥오프",
+    "panelScript": "패널 스크립트",
+    "panelBoard": "패널 보드",
+    "webtoonPanels": "웹툰 패널"
   },
   "buttons": {
     "assetLibrary": "자산 라이브러리",

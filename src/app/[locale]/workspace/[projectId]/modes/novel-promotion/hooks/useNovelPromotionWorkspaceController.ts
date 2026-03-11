@@ -397,6 +397,7 @@ export function useNovelPromotionWorkspaceController({
     episode,
     projectCharacterCount: projectSnapshot.projectCharacters.length,
     episodeStoryboards,
+    journeyType: projectSnapshot.journeyType,
     t,
   })
 

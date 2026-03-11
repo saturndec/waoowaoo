@@ -25,6 +25,7 @@ interface UseWorkspaceStageNavigationParams {
   episode?: EpisodeLike | null
   projectCharacterCount: number
   episodeStoryboards: StoryboardLike[]
+  journeyType: 'film_video' | 'manga_webtoon'
   t: (key: string) => string
 }
 
@@ -33,6 +34,7 @@ export function useWorkspaceStageNavigation({
   episode,
   projectCharacterCount,
   episodeStoryboards,
+  journeyType,
   t,
 }: UseWorkspaceStageNavigationParams): CapsuleNavItem[] {
   const getStageStatus = (stageId: string): 'empty' | 'active' | 'processing' | 'ready' => {
@@ -53,6 +55,23 @@ export function useWorkspaceStageNavigation({
       default:
         return 'empty'
     }
+  }
+
+  if (journeyType === 'manga_webtoon') {
+    return [
+      { id: 'config', icon: 'M', label: t('stages.mangaKickoff'), status: getStageStatus('config') },
+      { id: 'script', icon: 'P', label: t('stages.panelScript'), status: getStageStatus('assets') },
+      { id: 'storyboard', icon: 'B', label: t('stages.panelBoard'), status: getStageStatus('storyboard') },
+      { id: 'videos', icon: 'W', label: t('stages.webtoonPanels'), status: getStageStatus('videos') },
+      {
+        id: 'editor',
+        icon: 'E',
+        label: t('stages.editor'),
+        status: 'empty',
+        disabled: true,
+        disabledLabel: t('stages.editorComingSoon'),
+      },
+    ]
   }
 
   return [

@@ -5,7 +5,11 @@
     "storyboard": "Bảng phân cảnh",
     "video": "Băng hình",
     "editor": "Trình chỉnh sửa AI",
-    "editorComingSoon": "Sắp có, hãy theo dõi chúng tôi để cập nhật"
+    "editorComingSoon": "Sắp có, hãy theo dõi chúng tôi để cập nhật",
+    "mangaKickoff": "Manga kickoff",
+    "panelScript": "Panel script",
+    "panelBoard": "Panel board",
+    "webtoonPanels": "Webtoon panel"
   },
   "buttons": {
     "assetLibrary": "Thư viện nội dung",

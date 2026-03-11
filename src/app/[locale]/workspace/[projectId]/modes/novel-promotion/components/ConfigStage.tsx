@@ -2,6 +2,7 @@
 
 import NovelInputStage from './NovelInputStage'
 import QuickMangaHistoryPanel from './QuickMangaHistoryPanel'
+import MangaPanelControls from './MangaPanelControls'
 import { useWorkspaceStageRuntime } from '../WorkspaceStageRuntimeContext'
 import { useWorkspaceEpisodeStageData } from '../hooks/useWorkspaceEpisodeStageData'
 
@@ -51,7 +52,27 @@ export default function ConfigStage() {
         onNext={runtime.onRunStoryToScript}
       />
       {runtime.journeyType === 'manga_webtoon' && (
-        <QuickMangaHistoryPanel enabled={runtime.quickMangaEnabled} />
+        <>
+          <MangaPanelControls
+            enabled={runtime.quickMangaEnabled}
+            preset={runtime.quickMangaPreset}
+            layout={runtime.quickMangaLayout}
+            colorMode={runtime.quickMangaColorMode}
+            styleLockEnabled={runtime.quickMangaStyleLockEnabled}
+            styleLockProfile={runtime.quickMangaStyleLockProfile}
+            styleLockStrength={runtime.quickMangaStyleLockStrength}
+            conflictPolicy={runtime.quickMangaConflictPolicy}
+            onEnabledChange={runtime.onQuickMangaEnabledChange}
+            onPresetChange={runtime.onQuickMangaPresetChange}
+            onLayoutChange={runtime.onQuickMangaLayoutChange}
+            onColorModeChange={runtime.onQuickMangaColorModeChange}
+            onStyleLockEnabledChange={runtime.onQuickMangaStyleLockEnabledChange}
+            onStyleLockProfileChange={runtime.onQuickMangaStyleLockProfileChange}
+            onStyleLockStrengthChange={runtime.onQuickMangaStyleLockStrengthChange}
+            onConflictPolicyChange={runtime.onQuickMangaConflictPolicyChange}
+          />
+          <QuickMangaHistoryPanel enabled={runtime.quickMangaEnabled} />
+        </>
       )}
     </div>
   )
