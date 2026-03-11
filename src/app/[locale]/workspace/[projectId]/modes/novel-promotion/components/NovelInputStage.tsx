@@ -6,7 +6,7 @@
  */
 
 import { useTranslations } from 'next-intl'
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect, useMemo } from 'react'
 import '@/styles/animations.css'
 import { ART_STYLES, VIDEO_RATIOS } from '@/lib/constants'
 import type {
@@ -22,6 +22,7 @@ import type {
 import TaskStatusInline from '@/components/task/TaskStatusInline'
 import { resolveTaskPresentationState } from '@/lib/task/presentation'
 import { AppIcon, RatioPreviewIcon } from '@/components/ui/icons'
+import { useUserModels } from '@/lib/query/hooks'
 
 /**
  * RatioIcon - 比例预览图标组件
@@ -283,6 +284,86 @@ export default function NovelInputStage({
     })
     : null
 
+  const userModelsQuery = useUserModels()
+  const providerFirstModels = useMemo(() => {
+    const imageModels = (userModelsQuery.data?.image ?? []) as Array<{ value?: string; label?: string; provider?: string; providerName?: string }>
+    const normalized = imageModels
+      .map((model) => ({
+        value: (model.value || '').trim(),
+        label: (model.label || model.value || '').trim(),
+        provider: (model.provider || model.providerName || '').trim(),
+      }))
+      .filter((model) => model.value)
+
+    const openaiCompat = normalized.filter((model) => model.provider.toLowerCase().includes('openai-compatible'))
+    const geminiCompat = normalized.filter((model) => model.provider.toLowerCase().includes('gemini'))
+
+    return {
+      openaiCompat,
+      geminiCompat,
+      total: normalized.length,
+    }
+  }, [userModelsQuery.data?.image])
+
+  const styleGalleryCards = useMemo(() => {
+    const providerHint = providerFirstModels.openaiCompat.length > 0
+      ? 'openai-compatible'
+      : providerFirstModels.geminiCompat.length > 0
+        ? 'gemini-compatible'
+        : 'default'
+
+    return ART_STYLES.map((style) => ({
+      ...style,
+      providerHint,
+    }))
+  }, [providerFirstModels.geminiCompat.length, providerFirstModels.openaiCompat.length])
+
+  const characterStrategies = [
+    {
+      id: 'consistency-first',
+      title: 'Consistency First',
+      description: 'Giữ nhận diện nhân vật ổn định giữa các panel/shot.',
+      badge: 'Demo ready',
+    },
+    {
+      id: 'emotion-first',
+      title: 'Emotion First',
+      description: 'Ưu tiên biểu cảm mạnh để tạo hook thị giác cho demo.',
+      badge: 'Visual impact',
+    },
+    {
+      id: 'dynamic-action',
+      title: 'Dynamic Action',
+      description: 'Tăng chuyển động pose/camera cho trailer ngắn.',
+      badge: 'Trailer mode',
+    },
+  ] as const
+
+  const [selectedCharacterStrategy, setSelectedCharacterStrategy] = useState<(typeof characterStrategies)[number]['id']>('consistency-first')
+
+  const environmentGallery = [
+    {
+      id: 'city-night-neon',
+      title: 'Neon City',
+      tone: 'Cyber, high contrast',
+      colors: 'from-cyan-500/20 via-blue-500/10 to-purple-500/20',
+    },
+    {
+      id: 'forest-mist-dawn',
+      title: 'Forest Dawn',
+      tone: 'Soft mist, calm light',
+      colors: 'from-emerald-500/20 via-lime-500/10 to-cyan-500/20',
+    },
+    {
+      id: 'interior-cinematic',
+      title: 'Cinematic Interior',
+      tone: 'Warm keylight + deep shadow',
+      colors: 'from-amber-500/20 via-orange-500/10 to-rose-500/20',
+    },
+  ] as const
+
+  const [selectedEnvironmentId, setSelectedEnvironmentId] = useState<(typeof environmentGallery)[number]['id']>('city-night-neon')
+
   return (
     <div className="max-w-5xl mx-auto space-y-5">
 
@@ -531,6 +612,94 @@ export default function NovelInputStage({
         <p className="text-xs text-[var(--glass-text-tertiary)] mt-4 text-center">
           {t("storyInput.moreConfig")}
         </p>
+      </div>
+
+      {/* VAT-121 batch 1: visual-first preset gallery */}
+      <div className="glass-surface p-6 space-y-4">
+        <div className="flex flex-col gap-1">
+          <h3 className="text-sm font-semibold text-[var(--glass-text-muted)] tracking-[0.01em]">Style Gallery (Demo)</h3>
+          <p className="text-xs text-[var(--glass-text-tertiary)]">
+            Ưu tiên model route: {providerFirstModels.openaiCompat.length > 0 ? 'OpenAI-compatible' : providerFirstModels.geminiCompat.length > 0 ? 'Gemini-compatible' : 'Default'}
+            {' · '}image models available: {providerFirstModels.total}
+          </p>
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+          {styleGalleryCards.map((style) => {
+            const selected = style.value === artStyle
+            return (
+              <button
+                key={style.value}
+                type="button"
+                onClick={() => onArtStyleChange?.(style.value)}
+                className={`rounded-xl border p-3 text-left transition-all ${selected
+                  ? 'border-[var(--glass-accent-from)] bg-[var(--glass-tone-info-bg)]/30'
+                  : 'border-[var(--glass-stroke-soft)] hover:bg-[var(--glass-bg-muted)]/30'
+                  }`}
+              >
+                <div className="flex items-center justify-between">
+                  <span className="text-lg">{style.preview}</span>
+                  {selected && <AppIcon name="check" className="w-4 h-4 text-[var(--glass-tone-info-fg)]" />}
+                </div>
+                <div className="mt-2 text-sm font-semibold text-[var(--glass-text-primary)]">{style.label}</div>
+                <div className="mt-1 text-[11px] text-[var(--glass-text-tertiary)]">{style.providerHint}</div>
+              </button>
+            )
+          })}
+        </div>
+      </div>
+
+      {/* VAT-122 batch 1: character strategy selector */}
+      <div className="glass-surface p-6 space-y-3">
+        <h3 className="text-sm font-semibold text-[var(--glass-text-muted)] tracking-[0.01em]">Character Strategy Selector</h3>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+          {characterStrategies.map((strategy) => {
+            const active = strategy.id === selectedCharacterStrategy
+            return (
+              <button
+                key={strategy.id}
+                type="button"
+                onClick={() => setSelectedCharacterStrategy(strategy.id)}
+                className={`rounded-xl border p-3 text-left transition-all ${active
+                  ? 'border-[var(--glass-accent-from)] bg-[var(--glass-tone-info-bg)]/25'
+                  : 'border-[var(--glass-stroke-soft)] hover:bg-[var(--glass-bg-muted)]/25'
+                  }`}
+              >
+                <div className="flex items-center justify-between gap-2">
+                  <span className="text-sm font-semibold text-[var(--glass-text-primary)]">{strategy.title}</span>
+                  <span className="text-[10px] px-2 py-1 rounded-full bg-[var(--glass-bg-muted)] text-[var(--glass-text-secondary)]">{strategy.badge}</span>
+                </div>
+                <p className="mt-2 text-xs text-[var(--glass-text-tertiary)]">{strategy.description}</p>
+              </button>
+            )
+          })}
+        </div>
+      </div>
+
+      {/* VAT-123 batch 1: environment gallery picker */}
+      <div className="glass-surface p-6 space-y-3">
+        <h3 className="text-sm font-semibold text-[var(--glass-text-muted)] tracking-[0.01em]">Environment Gallery</h3>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+          {environmentGallery.map((environment) => {
+            const active = environment.id === selectedEnvironmentId
+            return (
+              <button
+                key={environment.id}
+                type="button"
+                onClick={() => setSelectedEnvironmentId(environment.id)}
+                className={`rounded-xl border p-0 text-left overflow-hidden transition-all ${active
+                  ? 'border-[var(--glass-accent-from)] shadow-[0_0_0_1px_rgba(79,128,255,0.2)]'
+                  : 'border-[var(--glass-stroke-soft)] hover:border-[var(--glass-stroke-strong)]'
+                  }`}
+              >
+                <div className={`h-20 bg-gradient-to-br ${environment.colors}`} />
+                <div className="p-3">
+                  <div className="text-sm font-semibold text-[var(--glass-text-primary)]">{environment.title}</div>
+                  <div className="text-xs text-[var(--glass-text-tertiary)] mt-1">{environment.tone}</div>
+                </div>
+              </button>
+            )
+          })}
+        </div>
       </div>
 
       {/* 旁白开关 + 操作按钮 */}
