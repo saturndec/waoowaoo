@@ -9,6 +9,7 @@
   "connect": "连接",
   "compatibilityLayerOpenAI": "OpenAI 兼容层",
   "compatibilityLayerGemini": "Gemini 兼容层",
+  "compatibilityLayerGrok": "Grok 兼容层",
   "show": "显示",
   "hide": "隐藏",
   "capability": "能力",
@@ -110,6 +111,7 @@
   "apiType": "API 类型",
   "apiTypeGeminiCompatible": "Gemini 兼容",
   "apiTypeOpenAICompatible": "OpenAI 兼容",
+  "apiTypeGrokCompatible": "Grok 兼容",
   "apiTypeGeminiHint": "使用 Google SDK",
   "otherProviders": "其他配置",
   "audioCategory": "音频",
@@ -176,6 +178,7 @@
       "vidu_step1": "进入生数科技 Vidu 平台，点击「新建 API Key」",
       "openai_compatible_step1": "填写任意 OpenAI 协议兼容服务的 Base URL 与 API Key",
       "gemini_compatible_step1": "填写任意 Gemini 协议兼容服务的 Base URL 与 API Key",
+      "grok_compatible_step1": "填写 xAI Grok 的 Base URL（https://api.x.ai/v1）与 API Key",
       "bailian_step1": "进入阿里云百炼平台，获取 API Key",
       "siliconflow_step1": "进入硅基流动控制台，创建 API Key"
     }

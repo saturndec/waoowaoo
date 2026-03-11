@@ -373,6 +373,14 @@ export const PROVIDER_TUTORIALS: ProviderTutorial[] = [
         ]
     },
     {
+        providerId: 'grok-compatible',
+        steps: [
+            {
+                text: 'grok_compatible_step1'
+            }
+        ]
+    },
+    {
         providerId: 'bailian',
         steps: [
             {
