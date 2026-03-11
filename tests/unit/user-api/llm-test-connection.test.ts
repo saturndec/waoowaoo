@@ -2,8 +2,8 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 const openAIState = vi.hoisted(() => ({
   modelList: vi.fn(async () => ({ data: [] })),
-  create: vi.fn(async () => ({
-    model: 'gpt-4.1-mini',
+  create: vi.fn(async (payload: { model?: string }) => ({
+    model: payload.model || 'gpt-4.1-mini',
     choices: [{ message: { content: '2' } }],
   })),
 }))
@@ -59,6 +59,26 @@ describe('llm test connection', () => {
     expect(result.answer).toBe('2')
     expect(openAIState.create).toHaveBeenCalledWith({
       model: 'gpt-4.1-mini',
+      messages: [{ role: 'user', content: '1+1等于几？只回答数字' }],
+      max_tokens: 10,
+      temperature: 0,
+    })
+  })
+
+  it('tests grok-compatible provider via openai-style endpoint', async () => {
+    const result = await testLlmConnection({
+      provider: 'grok-compatible',
+      apiKey: 'xai-key',
+      baseUrl: 'https://api.x.ai/v1',
+      model: 'grok-4-fast-reasoning',
+    })
+
+    expect(result.provider).toBe('grok-compatible')
+    expect(result.message).toBe('grok-compatible 连接成功')
+    expect(result.model).toBe('grok-4-fast-reasoning')
+    expect(result.answer).toBe('2')
+    expect(openAIState.create).toHaveBeenCalledWith({
+      model: 'grok-4-fast-reasoning',
       messages: [{ role: 'user', content: '1+1等于几？只回答数字' }],
       max_tokens: 10,
       temperature: 0,

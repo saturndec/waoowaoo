@@ -9,6 +9,7 @@
   "connect": "Connect",
   "compatibilityLayerOpenAI": "OpenAI Compatible Layer",
   "compatibilityLayerGemini": "Gemini Compatible Layer",
+  "compatibilityLayerGrok": "Grok Compatible Layer",
   "show": "Show",
   "hide": "Hide",
   "capability": "Models",
@@ -110,6 +111,7 @@
   "apiType": "API Type",
   "apiTypeGeminiCompatible": "Gemini Compatible",
   "apiTypeOpenAICompatible": "OpenAI Compatible",
+  "apiTypeGrokCompatible": "Grok Compatible",
   "apiTypeGeminiHint": "Uses Google SDK",
   "otherProviders": "Other Settings",
   "audioCategory": "Audio",
@@ -176,6 +178,7 @@
       "vidu_step1": "Go to the Vidu platform and click 'Create API Key'",
       "openai_compatible_step1": "Enter any OpenAI-compatible service Base URL and API key",
       "gemini_compatible_step1": "Enter any Gemini-compatible service Base URL and API key",
+      "grok_compatible_step1": "Enter Grok Base URL (https://api.x.ai/v1) and API key",
       "bailian_step1": "Go to Alibaba Cloud Bailian console and get an API Key",
       "siliconflow_step1": "Go to SiliconFlow console and create an API Key"
     }

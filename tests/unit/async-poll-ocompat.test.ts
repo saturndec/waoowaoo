@@ -72,6 +72,55 @@ describe('async poll ocompat', () => {
     })
   })
 
+  it('falls back to nested video.url when configured outputUrlPath does not match', async () => {
+    getUserModelsMock.mockResolvedValueOnce([
+      {
+        modelKey: 'grok-compatible:gk-1::grok-imagine-video',
+        modelId: 'grok-imagine-video',
+        name: 'Grok Imagine Video',
+        type: 'video',
+        provider: 'grok-compatible:gk-1',
+        price: 0,
+        compatMediaTemplate: {
+          version: 1,
+          mediaType: 'video',
+          mode: 'async',
+          create: { method: 'POST', path: '/videos/generations' },
+          status: { method: 'GET', path: '/videos/{{task_id}}' },
+          response: {
+            statusPath: '$.status',
+            outputUrlPath: '$.output_url',
+          },
+          polling: {
+            intervalMs: 3000,
+            timeoutMs: 180000,
+            doneStates: ['done'],
+            failStates: ['expired'],
+          },
+        },
+      },
+    ])
+
+    const fetchMock = vi.fn(async () => new Response(JSON.stringify({
+      status: 'done',
+      video: {
+        url: 'https://cdn.x.ai/video.mp4',
+      },
+    }), { status: 200 }))
+    globalThis.fetch = fetchMock as unknown as typeof fetch
+
+    const result = await pollAsyncTask(
+      `OCOMPAT:VIDEO:${encode('grok-compatible:gk-1')}:${encode('grok-compatible:gk-1::grok-imagine-video')}:task_grok`,
+      'user-1',
+    )
+
+    expect(result).toEqual({
+      status: 'completed',
+      resultUrl: 'https://cdn.x.ai/video.mp4',
+      videoUrl: 'https://cdn.x.ai/video.mp4',
+    })
+  })
+
   it('uses content endpoint when output url is missing', async () => {
     getUserModelsMock.mockResolvedValueOnce([
       {

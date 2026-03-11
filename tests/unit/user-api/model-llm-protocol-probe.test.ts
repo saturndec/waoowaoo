@@ -1,8 +1,8 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 const resolveOpenAICompatClientConfigMock = vi.hoisted(() =>
-  vi.fn(async () => ({
-    providerId: 'openai-compatible:node-1',
+  vi.fn(async (_userId: string, providerId: string) => ({
+    providerId,
     baseUrl: 'https://compat.example.com/v1',
     apiKey: 'sk-test',
   })),
@@ -35,6 +35,22 @@ describe('user-api model llm protocol probe', () => {
     expect(fetchMock).toHaveBeenCalledTimes(1)
     const firstCall = fetchMock.mock.calls[0] as unknown[] | undefined
     expect(String(firstCall?.[0])).toBe('https://compat.example.com/v1/responses')
+  })
+
+  it('supports grok-compatible providers in the same probe chain', async () => {
+    const fetchMock = vi.fn(async () => new Response(JSON.stringify({ id: 'resp_1' }), { status: 200 }))
+    vi.stubGlobal('fetch', fetchMock)
+
+    const result = await probeModelLlmProtocol({
+      userId: 'user-1',
+      providerId: 'grok-compatible:gk-1',
+      modelId: 'grok-4-fast-reasoning',
+    })
+
+    expect(result.success).toBe(true)
+    if (!result.success) return
+    expect(result.protocol).toBe('responses')
+    expect(resolveOpenAICompatClientConfigMock).toHaveBeenCalledWith('user-1', 'grok-compatible:gk-1')
   })
 
   it('returns chat-completions when responses is unsupported and chat succeeds', async () => {

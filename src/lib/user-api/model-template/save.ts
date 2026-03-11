@@ -87,7 +87,8 @@ function hasProvider(rawProviders: string | null | undefined, providerId: string
 export async function saveModelTemplateConfiguration(input: SaveModelTemplateInput): Promise<{
   modelKey: string
 }> {
-  if (getProviderKey(input.providerId) !== 'openai-compatible') {
+  const providerKey = getProviderKey(input.providerId)
+  if (providerKey !== 'openai-compatible' && providerKey !== 'grok-compatible') {
     throw new Error('MODEL_TEMPLATE_SAVE_PROVIDER_INVALID')
   }
   if (input.template.mediaType !== input.type) {

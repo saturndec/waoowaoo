@@ -14,6 +14,10 @@ describe('provider card pricing form behavior', () => {
     expect(getAddableModelTypesForProvider('openai-compatible:oa-1')).toEqual(['llm', 'image', 'video'])
   })
 
+  it('allows grok-compatible provider to add llm/image/video', () => {
+    expect(getAddableModelTypesForProvider('grok-compatible:gk-1')).toEqual(['llm', 'image', 'video'])
+  })
+
   it('shows llm/image/video tabs by default for openai-compatible even with only image models', () => {
     const visible = getVisibleModelTypesForProvider(
       'openai-compatible:oa-1',
@@ -139,6 +143,20 @@ describe('provider card pricing form behavior', () => {
       apiType: 'openai-compatible',
       apiKey: 'sk-test',
       baseUrl: 'https://api.openai-proxy.example/v1',
+    })
+  })
+
+  it('includes baseUrl for grok-compatible provider connection test payload', () => {
+    const payload = buildProviderConnectionPayload({
+      providerKey: 'grok-compatible',
+      apiKey: ' xai-key ',
+      baseUrl: ' https://api.x.ai/v1 ',
+    })
+
+    expect(payload).toEqual({
+      apiType: 'grok-compatible',
+      apiKey: 'xai-key',
+      baseUrl: 'https://api.x.ai/v1',
     })
   })
 

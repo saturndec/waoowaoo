@@ -1,10 +1,10 @@
 export type ModelGatewayRoute = 'official' | 'openai-compat'
 
-export type CompatibleProviderKey = 'openai-compatible'
+export type CompatibleProviderKey = 'openai-compatible' | 'grok-compatible'
 
 export type OpenAICompatImageProfile = CompatibleProviderKey
 
-export type OpenAICompatVideoProfile = 'openai-compatible'
+export type OpenAICompatVideoProfile = CompatibleProviderKey
 
 export interface OpenAICompatClientConfig {
   providerId: string

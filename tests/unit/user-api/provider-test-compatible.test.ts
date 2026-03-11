@@ -97,4 +97,28 @@ describe('provider test connection compatible probes', () => {
     expect(result.steps[1]?.status).toBe('skip')
     expect(result.steps.length).toBe(2)
   })
+
+  it('supports grok-compatible with the same compatible probe path strategy', async () => {
+    fetchMock.mockImplementation(async (input: RequestInfo | URL) => {
+      const url = String(input)
+      if (url.endsWith('/v1/models')) {
+        return new Response(JSON.stringify({ data: [{ id: 'grok-4' }] }), { status: 200 })
+      }
+      return new Response('not-found', { status: 404 })
+    })
+
+    const result = await testProviderConnection({
+      apiType: 'grok-compatible',
+      baseUrl: 'https://api.x.ai',
+      apiKey: 'xai-key',
+    })
+
+    expect(result.success).toBe(true)
+    expect(result.steps[0]).toMatchObject({
+      name: 'models',
+      status: 'pass',
+      message: 'Found 1 models',
+    })
+    expect(result.steps[1]?.status).toBe('skip')
+  })
 })

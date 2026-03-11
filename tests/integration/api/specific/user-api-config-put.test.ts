@@ -479,6 +479,40 @@ describe('api specific - user api-config PUT provider uniqueness', () => {
     expect(typeof savedModels[0]?.llmProtocolCheckedAt).toBe('string')
   })
 
+  it('persists llmProtocol for grok-compatible llm models', async () => {
+    installAuthMocks()
+    mockAuthenticated('user-1')
+    const route = await import('@/app/api/user/api-config/route')
+
+    const req = buildMockRequest({
+      path: '/api/user/api-config',
+      method: 'PUT',
+      body: {
+        providers: [
+          { id: 'grok-compatible:gk-1', name: 'Grok Node', baseUrl: 'https://api.x.ai/v1', apiKey: 'xai-key' },
+        ],
+        models: [
+          {
+            type: 'llm',
+            provider: 'grok-compatible:gk-1',
+            modelId: 'grok-4-fast-reasoning',
+            modelKey: 'grok-compatible:gk-1::grok-4-fast-reasoning',
+            name: 'Grok 4 Fast',
+            llmProtocol: 'responses',
+          },
+        ],
+      },
+    })
+
+    const res = await route.PUT(req, routeContext)
+    expect(res.status).toBe(200)
+
+    const savedModels = readSavedModelsFromUpsert()
+    expect(savedModels).toHaveLength(1)
+    expect(savedModels[0]?.llmProtocol).toBe('responses')
+    expect(typeof savedModels[0]?.llmProtocolCheckedAt).toBe('string')
+  })
+
   it('rejects llmProtocol on non-openai-compatible or non-llm models', async () => {
     installAuthMocks()
     mockAuthenticated('user-1')
@@ -762,6 +796,35 @@ describe('api specific - user api-config PUT provider uniqueness', () => {
             name: 'OpenAI Node',
             baseUrl: 'https://oa.test/v1',
             apiKey: 'oa-key',
+            apiMode: 'openai-official',
+          },
+        ],
+      },
+    })
+
+    const res = await route.PUT(req, routeContext)
+    expect(res.status).toBe(200)
+
+    const savedProviders = readSavedProvidersFromUpsert()
+    expect(savedProviders).toHaveLength(1)
+    expect(savedProviders[0]?.gatewayRoute).toBe('openai-compat')
+  })
+
+  it('forces grok-compatible provider to openai-compat route', async () => {
+    installAuthMocks()
+    mockAuthenticated('user-1')
+    const route = await import('@/app/api/user/api-config/route')
+
+    const req = buildMockRequest({
+      path: '/api/user/api-config',
+      method: 'PUT',
+      body: {
+        providers: [
+          {
+            id: 'grok-compatible:gk-1',
+            name: 'Grok Node',
+            baseUrl: 'https://api.x.ai/v1',
+            apiKey: 'xai-key',
             apiMode: 'openai-official',
           },
         ],
@@ -1163,6 +1226,105 @@ describe('api specific - user api-config PUT provider uniqueness', () => {
       mode: 'sync',
       create: {
         path: '/images/generations',
+      },
+    })
+    expect(savedModel?.compatMediaTemplateSource).toBe('manual')
+    expect(typeof savedModel?.compatMediaTemplateCheckedAt).toBe('string')
+  })
+
+  it('backfills grok default compatMediaTemplate for image model when missing', async () => {
+    installAuthMocks()
+    mockAuthenticated('user-1')
+    const route = await import('@/app/api/user/api-config/route')
+
+    const req = buildMockRequest({
+      path: '/api/user/api-config',
+      method: 'PUT',
+      body: {
+        providers: [
+          { id: 'grok-compatible:gk-1', name: 'Grok Compat', baseUrl: 'https://api.x.ai/v1', apiKey: 'xai-key' },
+        ],
+        models: [
+          {
+            modelId: 'grok-2-image',
+            modelKey: 'grok-compatible:gk-1::grok-2-image',
+            name: 'Grok Image',
+            type: 'image',
+            provider: 'grok-compatible:gk-1',
+          },
+        ],
+      },
+    })
+
+    const res = await route.PUT(req, routeContext)
+    expect(res.status).toBe(200)
+    const savedModels = readSavedModelsFromUpsert()
+    const savedModel = savedModels.find((item) => item.modelKey === 'grok-compatible:gk-1::grok-2-image')
+    expect(savedModel?.compatMediaTemplate).toMatchObject({
+      version: 1,
+      mediaType: 'image',
+      mode: 'sync',
+      create: {
+        path: '/images/generations',
+      },
+      operations: {
+        edit: {
+          create: {
+            path: '/images/edits',
+          },
+        },
+      },
+    })
+    expect(savedModel?.compatMediaTemplateSource).toBe('manual')
+    expect(typeof savedModel?.compatMediaTemplateCheckedAt).toBe('string')
+  })
+
+  it('backfills grok default compatMediaTemplate for video model when missing', async () => {
+    installAuthMocks()
+    mockAuthenticated('user-1')
+    const route = await import('@/app/api/user/api-config/route')
+
+    const req = buildMockRequest({
+      path: '/api/user/api-config',
+      method: 'PUT',
+      body: {
+        providers: [
+          { id: 'grok-compatible:gk-1', name: 'Grok Compat', baseUrl: 'https://api.x.ai/v1', apiKey: 'xai-key' },
+        ],
+        models: [
+          {
+            modelId: 'grok-imagine-video',
+            modelKey: 'grok-compatible:gk-1::grok-imagine-video',
+            name: 'Grok Video',
+            type: 'video',
+            provider: 'grok-compatible:gk-1',
+          },
+        ],
+      },
+    })
+
+    const res = await route.PUT(req, routeContext)
+    expect(res.status).toBe(200)
+    const savedModels = readSavedModelsFromUpsert()
+    const savedModel = savedModels.find((item) => item.modelKey === 'grok-compatible:gk-1::grok-imagine-video')
+    expect(savedModel?.compatMediaTemplate).toMatchObject({
+      version: 1,
+      mediaType: 'video',
+      mode: 'async',
+      create: {
+        path: '/videos/generations',
+      },
+      status: {
+        path: '/videos/{{task_id}}',
+      },
+      response: {
+        taskIdPath: '$.request_id',
+        statusPath: '$.status',
+        outputUrlPath: '$.video.url',
+      },
+      polling: {
+        doneStates: ['done'],
+        failStates: ['failed', 'error', 'expired', 'canceled'],
       },
     })
     expect(savedModel?.compatMediaTemplateSource).toBe('manual')

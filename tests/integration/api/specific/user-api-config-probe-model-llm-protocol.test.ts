@@ -54,7 +54,33 @@ describe('api specific - user api-config probe model llm protocol', () => {
     })
   })
 
-  it('rejects non-openai-compatible provider ids', async () => {
+  it('probes protocol for grok-compatible provider/model', async () => {
+    installAuthMocks()
+    mockAuthenticated('user-1')
+    const route = await import('@/app/api/user/api-config/probe-model-llm-protocol/route')
+
+    const req = buildMockRequest({
+      path: '/api/user/api-config/probe-model-llm-protocol',
+      method: 'POST',
+      body: {
+        providerId: 'grok-compatible:gk-1',
+        modelId: 'grok-4-fast-reasoning',
+      },
+    })
+
+    const res = await route.POST(req, routeContext)
+    expect(res.status).toBe(200)
+    const body = await res.json() as { success: boolean; protocol?: string }
+    expect(body.success).toBe(true)
+    expect(body.protocol).toBe('responses')
+    expect(probeModelLlmProtocolMock).toHaveBeenCalledWith({
+      userId: 'user-1',
+      providerId: 'grok-compatible:gk-1',
+      modelId: 'grok-4-fast-reasoning',
+    })
+  })
+
+  it('rejects non-openai-compat provider ids', async () => {
     installAuthMocks()
     mockAuthenticated('user-1')
     const route = await import('@/app/api/user/api-config/probe-model-llm-protocol/route')

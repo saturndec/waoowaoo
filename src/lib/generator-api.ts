@@ -104,8 +104,9 @@ export async function generateImage(
     // 调用生成（提取 referenceImages 单独传递，其余选项合并进 options）
     const { referenceImages, ...generatorOptions } = options || {}
     if (gatewayRoute === 'openai-compat') {
+        const compatProfile = providerKey === 'grok-compatible' ? 'grok-compatible' : 'openai-compatible'
         const compatTemplate = selection.compatMediaTemplate
-        if (providerKey === 'openai-compatible' && !compatTemplate) {
+        if ((providerKey === 'openai-compatible' || providerKey === 'grok-compatible') && !compatTemplate) {
             throw new Error(`MODEL_COMPAT_MEDIA_TEMPLATE_REQUIRED: ${selection.modelKey}`)
         }
         if (compatTemplate) {
@@ -122,7 +123,7 @@ export async function generateImage(
                     modelId: selection.modelId,
                     modelKey: selection.modelKey,
                 },
-                profile: 'openai-compatible',
+                profile: compatProfile,
                 template: compatTemplate,
             })
         }
@@ -150,7 +151,7 @@ export async function generateImage(
                 modelId: selection.modelId,
                 modelKey: selection.modelKey,
             },
-            profile: 'openai-compatible',
+            profile: compatProfile,
         })
     }
 
@@ -228,8 +229,9 @@ export async function generateVideo(
 
     const { prompt, ...providerOptions } = options || {}
     if (gatewayRoute === 'openai-compat') {
+        const compatProfile = providerKey === 'grok-compatible' ? 'grok-compatible' : 'openai-compatible'
         const compatTemplate = selection.compatMediaTemplate
-        if (providerKey === 'openai-compatible' && !compatTemplate) {
+        if ((providerKey === 'openai-compatible' || providerKey === 'grok-compatible') && !compatTemplate) {
             throw new Error(`MODEL_COMPAT_MEDIA_TEMPLATE_REQUIRED: ${selection.modelKey}`)
         }
         if (compatTemplate) {
@@ -246,7 +248,7 @@ export async function generateVideo(
                     modelId: selection.modelId,
                     modelKey: selection.modelKey,
                 },
-                profile: 'openai-compatible',
+                profile: compatProfile,
                 template: compatTemplate,
             })
         }
@@ -264,7 +266,7 @@ export async function generateVideo(
                 modelId: selection.modelId,
                 modelKey: selection.modelKey,
             },
-            profile: 'openai-compatible',
+            profile: compatProfile,
         })
     }
 

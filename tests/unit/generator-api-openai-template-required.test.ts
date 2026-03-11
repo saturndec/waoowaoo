@@ -102,4 +102,50 @@ describe('generator-api requires compat media template for openai-compatible med
     expect(generateVideoViaOpenAICompatMock).not.toHaveBeenCalled()
     expect(generateVideoViaOpenAICompatTemplateMock).not.toHaveBeenCalled()
   })
+
+  it('throws for grok image model without compatMediaTemplate', async () => {
+    resolveModelSelectionMock.mockResolvedValueOnce({
+      provider: 'grok-compatible:gk-1',
+      modelId: 'grok-2-image',
+      modelKey: 'grok-compatible:gk-1::grok-2-image',
+      mediaType: 'image',
+      compatMediaTemplate: undefined,
+    })
+    getProviderConfigMock.mockResolvedValueOnce({
+      id: 'grok-compatible:gk-1',
+      name: 'Grok Compat',
+      apiKey: 'xai-key',
+      gatewayRoute: 'openai-compat',
+    })
+
+    await expect(
+      generateImage('user-1', 'grok-compatible:gk-1::grok-2-image', 'draw cat'),
+    ).rejects.toThrow('MODEL_COMPAT_MEDIA_TEMPLATE_REQUIRED')
+
+    expect(generateImageViaOpenAICompatMock).not.toHaveBeenCalled()
+    expect(generateImageViaOpenAICompatTemplateMock).not.toHaveBeenCalled()
+  })
+
+  it('throws for grok video model without compatMediaTemplate', async () => {
+    resolveModelSelectionMock.mockResolvedValueOnce({
+      provider: 'grok-compatible:gk-1',
+      modelId: 'grok-video-1',
+      modelKey: 'grok-compatible:gk-1::grok-video-1',
+      mediaType: 'video',
+      compatMediaTemplate: undefined,
+    })
+    getProviderConfigMock.mockResolvedValueOnce({
+      id: 'grok-compatible:gk-1',
+      name: 'Grok Compat',
+      apiKey: 'xai-key',
+      gatewayRoute: 'openai-compat',
+    })
+
+    await expect(
+      generateVideo('user-1', 'grok-compatible:gk-1::grok-video-1', 'https://example.com/a.png', { prompt: 'animate' }),
+    ).rejects.toThrow('MODEL_COMPAT_MEDIA_TEMPLATE_REQUIRED')
+
+    expect(generateVideoViaOpenAICompatMock).not.toHaveBeenCalled()
+    expect(generateVideoViaOpenAICompatTemplateMock).not.toHaveBeenCalled()
+  })
 })

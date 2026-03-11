@@ -11,8 +11,9 @@ describe('api-config provider-card protocol probe helpers', () => {
     vi.clearAllMocks()
   })
 
-  it('only probes openai-compatible llm models', () => {
+  it('only probes openai-compat llm models', () => {
     expect(shouldProbeModelLlmProtocol({ providerId: 'openai-compatible:oa-1', modelType: 'llm' })).toBe(true)
+    expect(shouldProbeModelLlmProtocol({ providerId: 'grok-compatible:gk-1', modelType: 'llm' })).toBe(true)
     expect(shouldProbeModelLlmProtocol({ providerId: 'openai-compatible:oa-1', modelType: 'image' })).toBe(false)
     expect(shouldProbeModelLlmProtocol({ providerId: 'gemini-compatible:gm-1', modelType: 'llm' })).toBe(false)
   })

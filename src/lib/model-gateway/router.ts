@@ -3,6 +3,7 @@ import type { ModelGatewayRoute } from './types'
 
 const COMPATIBLE_PROVIDER_KEYS = new Set([
   'openai-compatible',
+  'grok-compatible',
 ])
 const OFFICIAL_ONLY_PROVIDER_KEYS = new Set([
   'bailian',

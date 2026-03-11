@@ -1,12 +1,26 @@
 import type {
+  OpenAICompatOperationTemplate,
   OpenAICompatMediaTemplate,
   TemplateBodyValue,
   TemplateEndpoint,
   TemplateHeaderMap,
+  TemplateOperationType,
+  TemplatePollingConfig,
+  TemplateResponseMap,
 } from '@/lib/openai-compat-media-template'
 import { toUploadFile } from '@/lib/model-gateway/openai-compat/common'
 
 export type TemplateVariableMap = Record<string, TemplateBodyValue | undefined>
+export type TemplateOperation = TemplateOperationType
+
+export interface ResolvedTemplateOperation {
+  mode: OpenAICompatMediaTemplate['mode']
+  create: TemplateEndpoint
+  status?: TemplateEndpoint
+  content?: TemplateEndpoint
+  response: TemplateResponseMap
+  polling?: TemplatePollingConfig
+}
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return !!value && typeof value === 'object' && !Array.isArray(value)
@@ -287,22 +301,30 @@ export function renderTemplateString(
 export function renderTemplateValue(
   value: TemplateBodyValue,
   variables: TemplateVariableMap,
-): TemplateBodyValue {
+): TemplateBodyValue | undefined {
   if (typeof value === 'string') {
     const exactPlaceholder = matchExactPlaceholder(value)
     if (exactPlaceholder) {
       const resolved = resolvePlaceholderValue(exactPlaceholder, variables)
-      return resolved === undefined ? '' : cloneTemplateBodyValue(resolved)
+      return resolved === undefined ? undefined : cloneTemplateBodyValue(resolved)
     }
     return renderTemplateString(value, variables)
   }
   if (value === null || typeof value === 'number' || typeof value === 'boolean') return value
   if (Array.isArray(value)) {
-    return value.map((item) => renderTemplateValue(item, variables))
+    const output: TemplateBodyValue[] = []
+    for (const item of value) {
+      const rendered = renderTemplateValue(item, variables)
+      if (rendered !== undefined) output.push(rendered)
+    }
+    return output
   }
   const out: Record<string, TemplateBodyValue> = {}
   for (const [key, nestedValue] of Object.entries(value)) {
-    out[key] = renderTemplateValue(nestedValue as TemplateBodyValue, variables)
+    const rendered = renderTemplateValue(nestedValue as TemplateBodyValue, variables)
+    if (rendered !== undefined) {
+      out[key] = rendered
+    }
   }
   return out
 }
@@ -401,7 +423,9 @@ export async function buildRenderedTemplateRequest(input: {
   let body: BodyInit | undefined
   if (input.endpoint.bodyTemplate !== undefined) {
     const renderedBody = renderTemplateValue(input.endpoint.bodyTemplate, input.variables)
-    body = await buildRequestBody(input.endpoint, renderedBody, headers)
+    if (renderedBody !== undefined) {
+      body = await buildRequestBody(input.endpoint, renderedBody, headers)
+    }
   }
 
   return {
@@ -422,6 +446,42 @@ export function normalizeResponseJson(rawText: string): unknown {
   }
 }
 
+function normalizeOperationTemplate(
+  template: OpenAICompatMediaTemplate,
+  operationTemplate?: OpenAICompatOperationTemplate,
+): ResolvedTemplateOperation {
+  if (!operationTemplate) {
+    return {
+      mode: template.mode,
+      create: template.create,
+      status: template.status,
+      content: template.content,
+      response: template.response,
+      polling: template.polling,
+    }
+  }
+
+  return {
+    mode: template.mode,
+    create: operationTemplate.create,
+    status: operationTemplate.status ?? template.status,
+    content: operationTemplate.content ?? template.content,
+    response: {
+      ...template.response,
+      ...operationTemplate.response,
+    },
+    polling: operationTemplate.polling ?? template.polling,
+  }
+}
+
+export function resolveTemplateOperation(
+  template: OpenAICompatMediaTemplate,
+  operation: TemplateOperation = 'generate',
+): ResolvedTemplateOperation {
+  const operationTemplate = template.operations?.[operation]
+  return normalizeOperationTemplate(template, operationTemplate)
+}
+
 export function buildTemplateVariables(input: {
   model: string
   prompt: string
@@ -437,13 +497,13 @@ export function buildTemplateVariables(input: {
   const variables: TemplateVariableMap = {
     model: input.model,
     prompt: input.prompt,
-    image: input.image || '',
+    image: input.image,
     images: input.images || [],
-    aspect_ratio: input.aspectRatio || '',
-    duration: input.duration ?? null,
-    resolution: input.resolution || '',
-    size: input.size || '',
-    task_id: input.taskId || '',
+    aspect_ratio: input.aspectRatio,
+    duration: input.duration,
+    resolution: input.resolution,
+    size: input.size,
+    task_id: input.taskId,
   }
   appendTemplateOptionVariables(variables, input.extra)
   return variables
@@ -454,7 +514,15 @@ export function extractTemplateError(
   payload: unknown,
   status: number,
 ): string {
-  const mapped = readJsonPath(payload, template.response.errorPath)
+  return extractTemplateErrorFromResponse(template.response, payload, status)
+}
+
+export function extractTemplateErrorFromResponse(
+  response: Pick<TemplateResponseMap, 'errorPath'>,
+  payload: unknown,
+  status: number,
+): string {
+  const mapped = readJsonPath(payload, response.errorPath)
   if (typeof mapped === 'string' && mapped.trim()) return mapped.trim()
   const fallbackCandidates = [
     readJsonPath(payload, '$.error.message_zh'),

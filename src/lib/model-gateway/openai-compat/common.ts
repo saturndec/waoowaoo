@@ -31,6 +31,25 @@ export function readStringOption(value: unknown, optionName: string): string | u
   return trimmed
 }
 
+export function sanitizeTemplateOptions(
+  options: Record<string, unknown> | undefined,
+): Record<string, unknown> | undefined {
+  if (!options) return undefined
+
+  const sanitized: Record<string, unknown> = {}
+  for (const [key, rawValue] of Object.entries(options)) {
+    if (typeof rawValue === 'string') {
+      const trimmed = rawValue.trim()
+      if (!trimmed) continue
+      sanitized[key] = trimmed
+      continue
+    }
+    sanitized[key] = rawValue
+  }
+
+  return Object.keys(sanitized).length > 0 ? sanitized : undefined
+}
+
 export async function resolveOpenAICompatClientConfig(userId: string, providerId: string): Promise<OpenAICompatClientConfig> {
   const config = await getProviderConfig(userId, providerId)
   if (!config.baseUrl) {

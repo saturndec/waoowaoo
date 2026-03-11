@@ -103,11 +103,15 @@ function readProbeFailureCode(value: unknown): string {
   return typeof value === 'string' ? value : 'PROBE_INCONCLUSIVE'
 }
 
+function isOpenAICompatProviderKey(providerKey: string): boolean {
+  return providerKey === 'openai-compatible' || providerKey === 'grok-compatible'
+}
+
 export function shouldProbeModelLlmProtocol(params: {
   providerId: string
   modelType: ProviderCardModelType
 }): boolean {
-  return getProviderKey(params.providerId) === 'openai-compatible' && params.modelType === 'llm'
+  return isOpenAICompatProviderKey(getProviderKey(params.providerId)) && params.modelType === 'llm'
 }
 
 export function shouldReprobeModelLlmProtocol(params: {
@@ -117,7 +121,7 @@ export function shouldReprobeModelLlmProtocol(params: {
 }): boolean {
   if (!shouldProbeModelLlmProtocol({ providerId: params.providerId, modelType: 'llm' })) return false
   if (params.originalModel.type !== 'llm') return false
-  if (getProviderKey(params.originalModel.provider) !== 'openai-compatible') return false
+  if (!isOpenAICompatProviderKey(getProviderKey(params.originalModel.provider))) return false
   return params.originalModel.modelId !== params.nextModelId || params.originalModel.provider !== params.providerId
 }
 
@@ -176,7 +180,9 @@ export function buildProviderConnectionPayload(params: {
   const compatibleBaseUrl = params.baseUrl?.trim()
   const llmModel = params.llmModel?.trim()
   const isCompatibleProvider =
-    params.providerKey === 'openai-compatible' || params.providerKey === 'gemini-compatible'
+    params.providerKey === 'openai-compatible'
+    || params.providerKey === 'grok-compatible'
+    || params.providerKey === 'gemini-compatible'
 
   if (isCompatibleProvider && compatibleBaseUrl) {
     return {

@@ -54,6 +54,10 @@ type EndpointProbeResult = {
   note: string
 }
 
+function isOpenAICompatProviderKey(providerKey: string): boolean {
+  return providerKey === 'openai-compatible' || providerKey === 'grok-compatible'
+}
+
 function isRecord(value: unknown): value is Record<string, unknown> {
   return !!value && typeof value === 'object' && !Array.isArray(value)
 }
@@ -220,7 +224,7 @@ function toTrace(
 export async function probeModelLlmProtocol(
   input: ModelLlmProtocolProbeInput,
 ): Promise<ModelLlmProtocolProbeResult> {
-  if (getProviderKey(input.providerId) !== 'openai-compatible') {
+  if (!isOpenAICompatProviderKey(getProviderKey(input.providerId))) {
     throw new Error(`MODEL_LLM_PROTOCOL_PROBE_PROVIDER_UNSUPPORTED: ${input.providerId}`)
   }
 

@@ -1,7 +1,9 @@
 import type {
+  OpenAICompatOperationTemplate,
   OpenAICompatMediaTemplate,
   TemplateBodyValue,
   TemplateEndpoint,
+  TemplateOperationType,
   TemplatePollingConfig,
   TemplateResponseMap,
 } from '@/lib/openai-compat-media-template'
@@ -16,6 +18,8 @@ export interface ModelTemplateValidationIssue {
   field: string
   message: string
 }
+
+const TEMPLATE_OPERATION_KEYS: TemplateOperationType[] = ['generate', 'edit']
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return !!value && typeof value === 'object' && !Array.isArray(value)
@@ -352,87 +356,209 @@ function readPollingConfig(
   }
 }
 
-function validateModeSpecificRequirements(
-  template: OpenAICompatMediaTemplate,
+function readOperationTemplate(
+  value: unknown,
+  field: string,
   issues: ModelTemplateValidationIssue[],
-) {
+): OpenAICompatOperationTemplate | null {
+  if (!isRecord(value)) {
+    issues.push({
+      code: 'MODEL_TEMPLATE_INVALID',
+      field,
+      message: 'operation template must be an object',
+    })
+    return null
+  }
+
+  const create = readTemplateEndpoint(value.create, `${field}.create`, { allowBody: true }, issues)
+  const status = value.status === undefined
+    ? undefined
+    : readTemplateEndpoint(value.status, `${field}.status`, { allowBody: false }, issues) || undefined
+  const content = value.content === undefined
+    ? undefined
+    : readTemplateEndpoint(value.content, `${field}.content`, { allowBody: false }, issues) || undefined
+  const response = value.response === undefined
+    ? {}
+    : readResponseMap(value.response, `${field}.response`, issues)
+  const polling = value.polling === undefined
+    ? undefined
+    : readPollingConfig(value.polling, `${field}.polling`, issues) || undefined
+
+  if (!create || !response) return null
+  return {
+    create,
+    ...(status ? { status } : {}),
+    ...(content ? { content } : {}),
+    response,
+    ...(polling ? { polling } : {}),
+  }
+}
+
+function readOperationTemplates(
+  value: unknown,
+  field: string,
+  issues: ModelTemplateValidationIssue[],
+): Partial<Record<TemplateOperationType, OpenAICompatOperationTemplate>> | undefined {
+  if (value === undefined || value === null) return undefined
+  if (!isRecord(value)) {
+    issues.push({
+      code: 'MODEL_TEMPLATE_INVALID',
+      field,
+      message: 'operations must be an object',
+    })
+    return undefined
+  }
+
+  const operations: Partial<Record<TemplateOperationType, OpenAICompatOperationTemplate>> = {}
+
+  for (const key of Object.keys(value)) {
+    if (!TEMPLATE_OPERATION_KEYS.includes(key as TemplateOperationType)) {
+      issues.push({
+        code: 'MODEL_TEMPLATE_INVALID',
+        field: `${field}.${key}`,
+        message: `unsupported operation key: ${key}`,
+      })
+    }
+  }
+
+  for (const operation of TEMPLATE_OPERATION_KEYS) {
+    const rawOperation = value[operation]
+    if (rawOperation === undefined) continue
+    const parsedOperation = readOperationTemplate(rawOperation, `${field}.${operation}`, issues)
+    if (parsedOperation) {
+      operations[operation] = parsedOperation
+    }
+  }
+
+  return Object.keys(operations).length > 0 ? operations : undefined
+}
+
+function fieldPath(prefix: string, suffix: string): string {
+  return prefix ? `${prefix}.${suffix}` : suffix
+}
+
+function validateSingleTemplateRequirements(input: {
+  mode: OpenAICompatMediaTemplate['mode']
+  create: TemplateEndpoint
+  status?: TemplateEndpoint
+  response: TemplateResponseMap
+  polling?: TemplatePollingConfig
+  fieldPrefix: string
+}, issues: ModelTemplateValidationIssue[]) {
+  const createBodyField = fieldPath(input.fieldPrefix, 'create.bodyTemplate')
+  const createMultipartField = fieldPath(input.fieldPrefix, 'create.multipartFileFields')
+  const statusField = fieldPath(input.fieldPrefix, 'status')
+  const statusPathField = fieldPath(input.fieldPrefix, 'status.path')
+  const taskIdField = fieldPath(input.fieldPrefix, 'response.taskIdPath')
+  const statusValueField = fieldPath(input.fieldPrefix, 'response.statusPath')
+  const responseField = fieldPath(input.fieldPrefix, 'response')
+  const pollingField = fieldPath(input.fieldPrefix, 'polling')
+
   if (
-    (template.create.method === 'POST' || template.create.method === 'PUT' || template.create.method === 'PATCH')
-    && template.create.bodyTemplate === undefined
+    (input.create.method === 'POST' || input.create.method === 'PUT' || input.create.method === 'PATCH')
+    && input.create.bodyTemplate === undefined
   ) {
     issues.push({
       code: 'MODEL_TEMPLATE_UNMAPPABLE',
-      field: 'create.bodyTemplate',
-      message: `${template.create.method} create endpoint requires bodyTemplate`,
+      field: createBodyField,
+      message: `${input.create.method} create endpoint requires bodyTemplate`,
     })
   }
 
-  if (template.create.contentType === 'multipart/form-data' && template.create.multipartFileFields) {
-    if (!isRecord(template.create.bodyTemplate)) {
+  if (input.create.contentType === 'multipart/form-data' && input.create.multipartFileFields) {
+    if (!isRecord(input.create.bodyTemplate)) {
       issues.push({
         code: 'MODEL_TEMPLATE_UNMAPPABLE',
-        field: 'create.bodyTemplate',
+        field: createBodyField,
         message: 'multipart create endpoint requires object bodyTemplate',
       })
     } else {
-      for (const fieldPath of template.create.multipartFileFields) {
-        const [topLevelField] = fieldPath.split('.')
-        if (!topLevelField || !(topLevelField in template.create.bodyTemplate)) {
+      for (const path of input.create.multipartFileFields) {
+        const [topLevelField] = path.split('.')
+        if (!topLevelField || !(topLevelField in input.create.bodyTemplate)) {
           issues.push({
             code: 'MODEL_TEMPLATE_UNMAPPABLE',
-            field: 'create.multipartFileFields',
-            message: `multipart file field not found in bodyTemplate: ${fieldPath}`,
+            field: createMultipartField,
+            message: `multipart file field not found in bodyTemplate: ${path}`,
           })
         }
       }
     }
   }
 
-  if (template.mode === 'async') {
-    if (!template.status) {
+  if (input.mode === 'async') {
+    if (!input.status) {
       issues.push({
         code: 'MODEL_TEMPLATE_UNMAPPABLE',
-        field: 'status',
+        field: statusField,
         message: 'async mode requires status endpoint',
       })
     }
-    if (!template.response.taskIdPath) {
+    if (!input.response.taskIdPath) {
       issues.push({
         code: 'MODEL_TEMPLATE_UNMAPPABLE',
-        field: 'response.taskIdPath',
+        field: taskIdField,
         message: 'async mode requires response.taskIdPath',
       })
     }
-    if (!template.response.statusPath) {
+    if (!input.response.statusPath) {
       issues.push({
         code: 'MODEL_TEMPLATE_UNMAPPABLE',
-        field: 'response.statusPath',
+        field: statusValueField,
         message: 'async mode requires response.statusPath',
       })
     }
-    if (!template.polling) {
+    if (!input.polling) {
       issues.push({
         code: 'MODEL_TEMPLATE_UNMAPPABLE',
-        field: 'polling',
+        field: pollingField,
         message: 'async mode requires polling config',
       })
     }
-    if (template.status && !/\{\{\s*task_id\s*\}\}/.test(template.status.path)) {
+    if (input.status && !/\{\{\s*task_id\s*\}\}/.test(input.status.path)) {
       issues.push({
         code: 'MODEL_TEMPLATE_UNMAPPABLE',
-        field: 'status.path',
+        field: statusPathField,
         message: 'async status endpoint path must include {{task_id}} placeholder',
       })
     }
     return
   }
 
-  if (!template.response.outputUrlPath && !template.response.outputUrlsPath) {
+  if (!input.response.outputUrlPath && !input.response.outputUrlsPath) {
     issues.push({
       code: 'MODEL_TEMPLATE_UNMAPPABLE',
-      field: 'response',
+      field: responseField,
       message: 'sync mode requires outputUrlPath or outputUrlsPath',
     })
+  }
+}
+
+function validateModeSpecificRequirements(
+  template: OpenAICompatMediaTemplate,
+  issues: ModelTemplateValidationIssue[],
+) {
+  validateSingleTemplateRequirements({
+    mode: template.mode,
+    create: template.create,
+    status: template.status,
+    response: template.response,
+    polling: template.polling,
+    fieldPrefix: '',
+  }, issues)
+
+  if (!template.operations) return
+  for (const operation of TEMPLATE_OPERATION_KEYS) {
+    const operationTemplate = template.operations[operation]
+    if (!operationTemplate) continue
+    validateSingleTemplateRequirements({
+      mode: template.mode,
+      create: operationTemplate.create,
+      status: operationTemplate.status ?? template.status,
+      response: { ...template.response, ...operationTemplate.response },
+      polling: operationTemplate.polling ?? template.polling,
+      fieldPrefix: `operations.${operation}`,
+    }, issues)
   }
 }
 
@@ -489,6 +615,7 @@ export function parseOpenAICompatMediaTemplate(raw: unknown): {
   const polling = raw.polling === undefined
     ? undefined
     : readPollingConfig(raw.polling, 'polling', issues) || undefined
+  const operations = readOperationTemplates(raw.operations, 'operations', issues)
 
   if (issues.length > 0 || !create || !response || (mode !== 'sync' && mode !== 'async') || (mediaType !== 'image' && mediaType !== 'video')) {
     return { template: null, issues }
@@ -503,6 +630,7 @@ export function parseOpenAICompatMediaTemplate(raw: unknown): {
     ...(content ? { content } : {}),
     response,
     ...(polling ? { polling } : {}),
+    ...(operations ? { operations } : {}),
   }
   validateModeSpecificRequirements(normalizedTemplate, issues)
   if (issues.length > 0) {

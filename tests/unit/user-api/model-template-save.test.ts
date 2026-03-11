@@ -85,4 +85,65 @@ describe('user-api model template save', () => {
     expect(target?.compatMediaTemplateSource).toBe('ai')
     expect(typeof target?.compatMediaTemplateCheckedAt).toBe('string')
   })
+
+  it('updates grok-compatible model template while preserving custom fields', async () => {
+    prismaMock.userPreference.findUnique.mockResolvedValueOnce({
+      customProviders: JSON.stringify([
+        { id: 'grok-compatible:gk-1', name: 'Grok Compat' },
+      ]),
+      customModels: JSON.stringify([
+        {
+          modelId: 'grok-2-image',
+          modelKey: 'grok-compatible:gk-1::grok-2-image',
+          name: 'Grok Image',
+          type: 'image',
+          provider: 'grok-compatible:gk-1',
+          customPricing: { image: { basePrice: 0.7 } },
+          capabilities: { image: { resolutionOptions: ['1024x1024'] } },
+        },
+      ]),
+    })
+
+    await saveModelTemplateConfiguration({
+      userId: 'user-1',
+      providerId: 'grok-compatible:gk-1',
+      modelId: 'grok-2-image',
+      name: 'Grok Image',
+      type: 'image',
+      template: {
+        version: 1,
+        mediaType: 'image',
+        mode: 'sync',
+        create: { method: 'POST', path: '/v1/images/generations' },
+        response: {
+          outputUrlPath: '$.data[0].url',
+        },
+        operations: {
+          edit: {
+            create: { method: 'POST', path: '/v1/images/edits' },
+            response: { outputUrlPath: '$.data[0].url' },
+          },
+        },
+      },
+      source: 'manual',
+    })
+
+    const savedModels = readSavedModelsFromUpsert()
+    const target = savedModels.find((item) => item.modelKey === 'grok-compatible:gk-1::grok-2-image')
+    expect(target).toBeTruthy()
+    expect(target?.customPricing).toEqual({ image: { basePrice: 0.7 } })
+    expect(target?.capabilities).toEqual({ image: { resolutionOptions: ['1024x1024'] } })
+    expect(target?.compatMediaTemplate).toMatchObject({
+      mediaType: 'image',
+      operations: {
+        edit: {
+          create: {
+            path: '/v1/images/edits',
+          },
+        },
+      },
+    })
+    expect(target?.compatMediaTemplateSource).toBe('manual')
+    expect(typeof target?.compatMediaTemplateCheckedAt).toBe('string')
+  })
 })

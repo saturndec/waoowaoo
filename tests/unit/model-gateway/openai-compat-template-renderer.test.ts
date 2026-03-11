@@ -143,6 +143,32 @@ describe('model-gateway openai-compat template renderer', () => {
     expect((request.body as URLSearchParams).toString()).toBe('model=veo3.1&task_id=task_1')
   })
 
+  it('omits unresolved exact-placeholder fields from json body', async () => {
+    const request = await buildRenderedTemplateRequest({
+      baseUrl: 'https://compat.example.com/v1',
+      endpoint: {
+        method: 'POST',
+        path: '/videos/generations',
+        contentType: 'application/json',
+        bodyTemplate: {
+          model: '{{model}}',
+          prompt: '{{prompt}}',
+          resolution: '{{resolution}}',
+          aspect_ratio: '{{aspect_ratio}}',
+        },
+      },
+      variables: buildTemplateVariables({
+        model: 'grok-video-1',
+        prompt: 'animate',
+      }),
+    })
+
+    expect(request.body).toBe(JSON.stringify({
+      model: 'grok-video-1',
+      prompt: 'animate',
+    }))
+  })
+
   it('reads json path for array/object outputs', () => {
     const payload = {
       data: [{ url: 'https://cdn.test/1.png' }],

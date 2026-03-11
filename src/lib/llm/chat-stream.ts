@@ -107,9 +107,9 @@ export async function chatCompletionStream(
 
   try {
     if (gatewayRoute === 'openai-compat') {
-      // openai-compatible protocol probing only applies to openai-compatible + llm.
-      // gemini-compatible is explicitly excluded and must not enter this branch.
-      if (providerKey !== 'openai-compatible') {
+      // openai-compat protocol probing applies to openai-compatible/grok-compatible + llm.
+      // gemini-compatible remains excluded and must not enter this branch.
+      if (providerKey !== 'openai-compatible' && providerKey !== 'grok-compatible') {
         throw new Error(`OPENAI_COMPAT_PROVIDER_UNSUPPORTED: ${provider}`)
       }
       if (!selection.llmProtocol) {

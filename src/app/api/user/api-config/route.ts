@@ -187,6 +187,7 @@ const PRICING_PROVIDER_ALIASES: Readonly<Record<string, string>> = {
 }
 const OPTIONAL_PRICING_PROVIDER_KEYS = new Set([
   'openai-compatible',
+  'grok-compatible',
   'gemini-compatible',
   'bailian',
   'siliconflow',
@@ -465,12 +466,16 @@ function isMediaTemplateSource(value: unknown): value is OpenAICompatMediaTempla
   return value === 'ai' || value === 'manual'
 }
 
+function isOpenAICompatProviderKey(providerKey: string): boolean {
+  return providerKey === 'openai-compatible' || providerKey === 'grok-compatible'
+}
+
 function resolveProviderGatewayRoute(
   providerId: string,
   rawGatewayRoute: unknown,
 ): GatewayRouteType {
   const providerKey = getProviderKey(providerId)
-  const isOpenAICompatibleProvider = providerKey === 'openai-compatible'
+  const isOpenAICompatibleProvider = isOpenAICompatProviderKey(providerKey)
   const isGeminiCompatibleProvider = providerKey === 'gemini-compatible'
 
   if (rawGatewayRoute !== undefined && !isGatewayRoute(rawGatewayRoute)) {
@@ -967,16 +972,78 @@ function validateModelProviderTypeSupport(models: StoredModel[], providers: Stor
 }
 
 function isOpenAICompatibleLlmModel(model: StoredModel): boolean {
-  return model.type === 'llm' && getProviderKey(model.provider) === 'openai-compatible'
+  return model.type === 'llm' && isOpenAICompatProviderKey(getProviderKey(model.provider))
 }
 
 function isOpenAICompatibleMediaTemplateModel(model: StoredModel): boolean {
-  if (getProviderKey(model.provider) !== 'openai-compatible') return false
+  if (!isOpenAICompatProviderKey(getProviderKey(model.provider))) return false
   return model.type === 'image' || model.type === 'video'
 }
 
-function getDefaultMediaTemplate(type: 'image' | 'video'): OpenAICompatMediaTemplate {
+function getDefaultMediaTemplate(type: 'image' | 'video', providerId: string): OpenAICompatMediaTemplate {
+  const providerKey = getProviderKey(providerId)
+  const isGrokCompatible = providerKey === 'grok-compatible'
+
   if (type === 'image') {
+    if (isGrokCompatible) {
+      return {
+        version: 1,
+        mediaType: 'image',
+        mode: 'sync',
+        create: {
+          method: 'POST',
+          path: '/images/generations',
+          contentType: 'application/json',
+          bodyTemplate: {
+            model: '{{model}}',
+            prompt: '{{prompt}}',
+          },
+        },
+        response: {
+          outputUrlPath: '$.data[0].url',
+          outputUrlsPath: '$.data',
+          errorPath: '$.error.message',
+        },
+        operations: {
+          generate: {
+            create: {
+              method: 'POST',
+              path: '/images/generations',
+              contentType: 'application/json',
+              bodyTemplate: {
+                model: '{{model}}',
+                prompt: '{{prompt}}',
+              },
+            },
+            response: {
+              outputUrlPath: '$.data[0].url',
+              outputUrlsPath: '$.data',
+              errorPath: '$.error.message',
+            },
+          },
+          edit: {
+            create: {
+              method: 'POST',
+              path: '/images/edits',
+              contentType: 'application/json',
+              bodyTemplate: {
+                model: '{{model}}',
+                prompt: '{{prompt}}',
+                image: {
+                  url: '{{image}}',
+                },
+              },
+            },
+            response: {
+              outputUrlPath: '$.data[0].url',
+              outputUrlsPath: '$.data',
+              errorPath: '$.error.message',
+            },
+          },
+        },
+      }
+    }
+
     return {
       version: 1,
       mediaType: 'image',
@@ -994,6 +1061,113 @@ function getDefaultMediaTemplate(type: 'image' | 'video'): OpenAICompatMediaTemp
         outputUrlPath: '$.data[0].url',
         outputUrlsPath: '$.data',
         errorPath: '$.error.message',
+      },
+    }
+  }
+
+  if (isGrokCompatible) {
+    return {
+      version: 1,
+      mediaType: 'video',
+      mode: 'async',
+      create: {
+        method: 'POST',
+        path: '/videos/generations',
+        contentType: 'application/json',
+        bodyTemplate: {
+          model: '{{model}}',
+          prompt: '{{prompt}}',
+          image: {
+            url: '{{image}}',
+          },
+          duration: '{{duration}}',
+          resolution: '{{resolution}}',
+          aspect_ratio: '{{aspect_ratio}}',
+        },
+      },
+      status: {
+        method: 'GET',
+        path: '/videos/{{task_id}}',
+      },
+      response: {
+        taskIdPath: '$.request_id',
+        statusPath: '$.status',
+        outputUrlPath: '$.video.url',
+        errorPath: '$.error.message',
+      },
+      polling: {
+        intervalMs: 3000,
+        timeoutMs: 600000,
+        doneStates: ['done'],
+        failStates: ['failed', 'error', 'expired', 'canceled'],
+      },
+      operations: {
+        generate: {
+          create: {
+            method: 'POST',
+            path: '/videos/generations',
+            contentType: 'application/json',
+            bodyTemplate: {
+              model: '{{model}}',
+              prompt: '{{prompt}}',
+              image: {
+                url: '{{image}}',
+              },
+              duration: '{{duration}}',
+              resolution: '{{resolution}}',
+              aspect_ratio: '{{aspect_ratio}}',
+            },
+          },
+          status: {
+            method: 'GET',
+            path: '/videos/{{task_id}}',
+          },
+          response: {
+            taskIdPath: '$.request_id',
+            statusPath: '$.status',
+            outputUrlPath: '$.video.url',
+            errorPath: '$.error.message',
+          },
+          polling: {
+            intervalMs: 3000,
+            timeoutMs: 600000,
+            doneStates: ['done'],
+            failStates: ['failed', 'error', 'expired', 'canceled'],
+          },
+        },
+        edit: {
+          create: {
+            method: 'POST',
+            path: '/videos/edits',
+            contentType: 'application/json',
+            bodyTemplate: {
+              model: '{{model}}',
+              prompt: '{{prompt}}',
+              image: {
+                url: '{{image}}',
+              },
+              duration: '{{duration}}',
+              resolution: '{{resolution}}',
+              aspect_ratio: '{{aspect_ratio}}',
+            },
+          },
+          status: {
+            method: 'GET',
+            path: '/videos/{{task_id}}',
+          },
+          response: {
+            taskIdPath: '$.request_id',
+            statusPath: '$.status',
+            outputUrlPath: '$.video.url',
+            errorPath: '$.error.message',
+          },
+          polling: {
+            intervalMs: 3000,
+            timeoutMs: 600000,
+            doneStates: ['done'],
+            failStates: ['failed', 'error', 'expired', 'canceled'],
+          },
+        },
       },
     }
   }
@@ -1134,7 +1308,7 @@ function resolveStoredMediaTemplates(
 
     return {
       ...model,
-      compatMediaTemplate: getDefaultMediaTemplate(expectedMediaType),
+      compatMediaTemplate: getDefaultMediaTemplate(expectedMediaType, model.provider),
       compatMediaTemplateCheckedAt: checkedAtFallback,
       compatMediaTemplateSource: 'manual',
     }

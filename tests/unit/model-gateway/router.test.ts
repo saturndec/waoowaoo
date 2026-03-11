@@ -8,6 +8,12 @@ describe('model-gateway router', () => {
     expect(resolveModelGatewayRoute('openai-compatible:oa-1')).toBe('openai-compat')
   })
 
+  it('routes grok-compatible providers to openai-compat', () => {
+    expect(isCompatibleProvider('grok-compatible')).toBe(true)
+    expect(isCompatibleProvider('grok-compatible:gk-1')).toBe(true)
+    expect(resolveModelGatewayRoute('grok-compatible:gk-1')).toBe('openai-compat')
+  })
+
   it('keeps gemini-compatible providers on official route', () => {
     expect(isCompatibleProvider('gemini-compatible')).toBe(false)
     expect(isCompatibleProvider('gemini-compatible:gm-1')).toBe(false)

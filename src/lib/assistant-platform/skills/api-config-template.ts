@@ -58,8 +58,9 @@ function createApiConfigTemplateTools(ctx: AssistantRuntimeContext): ToolSet {
   if (!providerId) {
     throw new AssistantPlatformError('ASSISTANT_CONTEXT_REQUIRED', 'providerId is required for api-config-template assistant')
   }
-  if (getProviderKey(providerId) !== 'openai-compatible') {
-    throw new AssistantPlatformError('ASSISTANT_CONTEXT_REQUIRED', 'api-config-template assistant requires openai-compatible providerId')
+  const providerKey = getProviderKey(providerId)
+  if (providerKey !== 'openai-compatible' && providerKey !== 'grok-compatible') {
+    throw new AssistantPlatformError('ASSISTANT_CONTEXT_REQUIRED', 'api-config-template assistant requires openai-compatible/grok-compatible providerId')
   }
 
   return {

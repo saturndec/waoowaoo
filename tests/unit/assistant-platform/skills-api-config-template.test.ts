@@ -11,12 +11,12 @@ vi.mock('@/lib/user-api/model-template/save', () => ({
 
 import { apiConfigTemplateSkill } from '@/lib/assistant-platform/skills/api-config-template'
 
-function buildRuntimeContext(): AssistantRuntimeContext {
+function buildRuntimeContext(providerId = 'openai-compatible:oa-1'): AssistantRuntimeContext {
   return {
     userId: 'user-1',
     assistantId: 'api-config-template',
     context: {
-      providerId: 'openai-compatible:oa-1',
+      providerId,
     },
     analysisModelKey: 'openrouter::gpt-5-mini',
     resolvedModel: {
@@ -225,6 +225,56 @@ describe('assistant-platform api-config-template skill', () => {
       userId: 'user-1',
       type: 'video',
       source: 'ai',
+    }))
+  })
+
+  it('allows grok-compatible provider context', async () => {
+    const tools = apiConfigTemplateSkill.tools?.(buildRuntimeContext('grok-compatible:gk-1'))
+    expect(tools).toBeTruthy()
+    const saveTool = tools?.saveModelTemplate
+    if (!saveTool?.execute) {
+      throw new Error('saveModelTemplate.execute is required for test')
+    }
+
+    const result = await saveTool.execute({
+      modelId: 'grok-video-1',
+      name: 'Grok Video',
+      type: 'video',
+      compatMediaTemplate: {
+        version: 1,
+        mediaType: 'video',
+        mode: 'async',
+        create: {
+          method: 'POST',
+          path: '/v1/videos/generations',
+          contentType: 'application/json',
+          bodyTemplate: {
+            model: '{{model}}',
+            prompt: '{{prompt}}',
+          },
+        },
+        status: {
+          method: 'GET',
+          path: '/v1/videos/{{task_id}}',
+        },
+        response: {
+          taskIdPath: '$.id',
+          statusPath: '$.status',
+          outputUrlPath: '$.output[0].url',
+        },
+        polling: {
+          intervalMs: 3000,
+          timeoutMs: 180000,
+          doneStates: ['done'],
+          failStates: ['expired', 'failed'],
+        },
+      },
+    }, {} as never)
+
+    expect(result.status).toBe('saved')
+    expect(saveModelTemplateConfigurationMock).toHaveBeenCalledWith(expect.objectContaining({
+      providerId: 'grok-compatible:gk-1',
+      modelId: 'grok-video-1',
     }))
   })
 })

@@ -44,6 +44,22 @@ function validateEndpointPaths(template: OpenAICompatMediaTemplate): ModelTempla
     const contentPathIssue = validatePath(template.content.path, 'content.path')
     if (contentPathIssue) issues.push(contentPathIssue)
   }
+
+  if (template.operations) {
+    for (const [operation, operationTemplate] of Object.entries(template.operations)) {
+      if (!operationTemplate) continue
+      const operationCreateIssue = validatePath(operationTemplate.create.path, `operations.${operation}.create.path`)
+      if (operationCreateIssue) issues.push(operationCreateIssue)
+      if (operationTemplate.status) {
+        const operationStatusIssue = validatePath(operationTemplate.status.path, `operations.${operation}.status.path`)
+        if (operationStatusIssue) issues.push(operationStatusIssue)
+      }
+      if (operationTemplate.content) {
+        const operationContentIssue = validatePath(operationTemplate.content.path, `operations.${operation}.content.path`)
+        if (operationContentIssue) issues.push(operationContentIssue)
+      }
+    }
+  }
   return issues
 }
 
@@ -66,4 +82,3 @@ export function validateOpenAICompatMediaTemplate(raw: unknown): {
   }
   return { ok: true, template: parsed.template, issues: [] }
 }
-

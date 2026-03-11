@@ -39,6 +39,16 @@ export interface TemplatePollingConfig {
   failStates: string[]
 }
 
+export type TemplateOperationType = 'generate' | 'edit'
+
+export interface OpenAICompatOperationTemplate {
+  create: TemplateEndpoint
+  status?: TemplateEndpoint
+  content?: TemplateEndpoint
+  response: TemplateResponseMap
+  polling?: TemplatePollingConfig
+}
+
 export interface OpenAICompatMediaTemplate {
   version: 1
   mediaType: 'image' | 'video'
@@ -48,6 +58,7 @@ export interface OpenAICompatMediaTemplate {
   content?: TemplateEndpoint
   response: TemplateResponseMap
   polling?: TemplatePollingConfig
+  operations?: Partial<Record<TemplateOperationType, OpenAICompatOperationTemplate>>
 }
 
 export type OpenAICompatMediaTemplateSource = 'ai' | 'manual'

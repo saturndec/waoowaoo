@@ -17,6 +17,8 @@ export function ProviderBaseFields({ provider, t, state }: ProviderBaseFieldsPro
         return 'https://your-api-domain.com'
       case 'openai-compatible':
         return 'https://api.openai.com/v1'
+      case 'grok-compatible':
+        return 'https://api.x.ai/v1'
       default:
         return 'http://localhost:8000'
     }

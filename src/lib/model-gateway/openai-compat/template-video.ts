@@ -3,12 +3,14 @@ import type { OpenAICompatVideoRequest } from '../types'
 import {
   buildRenderedTemplateRequest,
   buildTemplateVariables,
-  extractTemplateError,
+  extractTemplateErrorFromResponse,
   normalizeResponseJson,
   readJsonPath,
+  resolveTemplateOperation,
+  type TemplateOperation,
 } from '@/lib/openai-compat-template-runtime'
 import { parseModelKeyStrict } from '@/lib/model-config-contract'
-import { resolveOpenAICompatClientConfig } from './common'
+import { resolveOpenAICompatClientConfig, sanitizeTemplateOptions } from './common'
 
 const OPENAI_COMPAT_PROVIDER_PREFIX = 'openai-compatible:'
 const PROVIDER_UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
@@ -40,6 +42,17 @@ function resolveModelRef(request: OpenAICompatVideoRequest): string {
   throw new Error('OPENAI_COMPAT_VIDEO_MODEL_REF_REQUIRED')
 }
 
+function resolveVideoTemplateOperation(options: Record<string, unknown> | undefined): TemplateOperation {
+  const candidates = [options?.operation, options?.templateOperation, options?.generationMode]
+  for (const candidate of candidates) {
+    if (typeof candidate !== 'string') continue
+    const normalized = candidate.trim().toLowerCase()
+    if (normalized === 'edit') return 'edit'
+    if (normalized === 'generate' || normalized === 'generation') return 'generate'
+  }
+  return 'generate'
+}
+
 export async function generateVideoViaOpenAICompatTemplate(
   request: OpenAICompatVideoRequest,
 ): Promise<GenerateResult> {
@@ -51,21 +64,24 @@ export async function generateVideoViaOpenAICompatTemplate(
   }
 
   const config = await resolveOpenAICompatClientConfig(request.userId, request.providerId)
+  const sanitizedOptions = sanitizeTemplateOptions(request.options)
+  const operation = resolveVideoTemplateOperation(request.options)
+  const operationTemplate = resolveTemplateOperation(request.template, operation)
   const variables = buildTemplateVariables({
     model: request.modelId || '',
     prompt: request.prompt,
     image: request.imageUrl,
     images: [request.imageUrl],
-    aspectRatio: typeof request.options?.aspectRatio === 'string' ? request.options.aspectRatio : undefined,
-    resolution: typeof request.options?.resolution === 'string' ? request.options.resolution : undefined,
-    size: typeof request.options?.size === 'string' ? request.options.size : undefined,
-    duration: typeof request.options?.duration === 'number' ? request.options.duration : undefined,
-    extra: request.options,
+    aspectRatio: typeof sanitizedOptions?.aspectRatio === 'string' ? sanitizedOptions.aspectRatio : undefined,
+    resolution: typeof sanitizedOptions?.resolution === 'string' ? sanitizedOptions.resolution : undefined,
+    size: typeof sanitizedOptions?.size === 'string' ? sanitizedOptions.size : undefined,
+    duration: typeof sanitizedOptions?.duration === 'number' ? sanitizedOptions.duration : undefined,
+    extra: sanitizedOptions,
   })
 
   const createRequest = await buildRenderedTemplateRequest({
     baseUrl: config.baseUrl,
-    endpoint: request.template.create,
+    endpoint: operationTemplate.create,
     variables,
     defaultAuthHeader: `Bearer ${config.apiKey}`,
   })
@@ -81,22 +97,22 @@ export async function generateVideoViaOpenAICompatTemplate(
   const payload = normalizeResponseJson(rawText)
 
   if (!createResponse.ok) {
-    const errorMessage = extractTemplateError(request.template, payload, createResponse.status)
+    const errorMessage = extractTemplateErrorFromResponse(operationTemplate.response, payload, createResponse.status)
     if ([404, 405, 415].includes(createResponse.status)) {
       throw buildUnsupportedVideoFormatError(errorMessage)
     }
     throw new Error(errorMessage)
   }
 
-  if (request.template.mode === 'sync') {
-    const outputUrl = readJsonPath(payload, request.template.response.outputUrlPath)
+  if (operationTemplate.mode === 'sync') {
+    const outputUrl = readJsonPath(payload, operationTemplate.response.outputUrlPath)
     if (typeof outputUrl === 'string' && outputUrl.trim()) {
       return {
         success: true,
         videoUrl: outputUrl.trim(),
       }
     }
-    const outputUrls = readJsonPath(payload, request.template.response.outputUrlsPath)
+    const outputUrls = readJsonPath(payload, operationTemplate.response.outputUrlsPath)
     if (Array.isArray(outputUrls) && outputUrls.length > 0 && typeof outputUrls[0] === 'string') {
       return {
         success: true,
@@ -106,7 +122,7 @@ export async function generateVideoViaOpenAICompatTemplate(
     throw buildUnsupportedVideoFormatError('OPENAI_COMPAT_VIDEO_TEMPLATE_OUTPUT_NOT_FOUND')
   }
 
-  const taskIdRaw = readJsonPath(payload, request.template.response.taskIdPath)
+  const taskIdRaw = readJsonPath(payload, operationTemplate.response.taskIdPath)
   const taskId = typeof taskIdRaw === 'string' ? taskIdRaw.trim() : ''
   if (!taskId) {
     throw buildUnsupportedVideoFormatError('OPENAI_COMPAT_VIDEO_TEMPLATE_TASK_ID_NOT_FOUND')
@@ -119,6 +135,6 @@ export async function generateVideoViaOpenAICompatTemplate(
     success: true,
     async: true,
     requestId: taskId,
-    externalId: `OCOMPAT:VIDEO:${providerToken}:${modelRefToken}:${taskId}`,
+    externalId: `OCOMPAT:VIDEO:${providerToken}:${modelRefToken}:${operation}:${taskId}`,
   }
 }

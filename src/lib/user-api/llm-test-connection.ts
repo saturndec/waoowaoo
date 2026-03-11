@@ -9,6 +9,7 @@ type SupportedProvider =
   | 'bailian'
   | 'siliconflow'
   | 'openai-compatible'
+  | 'grok-compatible'
   | 'gemini-compatible'
   | 'custom'
 
@@ -40,6 +41,7 @@ function normalizeProvider(payload: TestConnectionPayload): SupportedProvider {
     case 'anthropic':
     case 'openai':
     case 'openai-compatible':
+    case 'grok-compatible':
     case 'gemini-compatible':
     case 'bailian':
     case 'siliconflow':
@@ -205,6 +207,14 @@ export async function testLlmConnection(payload: TestConnectionPayload): Promise
         model: requestedModel || undefined,
       })
       return { provider, message: 'openai-compatible 连接成功', ...tested }
+    }
+    case 'grok-compatible': {
+      const tested = await testOpenAICompatibleConnection({
+        apiKey,
+        baseURL: requireBaseUrl(payload),
+        model: requestedModel || undefined,
+      })
+      return { provider, message: 'grok-compatible 连接成功', ...tested }
     }
     case 'gemini-compatible': {
       const tested = await testOpenAICompatibleConnection({
