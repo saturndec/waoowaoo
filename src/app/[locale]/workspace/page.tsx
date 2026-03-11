@@ -785,7 +785,7 @@ export default function WorkspacePage() {
         <div className="fixed inset-0 glass-overlay flex items-center justify-center z-50 backdrop-blur-sm p-3 sm:p-4 lg:p-6">
           <div className="glass-surface-modal w-full max-w-4xl max-h-[90vh] overflow-y-auto p-5 sm:p-6 lg:p-7">
             <h2 className="text-2xl font-bold text-[var(--glass-text-primary)] mb-1">{t('createProject')}</h2>
-            <p className="text-sm text-[var(--glass-text-tertiary)] mb-1">{t('projectTypeLabel')} + {t('projectName')}</p>
+            <p className="text-sm text-[var(--glass-text-tertiary)] mb-1">{t('wizard.modalIntro')}</p>
             <div className="mb-5 rounded-lg border border-[var(--glass-border)]/60 bg-[var(--glass-background-secondary)]/35 px-3 py-2">
               <p className="text-xs uppercase tracking-[0.14em] text-[var(--glass-text-tertiary)]">{t('journeyLaneLabel')}</p>
               <p className="mt-1 text-sm font-semibold text-[var(--glass-text-primary)]">{selectedJourneyTitle}</p>
@@ -793,7 +793,7 @@ export default function WorkspacePage() {
             </div>
 
             <form onSubmit={handleCreateProject} className="space-y-5">
-              <div className="flex items-center gap-2 text-xs text-[var(--glass-text-tertiary)]">
+              <div className="flex flex-wrap items-center gap-2 text-xs text-[var(--glass-text-tertiary)]">
                 <span className={`rounded-full px-2 py-1 ${createWizardStep === 1 ? 'bg-[var(--glass-primary)]/20 text-[var(--glass-text-primary)]' : 'bg-[var(--glass-bg-muted)]'}`}>1. {t('wizard.stepJourney')}</span>
                 <span className={`rounded-full px-2 py-1 ${createWizardStep === 2 ? 'bg-[var(--glass-primary)]/20 text-[var(--glass-text-primary)]' : 'bg-[var(--glass-bg-muted)]'}`}>2. {t('wizard.stepTemplate')}</span>
                 <span className={`rounded-full px-2 py-1 ${createWizardStep === 3 ? 'bg-[var(--glass-primary)]/20 text-[var(--glass-text-primary)]' : 'bg-[var(--glass-bg-muted)]'}`}>3. {t('wizard.stepSource')}</span>
@@ -802,59 +802,90 @@ export default function WorkspacePage() {
               {createWizardStep === 1 && (
                 <section className="space-y-4">
                   <div>
-                    <span className="glass-field-label block mb-2">{t('projectTypeLabel')}</span>
+                    <span className="glass-field-label block mb-2">{t('wizard.studioChoiceLabel')}</span>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                       <button
                         type="button"
                         onClick={() => handleEntryModeChange('story')}
-                        className={`glass-btn-base px-4 py-3 text-left ${formData.entryMode === 'story' ? 'glass-btn-primary ring-2 ring-[var(--glass-primary)]/35' : 'glass-btn-secondary'}`}
+                        className={`glass-btn-base relative overflow-hidden px-4 py-3.5 text-left transition ${formData.entryMode === 'story'
+                          ? 'glass-btn-primary ring-2 ring-[var(--glass-primary)]/35 shadow-[0_0_0_1px_rgba(255,255,255,0.08),0_10px_28px_rgba(76,166,255,0.18)]'
+                          : 'glass-btn-secondary hover:ring-1 hover:ring-[var(--glass-border)]/80'}`}
                       >
-                        <div className="text-sm font-semibold">{t('projectTypeStoryTitle')}</div>
-                        <div className="text-xs opacity-75 mt-1">{t('projectTypeStoryDesc')}</div>
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="flex items-start gap-2.5">
+                            <span className="mt-0.5 inline-flex h-8 w-8 items-center justify-center rounded-lg bg-[var(--glass-background-secondary)]/80">
+                              <AppIcon name="clapperboard" className="h-4 w-4" />
+                            </span>
+                            <div>
+                              <div className="text-sm font-semibold">{t('projectTypeStoryTitle')}</div>
+                              <div className="text-xs opacity-80 mt-1 leading-relaxed">{t('projectTypeStoryDesc')}</div>
+                            </div>
+                          </div>
+                          {formData.entryMode === 'story' && <AppIcon name="check" className="h-4 w-4 opacity-90" />}
+                        </div>
                       </button>
                       {dualJourneyEnabled && (
                         <button
                           type="button"
                           onClick={() => handleEntryModeChange('manga')}
-                          className={`glass-btn-base px-4 py-3 text-left ${formData.entryMode === 'manga' ? 'glass-btn-primary ring-2 ring-[var(--glass-primary)]/35' : 'glass-btn-secondary'}`}
+                          className={`glass-btn-base relative overflow-hidden px-4 py-3.5 text-left transition ${formData.entryMode === 'manga'
+                            ? 'glass-btn-primary ring-2 ring-[var(--glass-primary)]/35 shadow-[0_0_0_1px_rgba(255,255,255,0.08),0_10px_28px_rgba(76,166,255,0.18)]'
+                            : 'glass-btn-secondary hover:ring-1 hover:ring-[var(--glass-border)]/80'}`}
                         >
-                          <div className="text-sm font-semibold">{t('projectTypeMangaTitle')}</div>
-                          <div className="text-xs opacity-75 mt-1">{t('projectTypeMangaDesc')}</div>
+                          <div className="flex items-start justify-between gap-3">
+                            <div className="flex items-start gap-2.5">
+                              <span className="mt-0.5 inline-flex h-8 w-8 items-center justify-center rounded-lg bg-[var(--glass-background-secondary)]/80">
+                                <AppIcon name="bookOpen" className="h-4 w-4" />
+                              </span>
+                              <div>
+                                <div className="text-sm font-semibold">{t('projectTypeMangaTitle')}</div>
+                                <div className="text-xs opacity-80 mt-1 leading-relaxed">{t('projectTypeMangaDesc')}</div>
+                              </div>
+                            </div>
+                            {formData.entryMode === 'manga' && <AppIcon name="check" className="h-4 w-4 opacity-90" />}
+                          </div>
                         </button>
                       )}
                     </div>
                   </div>
 
-                  <div>
-                    <label htmlFor="name" className="glass-field-label block mb-2">
-                      {t('projectName')} *
-                    </label>
-                    <input
-                      id="name"
-                      type="text"
-                      value={formData.name}
-                      onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                      className="glass-input-base w-full px-3 py-2.5"
-                      placeholder={t('projectNamePlaceholder')}
-                      maxLength={100}
-                      required
-                      autoFocus
-                    />
-                  </div>
+                  <div className="rounded-lg border border-[var(--glass-border)]/50 bg-[var(--glass-background-secondary)]/25 px-3 py-3">
+                    <div className="mb-2">
+                      <p className="glass-field-label">{t('wizard.projectDetailsLabel')}</p>
+                      <p className="text-xs text-[var(--glass-text-tertiary)] mt-1">{t('wizard.projectDetailsHint')}</p>
+                    </div>
 
-                  <div>
-                    <label htmlFor="description" className="glass-field-label block mb-2">
-                      {t('projectDescription')}
-                    </label>
-                    <textarea
-                      id="description"
-                      value={formData.description}
-                      onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                      className="glass-textarea-base w-full px-3 py-2.5"
-                      placeholder={t('projectDescriptionPlaceholder')}
-                      rows={2}
-                      maxLength={500}
-                    />
+                    <div>
+                      <label htmlFor="name" className="glass-field-label block mb-2">
+                        {t('projectName')} *
+                      </label>
+                      <input
+                        id="name"
+                        type="text"
+                        value={formData.name}
+                        onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                        className="glass-input-base w-full px-3 py-2.5"
+                        placeholder={t('projectNamePlaceholder')}
+                        maxLength={100}
+                        required
+                        autoFocus
+                      />
+                    </div>
+
+                    <div className="mt-3">
+                      <label htmlFor="description" className="glass-field-label block mb-2">
+                        {t('projectDescription')}
+                      </label>
+                      <textarea
+                        id="description"
+                        value={formData.description}
+                        onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                        className="glass-textarea-base w-full px-3 py-2.5"
+                        placeholder={t('projectDescriptionPlaceholder')}
+                        rows={2}
+                        maxLength={500}
+                      />
+                    </div>
                   </div>
                 </section>
               )}
@@ -993,7 +1024,7 @@ export default function WorkspacePage() {
                       className="glass-btn-base glass-btn-primary px-4 py-2.5 disabled:opacity-50"
                       disabled={createLoading || (createWizardStep === 1 ? !canContinueToTemplateStep : !canContinueToSourceStep)}
                     >
-                      {t('wizard.next')}
+                      {createWizardStep === 1 ? t('wizard.nextToTemplate') : t('wizard.nextToSource')}
                     </button>
                   ) : (
                     <button
