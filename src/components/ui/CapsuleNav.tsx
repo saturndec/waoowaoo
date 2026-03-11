@@ -104,8 +104,8 @@ function NavItem({
                 )}
             </button>
             {disabled && disabledLabel && (
-                <div className="absolute left-1/2 -translate-x-1/2 top-full mt-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-10">
-                    <div className="glass-surface-soft text-xs px-3 py-2 whitespace-nowrap text-[var(--glass-text-primary)]">
+                <div className="absolute left-1/2 -translate-x-1/2 top-full mt-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-[90]">
+                    <div className="glass-surface-soft text-xs px-3 py-2 max-w-[min(16rem,80vw)] whitespace-normal text-center text-[var(--glass-text-primary)]">
                         {disabledLabel}
                     </div>
                     <div className="absolute left-1/2 -translate-x-1/2 -top-1 w-2 h-2 bg-[var(--glass-bg-surface-strong)] rotate-45 border-l border-t border-[var(--glass-stroke-base)]" />
@@ -133,7 +133,7 @@ export function CapsuleNav({ items, activeId, onItemClick, projectId, episodeId 
     }
 
     return (
-        <nav className="fixed top-20 left-1/2 -translate-x-1/2 z-50 w-[calc(100vw-1rem)] sm:w-auto animate-fadeInDown">
+        <nav className="fixed top-[calc(env(safe-area-inset-top,0px)+8.75rem)] sm:top-[calc(env(safe-area-inset-top,0px)+8rem)] left-1/2 -translate-x-1/2 z-[55] w-[calc(100vw-1rem)] sm:w-auto animate-fadeInDown">
             <div
                 className="flex overflow-x-auto rounded-full px-1.5 sm:px-2 py-1 no-scrollbar"
                 style={{
@@ -215,7 +215,7 @@ export function EpisodeSelector({
     if (!currentEp) return null
 
     return (
-        <div className="fixed top-20 left-3 sm:left-6 z-[60] max-w-[calc(100vw-0.75rem)] sm:max-w-none" ref={menuRef}>
+        <div className="fixed top-[calc(env(safe-area-inset-top,0px)+8.75rem)] sm:top-[calc(env(safe-area-inset-top,0px)+8rem)] left-3 sm:left-6 z-[56] max-w-[calc(100vw-0.75rem)] sm:max-w-none" ref={menuRef}>
             <button
                 onClick={() => setIsOpen(!isOpen)}
                 className="glass-btn-base glass-btn-secondary flex items-center gap-2 sm:gap-3 px-3 sm:px-4 py-2.5 sm:py-3 transition-all group w-full sm:w-auto"

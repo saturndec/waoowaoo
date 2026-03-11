@@ -75,7 +75,7 @@ function NovelPromotionWorkspaceContent(props: NovelPromotionWorkspaceProps) {
         journeyType={vm.runtime.stageRuntime.journeyType}
       />
 
-      <div className="pt-24">
+      <div className="pt-36 sm:pt-32">
         <WorkspaceStageRuntimeProvider value={vm.runtime.stageRuntime}>
           <WorkspaceStageContent currentStage={vm.stageNav.currentStage} />
         </WorkspaceStageRuntimeProvider>

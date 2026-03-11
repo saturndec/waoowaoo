@@ -20,7 +20,7 @@ export default function WorkspaceTopActions({
   refreshTitle,
 }: WorkspaceTopActionsProps) {
   return (
-    <div className="fixed bottom-4 right-3 z-50 flex flex-col gap-2 sm:bottom-auto sm:top-20 sm:right-6 sm:flex-row sm:gap-3">
+    <div className="fixed bottom-4 right-3 z-50 flex flex-col gap-2 sm:bottom-auto sm:top-[calc(env(safe-area-inset-top,0px)+12.75rem)] sm:right-6 sm:flex-row sm:gap-3">
       <button
         onClick={onOpenAssetLibrary}
         className="glass-btn-base glass-btn-secondary flex items-center justify-center gap-2 px-3 sm:px-4 py-2.5 sm:py-3 rounded-3xl text-[var(--glass-text-primary)]"
