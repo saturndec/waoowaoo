@@ -1,0 +1,19 @@
+# benchmark/time-to-first-panel scan
+captured_at_utc=2026-03-12T16:26:43Z
+docs/ux/vat-136-research-pack/README.md:44:3. `benchmark-cases.vat-136.md`
+docs/ux/vat-136-research-pack/README.md:45:   - Danh sách benchmark cases ưu tiên (golden path + regression + compatibility).
+docs/ux/vat-136-research-pack/README.md:56:3. **QA/UAT**: chạy theo `benchmark-cases.vat-136.md` và cập nhật PASS/FAIL theo acceptance signal.
+docs/ux/vat-136-research-pack/benchmark-cases.vat-136.md:4:Danh sách benchmark cases ưu tiên để team FE/QA verify nhanh các điểm sống còn của VAT-131 P2 (không deploy).
+docs/ux/vat-136-research-pack/benchmark-cases.vat-136.md:8:## A. Golden-path benchmarks
+docs/ux/vat-136-research-pack/benchmark-cases.vat-136.md:30:## B. Compatibility/regression benchmarks
+docs/ux/vat-136-research-pack/benchmark-cases.vat-136.md:46:## C. Product semantics / copy benchmarks
+docs/ux/vat-136-research-pack/benchmark-cases.vat-136.md:62:## D. Data mapping / settings benchmarks
+docs/ux/vat-136-research-pack/benchmark-cases.vat-136.md:78:## E. Telemetry benchmarks
+docs/ux/vat-136-research-pack/acceptance-matrix.vat-136.yaml:145:      - Có đủ 4 artifacts: summary, acceptance matrix, benchmark list, evidence mapping.
+docs/ux/vat-136-research-pack/acceptance-matrix.vat-136.md:75:- [ ] Chạy smoke theo benchmark list.
+docs/testing/vat-132-ac-closure-status-2026-03-12.md:8:1. Benchmark >=30% time-to-first-panel
+docs/testing/vat-132-ac-closure-status-2026-03-12.md:13:### AC-1: benchmark >=30% time-to-first-panel
+docs/testing/vat-132-ac-closure-status-2026-03-12.md:15:- **Reason:** repo/runtime hiện không có benchmark harness đo `time-to-first-panel` cho VAT-132 flows (không có script + không có baseline run log đủ cặp trước/sau để tính %).
+docs/testing/vat-132-ac-closure-status-2026-03-12.md:16:- **Evidence:** full-text scan không tìm thấy artifact benchmark VAT-132 hiện hữu; chỉ có benchmark list cho VAT-136 research pack, chưa phải execution evidence cho VAT-132.
+docs/testing/vat-132-ac-closure-status-2026-03-12.md:28:1. Thiếu benchmark harness + baseline pair cho `time-to-first-panel` nên không thể chứng minh >=30% bằng số liệu thật.
+docs/testing/artifacts/vat-132-vat-133-blocker-followup-2026-03-12/rg-benchmark-scan.txt:1:# benchmark/time-to-first-panel scan

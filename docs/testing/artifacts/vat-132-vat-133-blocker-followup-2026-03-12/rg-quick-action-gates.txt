@@ -1,0 +1,66 @@
+# quick-action render gates scan
+captured_at_utc=2026-03-12T16:26:53Z
+src/lib/workspace/quick-manga-editor-flow.ts:24:  if (params.journeyType === 'manga_webtoon') {
+src/lib/workspace/project-mode.ts:42:  return journeyType === 'manga_webtoon' ? 'manga' : 'story'
+src/lib/workspace/project-mode.ts:54:  return journeyType === 'manga_webtoon' ? 'manga_quickstart' : 'film_story_studio'
+src/lib/workspace/project-mode.ts:64:  if (input.journeyType === 'manga_webtoon' || input.journeyType === 'film_video') {
+src/app/[locale]/workspace/page.tsx:636:                    <span className={`inline-flex items-center rounded-full border px-2.5 py-1 text-[11px] font-semibold tracking-[0.08em] uppercase ${project.onboardingContext?.journeyType === 'manga_webtoon'
+src/app/[locale]/workspace/page.tsx:640:                      {project.onboardingContext?.journeyType === 'manga_webtoon'
+src/lib/workspace/webtoon-panel-controls.ts:45:export const WEBTOON_PANEL_QUICK_ACTIONS: WebtoonQuickActionMeta[] = [
+src/lib/workspace/quick-manga-editor-flow.ts:24:  if (params.journeyType === 'manga_webtoon') {
+src/lib/workspace/journey-generation-runtime.ts:83:  const defaults = params.context.journeyType === 'manga_webtoon'
+src/lib/workspace/journey-generation-runtime.ts:93:    params.context.journeyType === 'manga_webtoon' && quickMangaForLane.enabled
+src/lib/workspace/project-mode.ts:42:  return journeyType === 'manga_webtoon' ? 'manga' : 'story'
+src/lib/workspace/project-mode.ts:54:  return journeyType === 'manga_webtoon' ? 'manga_quickstart' : 'film_story_studio'
+src/lib/workspace/project-mode.ts:64:  if (input.journeyType === 'manga_webtoon' || input.journeyType === 'film_video') {
+src/lib/workspace/webtoon-panel-controls.ts:45:export const WEBTOON_PANEL_QUICK_ACTIONS: WebtoonQuickActionMeta[] = [
+src/lib/workspace/journey-runtime-adapter.ts:36:  if (input.journeyType === 'manga_webtoon') {
+src/lib/workspace/journey-generation-runtime.ts:83:  const defaults = params.context.journeyType === 'manga_webtoon'
+src/lib/workspace/journey-generation-runtime.ts:93:    params.context.journeyType === 'manga_webtoon' && quickMangaForLane.enabled
+src/lib/workspace/journey-runtime-adapter.ts:36:  if (input.journeyType === 'manga_webtoon') {
+src/app/[locale]/workspace/[projectId]/modes/novel-promotion/hooks/useWorkspaceStageNavigation.ts:60:  if (journeyType === 'manga_webtoon') {
+src/app/[locale]/workspace/[projectId]/modes/novel-promotion/hooks/useWorkspaceProjectSnapshot.ts:48:      projectData?.onboardingContext?.journeyType === 'manga_webtoon'
+src/app/api/novel-promotion/[projectId]/demo-sample-assets/route.ts:57:  const laneLabel = journeyType === 'manga_webtoon' ? 'Manga' : 'Film'
+src/app/[locale]/workspace/[projectId]/modes/novel-promotion/components/ConfigStage.tsx:5:import MangaPanelControls from './MangaPanelControls'
+src/app/[locale]/workspace/[projectId]/modes/novel-promotion/components/ConfigStage.tsx:56:      {runtime.journeyType === 'manga_webtoon' && (
+src/app/[locale]/workspace/[projectId]/modes/novel-promotion/components/ConfigStage.tsx:58:          <MangaPanelControls
+src/app/api/novel-promotion/[projectId]/demo-sample-assets/route.ts:57:  const laneLabel = journeyType === 'manga_webtoon' ? 'Manga' : 'Film'
+src/app/[locale]/workspace/[projectId]/modes/novel-promotion/components/prompts-stage/PromptEditorPanel.tsx:24:  const nextStageLabel = journeyType === 'manga_webtoon'
+src/app/[locale]/workspace/[projectId]/modes/novel-promotion/components/NovelInputStage.tsx:205:  const isMangaJourney = journeyType === 'manga_webtoon'
+src/app/[locale]/workspace/[projectId]/modes/novel-promotion/components/MangaPanelControls.tsx:22:  WEBTOON_PANEL_QUICK_ACTIONS,
+src/app/[locale]/workspace/[projectId]/modes/novel-promotion/components/MangaPanelControls.tsx:26:interface MangaPanelControlsProps {
+src/app/[locale]/workspace/[projectId]/modes/novel-promotion/components/MangaPanelControls.tsx:207:export default function MangaPanelControls({
+src/app/[locale]/workspace/[projectId]/modes/novel-promotion/components/MangaPanelControls.tsx:230:}: MangaPanelControlsProps) {
+src/app/[locale]/workspace/[projectId]/modes/novel-promotion/components/MangaPanelControls.tsx:255:  const canRunQuickAction = (actionId: typeof WEBTOON_PANEL_QUICK_ACTIONS[number]['id']) => {
+src/app/[locale]/workspace/[projectId]/modes/novel-promotion/components/MangaPanelControls.tsx:360:    console.warn(`[MangaPanelControls] Missing real thumbnail: ${imagePath} (${context})`)
+src/app/[locale]/workspace/[projectId]/modes/novel-promotion/components/MangaPanelControls.tsx:488:          {WEBTOON_PANEL_QUICK_ACTIONS.map((action) => (
+src/app/[locale]/workspace/[projectId]/modes/novel-promotion/components/StoryboardStage.tsx:23:      onNext={async () => runtime.onStageChange(runtime.journeyType === 'manga_webtoon' ? 'panels' : 'videos')}
+src/app/api/projects/route.ts:232:    journeyType === 'film_video' || journeyType === 'manga_webtoon'
+src/app/api/projects/route.ts:232:    journeyType === 'film_video' || journeyType === 'manga_webtoon'
+src/app/[locale]/workspace/page.tsx:636:                    <span className={`inline-flex items-center rounded-full border px-2.5 py-1 text-[11px] font-semibold tracking-[0.08em] uppercase ${project.onboardingContext?.journeyType === 'manga_webtoon'
+src/app/[locale]/workspace/page.tsx:640:                      {project.onboardingContext?.journeyType === 'manga_webtoon'
+src/app/[locale]/workspace/[projectId]/modes/novel-promotion/components/WorkspaceHeaderShell.tsx:181:  const isMangaJourney = journeyType === 'manga_webtoon'
+src/app/[locale]/workspace/[projectId]/modes/novel-promotion/components/ScriptStage.tsx:4:import MangaPanelControls from './MangaPanelControls'
+src/app/[locale]/workspace/[projectId]/modes/novel-promotion/components/ScriptStage.tsx:16:      {runtime.journeyType === 'manga_webtoon' && (
+src/app/[locale]/workspace/[projectId]/modes/novel-promotion/components/ScriptStage.tsx:17:        <MangaPanelControls
+src/app/[locale]/workspace/[projectId]/modes/novel-promotion/hooks/useWorkspaceStageNavigation.ts:60:  if (journeyType === 'manga_webtoon') {
+src/app/[locale]/workspace/[projectId]/modes/novel-promotion/hooks/useWorkspaceProjectSnapshot.ts:48:      projectData?.onboardingContext?.journeyType === 'manga_webtoon'
+src/app/[locale]/workspace/[projectId]/modes/novel-promotion/components/ConfigStage.tsx:5:import MangaPanelControls from './MangaPanelControls'
+src/app/[locale]/workspace/[projectId]/modes/novel-promotion/components/ConfigStage.tsx:56:      {runtime.journeyType === 'manga_webtoon' && (
+src/app/[locale]/workspace/[projectId]/modes/novel-promotion/components/ConfigStage.tsx:58:          <MangaPanelControls
+src/app/[locale]/workspace/[projectId]/modes/novel-promotion/components/prompts-stage/PromptEditorPanel.tsx:24:  const nextStageLabel = journeyType === 'manga_webtoon'
+src/app/[locale]/workspace/[projectId]/modes/novel-promotion/components/NovelInputStage.tsx:205:  const isMangaJourney = journeyType === 'manga_webtoon'
+src/app/[locale]/workspace/[projectId]/modes/novel-promotion/components/MangaPanelControls.tsx:22:  WEBTOON_PANEL_QUICK_ACTIONS,
+src/app/[locale]/workspace/[projectId]/modes/novel-promotion/components/MangaPanelControls.tsx:26:interface MangaPanelControlsProps {
+src/app/[locale]/workspace/[projectId]/modes/novel-promotion/components/MangaPanelControls.tsx:207:export default function MangaPanelControls({
+src/app/[locale]/workspace/[projectId]/modes/novel-promotion/components/MangaPanelControls.tsx:230:}: MangaPanelControlsProps) {
+src/app/[locale]/workspace/[projectId]/modes/novel-promotion/components/MangaPanelControls.tsx:255:  const canRunQuickAction = (actionId: typeof WEBTOON_PANEL_QUICK_ACTIONS[number]['id']) => {
+src/app/[locale]/workspace/[projectId]/modes/novel-promotion/components/MangaPanelControls.tsx:360:    console.warn(`[MangaPanelControls] Missing real thumbnail: ${imagePath} (${context})`)
+src/app/[locale]/workspace/[projectId]/modes/novel-promotion/components/MangaPanelControls.tsx:488:          {WEBTOON_PANEL_QUICK_ACTIONS.map((action) => (
+src/app/[locale]/workspace/[projectId]/modes/novel-promotion/components/StoryboardStage.tsx:23:      onNext={async () => runtime.onStageChange(runtime.journeyType === 'manga_webtoon' ? 'panels' : 'videos')}
+src/app/[locale]/workspace/[projectId]/modes/novel-promotion/components/ScriptStage.tsx:4:import MangaPanelControls from './MangaPanelControls'
+src/app/[locale]/workspace/[projectId]/modes/novel-promotion/components/ScriptStage.tsx:16:      {runtime.journeyType === 'manga_webtoon' && (
+src/app/[locale]/workspace/[projectId]/modes/novel-promotion/components/ScriptStage.tsx:17:        <MangaPanelControls
+src/app/[locale]/workspace/[projectId]/modes/novel-promotion/components/video/VideoToolbar.tsx:37:  const isMangaJourney = journeyType === 'manga_webtoon'
+src/app/[locale]/workspace/[projectId]/modes/novel-promotion/components/video/VideoToolbar.tsx:37:  const isMangaJourney = journeyType === 'manga_webtoon'
+src/app/[locale]/workspace/[projectId]/modes/novel-promotion/components/WorkspaceHeaderShell.tsx:181:  const isMangaJourney = journeyType === 'manga_webtoon'
