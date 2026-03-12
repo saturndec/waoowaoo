@@ -187,6 +187,27 @@ describe('webtoon panel controls helpers (VAT-133 P0)', () => {
     expect(plan.expectedAfterOrder).toEqual(['p2', 'p3', 'p1'])
   })
 
+  it('supports add quick action even when storyboard has zero panels', () => {
+    const plan = planWebtoonQuickActionMutation({
+      action: 'add',
+      panels: [],
+      fallbackStoryboardId: 'sb-empty',
+    })
+
+    expect(plan.selectedPanelId).toBeNull()
+    expect(plan.deletePanelIds).toEqual([])
+    expect(plan.createPayloads).toHaveLength(1)
+    expect(plan.createPayloads[0]?.storyboardId).toBe('sb-empty')
+    expect(plan.expectedAfterOrder).toEqual(['__new_add__'])
+  })
+
+  it('guards add when no storyboard fallback id is provided', () => {
+    expect(() => planWebtoonQuickActionMutation({
+      action: 'add',
+      panels: [],
+    })).toThrow('No storyboard to add panel')
+  })
+
   it('guards merge/reorder edge cases with explicit errors', () => {
     expect(() => planWebtoonQuickActionMutation({
       action: 'merge',

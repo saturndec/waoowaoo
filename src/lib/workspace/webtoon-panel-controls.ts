@@ -209,7 +209,7 @@ export function createReorderPayload(panel: WebtoonQuickActionPanelLite): Webtoo
 
 export interface WebtoonQuickActionMutationPlan {
   action: WebtoonPanelQuickAction
-  selectedPanelId: string
+  selectedPanelId: string | null
   deletePanelIds: string[]
   createPayloads: WebtoonQuickActionCreatePayload[]
   beforeOrder: string[]
@@ -220,10 +220,41 @@ export function planWebtoonQuickActionMutation(input: {
   action: WebtoonPanelQuickAction
   panels: WebtoonQuickActionPanelLite[]
   selectedPanelId?: string | null
+  fallbackStoryboardId?: string | null
 }): WebtoonQuickActionMutationPlan {
   const orderedPanels = [...input.panels].sort((a, b) => a.panelIndex - b.panelIndex)
   if (orderedPanels.length === 0) {
-    throw new Error('Chưa có storyboard/panel để thao tác quick actions.')
+    if (input.action !== 'add') {
+      throw new Error('Chưa có storyboard/panel để thao tác quick actions.')
+    }
+
+    const storyboardId = typeof input.fallbackStoryboardId === 'string' && input.fallbackStoryboardId.trim()
+      ? input.fallbackStoryboardId.trim()
+      : null
+
+    if (!storyboardId) {
+      throw new Error('No storyboard to add panel')
+    }
+
+    return {
+      action: input.action,
+      selectedPanelId: null,
+      deletePanelIds: [],
+      createPayloads: [{
+        storyboardId,
+        shotType: 'Medium shot',
+        cameraMove: 'Static',
+        description: 'New panel beat',
+        location: null,
+        characters: '[]',
+        srtStart: null,
+        srtEnd: null,
+        duration: null,
+        videoPrompt: '',
+      }],
+      beforeOrder: [],
+      expectedAfterOrder: ['__new_add__'],
+    }
   }
 
   const selected = input.selectedPanelId

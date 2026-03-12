@@ -251,6 +251,13 @@ export default function MangaPanelControls({
     return activePanels[activePanels.length - 1] || null
   }, [activePanels])
 
+  const canRunQuickAction = (actionId: typeof WEBTOON_PANEL_QUICK_ACTIONS[number]['id']) => {
+    if (quickActionBusy) return false
+    if (!activeStoryboard) return false
+    if (actionId === 'add') return true
+    return !!selectedPanelForActions
+  }
+
   const runQuickAction = async (label: string, operation: () => Promise<void>) => {
     if (quickActionBusy) return
     setQuickActionBusy(label)
@@ -481,16 +488,18 @@ export default function MangaPanelControls({
             <button
               key={action.id}
               type="button"
-              disabled={!activeStoryboard || !selectedPanelForActions || !!quickActionBusy}
+              disabled={!canRunQuickAction(action.id)}
               onClick={() => {
-                if (!activeStoryboard || !selectedPanelForActions) return
+                if (!activeStoryboard) return
+                if (action.id !== 'add' && !selectedPanelForActions) return
 
                 if (action.id === 'add' || action.id === 'duplicate' || action.id === 'split' || action.id === 'merge' || action.id === 'reorder') {
                   void runQuickAction(action.id, async () => {
                     const plan = planWebtoonQuickActionMutation({
                       action: action.id,
                       panels: activePanels.map(buildPanelLite),
-                      selectedPanelId: selectedPanelForActions.id,
+                      selectedPanelId: selectedPanelForActions?.id ?? null,
+                      fallbackStoryboardId: activeStoryboard.id,
                     })
 
                     for (const panelId of plan.deletePanelIds) {
