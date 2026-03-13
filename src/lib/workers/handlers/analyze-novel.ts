@@ -236,8 +236,15 @@ export async function handleAnalyzeNovelTask(job: Job<TaskJobData>) {
 
   const createdCharacters: Array<{ id: string }> = []
   if (charactersToCreate.length > 0) {
-    const created = await prisma.novelPromotionCharacter.createManyAndReturn({
+    await prisma.novelPromotionCharacter.createMany({
       data: charactersToCreate,
+    })
+    const names = (charactersToCreate as any[]).map(c => c.name)
+    const created = await prisma.novelPromotionCharacter.findMany({
+      where: {
+        novelPromotionProjectId: novelData.id,
+        name: { in: names },
+      },
       select: { id: true },
     })
     createdCharacters.push(...created)
@@ -279,25 +286,31 @@ export async function handleAnalyzeNovelTask(job: Job<TaskJobData>) {
 
   const createdLocations: Array<{ id: string }> = []
   if (locationsToCreate.length > 0) {
-    const created = await prisma.novelPromotionLocation.createManyAndReturn({
-      data: locationsToCreate.map(l => l.data),
-      // We need name or something to map back if we had multiple with same name,
-      // but since we want to map back to the original descriptions, and createManyAndReturn
-      // returns in the same order as the input data (usually, but let's check)
-      select: { id: true },
+    await prisma.novelPromotionLocation.createMany({
+      data: locationsToCreate.map(l => l.data as any),
+    })
+
+    const names = locationsToCreate.map(l => (l.data as any).name)
+    const created = await prisma.novelPromotionLocation.findMany({
+      where: {
+        novelPromotionProjectId: novelData.id,
+        name: { in: names },
+      },
+      select: { id: true, name: true },
     })
 
     const locationImagesToCreate: Parameters<typeof prisma.locationImage.createMany>[0]['data'] = []
-    for (let i = 0; i < created.length; i++) {
-      const createdLoc = created[i]
-      const original = locationsToCreate[i]
-      const cleanDescriptions = original.descriptions.map((value: string) => removeLocationPromptSuffix(value || ''))
-      for (let j = 0; j < cleanDescriptions.length; j += 1) {
-        locationImagesToCreate.push({
-          locationId: createdLoc.id,
-          imageIndex: j,
-          description: cleanDescriptions[j],
-        })
+    for (const createdLoc of created) {
+      const original = locationsToCreate.find(l => (l.data as any).name === createdLoc.name)
+      if (original) {
+        const cleanDescriptions = original.descriptions.map((value: string) => removeLocationPromptSuffix(value || ''))
+        for (let j = 0; j < cleanDescriptions.length; j += 1) {
+          locationImagesToCreate.push({
+            locationId: createdLoc.id,
+            imageIndex: j,
+            description: cleanDescriptions[j],
+          })
+        }
       }
       createdLocations.push({ id: createdLoc.id })
     }

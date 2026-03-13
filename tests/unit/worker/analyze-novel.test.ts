@@ -11,11 +11,13 @@ const prismaMock = vi.hoisted(() => ({
   novelPromotionEpisode: { findFirst: vi.fn() },
   novelPromotionCharacter: {
     create: vi.fn(async () => ({ id: 'char-new-1' })),
-    createManyAndReturn: vi.fn(async ({ data }) => data.map((item: any, index: number) => ({ ...item, id: `char-new-${index + 1}` }))),
+    createMany: vi.fn(async () => ({ count: 1 })),
+    findMany: vi.fn(async () => [{ id: 'char-new-1' }]),
   },
   novelPromotionLocation: {
     create: vi.fn(async () => ({ id: 'loc-new-1' })),
-    createManyAndReturn: vi.fn(async ({ data }) => data.map((item: any, index: number) => ({ ...item, id: `loc-new-${index + 1}` }))),
+    createMany: vi.fn(async () => ({ count: 1 })),
+    findMany: vi.fn(async () => [{ id: 'loc-new-1', name: '新地点' }]),
   },
   locationImage: {
     create: vi.fn(async () => ({})),
@@ -150,7 +152,7 @@ describe('worker analyze-novel behavior', () => {
       locationCount: 1,
     })
 
-    expect(prismaMock.novelPromotionCharacter.createManyAndReturn).toHaveBeenCalledWith(
+    expect(prismaMock.novelPromotionCharacter.createMany).toHaveBeenCalledWith(
       expect.objectContaining({
         data: expect.arrayContaining([
           expect.objectContaining({
@@ -162,7 +164,7 @@ describe('worker analyze-novel behavior', () => {
       }),
     )
 
-    expect(prismaMock.novelPromotionLocation.createManyAndReturn).toHaveBeenCalledWith(
+    expect(prismaMock.novelPromotionLocation.createMany).toHaveBeenCalledWith(
       expect.objectContaining({
         data: expect.arrayContaining([
           expect.objectContaining({
