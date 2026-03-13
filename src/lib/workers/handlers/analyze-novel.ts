@@ -200,7 +200,7 @@ export async function handleAnalyzeNovelTask(job: Job<TaskJobData>) {
   })
   await assertTaskActive(job, 'analyze_novel_persist')
 
-  const createdCharacters: Array<{ id: string }> = []
+  const charactersToCreate: Parameters<typeof prisma.novelPromotionCharacter.createMany>[0]['data'] = []
   for (const item of parsedCharacters) {
     const name = readText(item.name).trim()
     if (!name) continue
@@ -225,20 +225,28 @@ export async function handleAnalyzeNovelTask(job: Job<TaskJobData>) {
       age_range: item.age_range,
     }
 
-    const created = await prisma.novelPromotionCharacter.create({
-      data: {
-        novelPromotionProjectId: novelData.id,
-        name,
-        aliases: JSON.stringify(toStringArray(item.aliases)),
-        profileData: JSON.stringify(profileData),
-        profileConfirmed: false,
-      },
-      select: { id: true },
+    charactersToCreate.push({
+      novelPromotionProjectId: novelData.id,
+      name,
+      aliases: JSON.stringify(toStringArray(item.aliases)),
+      profileData: JSON.stringify(profileData),
+      profileConfirmed: false,
     })
-    createdCharacters.push(created)
   }
 
-  const createdLocations: Array<{ id: string }> = []
+  const createdCharacters: Array<{ id: string }> = []
+  if (charactersToCreate.length > 0) {
+    const created = await prisma.novelPromotionCharacter.createManyAndReturn({
+      data: charactersToCreate,
+      select: { id: true },
+    })
+    createdCharacters.push(...created)
+  }
+
+  const locationsToCreate: Array<{
+    data: Parameters<typeof prisma.novelPromotionLocation.create>[0]['data']
+    descriptions: string[]
+  }> = []
   for (const item of parsedLocations) {
     const name = readText(item.name).trim()
     if (!name) continue
@@ -259,27 +267,46 @@ export async function handleAnalyzeNovelTask(job: Job<TaskJobData>) {
     )
     if (existsInLibrary) continue
 
-    const created = await prisma.novelPromotionLocation.create({
+    locationsToCreate.push({
       data: {
         novelPromotionProjectId: novelData.id,
         name,
         summary: readText(item.summary) || null,
       },
+      descriptions,
+    })
+  }
+
+  const createdLocations: Array<{ id: string }> = []
+  if (locationsToCreate.length > 0) {
+    const created = await prisma.novelPromotionLocation.createManyAndReturn({
+      data: locationsToCreate.map(l => l.data),
+      // We need name or something to map back if we had multiple with same name,
+      // but since we want to map back to the original descriptions, and createManyAndReturn
+      // returns in the same order as the input data (usually, but let's check)
       select: { id: true },
     })
 
-    const cleanDescriptions = descriptions.map((value) => removeLocationPromptSuffix(value || ''))
-    for (let i = 0; i < cleanDescriptions.length; i += 1) {
-      await prisma.locationImage.create({
-        data: {
-          locationId: created.id,
-          imageIndex: i,
-          description: cleanDescriptions[i],
-        },
-      })
+    const locationImagesToCreate: Parameters<typeof prisma.locationImage.createMany>[0]['data'] = []
+    for (let i = 0; i < created.length; i++) {
+      const createdLoc = created[i]
+      const original = locationsToCreate[i]
+      const cleanDescriptions = original.descriptions.map((value: string) => removeLocationPromptSuffix(value || ''))
+      for (let j = 0; j < cleanDescriptions.length; j += 1) {
+        locationImagesToCreate.push({
+          locationId: createdLoc.id,
+          imageIndex: j,
+          description: cleanDescriptions[j],
+        })
+      }
+      createdLocations.push({ id: createdLoc.id })
     }
 
-    createdLocations.push(created)
+    if (locationImagesToCreate.length > 0) {
+      await prisma.locationImage.createMany({
+        data: locationImagesToCreate,
+      })
+    }
   }
 
   await prisma.novelPromotionProject.update({
