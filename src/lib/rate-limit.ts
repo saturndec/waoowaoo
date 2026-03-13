@@ -126,19 +126,20 @@ export async function checkRateLimit(
  * 依次检查常见反向代理头，最终回退到 127.0.0.1。
  */
 export function getClientIp(req: NextRequest): string {
-    // x-forwarded-for 可能包含多个 IP（逗号分隔），取第一个
+    // 1. 优先使用 Next.js 提供的 ip 属性
+    // 这通常由底层平台（如 Vercel）或正确配置的反向代理填充，相对更可靠
+    if (req.ip) return req.ip
+
+    // 2. 其次检查 X-Real-IP，这通常由内部反向代理设置
+    const realIp = req.headers.get('x-real-ip')
+    if (realIp) return realIp.trim()
+
+    // 3. 最后才考虑 X-Forwarded-For
+    // 注意：如果应用直接暴露在公网且没有受信代理，该头部可被伪造
     const forwarded = req.headers.get('x-forwarded-for')
     if (forwarded) {
         const first = forwarded.split(',')[0]?.trim()
         if (first) return first
-    }
-
-    const realIp = req.headers.get('x-real-ip')
-    if (realIp) return realIp.trim()
-
-    // Next.js 14+ 的 ip 属性
-    if ('ip' in req && typeof (req as NextRequest & { ip?: string }).ip === 'string') {
-        return (req as NextRequest & { ip?: string }).ip!
     }
 
     return '127.0.0.1'
