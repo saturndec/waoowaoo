@@ -30,11 +30,18 @@ describe('storyboard-types utils', () => {
             const storyboard = {
                 panels
             } as unknown as NovelPromotionStoryboard
-            expect(getPanels(storyboard)).toBe(panels)
+            expect(getPanels(storyboard)).toEqual(panels)
         })
 
         it('should return empty array when panels are missing', () => {
             const storyboard = {} as NovelPromotionStoryboard
+            expect(getPanels(storyboard)).toEqual([])
+        })
+
+        it('should return empty array when panels exists but is not an array', () => {
+            const storyboard = {
+                panels: 'not an array'
+            } as unknown as NovelPromotionStoryboard
             expect(getPanels(storyboard)).toEqual([])
         })
     })
