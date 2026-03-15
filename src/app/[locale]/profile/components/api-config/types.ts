@@ -173,6 +173,17 @@ export const PRESET_MODELS: PresetModel[] = [
     { modelId: 'minimax-hailuo-02', name: 'Hailuo 02', type: 'video', provider: 'minimax' },
     { modelId: 't2v-01', name: 'T2V-01', type: 'video', provider: 'minimax' },
     { modelId: 't2v-01-director', name: 'T2V-01 Director', type: 'video', provider: 'minimax' },
+    { modelId: 's2v-01', name: 'S2V-01', type: 'video', provider: 'minimax' },
+    // MiniMax 语音模型
+    { modelId: 'speech-2.8-hd', name: 'Speech 2.8 HD', type: 'audio', provider: 'minimax' },
+    { modelId: 'speech-2.8-turbo', name: 'Speech 2.8 Turbo', type: 'audio', provider: 'minimax' },
+    { modelId: 'speech-2.6-hd', name: 'Speech 2.6 HD', type: 'audio', provider: 'minimax' },
+    { modelId: 'speech-2.6-turbo', name: 'Speech 2.6 Turbo', type: 'audio', provider: 'minimax' },
+    { modelId: 'speech-02-hd', name: 'Speech 02 HD', type: 'audio', provider: 'minimax' },
+    { modelId: 'speech-02-turbo', name: 'Speech 02 Turbo', type: 'audio', provider: 'minimax' },
+    // MiniMax 图像模型
+    { modelId: 'image-01', name: 'Image 01', type: 'image', provider: 'minimax' },
+    { modelId: 'image-01-live', name: 'Image 01 Live', type: 'image', provider: 'minimax' },
 
     // Vidu 视频模型
     { modelId: 'viduq3-pro', name: 'Vidu Q3 Pro', type: 'video', provider: 'vidu' },

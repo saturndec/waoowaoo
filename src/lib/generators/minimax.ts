@@ -85,6 +85,14 @@ const MINIMAX_VIDEO_MODEL_SPECS: Record<string, MinimaxVideoModelSpec> = {
             { resolution: '720P', durations: [6] },
         ],
     },
+    's2v-01': {
+        apiModel: 'S2V-01',
+        supportsImageInput: true,
+        supportsFirstLastFrame: false,
+        normalRules: [
+            { resolution: '1080P', durations: [6] },
+        ],
+    },
 }
 
 function isNonEmptyString(value: unknown): value is string {
@@ -218,6 +226,9 @@ export class MinimaxVideoGenerator extends BaseVideoGenerator {
             && !hasFirstFrameImage
         ) {
             throw new Error('MINIMAX_VIDEO_OPTION_REQUIRED: firstFrameImage for resolution=512P')
+        }
+        if (modelId === 's2v-01' && !hasFirstFrameImage) {
+            throw new Error('MINIMAX_VIDEO_OPTION_REQUIRED: imageUrl (required for S2V-01)')
         }
 
         // aspectRatio 由 worker 层统一注入（来自项目 videoRatio），

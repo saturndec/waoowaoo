@@ -19,4 +19,39 @@ describe('api-config minimax preset', () => {
     expect(minimaxLlmModelIds).toContain('MiniMax-M2.1-highspeed')
     expect(minimaxLlmModelIds).toContain('MiniMax-M2')
   })
+
+  it('includes all required minimax official video preset models', () => {
+    const minimaxVideoModelIds = PRESET_MODELS
+      .filter((model) => model.provider === 'minimax' && model.type === 'video')
+      .map((model) => model.modelId)
+
+    expect(minimaxVideoModelIds).toContain('minimax-hailuo-2.3')
+    expect(minimaxVideoModelIds).toContain('minimax-hailuo-2.3-fast')
+    expect(minimaxVideoModelIds).toContain('minimax-hailuo-02')
+    expect(minimaxVideoModelIds).toContain('t2v-01')
+    expect(minimaxVideoModelIds).toContain('t2v-01-director')
+    expect(minimaxVideoModelIds).toContain('s2v-01')
+  })
+
+  it('includes all required minimax official audio preset models', () => {
+    const minimaxAudioModelIds = PRESET_MODELS
+      .filter((model) => model.provider === 'minimax' && model.type === 'audio')
+      .map((model) => model.modelId)
+
+    expect(minimaxAudioModelIds).toContain('speech-2.8-hd')
+    expect(minimaxAudioModelIds).toContain('speech-2.8-turbo')
+    expect(minimaxAudioModelIds).toContain('speech-2.6-hd')
+    expect(minimaxAudioModelIds).toContain('speech-2.6-turbo')
+    expect(minimaxAudioModelIds).toContain('speech-02-hd')
+    expect(minimaxAudioModelIds).toContain('speech-02-turbo')
+  })
+
+  it('includes all required minimax official image preset models', () => {
+    const minimaxImageModelIds = PRESET_MODELS
+      .filter((model) => model.provider === 'minimax' && model.type === 'image')
+      .map((model) => model.modelId)
+
+    expect(minimaxImageModelIds).toContain('image-01')
+    expect(minimaxImageModelIds).toContain('image-01-live')
+  })
 })

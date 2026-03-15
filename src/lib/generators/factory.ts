@@ -19,6 +19,8 @@ import {
 import { GoogleVeoVideoGenerator } from './video/google'
 import { OpenAICompatibleVideoGenerator } from './video'
 import { MinimaxVideoGenerator } from './minimax'
+import { MinimaxAudioGenerator } from './minimax-audio'
+import { MinimaxImageGenerator } from './minimax-image'
 import { ViduVideoGenerator } from './vidu'
 import { getProviderKey } from '@/lib/api-config'
 import {
@@ -67,6 +69,8 @@ export function createImageGenerator(provider: string, modelId?: string): ImageG
             return new BailianImageGenerator()
         case 'siliconflow':
             return new SiliconFlowImageGenerator()
+        case 'minimax':
+            return new MinimaxImageGenerator()
         default:
             throw new Error(`Unknown image generator provider: ${provider}`)
     }
@@ -111,6 +115,8 @@ export function createAudioGenerator(provider: string): AudioGenerator {
             return new BailianAudioGenerator()
         case 'siliconflow':
             return new SiliconFlowAudioGenerator()
+        case 'minimax':
+            return new MinimaxAudioGenerator()
         default:
             throw new Error(`Unknown audio generator provider: ${provider}`)
     }
