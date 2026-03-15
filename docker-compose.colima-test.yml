@@ -1,0 +1,51 @@
+services:
+  app:
+    image: vat-app
+    container_name: vat-test-app
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: "mysql://root:waoowaoo123@host.docker.internal:23306/waoowaoo"
+      REDIS_HOST: host.docker.internal
+      REDIS_PORT: "26379"
+      REDIS_USERNAME: ""
+      REDIS_PASSWORD: ""
+      REDIS_TLS: ""
+      STORAGE_TYPE: local
+      NEXTAUTH_URL: "https://videoai.linkto.com.vn"
+      NEXTAUTH_SECRET: "waoowaoo-default-secret-2026"
+      CRON_SECRET: "waoowaoo-docker-cron-secret"
+      INTERNAL_TASK_TOKEN: "waoowaoo-docker-task-token"
+      API_ENCRYPTION_KEY: "waoowaoo-opensource-fixed-key-2026"
+      WATCHDOG_INTERVAL_MS: "30000"
+      TASK_HEARTBEAT_TIMEOUT_MS: "90000"
+      QUEUE_CONCURRENCY_IMAGE: "50"
+      QUEUE_CONCURRENCY_VIDEO: "50"
+      QUEUE_CONCURRENCY_VOICE: "20"
+      QUEUE_CONCURRENCY_TEXT: "50"
+      BULL_BOARD_HOST: "0.0.0.0"
+      BULL_BOARD_PORT: "3010"
+      BULL_BOARD_BASE_PATH: "/admin/queues"
+      BULL_BOARD_USER: ""
+      BULL_BOARD_PASSWORD: ""
+      LOG_UNIFIED_ENABLED: "true"
+      LOG_LEVEL: "INFO"
+      LOG_FORMAT: "json"
+      LOG_DEBUG_ENABLED: "false"
+      LOG_AUDIT_ENABLED: "true"
+      LOG_SERVICE: "waoowaoo"
+      LOG_REDACT_KEYS: "password,token,apiKey,apikey,authorization,cookie,secret,access_token,refresh_token"
+      BILLING_MODE: "OFF"
+      LLM_STREAM_EPHEMERAL_ENABLED: "true"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    ports:
+      - "14000:3000"
+      - "14010:3010"
+    volumes:
+      - /Users/mrcagents/Work/projects/VAT/.colima-test-data:/app/data
+      - /Users/mrcagents/Work/projects/VAT/.colima-test-logs:/app/logs
+    command: >
+      sh -c "
+        npx prisma db push --skip-generate &&
+        npm run start
+      "
