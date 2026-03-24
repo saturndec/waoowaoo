@@ -36,9 +36,10 @@ import {
   normalizeWorkflowConcurrencyConfig,
   normalizeWorkflowConcurrencyValue,
 } from '@/lib/workflow-concurrency'
-import type {
-  OpenAICompatMediaTemplate,
-  OpenAICompatMediaTemplateSource,
+import {
+  type OpenAICompatMediaTemplate,
+  type OpenAICompatMediaTemplateSource,
+  getDefaultMediaTemplate,
 } from '@/lib/openai-compat-media-template'
 import { validateOpenAICompatMediaTemplate } from '@/lib/user-api/model-template/validator'
 
@@ -975,68 +976,6 @@ function isOpenAICompatibleMediaTemplateModel(model: StoredModel): boolean {
   return model.type === 'image' || model.type === 'video'
 }
 
-function getDefaultMediaTemplate(type: 'image' | 'video'): OpenAICompatMediaTemplate {
-  if (type === 'image') {
-    return {
-      version: 1,
-      mediaType: 'image',
-      mode: 'sync',
-      create: {
-        method: 'POST',
-        path: '/images/generations',
-        contentType: 'application/json',
-        bodyTemplate: {
-          model: '{{model}}',
-          prompt: '{{prompt}}',
-        },
-      },
-      response: {
-        outputUrlPath: '$.data[0].url',
-        outputUrlsPath: '$.data',
-        errorPath: '$.error.message',
-      },
-    }
-  }
-
-  return {
-    version: 1,
-    mediaType: 'video',
-    mode: 'async',
-    create: {
-      method: 'POST',
-      path: '/videos',
-      contentType: 'multipart/form-data',
-      multipartFileFields: ['input_reference'],
-      bodyTemplate: {
-        model: '{{model}}',
-        prompt: '{{prompt}}',
-        seconds: '{{duration}}',
-        size: '{{size}}',
-        input_reference: '{{image}}',
-      },
-    },
-    status: {
-      method: 'GET',
-      path: '/videos/{{task_id}}',
-    },
-    content: {
-      method: 'GET',
-      path: '/videos/{{task_id}}/content',
-    },
-    response: {
-      taskIdPath: '$.id',
-      statusPath: '$.status',
-      errorPath: '$.error.message',
-    },
-    polling: {
-      intervalMs: 3000,
-      timeoutMs: 600000,
-      doneStates: ['completed', 'succeeded'],
-      failStates: ['failed', 'error', 'canceled'],
-    },
-  }
-}
-
 function resolveStoredLlmProtocols(
   models: StoredModel[],
   existingModels: StoredModel[],
@@ -1124,6 +1063,16 @@ function resolveStoredMediaTemplates(
 
     const existing = existingByModelKey.get(model.modelKey)
     if (existing?.compatMediaTemplate) {
+      const defaultTemplate = getDefaultMediaTemplate(expectedMediaType)
+      // Auto-upgrade old templates to current version
+      if ((existing.compatMediaTemplate.version || 0) < defaultTemplate.version) {
+        return {
+          ...model,
+          compatMediaTemplate: defaultTemplate,
+          compatMediaTemplateCheckedAt: checkedAtFallback,
+          compatMediaTemplateSource: 'manual',
+        }
+      }
       return {
         ...model,
         compatMediaTemplate: existing.compatMediaTemplate,
@@ -1682,7 +1631,15 @@ export const GET = apiHandler(async () => {
   }))
 
   const billingMode = await getBillingMode()
-  const parsedModels = parseStoredModels(pref?.customModels)
+  const parsedModels = parseStoredModels(pref?.customModels).map((model) => {
+    if (!isOpenAICompatibleMediaTemplateModel(model) || !model.compatMediaTemplate) return model
+    const expectedMediaType = model.type === 'image' ? 'image' : 'video'
+    const defaultTemplate = getDefaultMediaTemplate(expectedMediaType)
+    if ((model.compatMediaTemplate.version || 0) < defaultTemplate.version) {
+      return { ...model, compatMediaTemplate: defaultTemplate }
+    }
+    return model
+  })
   const models = billingMode === 'OFF' ? parsedModels : sanitizeModelsForBilling(parsedModels)
   const pricingDisplay = buildPricingDisplayMap()
   const pricedModels = models.map((model) => withDisplayPricing(model, pricingDisplay))

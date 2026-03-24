@@ -14,9 +14,10 @@ import {
   parseModelKeyStrict,
   type UnifiedModelType,
 } from './model-config-contract'
-import type {
-  OpenAICompatMediaTemplate,
-  OpenAICompatMediaTemplateSource,
+import {
+  type OpenAICompatMediaTemplate,
+  type OpenAICompatMediaTemplateSource,
+  getDefaultMediaTemplate,
 } from './openai-compat-media-template'
 import { validateOpenAICompatMediaTemplate } from './user-api/model-template/validator'
 
@@ -297,8 +298,19 @@ async function readUserConfig(userId: string): Promise<{ models: CustomModel[]; 
     },
   })
 
+  const models = parseCustomModels(pref?.customModels).map((model) => {
+    if (getProviderKey(model.provider).toLowerCase() !== 'openai-compatible') return model
+    if (model.type !== 'image' && model.type !== 'video') return model
+    const expectedMediaType = model.type === 'image' ? 'image' : 'video'
+    const defaultTemplate = getDefaultMediaTemplate(expectedMediaType)
+    if (!model.compatMediaTemplate || (model.compatMediaTemplate.version || 0) < defaultTemplate.version) {
+      return { ...model, compatMediaTemplate: defaultTemplate }
+    }
+    return model
+  })
+
   return {
-    models: parseCustomModels(pref?.customModels),
+    models,
     providers: parseCustomProviders(pref?.customProviders),
   }
 }
