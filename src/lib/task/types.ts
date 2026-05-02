@@ -173,4 +173,8 @@ export type CreateTaskInput = {
   priority?: number
   maxAttempts?: number
   billingInfo?: TaskBillingInfo | null
+  operationId?: string | null
+  operationSource?: string | null
+  operationConfirmed?: boolean | null
+  operationRequestId?: string | null
 }

@@ -17,6 +17,9 @@ export async function submitOperationTask(params: {
   type: TaskType
   targetType: string
   targetId: string
+  operationId: string
+  source: string
+  confirmed: boolean
   payload: Record<string, unknown>
   dedupeKey?: string | null
   priority?: number
@@ -43,6 +46,9 @@ export async function submitOperationTask(params: {
     dedupeKey: params.dedupeKey || null,
     priority: params.priority ?? 0,
     billingInfo,
+    operationId: params.operationId,
+    operationSource: params.source,
+    operationConfirmed: params.confirmed,
+    operationRequestId: getRequestId(params.request),
   })
 }
-

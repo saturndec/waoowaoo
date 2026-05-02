@@ -1,7 +1,7 @@
 'use client'
 
 import { useMemo, useState } from 'react'
-import { useTranslations } from 'next-intl'
+import { useLocale, useTranslations } from 'next-intl'
 import {
   AssistantRuntimeProvider,
   ComposerPrimitive,
@@ -28,32 +28,60 @@ import {
   removeApprovalRequestFromMessages,
   removeConfirmationRequestFromMessages,
 } from './workspace-assistant/approval-state'
-import { createAssistantMessage, createLocalMessage } from './workspace-assistant/workflow-timeline'
+import { createAssistantMessage } from './workspace-assistant/workflow-timeline'
 import { useWorkspaceAssistantRuntime } from './workspace-assistant/useWorkspaceAssistantRuntime'
 import { getWorkflowDisplayLabel } from '@/lib/skill-system/project-workflow-machine'
+import { apiFetch } from '@/lib/api-fetch'
 import { WorkspaceAssistantModePicker } from './workspace-assistant/WorkspaceAssistantModePicker'
 import { WorkspaceAssistantPanelHeader } from './workspace-assistant/WorkspaceAssistantPanelHeader'
 import { WorkspaceAssistantPanelRail } from './workspace-assistant/WorkspaceAssistantPanelRail'
 import { buildWorkspaceAssistantPanelLayout, WORKSPACE_ASSISTANT_TOP_OFFSET } from './workspace-assistant/panel-layout'
+import type { WorkspaceAssistantSelectionContext } from '../canvas/ProjectWorkspaceCanvas'
 
 interface WorkspaceAssistantPanelProps {
   projectId: string
   episodeId?: string
+  selection?: WorkspaceAssistantSelectionContext
   storyToScriptStream: RunStreamView
   scriptToStoryboardStream: RunStreamView
   isCollapsed: boolean
   onToggleCollapsed: () => void
 }
 
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return !!value && typeof value === 'object' && !Array.isArray(value)
+}
+
+function readResponseErrorMessage(payload: unknown, fallback: string): string {
+  if (!isRecord(payload)) return fallback
+  const error = isRecord(payload.error) ? payload.error : null
+  if (typeof error?.message === 'string' && error.message.trim()) return error.message.trim()
+  const details = isRecord(error?.details) ? error.details : null
+  if (typeof details?.message === 'string' && details.message.trim()) return details.message.trim()
+  return fallback
+}
+
+function readOperationResultSummary(payload: unknown): string {
+  if (!isRecord(payload)) return ''
+  const result = isRecord(payload.result) ? payload.result : null
+  if (!result) return ''
+  const taskId = typeof result.taskId === 'string' ? result.taskId.trim() : ''
+  const runId = typeof result.runId === 'string' ? result.runId.trim() : ''
+  const status = typeof result.status === 'string' ? result.status.trim() : ''
+  return [status, taskId || runId].filter(Boolean).join(' · ')
+}
+
 export default function WorkspaceAssistantPanel({
   projectId,
   episodeId,
+  selection,
   storyToScriptStream,
   scriptToStoryboardStream,
   isCollapsed,
   onToggleCollapsed,
 }: WorkspaceAssistantPanelProps) {
   const t = useTranslations('assistantAgent')
+  const locale = useLocale()
   const layout = buildWorkspaceAssistantPanelLayout(isCollapsed)
   const [interactionMode, setInteractionMode] = useState<'auto' | 'plan' | 'fast'>('auto')
   const workflowLabels = useMemo(() => ({
@@ -68,6 +96,11 @@ export default function WorkspaceAssistantPanel({
   const assistantRuntime = useWorkspaceAssistantRuntime({
     projectId,
     episodeId,
+    currentStage: null,
+    selectedScopeRef: selection?.selectedScopeRef ?? null,
+    selectedPanelId: selection?.selectedPanelId ?? null,
+    selectedClipId: selection?.selectedClipId ?? null,
+    selectedAssetId: selection?.selectedAssetId ?? null,
     interactionMode,
   })
   const pendingApprovalActions = useMemo(
@@ -143,11 +176,53 @@ export default function WorkspaceAssistantPanel({
   const handleConfirmOperation = async (operationId: string, argsHint?: Record<string, unknown> | null) => {
     setConfirmationSubmittingKey(`confirm:${operationId}:continue`)
     try {
+      const response = await apiFetch(`/api/projects/${projectId}/assistant/confirm-operation`, {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({
+          operationId,
+          input: {
+            ...(argsHint ?? {}),
+            confirmed: true,
+          },
+          context: {
+            locale,
+            ...(episodeId ? { episodeId } : {}),
+            ...(selection?.selectedScopeRef ? { selectedScopeRef: selection.selectedScopeRef } : {}),
+            ...(selection?.selectedPanelId ? { selectedPanelId: selection.selectedPanelId } : {}),
+            ...(selection?.selectedClipId ? { selectedClipId: selection.selectedClipId } : {}),
+            ...(selection?.selectedAssetId ? { selectedAssetId: selection.selectedAssetId } : {}),
+          },
+        }),
+      })
+      const payload: unknown = await response.json().catch(() => null)
+      if (!response.ok) {
+        throw new Error(readResponseErrorMessage(payload, t('cards.operationExecutionFailedFallback')))
+      }
+
       const nextMessages = removeConfirmationRequestFromMessages(assistantRuntime.messages, operationId)
-      assistantRuntime.replaceMessages(nextMessages)
-      await assistantRuntime.sendMessage(
-        `我确认继续执行该操作。请继续调用 operation=${operationId}，并严格使用下面的参数（已包含 confirmed=true）：\n\n\`\`\`json\n${JSON.stringify(argsHint ?? { confirmed: true }, null, 2)}\n\`\`\``,
-      )
+      const resultSummary = readOperationResultSummary(payload)
+      assistantRuntime.replaceMessages([
+        ...nextMessages,
+        createAssistantMessage([{
+          type: 'text',
+          text: resultSummary
+            ? t('cards.confirmedOperationWithResult', { operation: operationId, result: resultSummary })
+            : t('cards.confirmedOperation', { operation: operationId }),
+        }]),
+      ])
+    } catch (error) {
+      const nextMessages = removeConfirmationRequestFromMessages(assistantRuntime.messages, operationId)
+      assistantRuntime.replaceMessages([
+        ...nextMessages,
+        createAssistantMessage([{
+          type: 'text',
+          text: t('cards.confirmedOperationFailed', {
+            operation: operationId,
+            error: error instanceof Error ? error.message : String(error),
+          }),
+        }]),
+      ])
     } finally {
       setConfirmationSubmittingKey(null)
     }
@@ -158,9 +233,9 @@ export default function WorkspaceAssistantPanel({
       const nextMessages = removeConfirmationRequestFromMessages(assistantRuntime.messages, operationId)
       assistantRuntime.replaceMessages([
         ...nextMessages,
-        createLocalMessage('assistant', [{
+        createAssistantMessage([{
           type: 'text',
-          text: `已取消待确认操作 ${operationId}。`,
+          text: t('cards.cancelledOperation', { operation: operationId }),
         }]),
       ])
     } finally {

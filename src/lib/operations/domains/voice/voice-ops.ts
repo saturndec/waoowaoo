@@ -170,6 +170,7 @@ async function buildVoiceGenerationContext(params: {
 async function executeGenerateVoiceLineAudioOperation(params: {
   ctx: ProjectAgentOperationContext
   input: {
+    confirmed?: boolean
     episodeId?: string
     lineId: string
     audioModel?: string
@@ -237,6 +238,10 @@ async function executeGenerateVoiceLineAudioOperation(params: {
     }),
     dedupeKey: `voice_line:${line.id}`,
     billingInfo: buildDefaultTaskBillingInfo(TASK_TYPE.VOICE_LINE, payload),
+    operationId: params.operationId,
+    operationSource: params.ctx.source,
+    operationConfirmed: params.input.confirmed === true,
+    operationRequestId: getRequestId(params.ctx.request),
   })
 
   const mutationBatch = await createMutationBatch({
@@ -277,6 +282,7 @@ async function executeGenerateVoiceLineAudioOperation(params: {
 async function executeGenerateEpisodeVoiceAudioOperation(params: {
   ctx: ProjectAgentOperationContext
   input: {
+    confirmed?: boolean
     episodeId?: string
     audioModel?: string
   }
@@ -342,6 +348,10 @@ async function executeGenerateEpisodeVoiceAudioOperation(params: {
         }),
         dedupeKey: `voice_line:${line.id}`,
         billingInfo: buildDefaultTaskBillingInfo(TASK_TYPE.VOICE_LINE, payload),
+        operationId: params.operationId,
+        operationSource: params.ctx.source,
+        operationConfirmed: params.input.confirmed === true,
+        operationRequestId: getRequestId(params.ctx.request),
       })
       return {
         refId: line.id,
@@ -541,6 +551,10 @@ export function createVoiceOperations(): ProjectAgentOperationRegistryDraft {
           payload,
           dedupeKey: `${TASK_TYPE.VOICE_DESIGN}:${digest}`,
           billingInfo: buildDefaultTaskBillingInfo(TASK_TYPE.VOICE_DESIGN, payload),
+          operationId: 'voice_design',
+          operationSource: ctx.source,
+          operationConfirmed: input.confirmed === true,
+          operationRequestId: getRequestId(ctx.request),
         })
 
         writeOperationDataPart<TaskSubmittedPartData>(ctx.writer, 'data-task-submitted', {

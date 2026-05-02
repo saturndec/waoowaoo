@@ -285,6 +285,10 @@ async function executeGenerateEpisodeVideosOperation(params: {
         }),
         dedupeKey: `video_panel:${panel.id}`,
         billingInfo: buildVideoPanelBillingInfoOrThrow(payload),
+        operationId: params.operationId,
+        operationSource: params.ctx.source,
+        operationConfirmed: params.input.confirmed === true,
+        operationRequestId: getRequestId(params.ctx.request),
       }),
     ),
   )
@@ -387,6 +391,10 @@ async function executeGeneratePanelVideoOperation(params: {
     }),
     dedupeKey: `video_panel:${panelId}`,
     billingInfo: buildVideoPanelBillingInfoOrThrow(payload),
+    operationId: params.operationId,
+    operationSource: params.ctx.source,
+    operationConfirmed: params.input.confirmed === true,
+    operationRequestId: getRequestId(params.ctx.request),
   })
 
   const mutationBatch = await createMutationBatch({

@@ -141,6 +141,10 @@ export function createMediaOperations(): ProjectAgentOperationRegistryDraft {
           }),
           dedupeKey: `regenerate_group:${targetType}:${targetId}:${count}:${styleSignature}`,
           billingInfo: buildDefaultTaskBillingInfo(TASK_TYPE.REGENERATE_GROUP, billingPayload),
+          operationId: 'regenerate_group',
+          operationSource: ctx.source,
+          operationConfirmed: input.confirmed === true,
+          operationRequestId: getRequestId(ctx.request),
         })
       },
     }),
@@ -236,6 +240,10 @@ export function createMediaOperations(): ProjectAgentOperationRegistryDraft {
           }),
           dedupeKey: `${taskType}:${targetId}:single:${parsedImageIndex}:${styleSignature}`,
           billingInfo: buildDefaultTaskBillingInfo(taskType, billingPayload),
+          operationId: 'regenerate_single_image',
+          operationSource: ctx.source,
+          operationConfirmed: input.confirmed === true,
+          operationRequestId: getRequestId(ctx.request),
         })
       },
     }),
@@ -281,6 +289,10 @@ export function createMediaOperations(): ProjectAgentOperationRegistryDraft {
           payload: billingPayload,
           dedupeKey: `regenerate_storyboard_text:${input.storyboardId}`,
           billingInfo: buildDefaultTaskBillingInfo(TASK_TYPE.REGENERATE_STORYBOARD_TEXT, billingPayload),
+          operationId: 'regenerate_storyboard_text',
+          operationSource: ctx.source,
+          operationConfirmed: input.confirmed === true,
+          operationRequestId: getRequestId(ctx.request),
         })
       },
     }),
@@ -408,6 +420,10 @@ export function createMediaOperations(): ProjectAgentOperationRegistryDraft {
           }),
           dedupeKey: `modify_storyboard_image:${panel.id}`,
           billingInfo: buildDefaultTaskBillingInfo(TASK_TYPE.MODIFY_ASSET_IMAGE, billingPayload),
+          operationId: 'modify_storyboard_image',
+          operationSource: ctx.source,
+          operationConfirmed: input.confirmed === true,
+          operationRequestId: getRequestId(ctx.request),
         })
       },
     }),

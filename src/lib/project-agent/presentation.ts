@@ -46,7 +46,12 @@ export function buildAssistantProjectContextSnapshot(
     episodeName: context.episodeName,
     currentStage: context.currentStage,
     selectedScopeRef: context.selectedScopeRef,
+    selectedPanelId: context.selectedPanelId,
+    selectedClipId: context.selectedClipId,
+    selectedAssetId: context.selectedAssetId,
     activeRuns: context.activeRuns,
+    activeOperationTasks: context.activeOperationTasks,
+    recentOperationResults: context.recentOperationResults,
     latestArtifacts: context.latestArtifacts,
     config: {
       analysisModel: context.policy.analysisModel || null,

@@ -142,6 +142,11 @@
     "scopePanel": "Panel {id}",
     "step": "Step {current}/{total}",
     "rejectedPlan": "Rejected the {workflow} plan.{reason}",
-    "approvedPlan": "Approved the {workflow} plan and started execution."
+    "approvedPlan": "Approved the {workflow} plan and started execution.",
+    "operationExecutionFailedFallback": "Operation execution failed",
+    "confirmedOperation": "Confirmed and executed operation {operation}.",
+    "confirmedOperationWithResult": "Confirmed and executed operation {operation}. Result: {result}",
+    "confirmedOperationFailed": "Operation {operation} failed: {error}",
+    "cancelledOperation": "Rejected operation {operation}. The system will not continue executing it."
   }
 }

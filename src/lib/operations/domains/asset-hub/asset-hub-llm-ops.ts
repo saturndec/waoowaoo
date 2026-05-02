@@ -63,6 +63,9 @@ export function createAssetHubLlmOperations(): ProjectAgentOperationRegistryDraf
           type: TASK_TYPE.ASSET_HUB_AI_DESIGN_CHARACTER,
           targetType: 'GlobalAssetHubCharacterDesign',
           targetId: ctx.userId,
+          operationId: 'asset_hub_ai_design_character',
+          source: ctx.source,
+          confirmed: input.confirmed === true,
           payload: {
             userInstruction,
             analysisModel: userConfig.analysisModel,
@@ -106,6 +109,9 @@ export function createAssetHubLlmOperations(): ProjectAgentOperationRegistryDraf
           type: TASK_TYPE.ASSET_HUB_AI_DESIGN_LOCATION,
           targetType: 'GlobalAssetHubLocationDesign',
           targetId: ctx.userId,
+          operationId: 'asset_hub_ai_design_location',
+          source: ctx.source,
+          confirmed: input.confirmed === true,
           payload: {
             userInstruction,
             analysisModel: userConfig.analysisModel,
@@ -155,6 +161,9 @@ export function createAssetHubLlmOperations(): ProjectAgentOperationRegistryDraf
           type: TASK_TYPE.ASSET_HUB_AI_MODIFY_CHARACTER,
           targetType: 'GlobalCharacter',
           targetId: input.characterId,
+          operationId: 'asset_hub_ai_modify_character',
+          source: ctx.source,
+          confirmed: input.confirmed === true,
           payload: {
             ...input,
             analysisModel: userConfig.analysisModel,
@@ -203,6 +212,9 @@ export function createAssetHubLlmOperations(): ProjectAgentOperationRegistryDraf
           type: TASK_TYPE.ASSET_HUB_AI_MODIFY_LOCATION,
           targetType: 'GlobalLocation',
           targetId: input.locationId,
+          operationId: 'asset_hub_ai_modify_location',
+          source: ctx.source,
+          confirmed: input.confirmed === true,
           payload: {
             ...input,
             analysisModel: userConfig.analysisModel,
@@ -265,6 +277,9 @@ export function createAssetHubLlmOperations(): ProjectAgentOperationRegistryDraf
           type: TASK_TYPE.ASSET_HUB_AI_MODIFY_PROP,
           targetType: 'GlobalLocation',
           targetId: variantId || propId,
+          operationId: 'asset_hub_ai_modify_prop',
+          source: ctx.source,
+          confirmed: input.confirmed === true,
           payload: {
             ...input,
             propId,
@@ -334,6 +349,9 @@ export function createAssetHubLlmOperations(): ProjectAgentOperationRegistryDraf
           type: TASK_TYPE.ASSET_HUB_REFERENCE_TO_CHARACTER,
           targetType: appearanceId ? 'GlobalCharacterAppearance' : 'GlobalCharacter',
           targetId: appearanceId || characterId || ctx.userId,
+          operationId: 'asset_hub_reference_to_character',
+          source: ctx.source,
+          confirmed: body.confirmed === true,
           payload,
           dedupeKey: `asset_hub_reference_to_character:${appearanceId || characterId || ctx.userId}:${count}`,
         })

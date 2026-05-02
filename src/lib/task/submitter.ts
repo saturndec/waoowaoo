@@ -121,6 +121,10 @@ export async function submitTask(params: {
   maxAttempts?: number
   billingInfo?: TaskBillingInfo | null
   requestId?: string | null
+  operationId?: string | null
+  operationSource?: string | null
+  operationConfirmed?: boolean | null
+  operationRequestId?: string | null
 }) {
   const logger = createScopedLogger({
     module: 'task.submitter',
@@ -181,6 +185,10 @@ export async function submitTask(params: {
     priority: params.priority,
     maxAttempts: params.maxAttempts,
     billingInfo: resolvedBillingInfo || null,
+    operationId: params.operationId || null,
+    operationSource: params.operationSource || null,
+    operationConfirmed: params.operationConfirmed ?? null,
+    operationRequestId: params.operationRequestId || params.requestId || null,
   })
   const reusableRunId = reusableRun && shouldAttachNewTaskToReusableRun(reusableRunTask?.status)
     ? (reusableRun?.id || null)

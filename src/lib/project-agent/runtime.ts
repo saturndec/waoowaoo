@@ -60,11 +60,19 @@ function normalizeProjectAgentContext(raw: unknown): ProjectAgentContext {
   const locale = typeof record.locale === 'string' ? record.locale.trim() : ''
   const episodeId = typeof record.episodeId === 'string' ? record.episodeId.trim() : ''
   const currentStage = typeof record.currentStage === 'string' ? record.currentStage.trim() : ''
+  const selectedScopeRef = typeof record.selectedScopeRef === 'string' ? record.selectedScopeRef.trim() : ''
+  const selectedPanelId = typeof record.selectedPanelId === 'string' ? record.selectedPanelId.trim() : ''
+  const selectedClipId = typeof record.selectedClipId === 'string' ? record.selectedClipId.trim() : ''
+  const selectedAssetId = typeof record.selectedAssetId === 'string' ? record.selectedAssetId.trim() : ''
   const interactionMode = normalizeInteractionMode(record.interactionMode)
   return {
     ...(locale ? { locale } : {}),
     ...(episodeId ? { episodeId } : {}),
     ...(currentStage ? { currentStage } : {}),
+    ...(selectedScopeRef ? { selectedScopeRef } : {}),
+    ...(selectedPanelId ? { selectedPanelId } : {}),
+    ...(selectedClipId ? { selectedClipId } : {}),
+    ...(selectedAssetId ? { selectedAssetId } : {}),
     ...(interactionMode ? { interactionMode } : {}),
   }
 }

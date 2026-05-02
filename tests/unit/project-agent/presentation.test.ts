@@ -14,6 +14,8 @@ describe('project agent presentation', () => {
       selectedScopeRef: null,
       latestArtifacts: [],
       activeRuns: [],
+      activeOperationTasks: [],
+      recentOperationResults: [],
       policy: {
         projectId: 'project-1',
         episodeId: 'episode-1',
@@ -42,6 +44,24 @@ describe('project agent presentation', () => {
       selectedScopeRef: 'clip:clip-1',
       latestArtifacts: [],
       activeRuns: [],
+      activeOperationTasks: [],
+      recentOperationResults: [
+        {
+          operationId: 'generate_project_music',
+          taskId: 'task-1',
+          taskType: 'music_generate',
+          status: 'completed',
+          targetType: 'Project',
+          targetId: 'project-1',
+          submittedAt: '2026-01-01T00:00:00.000Z',
+          completedAt: '2026-01-01T00:01:00.000Z',
+          media: {
+            mediaType: 'music',
+            mediaId: 'media-1',
+            url: 'https://audio.example/music.mp3',
+          },
+        },
+      ],
       policy: {
         projectId: 'project-1',
         episodeId: 'episode-1',
@@ -92,6 +112,7 @@ describe('project agent presentation', () => {
 
     expect(snapshot.workflow?.episode?.panelCount).toBe(3)
     expect(snapshot.workflow?.clips[0]?.storyboardReady).toBe(true)
+    expect(snapshot.recentOperationResults[0]?.media?.url).toBe('https://audio.example/music.mp3')
   })
 
   it('builds concise chinese approval reasons instead of raw invalidation dumps', () => {

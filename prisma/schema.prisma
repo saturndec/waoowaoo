@@ -870,6 +870,10 @@ model Task {
   priority         Int       @default(0)
   dedupeKey        String?   @unique
   externalId       String?
+  operationId        String?   @db.VarChar(128)
+  operationSource    String?   @db.VarChar(64)
+  operationConfirmed Boolean?
+  operationRequestId String?   @db.VarChar(128)
   payload          Json?
   result           Json?
   errorCode        String?
@@ -893,6 +897,8 @@ model Task {
   @@index([type])
   @@index([targetType, targetId])
   @@index([projectId])
+  @@index([projectId, status, updatedAt])
+  @@index([projectId, operationId, updatedAt])
   @@index([userId])
   @@index([heartbeatAt])
   @@map("tasks")

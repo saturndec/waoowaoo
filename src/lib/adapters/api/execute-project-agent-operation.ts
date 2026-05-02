@@ -45,6 +45,10 @@ export async function executeProjectAgentOperationFromApi(params: {
     locale?: string | null
     episodeId?: string | null
     currentStage?: string | null
+    selectedScopeRef?: string | null
+    selectedPanelId?: string | null
+    selectedClipId?: string | null
+    selectedAssetId?: string | null
   }
   input: unknown
   source?: string
@@ -74,6 +78,10 @@ export async function executeProjectAgentOperationFromApi(params: {
         ...(params.context?.locale ? { locale: params.context.locale } : {}),
         ...(params.context?.episodeId ? { episodeId: params.context.episodeId } : {}),
         ...(params.context?.currentStage ? { currentStage: params.context.currentStage } : {}),
+        ...(params.context?.selectedScopeRef ? { selectedScopeRef: params.context.selectedScopeRef } : {}),
+        ...(params.context?.selectedPanelId ? { selectedPanelId: params.context.selectedPanelId } : {}),
+        ...(params.context?.selectedClipId ? { selectedClipId: params.context.selectedClipId } : {}),
+        ...(params.context?.selectedAssetId ? { selectedAssetId: params.context.selectedAssetId } : {}),
       },
       source: params.source || 'project-ui',
       writer: null,

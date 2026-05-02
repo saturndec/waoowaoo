@@ -54,6 +54,9 @@ export function createHomeLlmOperations(): ProjectAgentOperationRegistryDraft {
           type: TASK_TYPE.AI_STORY_EXPAND,
           targetType: 'HomeAiStoryExpand',
           targetId: ctx.userId,
+          operationId: 'ai_story_expand',
+          source: ctx.source,
+          confirmed: input.confirmed === true,
           payload: {
             prompt,
             analysisModel: userConfig.analysisModel,

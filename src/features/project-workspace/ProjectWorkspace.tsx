@@ -9,6 +9,7 @@ import WorkspaceAssetLibraryModal from './components/WorkspaceAssetLibraryModal'
 import WorkspaceAssistantPanel from './components/WorkspaceAssistantPanel'
 import WorkspaceHeaderShell from './components/WorkspaceHeaderShell'
 import ProjectWorkspaceCanvas from './canvas/ProjectWorkspaceCanvas'
+import type { WorkspaceAssistantSelectionContext } from './canvas/ProjectWorkspaceCanvas'
 import { WorkspaceRuntimeProvider } from './WorkspaceRuntimeContext'
 import { useProjectWorkspaceController } from './hooks/useProjectWorkspaceController'
 import type { ProjectWorkspaceProps } from './types'
@@ -17,6 +18,7 @@ import '@/styles/animations.css'
 function ProjectWorkspaceContent(props: ProjectWorkspaceProps) {
   const vm = useProjectWorkspaceController(props)
   const [isAssistantPanelCollapsed, setIsAssistantPanelCollapsed] = useState(false)
+  const [assistantSelection, setAssistantSelection] = useState<WorkspaceAssistantSelectionContext>({})
 
   const {
     project,
@@ -76,6 +78,7 @@ function ProjectWorkspaceContent(props: ProjectWorkspaceProps) {
           <WorkspaceAssistantPanel
             projectId={projectId}
             episodeId={episodeId}
+            selection={assistantSelection}
             storyToScriptStream={vm.execution.storyToScriptStream}
             scriptToStoryboardStream={vm.execution.scriptToStoryboardStream}
             isCollapsed={isAssistantPanelCollapsed}
@@ -84,7 +87,7 @@ function ProjectWorkspaceContent(props: ProjectWorkspaceProps) {
 
           <div className="min-w-0 flex-1">
             <WorkspaceRuntimeProvider value={vm.runtime.workspaceRuntime}>
-              <ProjectWorkspaceCanvas />
+              <ProjectWorkspaceCanvas onAssistantSelectionChange={setAssistantSelection} />
             </WorkspaceRuntimeProvider>
           </div>
         </div>

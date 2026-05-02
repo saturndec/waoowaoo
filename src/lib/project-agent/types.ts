@@ -15,6 +15,10 @@ export interface ProjectAgentContext {
   locale?: string
   episodeId?: string | null
   currentStage?: string | null
+  selectedScopeRef?: string | null
+  selectedPanelId?: string | null
+  selectedClipId?: string | null
+  selectedAssetId?: string | null
   interactionMode?: ProjectAgentInteractionMode
 }
 
@@ -135,7 +139,12 @@ export interface ProjectAssistantContextSnapshot {
   episodeName?: string | null
   currentStage?: string | null
   selectedScopeRef?: string | null
+  selectedPanelId?: string | null
+  selectedClipId?: string | null
+  selectedAssetId?: string | null
   activeRuns: ProjectContextSnapshot['activeRuns']
+  activeOperationTasks: ProjectContextSnapshot['activeOperationTasks']
+  recentOperationResults: ProjectContextSnapshot['recentOperationResults']
   latestArtifacts: ProjectContextSnapshot['latestArtifacts']
   config: {
     analysisModel?: string | null

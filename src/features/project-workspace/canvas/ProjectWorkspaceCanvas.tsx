@@ -32,7 +32,18 @@ import type { WorkspaceCanvasFlowNode, WorkspaceCanvasNodeAction } from './node-
 const DEFAULT_VIEWPORT = { x: 48, y: 96, zoom: 0.72 }
 const EMPTY_SAVED_NODE_LAYOUTS: readonly CanvasNodeLayout[] = []
 
-function ProjectWorkspaceCanvasContent() {
+export interface WorkspaceAssistantSelectionContext {
+  selectedScopeRef?: string | null
+  selectedPanelId?: string | null
+  selectedClipId?: string | null
+  selectedAssetId?: string | null
+}
+
+interface ProjectWorkspaceCanvasContentProps {
+  onAssistantSelectionChange?: (selection: WorkspaceAssistantSelectionContext) => void
+}
+
+function ProjectWorkspaceCanvasContent({ onAssistantSelectionChange }: ProjectWorkspaceCanvasContentProps) {
   const t = useTranslations('projectWorkflow.canvas.workspace')
   const { projectId, episodeId } = useWorkspaceProvider()
   const { episodeName, novelText, clips, storyboards, shots } = useWorkspaceEpisodeStageData()
@@ -164,6 +175,21 @@ function ProjectWorkspaceCanvasContent() {
     () => nodes.find((node) => node.id === selectedNodeId) ?? null,
     [nodes, selectedNodeId],
   )
+  const assistantSelection = useMemo<WorkspaceAssistantSelectionContext>(() => {
+    if (!selectedNode) return {}
+    const targetType = selectedNode.data.targetType
+    const targetId = selectedNode.data.targetId
+    return {
+      selectedScopeRef: `${targetType}:${targetId}`,
+      selectedPanelId: targetType === 'panel' ? targetId : null,
+      selectedClipId: targetType === 'clip' ? targetId : null,
+      selectedAssetId: null,
+    }
+  }, [selectedNode])
+
+  useEffect(() => {
+    onAssistantSelectionChange?.(assistantSelection)
+  }, [assistantSelection, onAssistantSelectionChange])
 
   if (!episodeId) return null
 
@@ -223,10 +249,14 @@ function ProjectWorkspaceCanvasContent() {
   )
 }
 
-export default function ProjectWorkspaceCanvas() {
+interface ProjectWorkspaceCanvasProps {
+  onAssistantSelectionChange?: (selection: WorkspaceAssistantSelectionContext) => void
+}
+
+export default function ProjectWorkspaceCanvas({ onAssistantSelectionChange }: ProjectWorkspaceCanvasProps) {
   return (
     <ReactFlowProvider>
-      <ProjectWorkspaceCanvasContent />
+      <ProjectWorkspaceCanvasContent onAssistantSelectionChange={onAssistantSelectionChange} />
     </ReactFlowProvider>
   )
 }

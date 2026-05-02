@@ -148,7 +148,9 @@ export async function executeProjectAgentOperationFromTool(params: {
             ...(estimatedCostUnits !== undefined ? { estimatedCostUnits } : {}),
           }
       const summary = operation.confirmation?.summary
-        || `执行 ${params.operationId} 会产生写入或计费等副作用。请在确认后重试，并在参数中带 confirmed=true。`
+        || (params.context.locale === 'en'
+          ? `Executing ${params.operationId} may write data, create billable usage, or trigger external side effects. Confirm to continue.`
+          : `执行 ${params.operationId} 会产生写入、计费或外部副作用。请确认后继续执行。`)
       writeOperationDataPart<ConfirmationRequestPartData>(params.writer, 'data-confirmation-request', {
         operationId: params.operationId,
         summary,

@@ -65,6 +65,7 @@ describe('executeProjectAgentOperationFromTool', () => {
 
   it('[confirmation required] -> writes confirmation card and returns error', async () => {
     const writer = buildWriter()
+    const execute = vi.fn(async () => ({ ok: true }))
     registryState.registry = {
       confirm_op: makeTestOperation({
         id: 'confirm_op',
@@ -81,7 +82,7 @@ describe('executeProjectAgentOperationFromTool', () => {
         },
         inputSchema: z.object({ confirmed: z.boolean().optional() }),
         outputSchema: z.object({ ok: z.boolean() }),
-        execute: vi.fn(async () => ({ ok: true })),
+        execute,
       }),
     }
 
@@ -112,6 +113,7 @@ describe('executeProjectAgentOperationFromTool', () => {
     if (result.ok) return
     expect(result.confirmationRequired).toBe(true)
     expect(result.error.code).toBe('CONFIRMATION_REQUIRED')
+    expect(execute).not.toHaveBeenCalled()
   })
 
   it('[confirmed input] -> executes operation when confirmation required', async () => {

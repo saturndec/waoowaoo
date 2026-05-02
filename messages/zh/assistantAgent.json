@@ -142,6 +142,11 @@
     "scopePanel": "面板 {id}",
     "step": "步骤 {current}/{total}",
     "rejectedPlan": "已拒绝 {workflow} 计划。{reason}",
-    "approvedPlan": "已批准 {workflow} 计划，正在开始执行。"
+    "approvedPlan": "已批准 {workflow} 计划，正在开始执行。",
+    "operationExecutionFailedFallback": "操作执行失败",
+    "confirmedOperation": "已确认并执行操作 {operation}。",
+    "confirmedOperationWithResult": "已确认并执行操作 {operation}。结果：{result}",
+    "confirmedOperationFailed": "操作 {operation} 执行失败：{error}",
+    "cancelledOperation": "已拒绝执行操作 {operation}，系统不会继续执行该操作。"
   }
 }

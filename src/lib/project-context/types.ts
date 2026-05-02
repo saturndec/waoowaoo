@@ -1,3 +1,5 @@
+import type { RecentOperationResult } from '@/lib/task/operation-result-types'
+
 export interface ProjectPolicySnapshot {
   projectId: string
   episodeId?: string | null
@@ -83,8 +85,13 @@ export interface ProjectContextSnapshot {
   episodeName?: string | null
   currentStage?: string | null
   selectedScopeRef?: string | null
+  selectedPanelId?: string | null
+  selectedClipId?: string | null
+  selectedAssetId?: string | null
   latestArtifacts: ProjectContextArtifactSummary[]
   activeRuns: ProjectContextRunSummary[]
+  activeOperationTasks: RecentOperationResult[]
+  recentOperationResults: RecentOperationResult[]
   policy: ProjectPolicySnapshot
   workflow?: ProjectContextWorkflowSnapshot
 }

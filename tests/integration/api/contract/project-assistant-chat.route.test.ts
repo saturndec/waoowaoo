@@ -10,6 +10,13 @@ const projectAgentMock = vi.hoisted(() => ({
   createProjectAgentChatResponse: vi.fn(async () => new Response('ok', { status: 200 })),
 }))
 
+const apiAdapterMock = vi.hoisted(() => ({
+  executeProjectAgentOperationFromApi: vi.fn(async (): Promise<unknown> => ({
+    status: 'submitted',
+    taskId: 'task-1',
+  })),
+}))
+
 const compressionState = vi.hoisted(() => ({
   shouldCompress: false,
   compressedMessages: [
@@ -79,6 +86,7 @@ vi.mock('@/lib/api-auth', () => {
 })
 
 vi.mock('@/lib/project-agent', () => projectAgentMock)
+vi.mock('@/lib/adapters/api/execute-project-agent-operation', () => apiAdapterMock)
 vi.mock('@/lib/project-agent/persistence', () => persistenceMock)
 vi.mock('@/lib/project-agent/thread-log', () => threadLogMock)
 vi.mock('@/lib/config-service', () => modelConfigMock)
@@ -92,6 +100,7 @@ import {
   PUT as chatPut,
 } from '@/app/api/projects/[projectId]/assistant/chat/route'
 import { GET as chatLogGet } from '@/app/api/projects/[projectId]/assistant/chat/log/route'
+import { POST as confirmOperationPost } from '@/app/api/projects/[projectId]/assistant/confirm-operation/route'
 
 describe('project assistant chat route', () => {
   beforeEach(() => {
@@ -238,6 +247,115 @@ describe('project assistant chat route', () => {
         details: expect.objectContaining({ code: 'PROJECT_AGENT_MODEL_NOT_CONFIGURED' }),
       }),
     }))
+  })
+
+  it('POST /api/projects/[projectId]/assistant/confirm-operation -> executes the saved operation arguments directly with confirmed=true', async () => {
+    apiAdapterMock.executeProjectAgentOperationFromApi.mockResolvedValueOnce({
+      status: 'submitted',
+      taskId: 'task-music-1',
+    })
+
+    const response = await confirmOperationPost(
+      buildMockRequest({
+        path: '/api/projects/project-1/assistant/confirm-operation',
+        method: 'POST',
+        body: {
+          operationId: 'generate_project_music',
+          input: {
+            prompt: 'lo-fi title theme',
+            durationSeconds: 30,
+            confirmed: false,
+          },
+          context: {
+            locale: 'zh',
+            episodeId: 'episode-1',
+            currentStage: 'workspace',
+            selectedScopeRef: 'panel:panel-1',
+            selectedPanelId: 'panel-1',
+            selectedClipId: 'clip-1',
+            selectedAssetId: 'asset-1',
+          },
+        },
+      }),
+      { params: Promise.resolve({ projectId: 'project-1' }) },
+    )
+
+    expect(response.status).toBe(200)
+    expect(apiAdapterMock.executeProjectAgentOperationFromApi).toHaveBeenCalledTimes(1)
+    expect(apiAdapterMock.executeProjectAgentOperationFromApi).toHaveBeenCalledWith(expect.objectContaining({
+      projectId: 'project-1',
+      userId: 'user-1',
+      operationId: 'generate_project_music',
+      source: 'assistant-confirmation',
+      input: {
+        prompt: 'lo-fi title theme',
+        durationSeconds: 30,
+        confirmed: true,
+      },
+      context: {
+        locale: 'zh',
+        episodeId: 'episode-1',
+        currentStage: 'workspace',
+        selectedScopeRef: 'panel:panel-1',
+        selectedPanelId: 'panel-1',
+        selectedClipId: 'clip-1',
+        selectedAssetId: 'asset-1',
+      },
+    }))
+    await expect(response.json()).resolves.toEqual({
+      success: true,
+      operationId: 'generate_project_music',
+      result: {
+        status: 'submitted',
+        taskId: 'task-music-1',
+      },
+    })
+  })
+
+  it('POST /api/projects/[projectId]/assistant/confirm-operation -> rejects invalid operation input before execution', async () => {
+    const response = await confirmOperationPost(
+      buildMockRequest({
+        path: '/api/projects/project-1/assistant/confirm-operation',
+        method: 'POST',
+        body: {
+          operationId: 'generate_project_music',
+          input: 'not-object',
+        },
+      }),
+      { params: Promise.resolve({ projectId: 'project-1' }) },
+    )
+
+    expect(response.status).toBe(400)
+    expect(apiAdapterMock.executeProjectAgentOperationFromApi).not.toHaveBeenCalled()
+    await expect(response.json()).resolves.toEqual(expect.objectContaining({
+      error: expect.objectContaining({
+        code: 'INVALID_PARAMS',
+        details: expect.objectContaining({
+          code: 'CONFIRM_OPERATION_INPUT_INVALID',
+        }),
+      }),
+    }))
+  })
+
+  it('POST /api/projects/[projectId]/assistant/confirm-operation -> rejects unauthenticated requests', async () => {
+    authState.authenticated = false
+
+    const response = await confirmOperationPost(
+      buildMockRequest({
+        path: '/api/projects/project-1/assistant/confirm-operation',
+        method: 'POST',
+        body: {
+          operationId: 'generate_project_music',
+          input: {
+            prompt: 'lo-fi title theme',
+          },
+        },
+      }),
+      { params: Promise.resolve({ projectId: 'project-1' }) },
+    )
+
+    expect(response.status).toBe(401)
+    expect(apiAdapterMock.executeProjectAgentOperationFromApi).not.toHaveBeenCalled()
   })
 
   it('GET /api/projects/[projectId]/assistant/chat -> loads persisted workspace thread from database service', async () => {

@@ -339,6 +339,10 @@ export function createStoryboardPanelImageOperations(): ProjectAgentOperationReg
           }),
           dedupeKey: `image_panel:${panelId}:${candidateCount}:${styleSignature}:${referenceSignature}`,
           billingInfo: buildDefaultTaskBillingInfo(TASK_TYPE.IMAGE_PANEL, billingPayload),
+          operationId: 'regenerate_panel_image',
+          operationSource: ctx.source,
+          operationConfirmed: input.confirmed === true,
+          operationRequestId: getRequestId(ctx.request),
         })
 
         const mutationBatch = await createMutationBatch({
@@ -528,6 +532,10 @@ export function createStoryboardPanelImageOperations(): ProjectAgentOperationReg
             payload: billingPayload,
             dedupeKey: `panel_variant:${storyboardId}:${insertAfterPanelId}:${sourcePanelId}:${styleSignature}`,
             billingInfo: buildDefaultTaskBillingInfo(TASK_TYPE.PANEL_VARIANT, billingPayload),
+            operationId: 'panel_variant',
+            operationSource: ctx.source,
+            operationConfirmed: input.confirmed === true,
+            operationRequestId: getRequestId(ctx.request),
           })
         } catch (error) {
           await rollbackCreatedVariantPanel({

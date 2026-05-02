@@ -1,5 +1,6 @@
 import { prisma } from '@/lib/prisma'
 import { listArtifacts, listRuns } from '@/lib/run-runtime/service'
+import { normalizeTaskOperationResult, type OperationResultTaskRow } from '@/lib/task/operation-result-normalizer'
 import { resolveProjectContextPolicy } from './policy'
 import type { ProjectContextSnapshot } from './types'
 
@@ -35,14 +36,56 @@ async function listLatestArtifactsForContext(params: {
   }))
 }
 
+async function listOperationResultsForContext(params: {
+  userId: string
+  projectId: string
+  statuses: string[]
+  limit?: number
+}) {
+  const rows = await prisma.task.findMany({
+    where: {
+      userId: params.userId,
+      projectId: params.projectId,
+      operationId: { not: null },
+      status: { in: params.statuses },
+    },
+    orderBy: { updatedAt: 'desc' },
+    take: params.limit ?? 10,
+    select: {
+      id: true,
+      type: true,
+      status: true,
+      targetType: true,
+      targetId: true,
+      episodeId: true,
+      payload: true,
+      result: true,
+      errorCode: true,
+      errorMessage: true,
+      operationId: true,
+      operationSource: true,
+      operationConfirmed: true,
+      queuedAt: true,
+      finishedAt: true,
+      updatedAt: true,
+    },
+  })
+  return rows
+    .map((row) => normalizeTaskOperationResult(row satisfies OperationResultTaskRow))
+    .filter((item): item is NonNullable<typeof item> => item !== null)
+}
+
 export async function assembleProjectContext(params: {
   projectId: string
   userId: string
   episodeId?: string | null
   currentStage?: string | null
   selectedScopeRef?: string | null
+  selectedPanelId?: string | null
+  selectedClipId?: string | null
+  selectedAssetId?: string | null
 }): Promise<ProjectContextSnapshot> {
-  const [project, episode, runs, latestArtifacts, approvals] = await Promise.all([
+  const [project, episode, runs, latestArtifacts, approvals, activeOperationTasks, recentOperationResults] = await Promise.all([
     prisma.project.findUnique({
       where: { id: params.projectId },
     }),
@@ -118,6 +161,18 @@ export async function assembleProjectContext(params: {
           },
         }) as Promise<ApprovalSummaryRow[]>
       : Promise.resolve([] as ApprovalSummaryRow[]),
+    listOperationResultsForContext({
+      userId: params.userId,
+      projectId: params.projectId,
+      statuses: ['queued', 'processing'],
+      limit: 10,
+    }),
+    listOperationResultsForContext({
+      userId: params.userId,
+      projectId: params.projectId,
+      statuses: ['completed', 'failed', 'canceled'],
+      limit: 10,
+    }),
   ])
 
   if (!project) {
@@ -172,6 +227,9 @@ export async function assembleProjectContext(params: {
     episodeName: episode?.name || null,
     currentStage: params.currentStage || null,
     selectedScopeRef: params.selectedScopeRef || null,
+    selectedPanelId: params.selectedPanelId || null,
+    selectedClipId: params.selectedClipId || null,
+    selectedAssetId: params.selectedAssetId || null,
     latestArtifacts,
     activeRuns: runs.map((run) => ({
       id: run.id,
@@ -180,6 +238,8 @@ export async function assembleProjectContext(params: {
       createdAt: run.createdAt,
       updatedAt: run.updatedAt,
     })),
+    activeOperationTasks,
+    recentOperationResults,
     policy,
     workflow: {
       latestRunId: runs[0]?.id || null,

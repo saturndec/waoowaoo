@@ -100,6 +100,10 @@ describe('media operations', () => {
     expect(submitTaskMock).toHaveBeenCalledWith(expect.objectContaining({
       type: TASK_TYPE.REGENERATE_GROUP,
       projectId: 'project-1',
+      operationId: 'regenerate_group',
+      operationSource: 'assistant-panel',
+      operationConfirmed: false,
+      operationRequestId: undefined,
     }))
   })
 

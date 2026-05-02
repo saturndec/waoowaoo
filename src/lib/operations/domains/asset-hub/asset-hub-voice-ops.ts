@@ -70,6 +70,9 @@ export function createAssetHubVoiceOperations(): ProjectAgentOperationRegistryDr
           type: TASK_TYPE.ASSET_HUB_VOICE_DESIGN,
           targetType: 'GlobalAssetHubVoiceDesign',
           targetId: ctx.userId,
+          operationId: 'asset_hub_voice_design',
+          source: ctx.source,
+          confirmed: body.confirmed === true,
           payload,
           dedupeKey: `${TASK_TYPE.ASSET_HUB_VOICE_DESIGN}:${digest}`,
         })

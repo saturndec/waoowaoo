@@ -418,6 +418,10 @@ export function createRunOperations(): ProjectAgentOperationRegistryDraft {
           payload: taskPayload,
           dedupeKey: null,
           priority: 3,
+          operationId: 'retry_run_step',
+          operationSource: ctx.source,
+          operationConfirmed: payload.confirmed === true,
+          operationRequestId: getRequestId(ctx.request),
         })
 
         return {

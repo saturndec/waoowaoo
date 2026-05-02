@@ -122,6 +122,10 @@ export function createLipSyncOperations(): ProjectAgentOperationRegistryDraft {
           }),
           dedupeKey: `lip_sync:${panel.id}:${voiceLineId}`,
           billingInfo: buildDefaultTaskBillingInfo(TASK_TYPE.LIP_SYNC, payload),
+          operationId: 'lip_sync',
+          operationSource: ctx.source,
+          operationConfirmed: input.confirmed === true,
+          operationRequestId: getRequestId(ctx.request),
         })
 
         const mutationBatch = await createMutationBatch({

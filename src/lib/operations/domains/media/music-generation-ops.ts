@@ -110,6 +110,9 @@ export function createMusicGenerationOperations(): ProjectAgentOperationRegistry
           type: TASK_TYPE.MUSIC_GENERATE,
           targetType: 'Project',
           targetId: ctx.projectId,
+          operationId: 'generate_project_music',
+          source: ctx.source,
+          confirmed: input.confirmed === true,
           payload,
           dedupeKey: `music_generate:${ctx.projectId}:${hashPayload(payload)}`,
         })

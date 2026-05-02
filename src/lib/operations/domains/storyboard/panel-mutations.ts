@@ -1056,6 +1056,10 @@ export async function executeStoryboardMutationOperation(
     payload: billingPayload,
     dedupeKey: `insert_panel:${storyboardId}:${input.insertAfterPanelId}`,
     billingInfo: buildDefaultTaskBillingInfo(TASK_TYPE.INSERT_PANEL, billingPayload),
+    operationId,
+    operationSource: ctx.source,
+    operationConfirmed: input.confirmed === true,
+    operationRequestId: getRequestId(ctx.request),
   })
 
   const mutationBatch = await createMutationBatch({

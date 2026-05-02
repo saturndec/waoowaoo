@@ -116,6 +116,9 @@ export function createReadOperations(): ProjectAgentOperationRegistryDraft {
       inputSchema: z.object({
         detail: z.enum(['snapshot', 'full']).optional(),
         selectedScopeRef: z.string().optional(),
+        selectedPanelId: z.string().optional(),
+        selectedClipId: z.string().optional(),
+        selectedAssetId: z.string().optional(),
       }),
       outputSchema: z.unknown(),
       execute: async (ctx, input) => {
@@ -124,7 +127,10 @@ export function createReadOperations(): ProjectAgentOperationRegistryDraft {
           userId: ctx.userId,
           episodeId: ctx.context.episodeId || null,
           currentStage: ctx.context.currentStage || null,
-          selectedScopeRef: normalizeString(input.selectedScopeRef) || null,
+          selectedScopeRef: normalizeString(input.selectedScopeRef) || ctx.context.selectedScopeRef || null,
+          selectedPanelId: normalizeString(input.selectedPanelId) || ctx.context.selectedPanelId || null,
+          selectedClipId: normalizeString(input.selectedClipId) || ctx.context.selectedClipId || null,
+          selectedAssetId: normalizeString(input.selectedAssetId) || ctx.context.selectedAssetId || null,
         })
         const snapshot = buildAssistantProjectContextSnapshot(projectContext)
         writeOperationDataPart<ProjectContextPartData>(ctx.writer, 'data-project-context', {

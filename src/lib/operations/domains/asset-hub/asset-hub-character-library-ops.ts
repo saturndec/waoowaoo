@@ -197,6 +197,9 @@ export function createAssetHubCharacterLibraryOperations(): ProjectAgentOperatio
               type: TASK_TYPE.ASSET_HUB_REFERENCE_TO_CHARACTER,
               targetType: 'GlobalCharacterAppearance',
               targetId: appearance.id,
+              operationId: 'create_asset_hub_character',
+              source: ctx.source,
+              confirmed: body.confirmed === true,
               payload,
               dedupeKey: `asset_hub_reference_to_character:${appearance.id}:${count}`,
             })
