@@ -1,4 +1,4 @@
-import { AI_PROMPT_IDS, type AiPromptId } from '@/lib/ai-prompts'
+import { AI_PROMPT_IDS, type AiPromptId } from '@/lib/ai-prompts/ids'
 import type { DirectorStyleDoc, DirectorStyleDocField } from './types'
 
 const PROMPT_TO_STYLE_FIELDS: Partial<Record<AiPromptId, readonly DirectorStyleDocField[]>> = {
