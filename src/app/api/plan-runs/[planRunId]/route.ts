@@ -5,22 +5,21 @@ import { executeProjectAgentOperationFromApi } from '@/lib/adapters/api/execute-
 
 export const GET = apiHandler(async (
   request: NextRequest,
-  context: { params: Promise<{ runId: string }> },
+  context: { params: Promise<{ planRunId: string }> },
 ) => {
   const authResult = await requireUserAuth()
   if (isErrorResponse(authResult)) return authResult
   const { session } = authResult
-  const { runId } = await context.params
+  const { planRunId } = await context.params
 
   const snapshot = await executeProjectAgentOperationFromApi({
     request,
-    operationId: 'get_run_snapshot',
+    operationId: 'get_plan_run_snapshot',
     projectId: 'system',
     userId: session.user.id,
-    input: { runId },
+    input: { planRunId },
     source: 'project-ui',
   })
 
   return NextResponse.json(snapshot)
 })
-

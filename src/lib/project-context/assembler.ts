@@ -1,5 +1,5 @@
 import { prisma } from '@/lib/prisma'
-import { listArtifacts, listRuns } from '@/lib/run-runtime/service'
+import { listPlanArtifacts, listPlanRuns } from '@/lib/plan-run-runtime/service'
 import { normalizeTaskOperationResult, type OperationResultTaskRow } from '@/lib/task/operation-result-normalizer'
 import { resolveProjectContextPolicy } from './policy'
 import type { ProjectContextSnapshot } from './types'
@@ -8,9 +8,6 @@ type ApprovalSummaryRow = {
   id: string
   status: string
   createdAt: Date
-  plan: {
-    linkedRunId: string | null
-  }
 }
 
 async function listLatestArtifactsForContext(params: {
@@ -18,15 +15,15 @@ async function listLatestArtifactsForContext(params: {
   projectId: string
   episodeId?: string | null
 }) {
-  const latestRun = (await listRuns({
+  const latestRun = (await listPlanRuns({
     userId: params.userId,
     projectId: params.projectId,
     episodeId: params.episodeId || undefined,
     limit: 1,
   }))[0] || null
   if (!latestRun) return []
-  const artifacts = await listArtifacts({
-    runId: latestRun.id,
+  const artifacts = await listPlanArtifacts({
+    planRunId: latestRun.id,
     limit: 20,
   })
   return artifacts.map((artifact) => ({
@@ -127,7 +124,7 @@ export async function assembleProjectContext(params: {
           },
         })
       : Promise.resolve(null),
-    listRuns({
+    listPlanRuns({
       userId: params.userId,
       projectId: params.projectId,
       episodeId: params.episodeId || undefined,
@@ -152,13 +149,6 @@ export async function assembleProjectContext(params: {
           },
           orderBy: { createdAt: 'desc' },
           take: 10,
-          include: {
-            plan: {
-              select: {
-                linkedRunId: true,
-              },
-            },
-          },
         }) as Promise<ApprovalSummaryRow[]>
       : Promise.resolve([] as ApprovalSummaryRow[]),
     listOperationResultsForContext({
@@ -233,7 +223,7 @@ export async function assembleProjectContext(params: {
     latestArtifacts,
     activePlanRuns: runs.map((run) => ({
       id: run.id,
-      runType: run.workflowType,
+      runType: 'plan_run',
       status: run.status,
       createdAt: run.createdAt,
       updatedAt: run.updatedAt,
@@ -259,7 +249,6 @@ export async function assembleProjectContext(params: {
         id: approval.id,
         status: approval.status,
         createdAt: approval.createdAt.toISOString(),
-        linkedRunId: approval.plan.linkedRunId,
       })),
     },
   }

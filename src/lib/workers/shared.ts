@@ -13,16 +13,13 @@ import {
   updateTaskBillingInfo,
 } from '@/lib/task/service'
 import { publishTaskEvent, publishTaskStreamEvent } from '@/lib/task/publisher'
-import { TASK_EVENT_TYPE, TASK_SSE_EVENT_TYPE, TASK_TYPE, type TaskSSEEvent, type TaskBillingInfo, type TaskJobData } from '@/lib/task/types'
+import { TASK_EVENT_TYPE, type TaskBillingInfo, type TaskJobData } from '@/lib/task/types'
 import { buildTaskProgressMessage, getTaskStageLabel } from '@/lib/task/progress-message'
 import { normalizeAnyError } from '@/lib/errors/normalize'
 import { rollbackTaskBilling, settleTaskBilling } from '@/lib/billing'
 import { withTextUsageCollection } from '@/lib/billing/runtime-usage'
 import { onProjectNameAvailable } from '@/lib/logging/file-writer'
 import type { NormalizedError } from '@/lib/errors/types'
-import { mapTaskSSEEventToRunEvents } from '@/lib/run-runtime/task-bridge'
-import { publishRunEvent } from '@/lib/run-runtime/publisher'
-import { RUN_EVENT_TYPE } from '@/lib/run-runtime/types'
 
 function toObject(value: unknown): Record<string, unknown> {
   if (!value || typeof value !== 'object' || Array.isArray(value)) return {}
@@ -79,12 +76,6 @@ function withFlowFields(jobData: TaskJobData, payload?: Record<string, unknown> 
   return base
 }
 
-function resolveRunId(jobData: TaskJobData): string | null {
-  const flowFields = extractFlowFields(jobData)
-  const runId = flowFields.runId
-  return typeof runId === 'string' && runId.trim() ? runId.trim() : null
-}
-
 function buildWorkerLogger(data: TaskJobData, queueName: string) {
   return createScopedLogger({
     module: `worker.${queueName}`,
@@ -93,56 +84,6 @@ function buildWorkerLogger(data: TaskJobData, queueName: string) {
     projectId: data.projectId,
     userId: data.userId,
   })
-}
-
-const RUN_STREAM_REPLAY_PERSIST_TYPES = new Set<string>([
-  TASK_TYPE.STORY_TO_SCRIPT_RUN,
-  TASK_TYPE.SCRIPT_TO_STORYBOARD_RUN,
-])
-
-const DIRECT_RUN_EVENT_TASK_TYPES = new Set<string>([
-  TASK_TYPE.STORY_TO_SCRIPT_RUN,
-  TASK_TYPE.SCRIPT_TO_STORYBOARD_RUN,
-])
-
-function shouldPersistRunStreamReplay(taskType: string): boolean {
-  return RUN_STREAM_REPLAY_PERSIST_TYPES.has(taskType)
-}
-
-function shouldDirectPublishRunEvents(taskType: string): boolean {
-  return DIRECT_RUN_EVENT_TASK_TYPES.has(taskType)
-}
-
-async function publishMirroredRunEvents(params: {
-  taskId: string
-  projectId: string
-  userId: string
-  taskType: string
-  targetType: string
-  targetId: string
-  episodeId?: string | null
-  eventType: typeof TASK_SSE_EVENT_TYPE[keyof typeof TASK_SSE_EVENT_TYPE]
-  payload?: Record<string, unknown> | null
-}) {
-  if (!shouldDirectPublishRunEvents(params.taskType)) return
-
-  const message: TaskSSEEvent = {
-    id: `direct:${params.taskId}:${Date.now().toString(36)}:${Math.random().toString(36).slice(2, 8)}`,
-    type: params.eventType,
-    taskId: params.taskId,
-    projectId: params.projectId,
-    userId: params.userId,
-    ts: new Date().toISOString(),
-    taskType: params.taskType,
-    targetType: params.targetType,
-    targetId: params.targetId,
-    episodeId: params.episodeId || null,
-    payload: (params.payload || null) as TaskSSEEvent['payload'],
-  }
-  const runEvents = mapTaskSSEEventToRunEvents(message)
-  for (const event of runEvents) {
-    await publishRunEvent(event)
-  }
 }
 
 async function publishLifecycleEvent(params: {
@@ -170,23 +111,6 @@ async function publishLifecycleEvent(params: {
     persist: params.persist,
   })
 
-  await publishMirroredRunEvents({
-    taskId: params.taskId,
-    projectId: params.projectId,
-    userId: params.userId,
-    taskType: params.taskType,
-    targetType: params.targetType,
-    targetId: params.targetId,
-    episodeId: params.episodeId || null,
-    eventType: TASK_SSE_EVENT_TYPE.LIFECYCLE,
-    payload: {
-      ...params.payload,
-      lifecycleType:
-        params.type === TASK_EVENT_TYPE.PROGRESS
-          ? TASK_EVENT_TYPE.PROCESSING
-          : params.type,
-    },
-  })
 }
 
 async function publishStreamEvent(params: {
@@ -212,17 +136,6 @@ async function publishStreamEvent(params: {
     persist: params.persist,
   })
 
-  await publishMirroredRunEvents({
-    taskId: params.taskId,
-    projectId: params.projectId,
-    userId: params.userId,
-    taskType: params.taskType,
-    targetType: params.targetType,
-    targetId: params.targetId,
-    episodeId: params.episodeId || null,
-    eventType: TASK_SSE_EVENT_TYPE.STREAM,
-    payload: params.payload,
-  })
 }
 
 function resolveQueueAttempts(job: Job<TaskJobData>): number {
@@ -373,25 +286,6 @@ export async function withTaskLifecycle(job: Job<TaskJobData>, handler: (job: Jo
         requestId: data.trace?.requestId || null,
       },
     })
-    if (shouldDirectPublishRunEvents(data.type)) {
-      const runId = resolveRunId(data)
-      if (runId) {
-        await publishRunEvent({
-          runId,
-          projectId: data.projectId,
-          userId: data.userId,
-          eventType: RUN_EVENT_TYPE.RUN_START,
-          payload: {
-            ...processingPayload,
-            message: buildTaskProgressMessage({
-              eventType: TASK_EVENT_TYPE.PROCESSING,
-              taskType: data.type,
-              payload: processingPayload,
-            }),
-          },
-        })
-      }
-    }
     await publishLifecycleEvent({
       taskId,
       projectId: data.projectId,
@@ -694,7 +588,7 @@ export async function reportTaskProgress(job: Job<TaskJobData>, progress: number
         requestId: job.data.trace?.requestId || null,
       },
     },
-    persist: shouldPersistRunStreamReplay(job.data.type),
+    persist: false,
   })
 }
 
@@ -725,6 +619,6 @@ export async function reportTaskStreamChunk(
         requestId: job.data.trace?.requestId || null,
       },
     },
-    persist: shouldPersistRunStreamReplay(job.data.type),
+    persist: false,
   })
 }

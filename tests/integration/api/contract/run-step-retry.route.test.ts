@@ -2,14 +2,11 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { buildMockRequest } from '../../../helpers/request'
 
 type RouteContext = {
-  params: Promise<{ runId: string; stepKey: string }>
+  params: Promise<{ planRunId: string; stepKey: string }>
 }
 
 const authState = vi.hoisted(() => ({ authenticated: true }))
-const getRunByIdMock = vi.hoisted(() => vi.fn())
-const retryFailedStepMock = vi.hoisted(() => vi.fn())
-const submitTaskMock = vi.hoisted(() => vi.fn())
-const resolveRequiredTaskLocaleMock = vi.hoisted(() => vi.fn(() => 'zh'))
+const retryPlanStepMock = vi.hoisted(() => vi.fn())
 
 vi.mock('@/lib/api-auth', () => {
   const unauthorized = () => new Response(
@@ -26,109 +23,64 @@ vi.mock('@/lib/api-auth', () => {
   }
 })
 
-vi.mock('@/lib/run-runtime/service', () => ({
-  getRunById: getRunByIdMock,
-  retryFailedStep: retryFailedStepMock,
+vi.mock('@/lib/plan-run-runtime/service', () => ({
+  retryPlanStep: retryPlanStepMock,
 }))
 
-vi.mock('@/lib/task/submitter', () => ({
-  submitTask: submitTaskMock,
-}))
-
-vi.mock('@/lib/task/resolve-locale', () => ({
-  resolveRequiredTaskLocale: resolveRequiredTaskLocaleMock,
-}))
-
-describe('api contract - run step retry route', () => {
+describe('api contract - plan run step retry route', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     authState.authenticated = true
 
-    getRunByIdMock.mockResolvedValue({
-      id: 'run-1',
-      userId: 'user-1',
-      projectId: 'project-1',
-      episodeId: 'episode-1',
-      workflowType: 'story_to_script_run',
-      taskType: 'story_to_script_run',
-      targetType: 'ProjectEpisode',
-      targetId: 'episode-1',
-      input: {
-        episodeId: 'episode-1',
-        content: 'test content',
-        meta: { locale: 'zh' },
-      },
-    })
-    retryFailedStepMock.mockResolvedValue({
-      run: { id: 'run-1' },
-      step: { stepKey: 'screenplay_clip_2' },
-      retryAttempt: 2,
-    })
-    submitTaskMock.mockResolvedValue({
-      success: true,
-      async: true,
-      taskId: 'task-retry-1',
-      runId: 'run-1',
-      status: 'queued',
-      deduped: false,
+    retryPlanStepMock.mockResolvedValue({
+      planRun: { id: 'plan-run-1' },
+      invalidatedStepKeys: ['screenplay_clip_2', 'finalize_storyboard'],
     })
   })
 
   it('rejects retry when step is not failed', async () => {
-    retryFailedStepMock.mockRejectedValue(new Error('RUN_STEP_NOT_FAILED'))
-    const route = await import('@/app/api/runs/[runId]/steps/[stepKey]/retry/route')
+    retryPlanStepMock.mockRejectedValue(new Error('PLAN_STEP_NOT_FAILED'))
+    const route = await import('@/app/api/plan-runs/[planRunId]/steps/[stepKey]/retry/route')
 
     const req = buildMockRequest({
-      path: '/api/runs/run-1/steps/screenplay_clip_2/retry',
+      path: '/api/plan-runs/plan-run-1/steps/screenplay_clip_2/retry',
       method: 'POST',
-      body: { modelOverride: 'openai/gpt-5' },
     })
     const res = await route.POST(req, {
-      params: Promise.resolve({ runId: 'run-1', stepKey: 'screenplay_clip_2' }),
+      params: Promise.resolve({ planRunId: 'plan-run-1', stepKey: 'screenplay_clip_2' }),
     } as RouteContext)
 
     expect(res.status).toBe(400)
-    expect(submitTaskMock).not.toHaveBeenCalled()
   })
 
-  it('submits retry task bound to existing run id', async () => {
-    const route = await import('@/app/api/runs/[runId]/steps/[stepKey]/retry/route')
+  it('resets a failed plan step and its downstream steps without submitting a fixed task', async () => {
+    const route = await import('@/app/api/plan-runs/[planRunId]/steps/[stepKey]/retry/route')
 
     const req = buildMockRequest({
-      path: '/api/runs/run-1/steps/screenplay_clip_2/retry',
+      path: '/api/plan-runs/plan-run-1/steps/screenplay_clip_2/retry',
       method: 'POST',
-      body: {
-        modelOverride: 'openai/gpt-5',
-        reason: 'manual retry',
-      },
+      body: { reason: 'manual retry' },
     })
     const res = await route.POST(req, {
-      params: Promise.resolve({ runId: 'run-1', stepKey: 'screenplay_clip_2' }),
+      params: Promise.resolve({ planRunId: 'plan-run-1', stepKey: 'screenplay_clip_2' }),
     } as RouteContext)
 
     expect(res.status).toBe(200)
     const payload = await res.json() as {
       success: boolean
-      runId: string
+      planRunId: string
       stepKey: string
-      retryAttempt: number
-      taskId: string
+      invalidatedStepKeys: string[]
     }
     expect(payload.success).toBe(true)
-    expect(payload.runId).toBe('run-1')
+    expect(payload.planRunId).toBe('plan-run-1')
     expect(payload.stepKey).toBe('screenplay_clip_2')
-    expect(payload.retryAttempt).toBe(2)
-    expect(payload.taskId).toBe('task-retry-1')
+    expect(payload.invalidatedStepKeys).toEqual(['screenplay_clip_2', 'finalize_storyboard'])
 
-    expect(submitTaskMock).toHaveBeenCalledWith(expect.objectContaining({
-      projectId: 'project-1',
-      type: 'story_to_script_run',
-      payload: expect.objectContaining({
-        runId: 'run-1',
-        retryStepKey: 'screenplay_clip_2',
-        retryStepAttempt: 2,
-        model: 'openai/gpt-5',
-      }),
+    expect(retryPlanStepMock).toHaveBeenCalledWith(expect.objectContaining({
+      planRunId: 'plan-run-1',
+      userId: 'user-1',
+      stepKey: 'screenplay_clip_2',
     }))
   })
 })

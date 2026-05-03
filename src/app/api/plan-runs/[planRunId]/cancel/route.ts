@@ -3,31 +3,23 @@ import { apiHandler } from '@/lib/api-errors'
 import { isErrorResponse, requireUserAuth } from '@/lib/api-auth'
 import { executeProjectAgentOperationFromApi } from '@/lib/adapters/api/execute-project-agent-operation'
 
-export const GET = apiHandler(async (
+export const POST = apiHandler(async (
   request: NextRequest,
-  context: { params: Promise<{ runId: string }> },
+  context: { params: Promise<{ planRunId: string }> },
 ) => {
   const authResult = await requireUserAuth()
   if (isErrorResponse(authResult)) return authResult
   const { session } = authResult
-  const { runId } = await context.params
-
-  const search = request.nextUrl.searchParams
-  const input = {
-    runId,
-    afterSeq: search.get('afterSeq'),
-    limit: search.get('limit'),
-  }
+  const { planRunId } = await context.params
 
   const result = await executeProjectAgentOperationFromApi({
     request,
-    operationId: 'list_run_events',
+    operationId: 'cancel_plan_run',
     projectId: 'system',
     userId: session.user.id,
-    input,
+    input: { planRunId },
     source: 'project-ui',
   })
 
   return NextResponse.json(result)
 })
-

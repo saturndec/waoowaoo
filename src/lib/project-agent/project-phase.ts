@@ -1,6 +1,5 @@
-import { TASK_TYPE } from '@/lib/task/types'
 import { assembleProjectProjectionLite } from '@/lib/project-projection/lite'
-import { listRuns } from '@/lib/run-runtime/service'
+import { listPlanRuns } from '@/lib/plan-run-runtime/service'
 import { prisma } from '@/lib/prisma'
 import type { ProjectContextRunSummary } from '@/lib/project-context/types'
 
@@ -171,14 +170,9 @@ export async function resolveProjectPhase(params: {
 
   const progress = projection.progress
 
-  const activeRunTypes = new Set(projection.activePlanRuns.map((run) => run.runType))
   let phase: ProjectPhase = PROJECT_PHASE.DRAFT
 
-  if (activeRunTypes.has(TASK_TYPE.SCRIPT_TO_STORYBOARD_RUN)) {
-    phase = PROJECT_PHASE.STORYBOARD_GENERATING
-  } else if (activeRunTypes.has(TASK_TYPE.STORY_TO_SCRIPT_RUN)) {
-    phase = PROJECT_PHASE.SCRIPT_ANALYZING
-  } else if (progress.voiceLineCount > 0) {
+  if (progress.voiceLineCount > 0) {
     phase = PROJECT_PHASE.VOICE_READY
   } else if (progress.storyboardCount > 0 || progress.panelCount > 0) {
     phase = PROJECT_PHASE.STORYBOARD_READY
@@ -187,7 +181,7 @@ export async function resolveProjectPhase(params: {
   }
 
   const [recentFailedRuns, staleArtifacts] = await Promise.all([
-    listRuns({
+    listPlanRuns({
       userId: params.userId,
       projectId: params.projectId,
       episodeId: projection.episodeId || undefined,
@@ -207,7 +201,7 @@ export async function resolveProjectPhase(params: {
     .map((run) => {
       const headline = run.errorMessage || run.errorCode || run.status || 'failed'
       const detail = truncateText(headline, 160)
-      return `run:${run.taskType || run.workflowType}(${run.id}): ${detail}`
+      return `planRun:${run.id}: ${detail}`
     })
 
   return {

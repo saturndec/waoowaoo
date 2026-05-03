@@ -250,14 +250,11 @@ export function startTaskWatchdog() {
 
             // 2. 对账 DB vs BullMQ
             const reconciled = await reconcileActiveTasks()
-            const { reconcileActiveRunsFromTasks } = await import('@/lib/run-runtime/reconcile')
-            const reconciledRuns = await reconcileActiveRunsFromTasks()
-
-            const total = sweptProcessing.length + reconciled.length + reconciledRuns.length
+            const total = sweptProcessing.length + reconciled.length
             if (total > 0) {
                 logger.info({
                     action: 'watchdog.cycle',
-                    message: `Watchdog: ${sweptProcessing.length} heartbeat-timeout, ${reconciled.length} orphan-reconciled, ${reconciledRuns.length} run-reconciled`,
+                    message: `Watchdog: ${sweptProcessing.length} heartbeat-timeout, ${reconciled.length} orphan-reconciled`,
                 })
             }
         } catch (error) {

@@ -5,17 +5,15 @@ import { executeProjectAgentOperationFromApi } from '@/lib/adapters/api/execute-
 
 export const POST = apiHandler(async (
   request: NextRequest,
-  context: { params: Promise<{ runId: string; stepKey: string }> },
+  context: { params: Promise<{ planRunId: string; stepKey: string }> },
 ) => {
   const authResult = await requireUserAuth()
   if (isErrorResponse(authResult)) return authResult
   const { session } = authResult
-  const { runId, stepKey: rawStepKey } = await context.params
+  const { planRunId, stepKey: rawStepKey } = await context.params
   const stepKey = decodeURIComponent(rawStepKey || '').trim()
 
-  if (!runId || !stepKey) {
-    throw new ApiError('INVALID_PARAMS')
-  }
+  if (!planRunId || !stepKey) throw new ApiError('INVALID_PARAMS')
 
   let body: unknown
   try {
@@ -26,13 +24,13 @@ export const POST = apiHandler(async (
 
   const input = {
     ...(body && typeof body === 'object' && !Array.isArray(body) ? body as Record<string, unknown> : {}),
-    runId,
+    planRunId,
     stepKey,
   }
 
   const result = await executeProjectAgentOperationFromApi({
     request,
-    operationId: 'retry_run_step',
+    operationId: 'retry_plan_step',
     projectId: 'system',
     userId: session.user.id,
     input,
@@ -41,4 +39,3 @@ export const POST = apiHandler(async (
 
   return NextResponse.json(result)
 })
-

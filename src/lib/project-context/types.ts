@@ -34,7 +34,6 @@ export interface ProjectContextApprovalSummary {
   id: string
   status: string
   createdAt: string
-  linkedRunId: string | null
 }
 
 export interface ProjectContextEpisodeSnapshot {

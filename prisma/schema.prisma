@@ -967,6 +967,7 @@ model PlanStepRun {
   status              String    @default("pending")
   stepIndex           Int
   stepTotal           Int
+  dependsOnJson       Json?
   inputArtifactsJson  Json?
   outputArtifactsJson Json?
   inputJson           Json?
@@ -1010,7 +1011,7 @@ model PlanRunEvent {
 model PlanArtifact {
   id           String   @id @default(uuid())
   planRunId    String
-  stepKey      String?
+  stepKey      String   @default("")
   artifactType String
   refId        String
   payload      Json?

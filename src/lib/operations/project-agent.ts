@@ -17,7 +17,7 @@ import { createConfigOperations } from './domains/config/config-ops'
 import { createProjectDataOperations } from './domains/project/project-data-ops'
 import { createProjectCrudOperations } from './domains/project/project-crud-ops'
 import { createSystemProjectOperations } from './domains/project/system-project-ops'
-import { createRunOperations } from './domains/run/run-ops'
+import { createPlanRunOperations } from './domains/run/run-ops'
 import { createTaskOperations } from './domains/task/task-ops'
 import { createSseOperations } from './domains/debug/sse-ops'
 import { createHomeLlmOperations } from './domains/llm/home-llm-ops'
@@ -61,8 +61,8 @@ export function createProjectAgentOperationRegistry(): ProjectAgentOperationRegi
       prerequisites: PREREQ_EPISODE_OPTIONAL,
       confirmation: CONFIRM_NONE,
     }),
-    ...withOperationPack(createRunOperations(), {
-      groupPath: ['run'],
+    ...withOperationPack(createPlanRunOperations(), {
+      groupPath: ['plan-run'],
       channels: CHANNELS_TOOL_API,
       prerequisites: PREREQ_EPISODE_OPTIONAL,
       confirmation: CONFIRM_NONE,

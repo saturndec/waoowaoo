@@ -3,21 +3,14 @@ import { redis } from '@/lib/redis'
 import {
   TASK_EVENT_TYPE,
   TASK_SSE_EVENT_TYPE,
-  TASK_TYPE,
   type TaskEventType,
   type TaskLifecycleEventType,
   type TaskSSEEvent,
 } from './types'
 import { coerceTaskIntent, resolveTaskIntent } from './intent'
-import { mapTaskSSEEventToRunEvents } from '@/lib/run-runtime/task-bridge'
-import { publishRunEvent } from '@/lib/run-runtime/publisher'
 
 const CHANNEL_PREFIX = 'task-events:project:'
 const STREAM_EPHEMERAL_ENABLED = process.env.LLM_STREAM_EPHEMERAL_ENABLED !== 'false'
-const TASK_TYPES_WITH_DIRECT_RUN_EVENTS = new Set<string>([
-  TASK_TYPE.STORY_TO_SCRIPT_RUN,
-  TASK_TYPE.SCRIPT_TO_STORYBOARD_RUN,
-])
 
 type TaskEventRow = {
   id: number
@@ -225,17 +218,6 @@ export function getProjectChannel(projectId: string) {
   return `${CHANNEL_PREFIX}${projectId}`
 }
 
-async function mirrorTaskEventToRun(message: TaskSSEEvent) {
-  if (message.taskType && TASK_TYPES_WITH_DIRECT_RUN_EVENTS.has(message.taskType)) {
-    return
-  }
-  const runEvents = mapTaskSSEEventToRunEvents(message)
-  if (runEvents.length === 0) return
-  for (const event of runEvents) {
-    await publishRunEvent(event)
-  }
-}
-
 export async function publishTaskLifecycleEvent(params: {
   taskId: string
   projectId: string
@@ -279,7 +261,6 @@ export async function publishTaskLifecycleEvent(params: {
   })
 
   await redis.publish(getProjectChannel(params.projectId), JSON.stringify(message))
-  await mirrorTaskEventToRun(message)
   return message
 }
 
@@ -352,7 +333,6 @@ export async function publishTaskStreamEvent(params: {
   })
 
   await redis.publish(getProjectChannel(params.projectId), JSON.stringify(message))
-  await mirrorTaskEventToRun(message)
   return message
 }
 

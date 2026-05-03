@@ -11,9 +11,6 @@ export const GET = apiHandler(async (request: NextRequest) => {
   const query = request.nextUrl.searchParams
   const input = {
     projectId: query.get('projectId'),
-    workflowType: query.get('workflowType'),
-    targetType: query.get('targetType'),
-    targetId: query.get('targetId'),
     episodeId: query.get('episodeId'),
     status: query.getAll('status'),
     limit: query.get('limit'),
@@ -21,7 +18,7 @@ export const GET = apiHandler(async (request: NextRequest) => {
 
   const result = await executeProjectAgentOperationFromApi({
     request,
-    operationId: 'list_runs',
+    operationId: 'list_plan_runs',
     projectId: 'system',
     userId: session.user.id,
     input,
@@ -49,7 +46,7 @@ export const POST = apiHandler(async (request: NextRequest) => {
 
   const result = await executeProjectAgentOperationFromApi({
     request,
-    operationId: 'create_run',
+    operationId: 'create_plan_run',
     projectId: 'system',
     userId: session.user.id,
     input: body,
@@ -58,4 +55,3 @@ export const POST = apiHandler(async (request: NextRequest) => {
 
   return NextResponse.json(result)
 })
-
