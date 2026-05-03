@@ -1,4 +1,3 @@
-import type { WorkflowSkillId } from '@/lib/skill-system/types'
 import { AI_PROMPT_IDS, type AiPromptId } from './ids'
 import type { AiPromptCatalogEntry } from './types'
 
@@ -6,7 +5,7 @@ export const AI_PROMPT_CATALOG: Record<AiPromptId, AiPromptCatalogEntry> = {
   [AI_PROMPT_IDS.CHARACTER_ANALYZE]: {
     pathStem: 'character/analyze',
     variableKeys: ['input', 'characters_lib_info', 'style_requirements'],
-    workflowSkillIds: ['analyze-characters'],
+    operationIds: ['analyze_characters'],
   },
   [AI_PROMPT_IDS.CHARACTER_VISUAL_PROFILE]: {
     pathStem: 'character/visual-profile',
@@ -39,7 +38,7 @@ export const AI_PROMPT_CATALOG: Record<AiPromptId, AiPromptCatalogEntry> = {
   [AI_PROMPT_IDS.LOCATION_ANALYZE]: {
     pathStem: 'location/analyze',
     variableKeys: ['input', 'locations_lib_name', 'style_requirements'],
-    workflowSkillIds: ['analyze-locations'],
+    operationIds: ['analyze_locations'],
   },
   [AI_PROMPT_IDS.LOCATION_CREATE]: {
     pathStem: 'location/create',
@@ -60,7 +59,7 @@ export const AI_PROMPT_CATALOG: Record<AiPromptId, AiPromptCatalogEntry> = {
   [AI_PROMPT_IDS.PROP_ANALYZE]: {
     pathStem: 'prop/analyze',
     variableKeys: ['input', 'props_lib_name', 'style_requirements'],
-    workflowSkillIds: ['analyze-props'],
+    operationIds: ['analyze_props'],
   },
   [AI_PROMPT_IDS.PROP_UPDATE_DESCRIPTION]: {
     pathStem: 'prop/update-description',
@@ -69,7 +68,7 @@ export const AI_PROMPT_CATALOG: Record<AiPromptId, AiPromptCatalogEntry> = {
   [AI_PROMPT_IDS.SCRIPT_CLIP_SEGMENTS]: {
     pathStem: 'script/clip-segments',
     variableKeys: ['input', 'locations_lib_name', 'characters_lib_name', 'props_lib_name', 'characters_introduction'],
-    workflowSkillIds: ['split-clips'],
+    operationIds: ['split_clips'],
   },
   [AI_PROMPT_IDS.SCRIPT_EPISODE_SPLIT]: {
     pathStem: 'script/episode-split',
@@ -78,7 +77,7 @@ export const AI_PROMPT_CATALOG: Record<AiPromptId, AiPromptCatalogEntry> = {
   [AI_PROMPT_IDS.SCRIPT_GENERATE_SCREENPLAY]: {
     pathStem: 'script/generate-screenplay',
     variableKeys: ['clip_content', 'locations_lib_name', 'characters_lib_name', 'props_lib_name', 'characters_introduction', 'clip_id'],
-    workflowSkillIds: ['generate-screenplay'],
+    operationIds: ['write_screenplay'],
   },
   [AI_PROMPT_IDS.SCRIPT_EXPAND_STORY]: {
     pathStem: 'script/expand-story',
@@ -97,22 +96,22 @@ export const AI_PROMPT_CATALOG: Record<AiPromptId, AiPromptCatalogEntry> = {
       'clip_content',
       'style_requirements',
     ],
-    workflowSkillIds: ['plan-storyboard-phase1'],
+    operationIds: ['create_shot_plan'],
   },
   [AI_PROMPT_IDS.STORYBOARD_REFINE_CINEMATOGRAPHY]: {
     pathStem: 'storyboard/refine-cinematography',
     variableKeys: ['panels_json', 'panel_count', 'locations_description', 'characters_info', 'props_description', 'style_requirements'],
-    workflowSkillIds: ['refine-cinematography'],
+    operationIds: ['refine_cinematography'],
   },
   [AI_PROMPT_IDS.STORYBOARD_REFINE_ACTING]: {
     pathStem: 'storyboard/refine-acting',
     variableKeys: ['panels_json', 'panel_count', 'characters_info', 'style_requirements'],
-    workflowSkillIds: ['refine-acting'],
+    operationIds: ['refine_acting'],
   },
   [AI_PROMPT_IDS.STORYBOARD_REFINE_DETAIL]: {
     pathStem: 'storyboard/refine-detail',
     variableKeys: ['panels_json', 'characters_age_gender', 'locations_description', 'props_description', 'style_requirements'],
-    workflowSkillIds: ['refine-storyboard-detail'],
+    operationIds: ['finalize_storyboard'],
   },
   [AI_PROMPT_IDS.STORYBOARD_INSERT_PANEL]: {
     pathStem: 'storyboard/insert-panel',
@@ -174,7 +173,7 @@ export const AI_PROMPT_CATALOG: Record<AiPromptId, AiPromptCatalogEntry> = {
   [AI_PROMPT_IDS.VOICE_GENERATE_LINES]: {
     pathStem: 'voice/generate-lines',
     variableKeys: ['input', 'characters_lib_name', 'characters_introduction', 'storyboard_json'],
-    workflowSkillIds: ['generate-voice-lines'],
+    operationIds: ['generate_voice_lines'],
   },
   [AI_PROMPT_IDS.MUSIC_LYRIA_PROMPT_EXPAND]: {
     pathStem: 'music/lyria-prompt-expand',
@@ -182,18 +181,18 @@ export const AI_PROMPT_CATALOG: Record<AiPromptId, AiPromptCatalogEntry> = {
   },
 }
 
-const WORKFLOW_SKILL_TO_AI_PROMPT_ID = new Map<WorkflowSkillId, AiPromptId>()
+const OPERATION_TO_AI_PROMPT_ID = new Map<string, AiPromptId>()
 
 for (const [promptId, entry] of Object.entries(AI_PROMPT_CATALOG) as Array<[AiPromptId, AiPromptCatalogEntry]>) {
-  for (const workflowSkillId of entry.workflowSkillIds ?? []) {
-    WORKFLOW_SKILL_TO_AI_PROMPT_ID.set(workflowSkillId, promptId)
+  for (const operationId of entry.operationIds ?? []) {
+    OPERATION_TO_AI_PROMPT_ID.set(operationId, promptId)
   }
 }
 
-export function resolveAiPromptIdFromWorkflowSkillId(skillId: WorkflowSkillId): AiPromptId {
-  const resolved = WORKFLOW_SKILL_TO_AI_PROMPT_ID.get(skillId)
+export function resolveAiPromptIdFromOperationId(operationId: string): AiPromptId {
+  const resolved = OPERATION_TO_AI_PROMPT_ID.get(operationId)
   if (!resolved) {
-    throw new Error(`AI_PROMPT_WORKFLOW_SKILL_UNREGISTERED:${skillId}`)
+    throw new Error(`AI_PROMPT_OPERATION_UNREGISTERED:${operationId}`)
   }
   return resolved
 }

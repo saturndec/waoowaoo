@@ -1,9 +1,8 @@
 import { ARTIFACT_TYPES } from '@/lib/artifact-system/types'
-import { getSkillPackage } from '@/lib/skill-system/catalog'
 import type { CommandSkillId, SkillDefinition } from '@/lib/skill-system/types'
 import type { CommandEnvelope, ExecutionPlanDraft, PlanStep } from './types'
 
-const LEGACY_COMMAND_SKILLS: Record<Exclude<CommandSkillId, Parameters<typeof getSkillPackage>[0]>, SkillDefinition> = {
+const COMMAND_SKILLS: Record<CommandSkillId, SkillDefinition> = {
   insert_panel: {
     id: 'insert_panel',
     name: 'Insert Panel',
@@ -51,22 +50,7 @@ const LEGACY_COMMAND_SKILLS: Record<Exclude<CommandSkillId, Parameters<typeof ge
 }
 
 function getPlanSkillDefinition(skillId: CommandSkillId): SkillDefinition {
-  if (skillId in LEGACY_COMMAND_SKILLS) {
-    return LEGACY_COMMAND_SKILLS[skillId as keyof typeof LEGACY_COMMAND_SKILLS]
-  }
-
-  const skill = getSkillPackage(skillId as Parameters<typeof getSkillPackage>[0])
-  return {
-    id: skill.metadata.id,
-    name: skill.metadata.name,
-    summary: skill.metadata.summary,
-    riskLevel: skill.metadata.riskLevel,
-    requiresApproval: skill.effects.requiresApproval,
-    inputArtifacts: skill.interface.inputArtifacts,
-    outputArtifacts: skill.interface.outputArtifacts,
-    invalidates: skill.effects.invalidates,
-    mutationKind: skill.effects.mutationKind,
-  }
+  return COMMAND_SKILLS[skillId]
 }
 
 function buildPlanStep(skillId: CommandSkillId, orderIndex: number, dependsOn: string[]): PlanStep {

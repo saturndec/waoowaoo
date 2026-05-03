@@ -3,7 +3,7 @@ import { queryTaskTargetStates } from '@/lib/task/state-service'
 import { withPrismaRetry } from '@/lib/prisma-retry'
 import { assembleProjectContext } from '@/lib/project-context/assembler'
 import { listProjectCommands, syncProjectCommandStatus } from '@/lib/command-center/executor'
-import { listSkillCatalogEntries, readSkillCatalogDocument } from '@/lib/skill-system/catalog'
+import { listAgentSkillManifests, loadAgentSkill } from '@/lib/agent-skills/registry'
 import { resolveProjectPhase } from '@/lib/project-agent/project-phase'
 import { assembleProjectProjectionLite } from '@/lib/project-projection/lite'
 import { assembleProjectProjectionFull } from '@/lib/project-projection/full'
@@ -139,7 +139,7 @@ export function createReadOperations(): ProjectAgentOperationRegistryDraft {
     }),
     list_skill_catalog: defineOperation({
       id: 'list_skill_catalog',
-      summary: 'List available atomic skill catalog entries.',
+      summary: 'List available Agent Skill catalog entries.',
       intent: 'query',
       effects: EFFECTS_NONE,
       inputSchema: z.object({
@@ -148,14 +148,26 @@ export function createReadOperations(): ProjectAgentOperationRegistryDraft {
       }),
       outputSchema: z.unknown(),
       execute: async (_, input) => {
+        const catalog = listAgentSkillManifests().map((skill) => ({
+          id: skill.id,
+          kind: 'agent-skill' as const,
+          name: skill.name,
+          summary: skill.summary,
+          description: skill.description,
+          documentPath: skill.documentPath,
+        }))
         const payload = {
-          catalog: listSkillCatalogEntries(),
+          catalog,
         }
 
         const documentPath = normalizeString(input.documentPath)
         if (!documentPath) return payload
 
-        const content = readSkillCatalogDocument(documentPath)
+        const manifest = listAgentSkillManifests().find((skill) => skill.documentPath === documentPath)
+        if (!manifest) return payload
+        const loaded = loadAgentSkill(manifest.id)
+        if (!loaded) return payload
+        const content = loaded.instructions
         const limit = Math.max(200, Math.min(20000, input.maxChars ?? 6000))
         return {
           ...payload,

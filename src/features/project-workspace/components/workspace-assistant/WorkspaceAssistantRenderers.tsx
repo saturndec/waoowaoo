@@ -22,11 +22,23 @@ import type {
 } from '@/lib/project-agent/types'
 import type { RunStreamView } from '@/lib/query/hooks/run-stream/types'
 import { useRevertMutationBatch } from '@/lib/query/hooks'
-import { getSkillDisplayLabel } from '@/lib/skill-system/project-workflow-machine'
 import { MarkdownTextPart } from './MarkdownTextPart'
 
+const AGENT_SKILL_LABELS: Record<string, string> = {
+  'creative-direction': '创意方向',
+  screenwriting: '剧本写作',
+  'story-structure': '故事结构',
+  'storyboard-direction': '分镜指导',
+  'visual-continuity': '视觉连续性',
+  'location-selection': '场景选择',
+  'character-selection': '角色选择',
+  'audio-direction': '声音指导',
+  'media-generation': '媒体生成',
+}
+
 function formatSkillLabel(skillId: string | null | undefined): string {
-  return getSkillDisplayLabel(skillId)
+  if (!skillId) return '未命名技能'
+  return AGENT_SKILL_LABELS[skillId] || skillId
 }
 
 type MessagePartComponents = NonNullable<ComponentProps<typeof MessagePrimitive.Parts>['components']>

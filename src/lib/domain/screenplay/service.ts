@@ -4,7 +4,6 @@ import { removeLocationPromptSuffix } from '@/lib/constants'
 import { seedProjectLocationBackedImageSlots } from '@/lib/assets/services/location-backed-assets'
 import { normalizeLocationAvailableSlots } from '@/lib/location-available-slots'
 import { resolvePropVisualDescription } from '@/lib/assets/prop-description'
-import type { StoryToScriptClipCandidate } from '@/lib/skill-system/executors/story-to-script/types'
 import { assertApprovedDomainMutationContext } from '@/lib/domain/approvals/guard'
 import {
   assertExpectedVersion,
@@ -17,6 +16,19 @@ import { createProjectRepository } from '@/lib/domain/repositories/project-workf
 type JsonRecord = Record<string, unknown>
 
 type ScreenplayPayload = Record<string, unknown>
+
+type StoryToScriptClipCandidate = {
+  id: string
+  startText: string
+  endText: string
+  summary: string
+  location: string | null
+  characters: string[]
+  props: string[]
+  content: string
+  matchLevel: string
+  matchConfidence: number
+}
 
 type StoryToScriptScreenplayResult = {
   clipId: string

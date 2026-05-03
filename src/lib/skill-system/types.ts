@@ -6,27 +6,14 @@ export type SkillRiskLevel = 'low' | 'medium' | 'high'
 export type SkillMutationKind = 'read' | 'generate' | 'update' | 'delete'
 export type SkillScopeKind = 'project' | 'episode' | 'clip' | 'panel'
 
-export type WorkflowSkillId =
-  | 'analyze-characters'
-  | 'analyze-locations'
-  | 'analyze-props'
-  | 'split-clips'
-  | 'generate-screenplay'
-  | 'plan-storyboard-phase1'
-  | 'refine-cinematography'
-  | 'refine-acting'
-  | 'refine-storyboard-detail'
-  | 'generate-voice-lines'
-
 export type CommandSkillId =
-  | WorkflowSkillId
   | 'insert_panel'
   | 'panel_variant'
   | 'regenerate_storyboard_text'
   | 'modify_shot_prompt'
 
 export interface SkillPackageMetadata {
-  id: WorkflowSkillId
+  id: string
   name: string
   summary: string
   description: string

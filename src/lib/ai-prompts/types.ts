@@ -1,5 +1,4 @@
 import type { Locale } from '@/i18n/routing'
-import type { WorkflowSkillId } from '@/lib/skill-system/types'
 import type { DirectorStyleDoc } from '@/lib/director-style'
 import type { AiPromptId } from './ids'
 
@@ -9,7 +8,7 @@ export type AiPromptVariables = Record<string, string>
 export type AiPromptCatalogEntry = {
   pathStem: string
   variableKeys: readonly string[]
-  workflowSkillIds?: readonly WorkflowSkillId[]
+  operationIds?: readonly string[]
 }
 
 export type BuildAiPromptInput = {

@@ -1,13 +1,13 @@
 import { describe, expect, it } from 'vitest'
-import { buildAiPrompt, getAiPromptTemplate, resolveAiPromptIdFromWorkflowSkillId } from '@/lib/ai-prompts'
+import { buildAiPrompt, getAiPromptTemplate, resolveAiPromptIdFromOperationId } from '@/lib/ai-prompts'
 import { AI_PROMPT_CATALOG } from '@/lib/ai-prompts/registry'
 import { AI_PROMPT_IDS, type AiPromptId } from '@/lib/ai-prompts/ids'
 import { buildDirectorStyleDoc } from '@/lib/director-style'
 
 describe('ai prompt registry', () => {
   it('maps workflow skill ids to the same unified template id', () => {
-    expect(resolveAiPromptIdFromWorkflowSkillId('analyze-characters')).toBe(AI_PROMPT_IDS.CHARACTER_ANALYZE)
-    expect(resolveAiPromptIdFromWorkflowSkillId('plan-storyboard-phase1')).toBe(AI_PROMPT_IDS.STORYBOARD_PLAN)
+    expect(resolveAiPromptIdFromOperationId('analyze_characters')).toBe(AI_PROMPT_IDS.CHARACTER_ANALYZE)
+    expect(resolveAiPromptIdFromOperationId('create_shot_plan')).toBe(AI_PROMPT_IDS.STORYBOARD_PLAN)
   })
 
   it('loads unified template content from the new functional directory', () => {
