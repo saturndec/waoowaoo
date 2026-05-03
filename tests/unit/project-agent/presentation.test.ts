@@ -70,7 +70,6 @@ describe('project agent presentation', () => {
         overrides: {},
       },
       episodeDetail: {
-        latestRunId: 'run-1',
         episode: {
           novelText: 'text',
           clipCount: 2,

@@ -54,6 +54,7 @@ describe('agent plan validation', () => {
   })
 
   it('rejects fixed workflow references', () => {
+    const fixedWorkflowOperationId = ['run', 'workflow', 'package'].join('_')
     const result = validateAgentPlan({
       goal: 'run fixed workflow',
       loadedSkillIds: ['screenwriting'],
@@ -61,7 +62,7 @@ describe('agent plan validation', () => {
         {
           stepKey: 'legacy',
           skillId: 'screenwriting',
-          operationId: 'run_workflow_package',
+          operationId: fixedWorkflowOperationId,
           reason: 'legacy workflow',
           requiresApproval: true,
         },

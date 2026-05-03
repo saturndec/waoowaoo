@@ -19,12 +19,12 @@ vi.mock('@/lib/prisma', () => ({
   prisma: prismaMock,
 }))
 
-const runRuntimeMock = vi.hoisted(() => ({
-  listRuns: vi.fn(),
-  listArtifacts: vi.fn(),
+const planRunRuntimeMock = vi.hoisted(() => ({
+  listPlanRuns: vi.fn(),
+  listPlanArtifacts: vi.fn(),
 }))
 
-vi.mock('@/lib/run-runtime/service', () => runRuntimeMock)
+vi.mock('@/lib/plan-run-runtime/service', () => planRunRuntimeMock)
 
 describe('assembleProjectContext', () => {
   beforeEach(() => {
@@ -70,9 +70,9 @@ describe('assembleProjectContext', () => {
       ],
       voiceLines: [],
     })
-    runRuntimeMock.listRuns.mockResolvedValueOnce([])
-    runRuntimeMock.listRuns.mockResolvedValueOnce([])
-    runRuntimeMock.listArtifacts.mockResolvedValueOnce([])
+    planRunRuntimeMock.listPlanRuns.mockResolvedValueOnce([])
+    planRunRuntimeMock.listPlanRuns.mockResolvedValueOnce([])
+    planRunRuntimeMock.listPlanArtifacts.mockResolvedValueOnce([])
     prismaMock.planApproval.findMany.mockResolvedValueOnce([])
     prismaMock.task.findMany
       .mockResolvedValueOnce([

@@ -31,7 +31,6 @@ export async function resolveProjectModel(projectId: string) {
   if (!project.analysisModel) throw new Error('请先在项目设置中配置分析模型')
   return {
     projectId,
-    workflowId: project.id,
     analysisModel: project.analysisModel,
   }
 }

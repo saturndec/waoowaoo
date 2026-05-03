@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { apiHandler, ApiError } from '@/lib/api-errors'
 import { isErrorResponse, requireProjectAuth } from '@/lib/api-auth'
-import { executeProjectAgentOperationFromApi } from '@/lib/adapters/api/execute-project-agent-operation'
+import { rejectProjectPlan } from '@/lib/command-center/executor'
 
 export const POST = apiHandler(async (
   request: NextRequest,
@@ -32,55 +32,17 @@ export const POST = apiHandler(async (
     })
   }
 
-  const raw = await executeProjectAgentOperationFromApi({
-    request,
-    operationId: 'reject_plan',
-    projectId,
-    userId: authResult.session.user.id,
-    input: {
-      planId: resolvedPlanId,
-      ...(note ? { note } : {}),
-    },
-    source: 'project-ui/api',
+  const result = await rejectProjectPlan({
+    planId: resolvedPlanId,
+    ...(note ? { note } : {}),
   })
-
-  const result = (() => {
-    if (!raw || typeof raw !== 'object' || Array.isArray(raw)) {
-      throw new ApiError('EXTERNAL_ERROR', {
-        code: 'REJECT_PLAN_RESULT_INVALID',
-        message: 'reject_plan result must be an object',
-      })
-    }
-    return raw as Record<string, unknown>
-  })()
-
-  const requireString = (value: unknown, field: string): string => {
-    const normalized = typeof value === 'string' ? value.trim() : ''
-    if (!normalized) {
-      throw new ApiError('EXTERNAL_ERROR', {
-        code: 'REJECT_PLAN_RESULT_INVALID',
-        message: `reject_plan result missing ${field}`,
-      })
-    }
-    return normalized
-  }
-
-  const steps = (() => {
-    if (!Array.isArray(result.steps)) {
-      throw new ApiError('EXTERNAL_ERROR', {
-        code: 'REJECT_PLAN_RESULT_INVALID',
-        message: 'reject_plan result missing steps',
-      })
-    }
-    return result.steps
-  })()
 
   return NextResponse.json({
     success: true,
-    commandId: requireString(result.commandId, 'commandId'),
-    planId: requireString(result.planId, 'planId'),
-    status: requireString(result.status, 'status'),
-    summary: typeof result.summary === 'string' ? result.summary : null,
-    steps,
+    commandId: result.commandId,
+    planId: result.planId,
+    status: result.status,
+    summary: result.summary,
+    steps: result.steps,
   })
 })

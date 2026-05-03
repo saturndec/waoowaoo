@@ -22,7 +22,6 @@ const executorMock = vi.hoisted(() => ({
     requiresApproval: false,
     status: 'running',
     linkedTaskId: 'task-1',
-    linkedRunId: 'run-1',
     summary: 'Panel Variant',
     steps: [
       {
@@ -47,7 +46,6 @@ const executorMock = vi.hoisted(() => ({
       requiresApproval: false,
       status: 'running',
       linkedTaskId: 'task-1',
-      linkedRunId: 'run-1',
       summary: 'Panel Variant',
       steps: [],
       createdAt: '2026-04-13T00:00:00.000Z',
@@ -65,7 +63,6 @@ const executorMock = vi.hoisted(() => ({
     requiresApproval: false,
     status: 'running',
     linkedTaskId: 'task-1',
-    linkedRunId: 'run-1',
     summary: 'Panel Variant',
     steps: [],
   })),
@@ -75,7 +72,6 @@ const executorMock = vi.hoisted(() => ({
     requiresApproval: true,
     status: 'rejected',
     linkedTaskId: null,
-    linkedRunId: null,
     summary: 'Panel Variant',
     steps: [],
   })),
@@ -164,7 +160,6 @@ describe('project commands routes', () => {
       commandId: 'command-1',
       planId: 'plan-1',
       taskId: 'task-1',
-      runId: 'run-1',
     })
     expect(executorMock.executeProjectCommand).toHaveBeenCalledTimes(1)
   })
@@ -176,7 +171,6 @@ describe('project commands routes', () => {
       requiresApproval: true,
       status: 'awaiting_approval',
       linkedTaskId: '',
-      linkedRunId: '',
       summary: 'Insert Panel',
       steps: [
         {
@@ -233,7 +227,6 @@ describe('project commands routes', () => {
         requiresApproval: false,
         status: 'running',
         linkedTaskId: 'task-1',
-        linkedRunId: 'run-1',
         summary: 'Panel Variant',
         steps: [],
         createdAt: '2026-04-13T00:00:00.000Z',
@@ -260,11 +253,11 @@ describe('project commands routes', () => {
     expect(payload.commands[0]).toMatchObject({
       commandId: 'command-1',
       planId: 'plan-1',
-      linkedRunId: 'run-1',
+      linkedTaskId: 'task-1',
     })
   })
 
-  it('POST approve route -> returns linked run/task payload', async () => {
+  it('POST approve route -> returns linked task payload', async () => {
     prismaMock.executionPlan.findUnique.mockResolvedValueOnce({
       id: 'plan-1',
       projectId: 'project-1',
@@ -273,11 +266,11 @@ describe('project commands routes', () => {
         rawInput: {},
       },
     })
-    apiAdapterMock.executeProjectAgentOperationFromApi.mockResolvedValueOnce({
+    executorMock.approveProjectPlan.mockResolvedValueOnce({
       commandId: 'command-1',
       planId: 'plan-1',
+      requiresApproval: false,
       linkedTaskId: 'task-1',
-      linkedRunId: 'run-1',
       status: 'running',
       summary: 'Panel Variant',
       steps: [],
@@ -297,7 +290,6 @@ describe('project commands routes', () => {
       success: true,
       async: true,
       taskId: 'task-1',
-      runId: 'run-1',
       status: 'running',
     })
   })
@@ -307,9 +299,11 @@ describe('project commands routes', () => {
       id: 'plan-1',
       projectId: 'project-1',
     })
-    apiAdapterMock.executeProjectAgentOperationFromApi.mockResolvedValueOnce({
+    executorMock.rejectProjectPlan.mockResolvedValueOnce({
       commandId: 'command-1',
       planId: 'plan-1',
+      requiresApproval: true,
+      linkedTaskId: null,
       status: 'rejected',
       summary: 'Panel Variant',
       steps: [],

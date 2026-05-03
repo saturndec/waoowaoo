@@ -70,7 +70,6 @@ export interface ProjectContextPanelSnapshot {
 }
 
 export interface ProjectContextEpisodeDetailSnapshot {
-  latestRunId: string | null
   episode: ProjectContextEpisodeSnapshot | null
   clips: ProjectContextClipSnapshot[]
   panels: ProjectContextPanelSnapshot[]

@@ -232,7 +232,6 @@ export async function assembleProjectContext(params: {
     recentOperationResults,
     policy,
     episodeDetail: {
-      latestRunId: runs[0]?.id || null,
       episode: episode
         ? {
             novelText: episode.novelText || null,

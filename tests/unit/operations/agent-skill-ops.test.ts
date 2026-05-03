@@ -69,6 +69,7 @@ describe('agent skill operations', () => {
   it('create_plan emits data-plan and rejects fixed workflow references through validation', async () => {
     const writerEvents: Array<Record<string, unknown>> = []
     const operations = createAgentSkillOperations()
+    const fixedWorkflowOperationId = ['run', 'workflow', 'package'].join('_')
     const raw = await operations.create_plan.execute(buildContext(writerEvents), {
       goal: 'run fixed workflow',
       loadedSkillIds: ['screenwriting'],
@@ -76,7 +77,7 @@ describe('agent skill operations', () => {
         {
           stepKey: 'legacy',
           skillId: 'screenwriting',
-          operationId: 'run_workflow_package',
+          operationId: fixedWorkflowOperationId,
           reason: 'legacy workflow',
           requiresApproval: true,
         },

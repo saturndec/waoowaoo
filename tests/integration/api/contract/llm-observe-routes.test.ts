@@ -398,7 +398,7 @@ describe('api contract - llm observe routes (behavior)', () => {
   })
 
   it('keeps expected coverage size', () => {
-    expect(ROUTE_CASES.length).toBe(23)
+    expect(ROUTE_CASES.length).toBe(21)
   })
 
   it('marks asset-hub AI routes as force-dynamic to keep app-route build registration stable', async () => {

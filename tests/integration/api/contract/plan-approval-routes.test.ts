@@ -5,8 +5,9 @@ const authState = vi.hoisted(() => ({
   authenticated: true,
 }))
 
-const apiAdapterMock = vi.hoisted(() => ({
-  executeProjectAgentOperationFromApi: vi.fn(),
+const executorMock = vi.hoisted(() => ({
+  approveProjectPlan: vi.fn(),
+  rejectProjectPlan: vi.fn(),
 }))
 
 vi.mock('@/lib/api-auth', () => {
@@ -27,23 +28,22 @@ vi.mock('@/lib/api-auth', () => {
   }
 })
 
-vi.mock('@/lib/adapters/api/execute-project-agent-operation', () => apiAdapterMock)
+vi.mock('@/lib/command-center/executor', () => executorMock)
 
 import { POST as approvePost } from '@/app/api/projects/[projectId]/plans/[planId]/approve/route'
 import { POST as rejectPost } from '@/app/api/projects/[projectId]/plans/[planId]/reject/route'
 
-describe('api contract - plan approval routes (operation adapter)', () => {
+describe('api contract - plan approval routes', () => {
   beforeEach(() => {
     authState.authenticated = true
     vi.clearAllMocks()
   })
 
-  it('POST /projects/[projectId]/plans/[planId]/approve -> calls approve_plan operation', async () => {
-    apiAdapterMock.executeProjectAgentOperationFromApi.mockResolvedValueOnce({
+  it('POST /projects/[projectId]/plans/[planId]/approve -> approves command-center plan', async () => {
+    executorMock.approveProjectPlan.mockResolvedValueOnce({
       commandId: 'command-1',
       planId: 'plan-1',
       linkedTaskId: 'task-1',
-      linkedRunId: 'run-1',
       status: 'running',
       summary: 'summary',
       steps: [{ skillId: 's1' }],
@@ -59,13 +59,9 @@ describe('api contract - plan approval routes (operation adapter)', () => {
     )
 
     expect(res.status).toBe(200)
-    expect(apiAdapterMock.executeProjectAgentOperationFromApi).toHaveBeenCalledWith(expect.objectContaining({
-      operationId: 'approve_plan',
-      projectId: 'project-1',
+    expect(executorMock.approveProjectPlan).toHaveBeenCalledWith(expect.objectContaining({
       userId: 'user-1',
-      input: {
-        planId: 'plan-1',
-      },
+      planId: 'plan-1',
     }))
 
     await expect(res.json()).resolves.toEqual(expect.objectContaining({
@@ -73,13 +69,12 @@ describe('api contract - plan approval routes (operation adapter)', () => {
       commandId: 'command-1',
       planId: 'plan-1',
       taskId: 'task-1',
-      runId: 'run-1',
       status: 'running',
     }))
   })
 
-  it('POST /projects/[projectId]/plans/[planId]/reject -> calls reject_plan operation with note', async () => {
-    apiAdapterMock.executeProjectAgentOperationFromApi.mockResolvedValueOnce({
+  it('POST /projects/[projectId]/plans/[planId]/reject -> rejects command-center plan with note', async () => {
+    executorMock.rejectProjectPlan.mockResolvedValueOnce({
       commandId: 'command-1',
       planId: 'plan-1',
       status: 'rejected',
@@ -99,14 +94,9 @@ describe('api contract - plan approval routes (operation adapter)', () => {
     )
 
     expect(res.status).toBe(200)
-    expect(apiAdapterMock.executeProjectAgentOperationFromApi).toHaveBeenCalledWith(expect.objectContaining({
-      operationId: 'reject_plan',
-      projectId: 'project-1',
-      userId: 'user-1',
-      input: {
-        planId: 'plan-1',
-        note: 'no',
-      },
+    expect(executorMock.rejectProjectPlan).toHaveBeenCalledWith(expect.objectContaining({
+      planId: 'plan-1',
+      note: 'no',
     }))
   })
 })

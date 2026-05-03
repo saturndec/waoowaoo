@@ -31,7 +31,6 @@ describe('domain approval guard', () => {
       id: 'plan-1',
       status: 'awaiting_approval',
       requiresApproval: true,
-      linkedRunId: null,
       command: {
         normalizedInput: {
           operationId: 'write_screenplay',
@@ -54,7 +53,6 @@ describe('domain approval guard', () => {
       id: 'plan-1',
       status: 'approved',
       requiresApproval: true,
-      linkedRunId: 'run-1',
       command: {
         normalizedInput: {
           operationId: 'write_screenplay',
@@ -72,12 +70,11 @@ describe('domain approval guard', () => {
     })).rejects.toThrow('execution plan operation mismatch')
   })
 
-  it('passes when approved plan and run match mutation context', async () => {
+  it('passes when approved plan and operation match mutation context', async () => {
     prismaMock.executionPlan.findUnique.mockResolvedValue({
       id: 'plan-1',
       status: 'running',
       requiresApproval: true,
-      linkedRunId: 'run-1',
       command: {
         normalizedInput: {
           operationId: 'finalize_storyboard',

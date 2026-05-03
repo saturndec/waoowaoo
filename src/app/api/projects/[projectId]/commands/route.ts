@@ -82,7 +82,6 @@ export const POST = apiHandler(async (
     commandId: result.commandId,
     planId: result.planId,
     taskId: result.linkedTaskId,
-    runId: result.linkedRunId,
     status: result.status,
     summary: result.summary,
     steps: result.steps,

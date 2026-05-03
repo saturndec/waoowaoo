@@ -3,10 +3,10 @@ import { getProjectModelConfig } from '@/lib/config-service'
 import { resolveProjectContextPolicy } from '@/lib/project-context/policy'
 import { prisma } from '@/lib/prisma'
 import { assembleProjectContext } from '@/lib/project-context/assembler'
-import { getRunById } from '@/lib/run-runtime/service'
 import { submitTask } from '@/lib/task/submitter'
+import { getTaskById } from '@/lib/task/service'
 import { resolveRequiredTaskLocale } from '@/lib/task/resolve-locale'
-import { TASK_TYPE, type TaskType } from '@/lib/task/types'
+import { TASK_STATUS, TASK_TYPE, type TaskType } from '@/lib/task/types'
 import { buildExecutionPlanDraft } from './plan-builder'
 import type {
   CommandEnvelope,
@@ -32,7 +32,6 @@ type ProjectCommandRow = {
   rawInput: unknown
   normalizedInput: unknown
   currentPlanId: string | null
-  latestRunId: string | null
   errorCode: string | null
   errorMessage: string | null
   createdAt: Date
@@ -49,7 +48,6 @@ type ExecutionPlanRow = {
   requiresApproval: boolean
   riskSummary: unknown
   linkedTaskId: string | null
-  linkedRunId: string | null
   createdAt: Date
   updatedAt: Date
 }
@@ -123,16 +121,11 @@ type ApprovalModel = {
   findFirst: (args: FindManyArgs) => Promise<PlanApprovalRow | null>
 }
 
-type GraphRunModel = {
-  update: (args: UpdateArgs) => Promise<unknown>
-}
-
 type CommandCenterPrismaClient = {
   projectCommand: CommandModel
   executionPlan: PlanModel
   executionPlanStep: PlanStepModel
   planApproval: ApprovalModel
-  graphRun: GraphRunModel
 }
 
 const commandCenterClient = prisma as unknown as CommandCenterPrismaClient
@@ -242,7 +235,6 @@ function mapCommandResult(params: {
     requiresApproval: params.plan.requiresApproval,
     status: toStatus(params.command.status),
     linkedTaskId: params.plan.linkedTaskId,
-    linkedRunId: params.plan.linkedRunId,
     summary: params.plan.summary || params.command.summary || '',
     steps: params.steps.sort((left, right) => left.orderIndex - right.orderIndex).map(mapPlanStepRow),
     createdAt: params.command.createdAt.toISOString(),
@@ -420,11 +412,10 @@ async function dispatchCommandPlan(params: {
     priority: 2,
   })
 
-  const nextStatus: CommandStatus = taskResult.runId ? 'running' : 'failed'
+  const nextStatus: CommandStatus = taskResult.taskId ? 'running' : 'failed'
   await commandCenterClient.projectCommand.update({
     where: { id: params.commandRow.id },
     data: {
-      latestRunId: taskResult.runId || null,
       status: nextStatus,
     },
   })
@@ -432,19 +423,9 @@ async function dispatchCommandPlan(params: {
     where: { id: params.planRow.id },
     data: {
       linkedTaskId: taskResult.taskId,
-      linkedRunId: taskResult.runId || null,
       status: nextStatus,
     },
   })
-  if (taskResult.runId) {
-    await commandCenterClient.graphRun.update({
-      where: { id: taskResult.runId },
-      data: {
-        commandId: params.commandRow.id,
-        planId: params.planRow.id,
-      },
-    })
-  }
 
   return {
     commandId: params.commandRow.id,
@@ -452,7 +433,6 @@ async function dispatchCommandPlan(params: {
     requiresApproval: false,
     status: nextStatus,
     linkedTaskId: taskResult.taskId,
-    linkedRunId: taskResult.runId || null,
     summary: params.planRow.summary || '',
     steps: [],
   }
@@ -483,7 +463,6 @@ export async function executeProjectCommand(params: {
       requiresApproval: true,
       status: 'awaiting_approval',
       linkedTaskId: null,
-      linkedRunId: null,
       summary: persisted.plan.summary || '',
       steps: planDraft.steps,
     }
@@ -677,7 +656,6 @@ export async function rejectProjectPlan(params: {
     requiresApproval: plan.requiresApproval,
     status: 'rejected',
     linkedTaskId: plan.linkedTaskId,
-    linkedRunId: plan.linkedRunId,
     summary: plan.summary || command.summary || '',
     steps: steps.map(mapPlanStepRow),
   }
@@ -689,14 +667,18 @@ export async function syncProjectCommandStatus(params: {
   const command = await commandCenterClient.projectCommand.findUnique({
     where: { id: params.commandId },
   })
-  if (!command || !command.latestRunId) return
-  const run = await getRunById(command.latestRunId)
-  if (!run) return
+  if (!command || !command.currentPlanId) return
+  const plan = await commandCenterClient.executionPlan.findUnique({
+    where: { id: command.currentPlanId },
+  })
+  if (!plan?.linkedTaskId) return
+  const task = await getTaskById(plan.linkedTaskId)
+  if (!task) return
 
   const nextStatus: CommandStatus =
-    run.status === 'completed'
+    task.status === TASK_STATUS.COMPLETED
       ? 'completed'
-      : run.status === 'failed' || run.status === 'canceled'
+      : task.status === TASK_STATUS.FAILED || task.status === TASK_STATUS.CANCELED
         ? 'failed'
         : 'running'
 
@@ -704,16 +686,13 @@ export async function syncProjectCommandStatus(params: {
     where: { id: command.id },
     data: {
       status: nextStatus,
-      errorMessage: run.errorMessage || null,
+      errorMessage: task.errorMessage || null,
     },
   })
-  if (command.currentPlanId) {
-    await commandCenterClient.executionPlan.update({
-      where: { id: command.currentPlanId },
-      data: {
-        status: nextStatus,
-        linkedRunId: run.id,
-      },
-    })
-  }
+  await commandCenterClient.executionPlan.update({
+    where: { id: command.currentPlanId },
+    data: {
+      status: nextStatus,
+    },
+  })
 }

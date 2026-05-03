@@ -60,7 +60,6 @@ export interface CommandExecutionResult {
   requiresApproval: boolean
   status: CommandStatus
   linkedTaskId?: string | null
-  linkedRunId?: string | null
   summary: string
   steps: PlanStep[]
 }

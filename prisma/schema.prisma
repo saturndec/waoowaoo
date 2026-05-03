@@ -256,7 +256,6 @@ model ProjectCommand {
   rawInput        Json?
   normalizedInput Json?
   currentPlanId   String?
-  latestRunId     String?
   errorCode       String?
   errorMessage    String?         @db.Text
   createdAt       DateTime        @default(now())

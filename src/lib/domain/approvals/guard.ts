@@ -44,12 +44,6 @@ export async function assertApprovedDomainMutationContext(input: DomainMutationC
     }
   }
 
-  if (plan.linkedRunId && input.runId && plan.linkedRunId !== input.runId) {
-    throw new DomainValidationError(
-      `execution plan run mismatch: expected ${plan.linkedRunId}, received ${input.runId}`,
-    )
-  }
-
   const expectedOperationId = readOperationIdFromNormalizedInput(plan.command.normalizedInput)
   if (expectedOperationId && input.operationId && expectedOperationId !== input.operationId) {
     throw new DomainValidationError(
