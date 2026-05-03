@@ -125,6 +125,10 @@ describe('project assistant chat route', () => {
           context: {
             episodeId: 'episode-1',
             currentStage: 'config',
+            selectedScopeRef: 'panel:panel-1',
+            selectedPanelId: 'panel-1',
+            selectedClipId: 'clip-1',
+            selectedAssetId: 'asset-1',
           },
         },
       }),
@@ -139,6 +143,10 @@ describe('project assistant chat route', () => {
       context: {
         episodeId: 'episode-1',
         currentStage: 'config',
+        selectedScopeRef: 'panel:panel-1',
+        selectedPanelId: 'panel-1',
+        selectedClipId: 'clip-1',
+        selectedAssetId: 'asset-1',
       },
     }))
   })
@@ -450,6 +458,63 @@ describe('project assistant chat route', () => {
       ],
     })
     expect(threadLogMock.writeWorkspaceAssistantThreadLog).toHaveBeenCalledTimes(1)
+  })
+
+  it('PUT /api/projects/[projectId]/assistant/chat -> accepts agent plan data parts for persistence', async () => {
+    const planPart = {
+      type: 'data-plan',
+      data: {
+        planId: 'plan_1',
+        goal: '希区柯克风格恐怖短片',
+        summary: '创作计划',
+        requiresApproval: true,
+        validation: {
+          ok: true,
+          issues: [],
+        },
+        steps: [
+          {
+            stepKey: 'context',
+            skillId: 'creative-direction',
+            operationId: 'get_project_context',
+            reason: '先读取项目上下文',
+            inputArtifacts: [],
+            outputArtifacts: ['creative.brief'],
+            dependsOn: [],
+            requiresApproval: false,
+          },
+        ],
+      },
+    }
+
+    const response = await chatPut(
+      buildMockRequest({
+        path: '/api/projects/project-1/assistant/chat',
+        method: 'PUT',
+        body: {
+          episodeId: 'episode-1',
+          messages: [
+            {
+              id: 'assistant-1',
+              role: 'assistant',
+              parts: [planPart],
+            },
+          ],
+        },
+      }),
+      { params: Promise.resolve({ projectId: 'project-1' }) },
+    )
+
+    expect(response.status).toBe(200)
+    expect(persistenceMock.saveProjectAssistantThread).toHaveBeenCalledWith(expect.objectContaining({
+      messages: [
+        {
+          id: 'assistant-1',
+          role: 'assistant',
+          parts: [planPart],
+        },
+      ],
+    }))
   })
 
   it('PUT /api/projects/[projectId]/assistant/chat -> persists compressed thread when long conversation threshold is hit', async () => {

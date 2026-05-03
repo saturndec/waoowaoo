@@ -3,7 +3,11 @@ import type { CommandExecutionResult } from '@/lib/command-center/types'
 import type { WorkflowCanonicalEvent } from '@/lib/agent/events/workflow-events'
 import type { ProjectContextSnapshot } from '@/lib/project-context/types'
 import type { ProjectPhase, ProjectPhaseSnapshot } from './project-phase'
-import type { WorkflowPackageId, WorkflowSkillId } from '@/lib/skill-system/types'
+import type {
+  WorkflowPackageId,
+  WorkflowSkillId,
+} from '@/lib/skill-system/types'
+import type { PlanValidationIssue } from '@/lib/agent-skills/types'
 
 export type UnknownObject = { [key: string]: unknown }
 
@@ -92,6 +96,27 @@ export interface ProjectAgentStopPartData {
   maxSteps: number
 }
 
+export interface AgentPlanPartData {
+  planId: string
+  goal: string
+  summary: string
+  requiresApproval: boolean
+  validation: {
+    ok: boolean
+    issues: PlanValidationIssue[]
+  }
+  steps: Array<{
+    stepKey: string
+    skillId: string
+    reason: string
+    operationId: string
+    inputArtifacts: string[]
+    outputArtifacts: string[]
+    dependsOn: string[]
+    requiresApproval: boolean
+  }>
+}
+
 export interface AgentDebugPartData {
   requestId: string
   interactionMode: ProjectAgentInteractionMode
@@ -151,7 +176,6 @@ export interface ProjectAssistantContextSnapshot {
     artStyle: string
     videoRatio: string
   }
-  workflow?: ProjectContextSnapshot['workflow']
 }
 
 export interface ProjectAssistantThreadSnapshot {
@@ -175,6 +199,7 @@ export type WorkspaceAssistantPartType =
   | 'data-workflow-plan'
   | 'data-approval-request'
   | 'data-workflow-status'
+  | 'data-plan'
   | 'data-script-preview'
   | 'data-storyboard-preview'
   | 'data-project-context'

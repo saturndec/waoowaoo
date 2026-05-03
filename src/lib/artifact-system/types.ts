@@ -1,5 +1,10 @@
 export const ARTIFACT_TYPES = {
   STORY_RAW: 'story.raw',
+  CREATIVE_BRIEF: 'creative.brief',
+  SUSPENSE_MECHANISM: 'suspense.mechanism',
+  SHORT_SCRIPT: 'script.short',
+  SHOT_PLAN: 'shot.plan',
+  AUDIO_PLAN: 'audio.plan',
   ANALYSIS_CHARACTERS: 'analysis.characters',
   ANALYSIS_LOCATIONS: 'analysis.locations',
   ANALYSIS_PROPS: 'analysis.props',

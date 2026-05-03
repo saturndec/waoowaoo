@@ -193,9 +193,10 @@ export async function createProjectAgentChatResponse(input: {
         : executionMode.effectiveIntent === 'plan'
           ? (['query', 'plan'] as const)
           : (['query', 'plan', 'act'] as const)
+      const skillOnlyRequestedGroups = route.requestedGroups.filter((groupPath) => groupPath[0] === 'skill')
       const selection = selectProjectAgentOperationsByGroups({
         registry: operations,
-        requestedGroups: route.requestedGroups,
+        requestedGroups: skillOnlyRequestedGroups,
         maxTools: 45,
         allowedIntents,
       })
@@ -206,7 +207,7 @@ export async function createProjectAgentChatResponse(input: {
           `interactionMode=${executionMode.interactionMode}`,
           `routedIntent=${route.intent}`,
           `effectiveIntent=${executionMode.effectiveIntent}`,
-          `requestedGroups=${JSON.stringify(route.requestedGroups)}`,
+          `requestedGroups=${JSON.stringify(skillOnlyRequestedGroups)}`,
           `alwaysOn=${String(selection.alwaysOnOperationIds.length)}`,
           `tools=${String(selection.operationIds.length)}`,
         ].join('\n'))
@@ -215,7 +216,7 @@ export async function createProjectAgentChatResponse(input: {
           interactionMode: executionMode.interactionMode,
           routedIntent: route.intent,
           effectiveIntent: executionMode.effectiveIntent,
-          requestedGroups: route.requestedGroups,
+          requestedGroups: skillOnlyRequestedGroups,
           alwaysOnOperationIds: selection.alwaysOnOperationIds,
           operationIds: selection.operationIds,
         })

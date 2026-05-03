@@ -94,11 +94,36 @@ describe('routeProjectAgentRequest', () => {
       phase: buildPhaseSnapshot(),
       context: { currentStage: 'config', locale: 'zh' },
       model: {} as never,
-      allowedRequestedGroups: [['project', 'read'], ['workflow', 'plan'], ['storyboard', 'edit']],
+      allowedRequestedGroups: [['project', 'read'], ['skill'], ['storyboard', 'edit']],
     })
 
     expect(route.needsClarification).toBe(false)
     expect(route.clarifyingQuestion).toBeNull()
+  })
+
+  it('[open creative plan request] -> can request skill planning group', async () => {
+    aiMock.generateObject.mockResolvedValueOnce({
+      object: {
+        intent: 'plan',
+        domains: ['skill'],
+        requestedGroups: [['skill']],
+        needsClarification: false,
+        clarifyingQuestion: null,
+        reasoning: ['open creative goal needs Agent Skill planning'],
+      },
+    })
+
+    const route = await routeProjectAgentRequest({
+      messages: [buildUserMessage('给我一个希区柯克风格的恐怖短片计划。')],
+      phase: buildPhaseSnapshot(),
+      context: { currentStage: 'concept', locale: 'zh', interactionMode: 'plan' },
+      model: {} as never,
+      allowedRequestedGroups: [['project', 'read'], ['skill']],
+    })
+
+    expect(route.intent).toBe('plan')
+    expect(route.domains).toEqual(['skill'])
+    expect(route.requestedGroups).toEqual([['skill']])
   })
 
   it('[empty user text] -> returns direct clarification without model call', async () => {

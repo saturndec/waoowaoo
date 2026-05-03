@@ -31,10 +31,10 @@ describe('project agent presentation', () => {
       artStyle: 'realistic',
       videoRatio: '9:16',
     })
-    expect(snapshot.workflow).toBeUndefined()
+    expect('workflow' in snapshot).toBe(false)
   })
 
-  it('passes through workflow snapshot so assistant sees the same latest state as GUI', () => {
+  it('does not pass workflow snapshot into assistant context', () => {
     const snapshot = buildAssistantProjectContextSnapshot({
       projectId: 'project-1',
       projectName: 'a',
@@ -110,8 +110,7 @@ describe('project agent presentation', () => {
       },
     } satisfies ProjectContextSnapshot)
 
-    expect(snapshot.workflow?.episode?.panelCount).toBe(3)
-    expect(snapshot.workflow?.clips[0]?.storyboardReady).toBe(true)
+    expect('workflow' in snapshot).toBe(false)
     expect(snapshot.recentOperationResults[0]?.media?.url).toBe('https://audio.example/music.mp3')
   })
 

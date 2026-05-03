@@ -1,7 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import {
   PROJECT_WORKFLOW_SKILL_IDS,
-  PROJECT_WORKFLOW_IDS,
 } from '@/lib/skill-system/project-workflow-machine'
 import {
   discoverSkillDocuments,
@@ -13,74 +12,27 @@ import {
 } from '@/lib/skill-system/catalog'
 
 describe('skill-system catalog', () => {
-  it('discovers first-phase skills and workflow packages from skills directory', () => {
+  it('discovers first-phase skill packages without workflow packages', () => {
     const skillPackages = listSkillPackages()
     const workflowPackages = listWorkflowPackages()
     const documents = discoverSkillDocuments()
 
     expect(skillPackages.map((pkg) => pkg.metadata.id)).toEqual(PROJECT_WORKFLOW_SKILL_IDS)
-    expect(workflowPackages.map((pkg) => pkg.manifest.id)).toEqual(PROJECT_WORKFLOW_IDS)
+    expect(workflowPackages).toEqual([])
     expect(documents.map((item) => item.path)).toContain('skills/project-workflow/analyze-characters/SKILL.md')
-    expect(documents.map((item) => item.path)).toContain('skills/project-workflow/workflows/story-to-script/WORKFLOW.md')
+    expect(documents.map((item) => item.path).some((item) => item.includes('/WORKFLOW.md'))).toBe(false)
   })
 
-  it('story-to-script workflow package uses fixed serial skill order', () => {
-    const workflowPackage = getWorkflowPackage('story-to-script')
-
-    expect(workflowPackage.steps.map((step) => step.skillId)).toEqual([
-      'analyze-characters',
-      'analyze-locations',
-      'analyze-props',
-      'split-clips',
-      'generate-screenplay',
-    ])
-    expect(workflowPackage.manifest.requiresApproval).toBe(true)
-    expect(workflowPackage.steps.every((step) => step.executionKind === 'serial')).toBe(true)
-  })
-
-  it('script-to-storyboard workflow package exposes clip fan-out and episode join metadata', () => {
-    const workflowPackage = getWorkflowPackage('script-to-storyboard')
-
-    expect(workflowPackage.steps.map((step) => ({
-      skillId: step.skillId,
-      executionKind: step.executionKind,
-      scopeCollection: step.scopeCollection,
-    }))).toEqual([
-      {
-        skillId: 'plan-storyboard-phase1',
-        executionKind: 'map',
-        scopeCollection: 'clips',
-      },
-      {
-        skillId: 'refine-cinematography',
-        executionKind: 'map',
-        scopeCollection: 'clips',
-      },
-      {
-        skillId: 'refine-acting',
-        executionKind: 'map',
-        scopeCollection: 'clips',
-      },
-      {
-        skillId: 'refine-storyboard-detail',
-        executionKind: 'map',
-        scopeCollection: 'clips',
-      },
-      {
-        skillId: 'generate-voice-lines',
-        executionKind: 'join',
-        scopeCollection: 'episode',
-      },
-    ])
+  it('fails explicitly when old workflow package lookup is attempted', () => {
+    expect(() => getWorkflowPackage('story-to-script')).toThrow(/WORKFLOW_PACKAGE_REMOVED/)
   })
 
   it('reads skill document content from repository source files', () => {
     const catalogEntries = listSkillCatalogEntries()
-    const storyWorkflow = catalogEntries.find((entry) => entry.id === 'story-to-script')
-    expect(storyWorkflow).toBeTruthy()
+    const characterSkill = catalogEntries.find((entry) => entry.id === 'analyze-characters')
+    expect(characterSkill).toBeTruthy()
 
-    const content = readSkillCatalogDocument(storyWorkflow!.documentPath)
-    expect(content).toContain('Fixed Skill Order')
+    const content = readSkillCatalogDocument(characterSkill!.documentPath)
     expect(content).toContain('analyze-characters')
   })
 })

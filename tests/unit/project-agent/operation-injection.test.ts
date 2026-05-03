@@ -43,10 +43,19 @@ function buildRegistry(): ProjectAgentOperationRegistry {
       outputSchema: z.object({ ok: z.boolean() }),
       execute: async () => ({ ok: true }),
     }),
-    create_workflow_plan: makeTestOperation({
-      id: 'create_workflow_plan',
+    create_plan: makeTestOperation({
+      id: 'create_plan',
       intent: 'plan',
-      groupPath: ['workflow', 'plan'],
+      groupPath: ['skill'],
+      effects: EFFECTS_NONE,
+      inputSchema: z.object({}),
+      outputSchema: z.object({ ok: z.boolean() }),
+      execute: async () => ({ ok: true }),
+    }),
+    search_skills: makeTestOperation({
+      id: 'search_skills',
+      intent: 'query',
+      groupPath: ['skill'],
       effects: EFFECTS_NONE,
       inputSchema: z.object({}),
       outputSchema: z.object({ ok: z.boolean() }),
@@ -117,11 +126,12 @@ describe('selectProjectAgentOperationsByGroups', () => {
     const registry = buildRegistry()
     const planMode = selectProjectAgentOperationsByGroups({
       registry,
-      requestedGroups: [['storyboard', 'edit'], ['workflow', 'plan']],
+      requestedGroups: [['storyboard', 'edit'], ['skill']],
       maxTools: 50,
       allowedIntents: ['query', 'plan'],
     })
     expect(planMode.operationIds).not.toContain('create_storyboard_group')
-    expect(planMode.operationIds).toContain('create_workflow_plan')
+    expect(planMode.operationIds).toContain('create_plan')
+    expect(planMode.operationIds).toContain('search_skills')
   })
 })

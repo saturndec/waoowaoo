@@ -10,6 +10,7 @@ export type ProjectAgentIntent = 'query' | 'plan' | 'act'
 
 export type ProjectAgentDomain =
   | 'project'
+  | 'skill'
   | 'workflow'
   | 'run'
   | 'task'
@@ -38,6 +39,7 @@ const routerSchema = z.object({
   intent: z.enum(['query', 'plan', 'act']),
   domains: z.array(z.enum([
     'project',
+    'skill',
     'workflow',
     'run',
     'task',
@@ -179,6 +181,8 @@ function buildRouterPrompt(params: {
         'Your task is to classify the user turn before the main assistant acts.',
         'If the request is ambiguous, set needsClarification=true and provide one short clarifyingQuestion.',
         'If any tool group might be needed, include it. Prefer recall over aggressive exclusion.',
+        'For creative, production, selection, writing, storyboard, media, or multi-step goals, request only the ["skill"] group plus project read context.',
+        'Do not request workflow groups; legacy fixed-chain routing is forbidden.',
         'Do not rely on previous rule routing. Output only from the provided schema.',
         'requestedGroups is a list of groupPath arrays, e.g. ["workflow","plan"].',
         `Allowed requestedGroups (choose from this list): ${groupList}`,
@@ -206,6 +210,8 @@ function buildRouterPrompt(params: {
       '你的任务是在主 assistant 执行前，对当前用户请求做结构化分类。',
       '如果请求有歧义，必须设置 needsClarification=true，并提供一个简短的 clarifyingQuestion。',
       '如果某个工具 group 可能需要用到，就把它包含进去。宁可高召回，不要激进排除。',
+      '对于创作、制作、选择、写作、分镜、媒体生成或多步骤目标，只请求 ["skill"] group 加项目读取上下文。',
+      '不要请求 workflow group；旧固定链路路由已禁止。',
       '禁止依赖旧的规则路由，必须只按 schema 输出。',
       'requestedGroups 是 groupPath 数组列表，例如 ["workflow","plan"]。',
       `允许的 requestedGroups（必须从该列表中选择）：${groupList}`,

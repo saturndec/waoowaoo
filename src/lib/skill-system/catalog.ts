@@ -10,8 +10,6 @@ import refineActingSkillPackage from '@skills/project-workflow/refine-acting'
 import refineCinematographySkillPackage from '@skills/project-workflow/refine-cinematography'
 import refineStoryboardDetailSkillPackage from '@skills/project-workflow/refine-storyboard-detail'
 import splitClipsSkillPackage from '@skills/project-workflow/split-clips'
-import scriptToStoryboardWorkflowPackage from '@skills/project-workflow/workflows/script-to-storyboard'
-import storyToScriptWorkflowPackage from '@skills/project-workflow/workflows/story-to-script'
 import type {
   SkillCatalogEntry,
   SkillPackage,
@@ -21,7 +19,6 @@ import type {
 } from './types'
 import {
   PROJECT_WORKFLOW_SKILL_IDS,
-  PROJECT_WORKFLOW_IDS,
 } from './project-workflow-machine'
 
 const importedSkillPackages = [
@@ -36,11 +33,6 @@ const importedSkillPackages = [
   refineStoryboardDetailSkillPackage,
   generateVoiceLinesSkillPackage,
 ] satisfies SkillPackage[]
-
-const importedWorkflowPackages = [
-  storyToScriptWorkflowPackage,
-  scriptToStoryboardWorkflowPackage,
-] satisfies WorkflowPackage[]
 
 function buildOrderedPackageRecord<TId extends string, TPackage>(
   expectedIds: TId[],
@@ -80,12 +72,6 @@ const skillPackages = buildOrderedPackageRecord(
   (pkg) => pkg.metadata.id,
 )
 
-const workflowPackages = buildOrderedPackageRecord(
-  PROJECT_WORKFLOW_IDS,
-  importedWorkflowPackages,
-  (pkg) => pkg.manifest.id,
-)
-
 function skillsRoot(): string {
   return path.resolve(process.cwd(), 'skills', 'project-workflow')
 }
@@ -117,11 +103,11 @@ export function listSkillPackages(): SkillPackage[] {
 }
 
 export function getWorkflowPackage(workflowId: WorkflowPackageId): WorkflowPackage {
-  return workflowPackages[workflowId]
+  throw new Error(`WORKFLOW_PACKAGE_REMOVED:${workflowId}`)
 }
 
 export function listWorkflowPackages(): WorkflowPackage[] {
-  return PROJECT_WORKFLOW_IDS.map((workflowId) => workflowPackages[workflowId])
+  return []
 }
 
 export function findWorkflowSkillPackageByLegacyStepId(stepId: string): SkillPackage | null {
@@ -140,22 +126,14 @@ export function listSkillCatalogEntries(): SkillCatalogEntry[] {
     description: skillPackage.metadata.description,
     documentPath: skillPackage.instructions.documentPath,
   }))
-  const workflows = listWorkflowPackages().map((workflowPackage) => ({
-    id: workflowPackage.manifest.id,
-    kind: 'workflow' as const,
-    name: workflowPackage.manifest.name,
-    summary: workflowPackage.manifest.summary,
-    description: workflowPackage.manifest.description,
-    documentPath: workflowPackage.documentPath,
-  }))
-  return [...workflows, ...skills]
+  return skills
 }
 
-export function discoverSkillDocuments(): Array<{ kind: 'skill' | 'workflow'; path: string }> {
+export function discoverSkillDocuments(): Array<{ kind: 'skill'; path: string }> {
   return walkFiles(skillsRoot())
-    .filter((filePath) => filePath.endsWith('/SKILL.md') || filePath.endsWith('/WORKFLOW.md'))
+    .filter((filePath) => filePath.endsWith('/SKILL.md'))
     .map((filePath) => ({
-      kind: filePath.endsWith('/SKILL.md') ? 'skill' as const : 'workflow' as const,
+      kind: 'skill' as const,
       path: relativeSkillPath(filePath),
     }))
 }

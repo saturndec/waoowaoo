@@ -6,6 +6,31 @@ const artifactCatalog: Record<ArtifactType, ArtifactDefinition> = {
     scope: 'episode',
     summary: 'Original story text for the episode.',
   },
+  [ARTIFACT_TYPES.CREATIVE_BRIEF]: {
+    type: ARTIFACT_TYPES.CREATIVE_BRIEF,
+    scope: 'episode',
+    summary: 'Creative brief distilled from the user goal and project context.',
+  },
+  [ARTIFACT_TYPES.SUSPENSE_MECHANISM]: {
+    type: ARTIFACT_TYPES.SUSPENSE_MECHANISM,
+    scope: 'episode',
+    summary: 'Suspense or tension mechanism used to shape a short film concept.',
+  },
+  [ARTIFACT_TYPES.SHORT_SCRIPT]: {
+    type: ARTIFACT_TYPES.SHORT_SCRIPT,
+    scope: 'episode',
+    summary: 'Short-form script artifact for planning shots and storyboards.',
+  },
+  [ARTIFACT_TYPES.SHOT_PLAN]: {
+    type: ARTIFACT_TYPES.SHOT_PLAN,
+    scope: 'episode',
+    summary: 'Shot-level plan derived from a script or concept.',
+  },
+  [ARTIFACT_TYPES.AUDIO_PLAN]: {
+    type: ARTIFACT_TYPES.AUDIO_PLAN,
+    scope: 'episode',
+    summary: 'Audio, voice, ambience, or music planning artifact.',
+  },
   [ARTIFACT_TYPES.ANALYSIS_CHARACTERS]: {
     type: ARTIFACT_TYPES.ANALYSIS_CHARACTERS,
     scope: 'episode',

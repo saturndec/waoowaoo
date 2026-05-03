@@ -1,5 +1,5 @@
 import { createReadOperations } from './domains/project/read-ops'
-import { createPlanOperations } from './domains/workflow/plan-ops'
+import { createAgentSkillOperations } from './domains/agent-skill/agent-skill-ops'
 import { createGovernanceOperations } from './domains/governance/governance-ops'
 import { createEditOperations } from './domains/storyboard/edit-ops'
 import { createStoryboardPanelEditOperations } from './domains/storyboard/panel-edit-ops'
@@ -175,6 +175,12 @@ export function createProjectAgentOperationRegistry(): ProjectAgentOperationRegi
       prerequisites: PREREQ_EPISODE_OPTIONAL,
       confirmation: CONFIRM_NONE,
     }),
+    ...withOperationPack(createAgentSkillOperations(), {
+      groupPath: ['skill'],
+      channels: CHANNELS_TOOL_API,
+      prerequisites: PREREQ_EPISODE_OPTIONAL,
+      confirmation: CONFIRM_NONE,
+    }),
     ...withOperationPack(createProjectCrudOperations(), {
       groupPath: ['project', 'crud'],
       channels: CHANNELS_TOOL_API,
@@ -207,12 +213,6 @@ export function createProjectAgentOperationRegistry(): ProjectAgentOperationRegi
     }),
     ...withOperationPack(createDownloadOperations(), {
       groupPath: ['media', 'download'],
-      channels: CHANNELS_TOOL_API,
-      prerequisites: PREREQ_EPISODE_OPTIONAL,
-      confirmation: CONFIRM_NONE,
-    }),
-    ...withOperationPack(createPlanOperations(), {
-      groupPath: ['workflow', 'plan'],
       channels: CHANNELS_TOOL_API,
       prerequisites: PREREQ_EPISODE_OPTIONAL,
       confirmation: CONFIRM_NONE,

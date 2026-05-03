@@ -9,6 +9,11 @@ import type {
 
 const ARTIFACT_LABELS: Record<ArtifactType, string> = {
   'story.raw': '故事原文',
+  'creative.brief': '创作简报',
+  'suspense.mechanism': '悬疑机制',
+  'script.short': '短片剧本',
+  'shot.plan': '镜头计划',
+  'audio.plan': '声音计划',
   'analysis.characters': '角色分析',
   'analysis.locations': '场景分析',
   'analysis.props': '道具分析',
@@ -58,7 +63,6 @@ export function buildAssistantProjectContextSnapshot(
       artStyle: context.policy.artStyle,
       videoRatio: context.policy.videoRatio,
     },
-    workflow: context.workflow,
   }
 }
 

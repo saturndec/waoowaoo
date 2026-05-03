@@ -176,10 +176,30 @@ describe('project agent runtime tool routing', () => {
         outputSchema: z.unknown(),
         execute: async () => ({}),
       }),
+      search_skills: makeTestOperation({
+        id: 'search_skills',
+        summary: 'Search skills',
+        intent: 'query',
+        groupPath: ['skill'],
+        effects: EFFECTS_NONE,
+        inputSchema: z.object({}),
+        outputSchema: z.unknown(),
+        execute: async () => ({}),
+      }),
+      create_plan: makeTestOperation({
+        id: 'create_plan',
+        summary: 'Create plan',
+        intent: 'plan',
+        groupPath: ['skill'],
+        effects: EFFECTS_NONE,
+        inputSchema: z.object({}),
+        outputSchema: z.unknown(),
+        execute: async () => ({}),
+      }),
     }
   })
 
-  it('injects asset-focused tools when router requests asset/character group', async () => {
+  it('does not inject direct business tools when router requests non-skill groups', async () => {
     streamState.routeResult = {
       intent: 'query',
       domains: ['asset'],
@@ -202,7 +222,7 @@ describe('project agent runtime tool routing', () => {
     await flushAsyncWork()
 
     expect(response.status).toBe(200)
-    expect(streamState.capturedToolNames).toContain('get_character_detail')
+    expect(streamState.capturedToolNames).not.toContain('get_character_detail')
     expect(streamState.capturedToolNames).not.toContain('regenerate_panel_image')
     expect(streamState.capturedSystem).toContain('get_project_phase')
     expect(loggerState.info).toHaveBeenCalledWith(expect.objectContaining({
@@ -210,13 +230,13 @@ describe('project agent runtime tool routing', () => {
       requestId: 'req-1',
       projectId: 'project-1',
       details: expect.objectContaining({
-        operationIds: expect.arrayContaining(['get_character_detail']),
-        requestedGroups: [['asset', 'character']],
+        operationIds: expect.not.arrayContaining(['get_character_detail']),
+        requestedGroups: [],
       }),
     }))
   })
 
-  it('injects panel media tools when router requests media group', async () => {
+  it('does not inject panel media tools directly when router requests media group', async () => {
     streamState.routeResult = {
       intent: 'act',
       domains: ['storyboard'],
@@ -238,7 +258,7 @@ describe('project agent runtime tool routing', () => {
     })
     await flushAsyncWork()
 
-    expect(streamState.capturedToolNames).toContain('regenerate_panel_image')
+    expect(streamState.capturedToolNames).not.toContain('regenerate_panel_image')
     expect(streamState.capturedSystem).toContain('get_project_phase')
   })
 
@@ -274,7 +294,7 @@ describe('project agent runtime tool routing', () => {
     streamState.routeResult = {
       intent: 'act',
       domains: ['storyboard'],
-      requestedGroups: [['media'], ['workflow', 'plan']],
+      requestedGroups: [['media'], ['skill']],
       needsClarification: false,
       clarifyingQuestion: null,
       reasoning: ['user wants a plan before acting'],
@@ -295,7 +315,34 @@ describe('project agent runtime tool routing', () => {
     expect(streamState.capturedToolNames).not.toContain('regenerate_panel_image')
   })
 
-  it('keeps act-capable routing in auto interaction mode', async () => {
+  it('injects skill planning tools for open-ended creative plans', async () => {
+    streamState.routeResult = {
+      intent: 'plan',
+      domains: ['skill'],
+      requestedGroups: [['skill']],
+      needsClarification: false,
+      clarifyingQuestion: null,
+      reasoning: ['open creative goal needs capability planning'],
+      latestUserText: '给我一个希区柯克风格恐怖片计划',
+    }
+
+    await createProjectAgentChatResponse({
+      request: buildRequest(),
+      userId: 'user-1',
+      projectId: 'project-1',
+      context: { episodeId: 'ep-1', currentStage: 'concept', interactionMode: 'plan' },
+      messages: [
+        { id: 'u1', role: 'user', parts: [{ type: 'text', text: '给我一个希区柯克风格恐怖片计划' }] },
+      ],
+    })
+    await flushAsyncWork()
+
+    expect(streamState.capturedToolNames).toContain('search_skills')
+    expect(streamState.capturedToolNames).toContain('create_plan')
+    expect(streamState.capturedToolNames).not.toContain('regenerate_panel_image')
+  })
+
+  it('keeps business act tools behind the skill gateway in auto interaction mode', async () => {
     streamState.routeResult = {
       intent: 'act',
       domains: ['storyboard'],
@@ -317,6 +364,6 @@ describe('project agent runtime tool routing', () => {
     })
     await flushAsyncWork()
 
-    expect(streamState.capturedToolNames).toContain('regenerate_panel_image')
+    expect(streamState.capturedToolNames).not.toContain('regenerate_panel_image')
   })
 })

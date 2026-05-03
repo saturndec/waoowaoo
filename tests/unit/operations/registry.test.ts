@@ -71,4 +71,31 @@ describe('project agent operation registry', () => {
       longRunning: true,
     })
   })
+
+  it('registers Agent Skill gateway tools as assistant-visible operations', () => {
+    const registry = createProjectAgentOperationRegistry()
+
+    expect(registry.search_skills?.groupPath).toEqual(['skill'])
+    expect(registry.load_skill?.groupPath).toEqual(['skill'])
+    expect(registry.create_plan?.groupPath).toEqual(['skill'])
+    expect(registry.validate_plan?.groupPath).toEqual(['skill'])
+    expect(registry.invoke_operation?.groupPath).toEqual(['skill'])
+    expect(registry.search_skills?.intent).toBe('query')
+    expect(registry.load_skill?.intent).toBe('query')
+    expect(registry.create_plan?.intent).toBe('plan')
+    expect(registry.validate_plan?.intent).toBe('plan')
+    expect(registry.invoke_operation?.intent).toBe('act')
+
+    for (const operationId of ['search_skills', 'load_skill', 'create_plan', 'validate_plan', 'invoke_operation']) {
+      expect(registry[operationId]?.effects).toEqual({
+        writes: false,
+        billable: false,
+        destructive: false,
+        overwrite: false,
+        bulk: false,
+        externalSideEffects: false,
+        longRunning: false,
+      })
+    }
+  })
 })
