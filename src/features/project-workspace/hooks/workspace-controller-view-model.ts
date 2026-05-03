@@ -6,7 +6,6 @@ import type { TaskPresentationState } from '@/lib/task/presentation'
 import type { BatchVideoGenerationParams, VideoGenerationOptions } from '../components/video'
 import type { CapabilitySelections } from '@/lib/ai-registry/types'
 import { VideoPricingTier } from '@/lib/ai-registry/video-capabilities'
-import type { RunStreamView } from '@/lib/query/hooks/run-stream/types'
 
 interface ProjectSnapshotInput {
   projectData: unknown
@@ -64,8 +63,6 @@ interface BuildWorkspaceControllerViewModelParams {
     showRebuildConfirm: boolean
     rebuildConfirmTitle: string
     rebuildConfirmMessage: string
-    pendingActionType: 'storyToScript' | 'scriptToStoryboard' | null
-    runWithRebuildConfirm: (action: 'storyToScript' | 'scriptToStoryboard', operation: () => Promise<void>) => Promise<void>
     handleCancelRebuildConfirm: () => void
     handleAcceptRebuildConfirm: () => void
   }
@@ -74,15 +71,11 @@ interface BuildWorkspaceControllerViewModelParams {
     isAssetAnalysisRunning: boolean
     isConfirmingAssets: boolean
     isTransitioning: boolean
-    isStartingStoryToScript: boolean
-    isStartingScriptToStoryboard: boolean
+    isStartingPlan: boolean
     transitionProgress: { step?: string; total?: number; current?: number }
-    storyToScriptStream: RunStreamView
-    scriptToStoryboardStream: RunStreamView
     handleGenerateTTS: () => Promise<void>
     handleAnalyzeAssets: () => Promise<void>
-    runStoryToScriptFlow: () => Promise<void>
-    runScriptToStoryboardFlow: () => Promise<void>
+    requestAssistantPlan: () => Promise<void>
     showCreatingToast: boolean
   }
   videoState: {

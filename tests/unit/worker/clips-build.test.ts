@@ -57,7 +57,7 @@ vi.mock('@/lib/ai-prompts', () => ({
   AI_PROMPT_IDS: { SCRIPT_CLIP_SEGMENTS: 'script-clip-segments' },
   buildAiPrompt: vi.fn(() => 'clip-split-prompt'),
 }))
-vi.mock('@/lib/project-workflow/story-to-script/clip-matching', () => ({
+vi.mock('@/lib/text-processing/clip-matching', () => ({
   createClipContentMatcher: (content: string) => ({
     matchBoundary: (start: string, end: string, fromIndex = 0) => {
       const startIndex = content.indexOf(start, fromIndex)

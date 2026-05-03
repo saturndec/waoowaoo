@@ -44,7 +44,7 @@ export default function StoryDetail({ projectId, storyText, episodeName }: Story
   const [longTextPromptOpen, setLongTextPromptOpen] = useState(false)
   const splitProjectEpisodes = useSplitProjectEpisodes(projectId)
   const saveProjectEpisodesBatch = useSaveProjectEpisodesBatch(projectId)
-  const isGeneratingScript = runtime.isStartingStoryToScript || runtime.isTransitioning
+  const isGeneratingScript = runtime.isStartingPlan || runtime.isTransitioning
   const visualStyleValue = encodePresetValue({
     presetSource: runtime.visualStylePresetSource === 'user' ? 'user' : 'system',
     presetId: runtime.visualStylePresetId || runtime.artStyle || ART_STYLES[0]?.value || '',
@@ -88,7 +88,7 @@ export default function StoryDetail({ projectId, storyText, episodeName }: Story
       setLongTextPromptOpen(true)
       return
     }
-    await runtime.onRunStoryToScript()
+    await runtime.onRequestAssistantPlan()
   }
 
   const runAiWrite = async (prompt: string) => {
@@ -211,7 +211,7 @@ export default function StoryDetail({ projectId, storyText, episodeName }: Story
         }}
         onContinue={() => {
           setLongTextPromptOpen(false)
-          void runtime.onRunStoryToScript()
+          void runtime.onRequestAssistantPlan()
         }}
         copy={{
           title: t('storyInput.longTextDetection.title'),

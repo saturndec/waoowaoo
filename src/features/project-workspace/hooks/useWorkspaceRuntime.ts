@@ -11,8 +11,7 @@ interface UseWorkspaceRuntimeParams {
   isSubmittingTTS: boolean
   isTransitioning: boolean
   isConfirmingAssets: boolean
-  isStartingStoryToScript: boolean
-  isStartingScriptToStoryboard: boolean
+  isStartingPlan: boolean
   videoRatio: string | undefined
   artStyle: string | undefined
   visualStylePresetSource: string | undefined
@@ -31,9 +30,7 @@ interface UseWorkspaceRuntimeParams {
   }> | undefined
   handleUpdateEpisode: (key: string, value: unknown) => Promise<void>
   handleUpdateConfig: (key: string, value: unknown) => Promise<void>
-  runWithRebuildConfirm: (action: 'storyToScript' | 'scriptToStoryboard', operation: () => Promise<void>) => Promise<void>
-  runStoryToScriptFlow: () => Promise<void>
-  runScriptToStoryboardFlow: () => Promise<void>
+  onRequestAssistantPlan: () => Promise<void>
   handleUpdateClip: (clipId: string, updates: Record<string, unknown>) => Promise<void>
   openAssetLibrary: (characterId?: string | null, refreshAssets?: boolean) => void
   handleGeneratePanelImage: (panelId: string, count?: number) => Promise<void>
@@ -65,8 +62,7 @@ export function useWorkspaceRuntime({
   isSubmittingTTS,
   isTransitioning,
   isConfirmingAssets,
-  isStartingStoryToScript,
-  isStartingScriptToStoryboard,
+  isStartingPlan,
   videoRatio,
   artStyle,
   visualStylePresetSource,
@@ -78,9 +74,7 @@ export function useWorkspaceRuntime({
   userVideoModels,
   handleUpdateEpisode,
   handleUpdateConfig,
-  runWithRebuildConfirm,
-  runStoryToScriptFlow,
-  runScriptToStoryboardFlow,
+  onRequestAssistantPlan,
   handleUpdateClip,
   openAssetLibrary,
   handleGeneratePanelImage,
@@ -99,8 +93,7 @@ export function useWorkspaceRuntime({
     isSubmittingTTS,
     isTransitioning,
     isConfirmingAssets,
-    isStartingStoryToScript,
-    isStartingScriptToStoryboard,
+    isStartingPlan,
     videoRatio,
     artStyle,
     visualStylePresetSource,
@@ -116,7 +109,7 @@ export function useWorkspaceRuntime({
     onVisualStylePresetChange: (value) => handleUpdateConfig('visualStylePreset', value),
     onDirectorStylePresetRefChange: (value) => handleUpdateConfig('directorStylePreset', value),
     onDirectorStylePresetChange: (value) => handleUpdateConfig('directorStylePresetId', value),
-    onRunStoryToScript: () => runWithRebuildConfirm('storyToScript', runStoryToScriptFlow),
+    onRequestAssistantPlan,
     onClipUpdate: (clipId, data) => {
       if (!data || typeof data !== 'object' || Array.isArray(data)) {
         throw new Error('onClipUpdate requires a plain object payload')
@@ -124,7 +117,6 @@ export function useWorkspaceRuntime({
       return handleUpdateClip(clipId, data as Record<string, unknown>)
     },
     onOpenAssetLibrary: () => openAssetLibrary(),
-    onRunScriptToStoryboard: () => runWithRebuildConfirm('scriptToStoryboard', runScriptToStoryboardFlow),
     onGeneratePanelImage: handleGeneratePanelImage,
     onGenerateVideo: handleGenerateVideo,
     onGenerateAllVideos: handleGenerateAllVideos,
@@ -147,14 +139,11 @@ export function useWorkspaceRuntime({
     handleUpdatePanelVideoModel,
     handleUpdateVideoPrompt,
     isConfirmingAssets,
-    isStartingScriptToStoryboard,
-    isStartingStoryToScript,
+    isStartingPlan,
     isSubmittingTTS,
     isTransitioning,
     openAssetLibrary,
-    runScriptToStoryboardFlow,
-    runStoryToScriptFlow,
-    runWithRebuildConfirm,
+    onRequestAssistantPlan,
     resolvedUserVideoModels,
     capabilityOverrides,
     videoModel,

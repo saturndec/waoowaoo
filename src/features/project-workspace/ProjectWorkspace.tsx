@@ -79,8 +79,6 @@ function ProjectWorkspaceContent(props: ProjectWorkspaceProps) {
             projectId={projectId}
             episodeId={episodeId}
             selection={assistantSelection}
-            storyToScriptStream={vm.execution.storyToScriptStream}
-            scriptToStoryboardStream={vm.execution.scriptToStoryboardStream}
             isCollapsed={isAssistantPanelCollapsed}
             onToggleCollapsed={() => setIsAssistantPanelCollapsed((current) => !current)}
           />

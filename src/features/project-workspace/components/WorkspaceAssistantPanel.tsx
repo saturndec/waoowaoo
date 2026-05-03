@@ -9,7 +9,6 @@ import {
 } from '@assistant-ui/react'
 import { AppIcon } from '@/components/ui/icons'
 import { useProjectContext } from '@/lib/query/hooks'
-import type { RunStreamView } from '@/lib/query/hooks/run-stream/types'
 import {
   ConfirmationActionCard,
   useWorkspaceAssistantMessagePartComponents,
@@ -32,8 +31,6 @@ interface WorkspaceAssistantPanelProps {
   projectId: string
   episodeId?: string
   selection?: WorkspaceAssistantSelectionContext
-  storyToScriptStream: RunStreamView
-  scriptToStoryboardStream: RunStreamView
   isCollapsed: boolean
   onToggleCollapsed: () => void
 }
@@ -65,8 +62,6 @@ export default function WorkspaceAssistantPanel({
   projectId,
   episodeId,
   selection,
-  storyToScriptStream,
-  scriptToStoryboardStream,
   isCollapsed,
   onToggleCollapsed,
 }: WorkspaceAssistantPanelProps) {
@@ -175,8 +170,6 @@ export default function WorkspaceAssistantPanel({
     }
   }
   const partComponents = useWorkspaceAssistantMessagePartComponents({
-    storyToScriptStream,
-    scriptToStoryboardStream,
     onConfirmOperation: handleConfirmOperation,
     onCancelOperation: handleCancelOperation,
     confirmationSubmittingKey,

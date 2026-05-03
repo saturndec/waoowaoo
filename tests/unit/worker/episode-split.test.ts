@@ -70,7 +70,7 @@ vi.mock('@/lib/workers/shared', () => sharedMock)
 vi.mock('@/lib/workers/utils', () => utilsMock)
 vi.mock('@/lib/workers/handlers/llm-stream', () => llmStreamMock)
 vi.mock('@/lib/ai-prompts', () => promptMock)
-vi.mock('@/lib/project-workflow/story-to-script/clip-matching', () => ({
+vi.mock('@/lib/text-processing/clip-matching', () => ({
   createTextMarkerMatcher: (content: string) => ({
     matchMarker: (marker: string, fromIndex = 0) => {
       const startIndex = content.indexOf(marker, fromIndex)

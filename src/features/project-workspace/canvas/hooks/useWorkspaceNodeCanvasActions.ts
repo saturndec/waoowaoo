@@ -28,12 +28,12 @@ export function useWorkspaceNodeCanvasActions() {
     }
 
     if (action.type === 'generate_script') {
-      void runtime.onRunStoryToScript()
+      void runtime.onRequestAssistantPlan()
       return
     }
 
     if (action.type === 'generate_storyboard') {
-      void runtime.onRunScriptToStoryboard()
+      void runtime.onRequestAssistantPlan()
       return
     }
 

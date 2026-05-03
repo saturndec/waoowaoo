@@ -71,7 +71,6 @@ describe('createHomeProjectLaunch', () => {
         pathname: '/workspace/project-1',
         query: {
           episode: 'episode-1',
-          autoRun: 'storyToScript',
         },
       },
     })
@@ -103,12 +102,11 @@ describe('createHomeProjectLaunch', () => {
 })
 
 describe('buildHomeWorkspaceLaunchTarget', () => {
-  it('points workspace launch to the created episode and auto-runs story-to-script', () => {
+  it('points workspace launch to the created episode', () => {
     expect(buildHomeWorkspaceLaunchTarget('project-9', 'episode-4')).toEqual({
       pathname: '/workspace/project-9',
       query: {
         episode: 'episode-4',
-        autoRun: 'storyToScript',
       },
     })
   })

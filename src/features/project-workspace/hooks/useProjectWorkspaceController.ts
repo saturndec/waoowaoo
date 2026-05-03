@@ -6,7 +6,6 @@ import { useSearchParams } from 'next/navigation'
 import { useTranslations } from 'next-intl'
 import { resolveTaskPresentationState } from '@/lib/task/presentation'
 import { useWorkspaceProvider } from '../WorkspaceProvider'
-import { useRebuildConfirm } from './useRebuildConfirm'
 import { useWorkspaceUserModels } from './useWorkspaceUserModels'
 import { useWorkspaceExecution } from './useWorkspaceExecution'
 import { useWorkspaceVideoActions } from './useWorkspaceVideoActions'
@@ -15,7 +14,6 @@ import { useWorkspaceProjectSnapshot } from './useWorkspaceProjectSnapshot'
 import { useWorkspaceModalEscape } from './useWorkspaceModalEscape'
 import { useWorkspaceRuntime } from './useWorkspaceRuntime'
 import { useWorkspaceConfigActions } from './useWorkspaceConfigActions'
-import { useWorkspaceAutoRun } from './useWorkspaceAutoRun'
 import { useWorkspaceImageActions } from './useWorkspaceImageActions'
 import { buildWorkspaceControllerViewModel } from './workspace-controller-view-model'
 import type { ProjectWorkspaceProps } from '../types'
@@ -77,12 +75,13 @@ export function useProjectWorkspaceController({
     episodeId,
   })
 
-  const rebuildState = useRebuildConfirm({
-    episodeId,
-    episodeStoryboards: episode?.storyboards,
-    getProjectStoryboardStats: configActions.getProjectStoryboardStats,
-    t,
-  })
+  const rebuildState = {
+    showRebuildConfirm: false,
+    rebuildConfirmTitle: '',
+    rebuildConfirmMessage: '',
+    handleCancelRebuildConfirm: () => undefined,
+    handleAcceptRebuildConfirm: () => undefined,
+  }
 
   const userModels = useWorkspaceUserModels()
 
@@ -106,30 +105,12 @@ export function useProjectWorkspaceController({
     episodeId,
   })
 
-  const isStartingStoryToScript = rebuildState.pendingActionType === 'storyToScript'
-  const isStartingScriptToStoryboard = rebuildState.pendingActionType === 'scriptToStoryboard'
-  const isStoryToScriptRunning =
-    execution.storyToScriptStream.isRunning ||
-    execution.storyToScriptStream.isRecoveredRunning ||
-    execution.storyToScriptStream.status === 'running'
-  useWorkspaceAutoRun({
-    searchParams,
-    router,
-    episodeId,
-    novelText: projectSnapshot.novelText,
-    isTransitioning: execution.isTransitioning,
-    isStoryToScriptRunning,
-    runWithRebuildConfirm: rebuildState.runWithRebuildConfirm,
-    runStoryToScriptFlow: execution.runStoryToScriptFlow,
-  })
-
   const workspaceRuntime = useWorkspaceRuntime({
     assetsLoading,
     isSubmittingTTS: execution.isSubmittingTTS,
     isTransitioning: execution.isTransitioning,
     isConfirmingAssets: execution.isConfirmingAssets,
-    isStartingStoryToScript,
-    isStartingScriptToStoryboard,
+    isStartingPlan: false,
     videoRatio: projectSnapshot.videoRatio,
     artStyle: projectSnapshot.artStyle,
     visualStylePresetSource: projectSnapshot.visualStylePresetSource,
@@ -141,9 +122,7 @@ export function useProjectWorkspaceController({
     userVideoModels: userModels.userVideoModels || [],
     handleUpdateEpisode: configActions.handleUpdateEpisode,
     handleUpdateConfig: configActions.handleUpdateConfig,
-    runWithRebuildConfirm: rebuildState.runWithRebuildConfirm,
-    runStoryToScriptFlow: execution.runStoryToScriptFlow,
-    runScriptToStoryboardFlow: execution.runScriptToStoryboardFlow,
+    onRequestAssistantPlan: execution.requestAssistantPlan,
     handleUpdateClip: videoActions.handleUpdateClip,
     openAssetLibrary: assetLibrary.openAssetLibrary,
     handleGeneratePanelImage: imageActions.handleGeneratePanelImage,
@@ -178,15 +157,11 @@ export function useProjectWorkspaceController({
     isAssetAnalysisRunning: execution.isAssetAnalysisRunning,
     isConfirmingAssets: execution.isConfirmingAssets,
     isTransitioning: execution.isTransitioning,
-    isStartingStoryToScript,
-    isStartingScriptToStoryboard,
+    isStartingPlan: false,
     transitionProgress: execution.transitionProgress,
-    storyToScriptStream: execution.storyToScriptStream,
-    scriptToStoryboardStream: execution.scriptToStoryboardStream,
     handleGenerateTTS: execution.handleGenerateTTS,
     handleAnalyzeAssets: execution.handleAnalyzeAssets,
-    runStoryToScriptFlow: execution.runStoryToScriptFlow,
-    runScriptToStoryboardFlow: execution.runScriptToStoryboardFlow,
+    requestAssistantPlan: execution.requestAssistantPlan,
     showCreatingToast: execution.showCreatingToast,
   }
 

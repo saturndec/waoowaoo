@@ -19,8 +19,7 @@ export interface WorkspaceRuntimeValue {
   isSubmittingTTS: boolean
   isTransitioning: boolean
   isConfirmingAssets: boolean
-  isStartingStoryToScript: boolean
-  isStartingScriptToStoryboard: boolean
+  isStartingPlan: boolean
   videoRatio: string | null | undefined
   artStyle: string | null | undefined
   visualStylePresetSource: string | null | undefined
@@ -36,10 +35,9 @@ export interface WorkspaceRuntimeValue {
   onVisualStylePresetChange: (value: { presetSource: 'system' | 'user'; presetId: string }) => Promise<void>
   onDirectorStylePresetRefChange: (value: { presetSource: 'system' | 'user'; presetId: string } | null) => Promise<void>
   onDirectorStylePresetChange: (value: string) => Promise<void>
-  onRunStoryToScript: () => Promise<void>
+  onRequestAssistantPlan: () => Promise<void>
   onClipUpdate: (clipId: string, data: unknown) => Promise<void>
   onOpenAssetLibrary: () => void
-  onRunScriptToStoryboard: () => Promise<void>
   onGeneratePanelImage: (panelId: string, count?: number) => Promise<void>
   onGenerateVideo: (
     storyboardId: string,

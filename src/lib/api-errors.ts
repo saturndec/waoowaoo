@@ -28,8 +28,6 @@ const GENERATION_OPERATION_PATTERNS = [
   /\/analyze(?:-|\/|$)/,
   /\/tts(?:\/|$)/,
   /\/lip-sync(?:\/|$)/,
-  /\/story-to-script(?:-|\/|$)/,
-  /\/script-to-storyboard(?:-|\/|$)/,
   /\/screenplay-conversion(?:\/|$)/,
   /\/ai-story-expand(?:\/|$)/,
   /\/voice-(?:analyze|design|generate)(?:\/|$)/,

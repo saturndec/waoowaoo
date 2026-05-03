@@ -21,7 +21,6 @@ export interface HomeWorkspaceLaunchTarget {
   pathname: string
   query: {
     episode: string
-    autoRun?: 'storyToScript'
   }
 }
 
@@ -81,7 +80,6 @@ export function buildHomeWorkspaceLaunchTarget(projectId: string, episodeId: str
     pathname: `/workspace/${projectId}`,
     query: {
       episode: episodeId,
-      autoRun: 'storyToScript',
     },
   }
 }

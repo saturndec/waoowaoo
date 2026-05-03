@@ -7,7 +7,7 @@ import { withInternalLLMStreamCallbacks } from '@/lib/llm-observe/internal-strea
 import { reportTaskProgress } from '@/lib/workers/shared'
 import { assertTaskActive } from '@/lib/workers/utils'
 import { getUserModelConfig } from '@/lib/config-service'
-import { createTextMarkerMatcher } from '@/lib/project-workflow/story-to-script/clip-matching'
+import { createTextMarkerMatcher } from '@/lib/text-processing/clip-matching'
 import { createWorkerLLMStreamCallbacks, createWorkerLLMStreamContext } from './llm-stream'
 import type { TaskJobData } from '@/lib/task/types'
 import { buildAiPrompt as buildPrompt, AI_PROMPT_IDS as PROMPT_IDS } from '@/lib/ai-prompts'

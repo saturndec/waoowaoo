@@ -246,7 +246,7 @@ export default function CanvasObjectDetailLayer({
           projectId={projectId}
           allClips={clips}
           onSave={saveClip}
-          onGenerateStoryboard={async () => runtime.onRunScriptToStoryboard()}
+          onGenerateStoryboard={async () => runtime.onRequestAssistantPlan()}
           onOpenAssetLibrary={(characterName) => runtime.onOpenAssetLibraryForCharacter(characterName ?? null)}
         />
       )

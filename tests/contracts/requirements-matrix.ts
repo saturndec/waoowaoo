@@ -68,7 +68,7 @@ export const REQUIREMENTS_MATRIX: ReadonlyArray<RequirementCoverageEntry> = [
     tests: [
       'tests/unit/project-workflow/panel-stage-runtime.test.ts',
       'tests/integration/api/contract/direct-submit-text-routes.test.ts',
-      'tests/unit/worker/script-to-storyboard.test.ts',
+      'tests/unit/worker/llm-proxy.test.ts',
     ],
   },
   {
@@ -86,15 +86,15 @@ export const REQUIREMENTS_MATRIX: ReadonlyArray<RequirementCoverageEntry> = [
   },
   {
     id: 'REQ-NP-TEXT-ANALYSIS',
-    feature: 'Text analysis and storyboard orchestration',
+    feature: 'Atomic text analysis tasks',
     userValue: '文本分析链路稳定并可回放结果',
-    risk: 'step 编排变化导致结果结构损坏',
+    risk: '原子任务结果结构损坏',
     priority: 'P1',
     tests: [
       'tests/integration/api/contract/llm-observe-routes.test.ts',
-      'tests/unit/worker/script-to-storyboard.test.ts',
       'tests/integration/chain/text.chain.test.ts',
-      'tests/unit/worker/story-to-script.test.ts',
+      'tests/unit/worker/clips-build.test.ts',
+      'tests/unit/worker/screenplay-convert.test.ts',
     ],
   },
   {

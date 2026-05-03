@@ -20,7 +20,6 @@ import type {
   TaskBatchSubmittedPartData,
   TaskSubmittedPartData,
 } from '@/lib/project-agent/types'
-import type { RunStreamView } from '@/lib/query/hooks/run-stream/types'
 import { useRevertMutationBatch } from '@/lib/query/hooks'
 import { MarkdownTextPart } from './MarkdownTextPart'
 
@@ -48,63 +47,6 @@ function readStringArray(value: unknown): string[] {
   return value
     .map((item) => (typeof item === 'string' ? item.trim() : ''))
     .filter((item) => item.length > 0)
-}
-
-export function WorkflowStatusCard(props: {
-  title: string
-  stream: RunStreamView
-  fallbackStatus: string
-}) {
-  const t = useTranslations('assistantAgent')
-  const formatScopeRef = (scopeRef: string | null | undefined): string => {
-    if (!scopeRef) return t('cards.globalScope')
-    if (scopeRef.startsWith('episode:')) return t('cards.scopeEpisode', { id: scopeRef.slice('episode:'.length) })
-    if (scopeRef.startsWith('clip:')) return t('cards.scopeClip', { id: scopeRef.slice('clip:'.length) })
-    if (scopeRef.startsWith('panel:')) return t('cards.scopePanel', { id: scopeRef.slice('panel:'.length) })
-    return scopeRef
-  }
-  const activeStep = props.stream.orderedSteps.find((step) => step.id === props.stream.activeStepId)
-    || props.stream.orderedSteps[0]
-    || null
-
-  const normalizedFallbackStatus = props.fallbackStatus.trim().toLowerCase()
-  const derivedPercent = props.stream.status === 'idle'
-    ? normalizedFallbackStatus === 'completed'
-      ? 100
-      : normalizedFallbackStatus === 'failed'
-        ? 0
-        : 0
-    : Math.max(0, Math.min(100, Math.round(props.stream.overallProgress || 0)))
-  const derivedStatusText = props.stream.status === 'idle' ? props.fallbackStatus : props.stream.status
-
-  return (
-    <div className="rounded-2xl border border-[var(--glass-stroke-base)] bg-[var(--glass-bg-muted)]/70 p-3">
-      <div className="flex items-center justify-between gap-3">
-        <div>
-          <div className="text-sm font-medium text-[var(--glass-text-primary)]">{props.title}</div>
-          <div className="mt-1 text-xs text-[var(--glass-text-secondary)]">
-            {derivedStatusText}
-          </div>
-        </div>
-        <div className="rounded-full bg-[var(--glass-bg-surface)] px-2.5 py-1 text-xs font-medium text-[var(--glass-text-primary)]">
-          {derivedPercent}%
-        </div>
-      </div>
-      <div className="mt-3 h-2 rounded-full bg-[var(--glass-bg-surface)]">
-        <div
-          className="h-full rounded-full bg-[var(--glass-accent-from)] transition-all"
-          style={{ width: `${derivedPercent}%` }}
-        />
-      </div>
-      {activeStep ? (
-        <div className="mt-3 rounded-xl bg-[var(--glass-bg-surface)]/70 px-3 py-2 text-xs text-[var(--glass-text-secondary)]">
-          <div className="font-medium text-[var(--glass-text-primary)]">{formatSkillLabel(activeStep.skillId)}</div>
-          <div className="mt-1">{activeStep.title}</div>
-          <div className="mt-1">{t('cards.step', { current: activeStep.stepIndex, total: activeStep.stepTotal })} · {formatScopeRef(activeStep.scopeRef)}</div>
-        </div>
-      ) : null}
-    </div>
-  )
 }
 
 function ProjectPhaseDataCard({ data }: DataMessagePartProps<ProjectPhasePartData>) {
@@ -457,16 +399,12 @@ export function WorkspaceAssistantToolCallCard(props: ToolCallMessagePartProps) 
 }
 
 interface WorkspaceAssistantMessagePartComponentsOptions {
-  storyToScriptStream: RunStreamView
-  scriptToStoryboardStream: RunStreamView
   onConfirmOperation: (operationId: string, argsHint?: Record<string, unknown> | null) => Promise<void>
   onCancelOperation: (operationId: string) => Promise<void>
   confirmationSubmittingKey: string | null
 }
 
 export function useWorkspaceAssistantMessagePartComponents({
-  storyToScriptStream,
-  scriptToStoryboardStream,
   onConfirmOperation,
   onCancelOperation,
   confirmationSubmittingKey,
@@ -498,8 +436,6 @@ export function useWorkspaceAssistantMessagePartComponents({
     confirmationSubmittingKey,
     onCancelOperation,
     onConfirmOperation,
-    scriptToStoryboardStream,
-    storyToScriptStream,
   ])
 }
 

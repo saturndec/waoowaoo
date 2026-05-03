@@ -3,7 +3,6 @@
 import { useCallback, useMemo, useState } from 'react'
 import { logInfo as _ulogInfo } from '@/lib/logging/core'
 import { useAnalyzeProjectAssets } from '@/lib/query/hooks'
-import type { RunResult, RunStreamView } from '@/lib/query/hooks/run-stream/types'
 
 interface UseWorkspaceExecutionParams {
   projectId: string
@@ -25,40 +24,6 @@ function getErrorMessage(err: unknown): string {
   return String(err)
 }
 
-function buildDisabledRunStream(): RunStreamView {
-  const run = async (): Promise<RunResult> => ({
-    runId: '',
-    status: 'failed',
-    summary: null,
-    payload: null,
-    errorMessage: 'PROJECT_ASSISTANT_PLAN_REQUIRED',
-  })
-
-  return {
-    runState: null,
-    runId: '',
-    status: 'idle',
-    isRunning: false,
-    isRecoveredRunning: false,
-    isVisible: false,
-    errorMessage: '',
-    summary: null,
-    payload: null,
-    stages: [],
-    orderedSteps: [],
-    activeStepId: null,
-    selectedStep: null,
-    outputText: '',
-    overallProgress: 0,
-    activeMessage: '',
-    run,
-    retryStep: run,
-    stop: () => undefined,
-    reset: () => undefined,
-    selectStep: () => undefined,
-  }
-}
-
 export function useWorkspaceExecution({
   projectId,
   episodeId,
@@ -74,8 +39,6 @@ export function useWorkspaceExecution({
   const [isConfirmingAssets] = useState(false)
   const [isTransitioning] = useState(false)
   const [transitionProgress] = useState({ message: '', step: '' })
-
-  const disabledRunStream = useMemo(() => buildDisabledRunStream(), [])
 
   const handleGenerateTTS = useCallback(async () => {
     _ulogInfo('[ProjectWorkspace] TTS is disabled, skip generate request')
@@ -103,7 +66,7 @@ export function useWorkspaceExecution({
     }
   }, [analyzeProjectAssetsMutation, episodeId, isAssetAnalysisRunning, onRefresh, t])
 
-  const runAssistantPlannedCreation = useCallback(async () => {
+  const requestAssistantPlan = useCallback(async () => {
     void analysisModel
     void novelText
     alert(t('execution.assistantPlanRequired'))
@@ -115,12 +78,9 @@ export function useWorkspaceExecution({
     isConfirmingAssets,
     isTransitioning,
     transitionProgress,
-    storyToScriptStream: disabledRunStream,
-    scriptToStoryboardStream: disabledRunStream,
     handleGenerateTTS,
     handleAnalyzeAssets,
-    runStoryToScriptFlow: runAssistantPlannedCreation,
-    runScriptToStoryboardFlow: runAssistantPlannedCreation,
+    requestAssistantPlan,
     showCreatingToast: false,
   }
 }
