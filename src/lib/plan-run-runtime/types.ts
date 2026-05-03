@@ -12,6 +12,7 @@ export type PlanRunStatus = (typeof PLAN_RUN_STATUS)[keyof typeof PLAN_RUN_STATU
 export const PLAN_STEP_STATUS = {
   PENDING: 'pending',
   RUNNING: 'running',
+  WAITING_TASK: 'waiting_task',
   COMPLETED: 'completed',
   FAILED: 'failed',
   CANCELED: 'canceled',

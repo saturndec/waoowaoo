@@ -7,6 +7,7 @@ import {
   type ListPlanRunsInput,
   type PlanRunEventInput,
   type PlanRunStatus,
+  type PlanStepStatus,
 } from './types'
 
 type JsonRecord = Record<string, unknown>
@@ -218,6 +219,10 @@ function mapPlanArtifact(row: PlanArtifactRow) {
   }
 }
 
+function asStepStatus(status: PlanStepStatus): PlanStepStatus {
+  return status
+}
+
 export async function createPlanRun(input: CreatePlanRunInput) {
   return await runtimeClient.$transaction(async (tx) => {
     const run = await tx.planRun.create({
@@ -252,6 +257,178 @@ export async function createPlanRun(input: CreatePlanRunInput) {
     }
     return mapPlanRun(run)
   })
+}
+
+export async function startPlanStep(params: {
+  planRunId: string
+  userId: string
+  projectId: string
+  stepKey: string
+}) {
+  return await runtimeClient.$transaction(async (tx) => {
+    const now = new Date()
+    const step = await tx.planStepRun.update({
+      where: {
+        planRunId_stepKey: {
+          planRunId: params.planRunId,
+          stepKey: params.stepKey,
+        },
+      },
+      data: {
+        status: asStepStatus(PLAN_STEP_STATUS.RUNNING),
+        startedAt: now,
+        errorCode: null,
+        errorMessage: null,
+      },
+    })
+    const run = await tx.planRun.update({
+      where: { id: params.planRunId },
+      data: {
+        status: PLAN_RUN_STATUS.RUNNING,
+        currentStepKey: params.stepKey,
+        startedAt: now,
+      },
+    })
+    const eventRun = await tx.planRun.update({
+      where: { id: params.planRunId },
+      data: { lastSeq: { increment: 1 } },
+    })
+    await tx.planRunEvent.create({
+      data: {
+        planRunId: params.planRunId,
+        projectId: params.projectId,
+        userId: params.userId,
+        seq: eventRun.lastSeq,
+        eventType: PLAN_RUN_EVENT_TYPE.STEP_START,
+        stepKey: params.stepKey,
+        payload: {
+          operationId: step.operationId,
+        },
+      },
+    })
+    return {
+      planRun: mapPlanRun(run),
+      step: mapPlanStep(step),
+    }
+  })
+}
+
+export async function completePlanStep(params: {
+  planRunId: string
+  userId: string
+  projectId: string
+  stepKey: string
+  output?: Record<string, unknown> | null
+  taskId?: string | null
+}) {
+  return await runtimeClient.$transaction(async (tx) => {
+    const stepStatus = params.taskId ? PLAN_STEP_STATUS.WAITING_TASK : PLAN_STEP_STATUS.COMPLETED
+    const step = await tx.planStepRun.update({
+      where: {
+        planRunId_stepKey: {
+          planRunId: params.planRunId,
+          stepKey: params.stepKey,
+        },
+      },
+      data: {
+        status: asStepStatus(stepStatus),
+        taskId: params.taskId || null,
+        outputJson: params.output || null,
+        ...(params.taskId ? {} : { finishedAt: new Date() }),
+      },
+    })
+    const eventRun = await tx.planRun.update({
+      where: { id: params.planRunId },
+      data: { lastSeq: { increment: 1 } },
+    })
+    await tx.planRunEvent.create({
+      data: {
+        planRunId: params.planRunId,
+        projectId: params.projectId,
+        userId: params.userId,
+        seq: eventRun.lastSeq,
+        eventType: PLAN_RUN_EVENT_TYPE.STEP_COMPLETE,
+        stepKey: params.stepKey,
+        payload: {
+          status: stepStatus,
+          ...(params.taskId ? { taskId: params.taskId } : {}),
+        },
+      },
+    })
+    return mapPlanStep(step)
+  })
+}
+
+export async function failPlanStep(params: {
+  planRunId: string
+  userId: string
+  projectId: string
+  stepKey: string
+  errorCode: string
+  errorMessage: string
+}) {
+  return await runtimeClient.$transaction(async (tx) => {
+    const now = new Date()
+    const step = await tx.planStepRun.update({
+      where: {
+        planRunId_stepKey: {
+          planRunId: params.planRunId,
+          stepKey: params.stepKey,
+        },
+      },
+      data: {
+        status: PLAN_STEP_STATUS.FAILED,
+        errorCode: params.errorCode,
+        errorMessage: params.errorMessage,
+        finishedAt: now,
+      },
+    })
+    await tx.planRun.update({
+      where: { id: params.planRunId },
+      data: {
+        status: PLAN_RUN_STATUS.FAILED,
+        errorCode: params.errorCode,
+        errorMessage: params.errorMessage,
+        finishedAt: now,
+      },
+    })
+    const eventRun = await tx.planRun.update({
+      where: { id: params.planRunId },
+      data: { lastSeq: { increment: 1 } },
+    })
+    await tx.planRunEvent.create({
+      data: {
+        planRunId: params.planRunId,
+        projectId: params.projectId,
+        userId: params.userId,
+        seq: eventRun.lastSeq,
+        eventType: PLAN_RUN_EVENT_TYPE.STEP_ERROR,
+        stepKey: params.stepKey,
+        payload: {
+          errorCode: params.errorCode,
+          message: params.errorMessage,
+        },
+      },
+    })
+    return mapPlanStep(step)
+  })
+}
+
+export async function completePlanRun(params: {
+  planRunId: string
+  userId: string
+  projectId: string
+}) {
+  await appendPlanRunEventWithSeq({
+    planRunId: params.planRunId,
+    projectId: params.projectId,
+    userId: params.userId,
+    eventType: PLAN_RUN_EVENT_TYPE.PLAN_COMPLETE,
+    payload: {
+      message: 'Plan run completed',
+    },
+  })
+  return await getPlanRunSnapshot(params.planRunId)
 }
 
 export async function listPlanRuns(input: ListPlanRunsInput) {

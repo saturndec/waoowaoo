@@ -1,10 +1,12 @@
 import { z } from 'zod'
 import type { NextRequest } from 'next/server'
+import { ApiError } from '@/lib/api-errors'
 import {
   buildAgentPlanDraft,
   agentPlanInputSchema,
   validateAgentPlan,
 } from '@/lib/agent-skills/plan'
+import { executeAgentPlan } from '@/lib/plan-run-runtime/executor'
 import {
   getAgentSkillManifest,
   loadAgentSkill,
@@ -104,6 +106,37 @@ const planDraftOutputSchema = z.object({
   requiresApproval: z.boolean(),
   validation: planValidationOutputSchema,
   steps: z.array(planStepOutputSchema),
+})
+
+const executablePlanStepInputSchema = z.object({
+  stepKey: z.string().min(1),
+  skillId: z.string().min(1),
+  operationId: z.string().min(1),
+  reason: z.string().min(1),
+  inputArtifacts: z.array(z.string().min(1)).optional(),
+  outputArtifacts: z.array(z.string().min(1)).optional(),
+  dependsOn: z.array(z.string().min(1)).optional(),
+  requiresApproval: z.boolean().optional(),
+  input: z.record(z.unknown()).optional(),
+})
+
+const executePlanInputSchema = z.object({
+  goal: z.string().min(1),
+  loadedSkillIds: z.array(z.string().min(1)).min(1).max(12),
+  steps: z.array(executablePlanStepInputSchema).min(1).max(30),
+  confirmed: z.boolean().optional(),
+  planId: z.string().min(1).optional(),
+})
+
+const executePlanOutputSchema = z.object({
+  success: z.boolean(),
+  planRunId: z.string(),
+  status: z.string().optional(),
+  executedStepKeys: z.array(z.string()).optional(),
+  waitingTaskId: z.string().nullable().optional(),
+  failedStepKey: z.string().optional(),
+  error: z.unknown().optional(),
+  snapshot: z.unknown(),
 })
 
 const invokeOperationInputSchema = z.object({
@@ -360,20 +393,46 @@ export function createAgentSkillOperations(): ProjectAgentOperationRegistryDraft
     }),
     execute_plan: defineOperation({
       id: 'execute_plan',
-      summary: 'Execute an approved one-off plan step by step. The current implementation requires the caller to invoke each step explicitly.',
+      summary: 'Execute an approved one-off Agent Skill plan through PlanRun. Runs ready steps until completion or the first async task wait.',
       intent: 'act',
-      effects: EFFECTS_NONE,
-      inputSchema: z.object({
-        planId: z.string().min(1),
-      }),
-      outputSchema: z.object({
-        ok: z.literal(false),
-        reason: z.literal('PLAN_EXECUTOR_NOT_PERSISTED_YET'),
-      }),
-      execute: async () => ({
-        ok: false as const,
-        reason: 'PLAN_EXECUTOR_NOT_PERSISTED_YET' as const,
-      }),
+      effects: {
+        writes: true,
+        billable: false,
+        destructive: false,
+        overwrite: false,
+        bulk: false,
+        externalSideEffects: true,
+        longRunning: true,
+      },
+      confirmation: {
+        required: true,
+        summary: '将创建 PlanRun 并按计划执行多个 operation；可能写入项目数据、提交后台任务或产生计费。确认继续后请重新调用并传入 confirmed=true。',
+      },
+      inputSchema: executePlanInputSchema,
+      outputSchema: executePlanOutputSchema,
+      execute: async (ctx, input) => {
+        const validation = validateAgentPlan(input)
+        if (!validation.ok) {
+          throw new ApiError('INVALID_PARAMS', {
+            code: 'PLAN_VALIDATION_FAILED',
+            message: 'plan validation failed',
+            issues: validation.issues,
+          })
+        }
+        return executeAgentPlan({
+          userId: ctx.userId,
+          projectId: ctx.projectId,
+          episodeId: ctx.context.episodeId || null,
+          planId: input.planId || null,
+          input,
+          invokeStep: async (step) => invokeAllowedOperation({
+            ctx,
+            skillId: step.skillId,
+            operationId: step.operationId,
+            input: step.input,
+          }),
+        })
+      },
     }),
     invoke_operation: defineOperation({
       id: 'invoke_operation',
