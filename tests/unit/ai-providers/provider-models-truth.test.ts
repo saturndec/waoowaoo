@@ -99,7 +99,7 @@ describe('provider models truth', () => {
       ...VIDU_BUILTIN_CAPABILITY_CATALOG_ENTRIES,
     ]
 
-    const modelTypes = new Set(['llm', 'image', 'video', 'audio', 'lipsync'])
+    const modelTypes = new Set(['llm', 'image', 'video', 'audio', 'music', 'lipsync'])
 
     for (const entry of capabilityEntries) {
       if (!isRecord(entry)) {
