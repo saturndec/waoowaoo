@@ -19,7 +19,7 @@ import { createScopedLogger } from '@/lib/logging/core'
 import type { ProjectAgentContext } from './types'
 import { resolveProjectPhase } from './project-phase'
 import { createProjectAgentStopController } from './stop-conditions'
-import type { AgentDebugPartData, ProjectAgentStopPartData } from './types'
+import type { AgentDebugPartData, AgentRuntimeContextPartData, ProjectAgentStopPartData } from './types'
 import { routeProjectAgentRequest } from './router'
 import { selectProjectAgentOperationsByGroups } from './operation-injection'
 import { buildProjectAgentSystemPrompt, localizeSelectableToolDescription } from './copy'
@@ -200,6 +200,58 @@ export async function createProjectAgentChatResponse(input: {
         maxTools: 45,
         allowedIntents,
       })
+      const toolEntries = selection.operationIds.map((operationId) => {
+        const operation = operations[operationId]
+        const description = localizeSelectableToolDescription(operationId, operation.summary, locale)
+        const definition: Tool<unknown, unknown> = {
+          description,
+          inputSchema: operation.inputSchema,
+          execute: async (args: unknown) => {
+            return executeProjectAgentOperationFromTool({
+              request: input.request,
+              operationId,
+              projectId: input.projectId,
+              userId: input.userId,
+              context,
+              source: 'assistant-panel',
+              writer,
+              input: args,
+            })
+          },
+        }
+        return {
+          entry: [operationId, definition] as const,
+          debugTool: {
+            operationId,
+            description,
+          },
+        }
+      })
+      const tools = Object.fromEntries(toolEntries.map((item) => item.entry)) as ToolSet
+      const systemPrompt = buildProjectAgentSystemPrompt({
+        locale,
+        projectId: input.projectId,
+        episodeId: context.episodeId || 'unknown',
+        stage: context.currentStage || 'unknown',
+        interactionMode: executionMode.interactionMode,
+      })
+      const modelMessages = await toModelMessages(runtimeMessages)
+      writeOperationDataPart<AgentRuntimeContextPartData>(writer, 'data-agent-runtime-context', {
+        requestId,
+        modelKey: analysisModelKey,
+        locale,
+        projectId: input.projectId,
+        episodeId: context.episodeId || null,
+        interactionMode: executionMode.interactionMode,
+        systemPrompt,
+        rawMessages: normalizedMessages,
+        runtimeMessages,
+        modelMessages,
+        projectContext: context,
+        projectPhase: phase,
+        route,
+        selectedTools: toolEntries.map((item) => item.debugTool),
+      })
       if (agentDebug) {
         writeDebugText(writer, [
           '[agentDebug]',
@@ -236,41 +288,14 @@ export async function createProjectAgentChatResponse(input: {
           operationIds: selection.operationIds,
         },
       })
-      const toolEntries = selection.operationIds.map((operationId) => {
-        const operation = operations[operationId]
-        const definition: Tool<unknown, unknown> = {
-          description: localizeSelectableToolDescription(operationId, operation.summary, locale),
-          inputSchema: operation.inputSchema,
-          execute: async (args: unknown) => {
-            return executeProjectAgentOperationFromTool({
-              request: input.request,
-              operationId,
-              projectId: input.projectId,
-              userId: input.userId,
-              context,
-              source: 'assistant-panel',
-              writer,
-              input: args,
-            })
-          },
-        }
-        return [operationId, definition] as const
-      })
-      const tools = Object.fromEntries(toolEntries) as ToolSet
       const stopController = createProjectAgentStopController(tools)
 
       let result: ReturnType<typeof streamText>
       try {
         result = streamText({
           model: resolved.languageModel,
-          system: buildProjectAgentSystemPrompt({
-            locale,
-            projectId: input.projectId,
-            episodeId: context.episodeId || 'unknown',
-            stage: context.currentStage || 'unknown',
-            interactionMode: executionMode.interactionMode,
-          }),
-          messages: await toModelMessages(runtimeMessages),
+          system: systemPrompt,
+          messages: modelMessages,
           tools,
           stopWhen: stopController.stopWhen,
           experimental_onToolCallStart: ({ toolCall }) => {

@@ -22,6 +22,7 @@
     "modeDescriptionFast": "Act sooner immediately",
     "collapse": "Collapse AI assistant sidebar",
     "expand": "Expand AI assistant sidebar",
+    "rawContext": "View full raw context",
     "downloadLog": "Download Log",
     "executionTraceTitle": "Execution Trace",
     "executionTraceRunning": "Model text, tool calls, and results are streaming into this thread.",
@@ -34,6 +35,25 @@
     "latest": "Latest",
     "pendingApprovalTitle": "Pending approval",
     "pendingApprovalCount": "{count} pending actions"
+  },
+  "debugContext": {
+    "title": "Full Raw Context",
+    "subtitle": "Shows the uncompressed UIMessage record retained in this browser for debugging each sent turn, tool call, and structured event.",
+    "close": "Close full raw context",
+    "copy": "Copy JSON",
+    "copied": "Copied",
+    "messageCount": "{count} messages",
+    "empty": "There is no raw context to inspect yet.",
+    "messageId": "Message ID",
+    "role": "Role",
+    "parts": "Parts",
+    "storageError": "Local raw context storage error",
+    "dialogueTitle": "Full Conversation Text",
+    "runtimeTitle": "Actual Model Runtime Context",
+    "systemPrompt": "System Prompt",
+    "modelMessages": "Messages Sent to Model",
+    "selectedTools": "Tools Injected to Model",
+    "rawJsonTitle": "Full UIMessage JSON"
   },
   "toolCall": {
     "title": "Tool Call",

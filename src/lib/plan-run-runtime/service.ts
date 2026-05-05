@@ -78,6 +78,14 @@ type PlanArtifactRow = {
   createdAt: Date
 }
 
+type ExecutionPlanRow = {
+  id: string
+}
+
+type ExecutionPlanModel = {
+  findFirst: (args: unknown) => Promise<ExecutionPlanRow | null>
+}
+
 type PlanRunModel = {
   create: (args: unknown) => Promise<PlanRunRow>
   update: (args: unknown) => Promise<PlanRunRow>
@@ -107,6 +115,7 @@ type PlanArtifactModel = {
 }
 
 type PlanRuntimeTx = {
+  executionPlan: ExecutionPlanModel
   planRun: PlanRunModel
   planStepRun: PlanStepRunModel
   planRunEvent: PlanRunEventModel
@@ -225,13 +234,25 @@ function asStepStatus(status: PlanStepStatus): PlanStepStatus {
 
 export async function createPlanRun(input: CreatePlanRunInput) {
   return await runtimeClient.$transaction(async (tx) => {
+    const planId = input.planId?.trim() || null
+    if (planId) {
+      const plan = await tx.executionPlan.findFirst({
+        where: {
+          id: planId,
+          projectId: input.projectId,
+        },
+        select: { id: true },
+      })
+      if (!plan) throw new Error(`PLAN_NOT_FOUND:${planId}`)
+    }
+
     const run = await tx.planRun.create({
       data: {
         userId: input.userId,
         projectId: input.projectId,
         episodeId: input.episodeId || null,
         commandId: input.commandId || null,
-        planId: input.planId || null,
+        planId,
         goal: input.goal || null,
         status: PLAN_RUN_STATUS.QUEUED,
       },

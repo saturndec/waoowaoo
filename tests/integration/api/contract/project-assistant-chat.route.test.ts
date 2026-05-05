@@ -464,7 +464,7 @@ describe('project assistant chat route', () => {
     const planPart = {
       type: 'data-plan',
       data: {
-        planId: 'plan_1',
+        draftPlanId: 'draft_plan_1',
         goal: '希区柯克风格恐怖短片',
         summary: '创作计划',
         requiresApproval: true,

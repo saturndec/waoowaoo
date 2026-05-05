@@ -22,6 +22,7 @@
     "modeDescriptionFast": "满足规则时尽快执行",
     "collapse": "折叠 AI 助手侧栏",
     "expand": "展开 AI 助手侧栏",
+    "rawContext": "查看完整原始上下文",
     "downloadLog": "下载日志",
     "executionTraceTitle": "执行过程",
     "executionTraceRunning": "模型输出、tool 调用与结果正在同步写入对话",
@@ -34,6 +35,25 @@
     "latest": "最新",
     "pendingApprovalTitle": "待处理审批",
     "pendingApprovalCount": "{count} 个待处理动作"
+  },
+  "debugContext": {
+    "title": "完整原始上下文",
+    "subtitle": "显示当前浏览器为调试保留的未压缩 UIMessage 记录；用于检查每轮发送、工具调用与结构化事件。",
+    "close": "关闭完整原始上下文",
+    "copy": "复制 JSON",
+    "copied": "已复制",
+    "messageCount": "{count} 条消息",
+    "empty": "当前还没有可查看的原始上下文。",
+    "messageId": "消息 ID",
+    "role": "角色",
+    "parts": "片段",
+    "storageError": "本地原始上下文保存异常",
+    "dialogueTitle": "完整对话原文",
+    "runtimeTitle": "模型实际运行上下文",
+    "systemPrompt": "System Prompt",
+    "modelMessages": "发送给模型的 Messages",
+    "selectedTools": "注入给模型的 Tools",
+    "rawJsonTitle": "完整 UIMessage JSON"
   },
   "toolCall": {
     "title": "工具调用",

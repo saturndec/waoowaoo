@@ -42,13 +42,6 @@ function formatSkillLabel(skillId: string | null | undefined): string {
 
 type MessagePartComponents = NonNullable<ComponentProps<typeof MessagePrimitive.Parts>['components']>
 
-function readStringArray(value: unknown): string[] {
-  if (!Array.isArray(value)) return []
-  return value
-    .map((item) => (typeof item === 'string' ? item.trim() : ''))
-    .filter((item) => item.length > 0)
-}
-
 function ProjectPhaseDataCard({ data }: DataMessagePartProps<ProjectPhasePartData>) {
   const t = useTranslations('assistantAgent')
   return (
@@ -135,6 +128,10 @@ export function ApprovalCard(props: {
 }
 
 export function HiddenApprovalRequestDataCard() {
+  return null
+}
+
+export function HiddenRuntimeContextDataCard() {
   return null
 }
 
@@ -314,7 +311,7 @@ export function AgentPlanDataCard({ data }: DataMessagePartProps<AgentPlanPartDa
       </div>
       <div className="mt-3 space-y-2">
         {data.steps.map((step: AgentPlanPartData['steps'][number]) => (
-          <div key={`${data.planId}:step:${step.stepKey}`} className="rounded-xl bg-[var(--glass-bg-muted)]/70 px-3 py-2 text-xs">
+          <div key={`${data.draftPlanId}:step:${step.stepKey}`} className="rounded-xl bg-[var(--glass-bg-muted)]/70 px-3 py-2 text-xs">
             <div className="font-medium text-[var(--glass-text-primary)]">{formatSkillLabel(step.skillId)}</div>
             <div className="mt-1 text-[var(--glass-text-secondary)]">{step.operationId}</div>
             <div className="mt-1 text-[var(--glass-text-tertiary)]">{step.reason}</div>
@@ -417,6 +414,7 @@ export function useWorkspaceAssistantMessagePartComponents({
     data: {
       by_name: {
         'agent-stop': AgentStopDataCard,
+        'agent-runtime-context': HiddenRuntimeContextDataCard,
         'project-phase': ProjectPhaseDataCard,
         'confirmation-request': (props) => (
           <InlineConfirmationRequestDataCard

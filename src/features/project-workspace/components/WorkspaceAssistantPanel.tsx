@@ -24,6 +24,7 @@ import { apiFetch } from '@/lib/api-fetch'
 import { WorkspaceAssistantModePicker } from './workspace-assistant/WorkspaceAssistantModePicker'
 import { WorkspaceAssistantPanelHeader } from './workspace-assistant/WorkspaceAssistantPanelHeader'
 import { WorkspaceAssistantPanelRail } from './workspace-assistant/WorkspaceAssistantPanelRail'
+import { WorkspaceAssistantRawContextDialog } from './workspace-assistant/WorkspaceAssistantRawContextDialog'
 import { buildWorkspaceAssistantPanelLayout, WORKSPACE_ASSISTANT_TOP_OFFSET } from './workspace-assistant/panel-layout'
 import type { WorkspaceAssistantSelectionContext } from '../canvas/ProjectWorkspaceCanvas'
 
@@ -69,6 +70,7 @@ export default function WorkspaceAssistantPanel({
   const locale = useLocale()
   const layout = buildWorkspaceAssistantPanelLayout(isCollapsed)
   const [interactionMode, setInteractionMode] = useState<'auto' | 'plan' | 'fast'>('auto')
+  const [rawContextOpen, setRawContextOpen] = useState(false)
   const { data: projectContext } = useProjectContext(projectId, {
     episodeId,
   })
@@ -234,10 +236,37 @@ export default function WorkspaceAssistantPanel({
                 episodeLabel={projectContext?.episodeName || episodeId || t('cards.globalScope')}
                 workspaceLabel={t('panel.workspaceStatus')}
                 runLabel={t('panel.runs', { count: projectContext?.activePlanRuns.length || 0 })}
+                rawContextLabel={t('panel.rawContext')}
                 downloadLabel={t('panel.downloadLog')}
                 downloadHref={downloadHref}
                 collapseLabel={t('panel.collapse')}
+                onOpenRawContext={() => setRawContextOpen(true)}
                 onCollapse={onToggleCollapsed}
+              />
+              <WorkspaceAssistantRawContextDialog
+                open={rawContextOpen}
+                messages={assistantRuntime.rawContextMessages}
+                storageError={assistantRuntime.rawContextStorageError}
+                labels={{
+                  title: t('debugContext.title'),
+                  subtitle: t('debugContext.subtitle'),
+                  close: t('debugContext.close'),
+                  copy: t('debugContext.copy'),
+                  copied: t('debugContext.copied'),
+                  messageCount: t('debugContext.messageCount', { count: assistantRuntime.rawContextMessages.length }),
+                  empty: t('debugContext.empty'),
+                  messageId: t('debugContext.messageId'),
+                  role: t('debugContext.role'),
+                  parts: t('debugContext.parts'),
+                  storageError: t('debugContext.storageError'),
+                  dialogueTitle: t('debugContext.dialogueTitle'),
+                  runtimeTitle: t('debugContext.runtimeTitle'),
+                  systemPrompt: t('debugContext.systemPrompt'),
+                  modelMessages: t('debugContext.modelMessages'),
+                  selectedTools: t('debugContext.selectedTools'),
+                  rawJsonTitle: t('debugContext.rawJsonTitle'),
+                }}
+                onClose={() => setRawContextOpen(false)}
               />
 
             <ThreadPrimitive.Viewport

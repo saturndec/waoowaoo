@@ -74,7 +74,7 @@ export interface AgentPlanValidationResult {
 }
 
 export interface AgentPlanDraft {
-  planId: string
+  draftPlanId: string
   goal: string
   summary: string
   requiresApproval: boolean

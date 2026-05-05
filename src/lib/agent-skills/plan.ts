@@ -219,12 +219,12 @@ export function validateAgentPlan(input: AgentPlanInput): AgentPlanValidationRes
 }
 
 export function buildAgentPlanDraft(params: {
-  planId: string
+  draftPlanId: string
   input: AgentPlanInput
 }): AgentPlanDraft {
   const validation = validateAgentPlan(params.input)
   return {
-    planId: params.planId,
+    draftPlanId: params.draftPlanId,
     goal: params.input.goal,
     summary: validation.ok
       ? `Plan for: ${params.input.goal}`

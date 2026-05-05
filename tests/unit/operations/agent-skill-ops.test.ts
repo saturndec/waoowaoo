@@ -1,8 +1,33 @@
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import type { NextRequest } from 'next/server'
 import { z } from 'zod'
 import { createAgentSkillOperations } from '@/lib/operations/domains/agent-skill/agent-skill-ops'
 import type { ProjectAgentOperationContext } from '@/lib/operations/types'
+
+const executeAgentPlanMock = vi.hoisted(() => vi.fn(async (_params: {
+  userId: string
+  projectId: string
+  episodeId?: string | null
+  planId?: string | null
+  input: unknown
+  invokeStep: unknown
+}) => ({
+  success: true,
+  planRunId: 'plan-run-1',
+  status: 'completed',
+  executedStepKeys: ['write_first_scene_script'],
+  waitingTaskId: null,
+  snapshot: {
+    planRun: {
+      id: 'plan-run-1',
+      planId: null,
+    },
+  },
+})))
+
+vi.mock('@/lib/plan-run-runtime/executor', () => ({
+  executeAgentPlan: executeAgentPlanMock,
+}))
 
 function buildContext(writerEvents: Array<Record<string, unknown>> = []): ProjectAgentOperationContext {
   return {
@@ -38,7 +63,7 @@ const loadSkillOutputSchema = z.object({
 })
 
 const planDraftOutputSchema = z.object({
-  planId: z.string(),
+  draftPlanId: z.string(),
   validation: z.object({
     ok: z.boolean(),
   }),
@@ -85,15 +110,52 @@ describe('agent skill operations', () => {
     })
     const result = planDraftOutputSchema.parse(raw)
 
+    expect(result.draftPlanId).toMatch(/^draft_plan_/)
     expect(result.validation.ok).toBe(false)
     expect(writerEvents).toEqual([
       expect.objectContaining({
         type: 'data-plan',
         data: expect.objectContaining({
+          draftPlanId: result.draftPlanId,
           validation: expect.objectContaining({ ok: false }),
         }),
       }),
     ])
+  })
+
+  it('execute_plan keeps draftPlanId out of the persisted PlanRun relation', async () => {
+    executeAgentPlanMock.mockClear()
+    const operations = createAgentSkillOperations()
+
+    const raw = await operations.execute_plan.execute(buildContext(), {
+      goal: '编写《星尘记录者》第一幕开场场景的剧本。',
+      loadedSkillIds: ['screenwriting'],
+      draftPlanId: 'draft_plan_1',
+      confirmed: true,
+      steps: [
+        {
+          stepKey: 'write_first_scene_script',
+          skillId: 'screenwriting',
+          operationId: 'write_screenplay',
+          reason: '根据大纲编写第一幕开场场景的剧本内容。',
+          requiresApproval: true,
+        },
+      ],
+    })
+
+    expect(raw).toMatchObject({
+      success: true,
+      planRunId: 'plan-run-1',
+    })
+    expect(executeAgentPlanMock).toHaveBeenCalledWith(expect.objectContaining({
+      userId: 'user-1',
+      projectId: 'project-1',
+      episodeId: 'episode-1',
+      planId: null,
+      input: expect.objectContaining({
+        draftPlanId: 'draft_plan_1',
+      }),
+    }))
   })
 
   it('invoke_operation requests confirmation through the gateway operation', async () => {

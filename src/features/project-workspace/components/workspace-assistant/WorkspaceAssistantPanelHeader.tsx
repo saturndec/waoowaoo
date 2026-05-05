@@ -9,9 +9,11 @@ interface WorkspaceAssistantPanelHeaderProps {
   episodeLabel: string
   workspaceLabel: string
   runLabel: string
+  rawContextLabel: string
   downloadLabel: string
   downloadHref: string
   collapseLabel: string
+  onOpenRawContext: () => void
   onCollapse: () => void
 }
 
@@ -27,6 +29,15 @@ export function WorkspaceAssistantPanelHeader(props: WorkspaceAssistantPanelHead
           <h2 className="mt-2 text-base font-semibold text-[var(--glass-text-primary)]">{props.title}</h2>
         </div>
         <div className="flex shrink-0 items-center gap-2">
+          <button
+            type="button"
+            onClick={props.onOpenRawContext}
+            className="inline-flex h-9 w-9 items-center justify-center rounded-2xl border border-[var(--glass-stroke-base)] bg-[rgba(255,255,255,0.7)] text-[var(--glass-text-primary)] transition hover:border-[var(--glass-accent-from)]/40 hover:text-[var(--glass-accent-from)]"
+            aria-label={props.rawContextLabel}
+            title={props.rawContextLabel}
+          >
+            <AppIcon name="fileText" className="h-4 w-4" />
+          </button>
           <a
             href={props.downloadHref}
             className="inline-flex items-center gap-2 rounded-2xl border border-[var(--glass-stroke-base)] bg-[rgba(255,255,255,0.7)] px-3 py-2 text-xs font-medium text-[var(--glass-text-primary)] transition hover:border-[var(--glass-accent-from)]/40 hover:text-[var(--glass-accent-from)]"
@@ -40,7 +51,7 @@ export function WorkspaceAssistantPanelHeader(props: WorkspaceAssistantPanelHead
             onClick={props.onCollapse}
             className="inline-flex h-9 w-9 items-center justify-center rounded-2xl border border-[var(--glass-stroke-base)] bg-[rgba(255,255,255,0.7)] text-[var(--glass-text-primary)] transition hover:border-[var(--glass-accent-from)]/40 hover:text-[var(--glass-accent-from)]"
           >
-            <AppIcon name="chevronLeft" className="h-4 w-4" />
+            <AppIcon name="chevronRight" className="h-4 w-4" />
           </button>
         </div>
       </div>

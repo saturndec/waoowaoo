@@ -100,7 +100,7 @@ const planValidationOutputSchema = z.object({
 })
 
 const planDraftOutputSchema = z.object({
-  planId: z.string(),
+  draftPlanId: z.string(),
   goal: z.string(),
   summary: z.string(),
   requiresApproval: z.boolean(),
@@ -125,7 +125,7 @@ const executePlanInputSchema = z.object({
   loadedSkillIds: z.array(z.string().min(1)).min(1).max(12),
   steps: z.array(executablePlanStepInputSchema).min(1).max(30),
   confirmed: z.boolean().optional(),
-  planId: z.string().min(1).optional(),
+  draftPlanId: z.string().min(1).optional(),
 })
 
 const executePlanOutputSchema = z.object({
@@ -151,7 +151,7 @@ function operationRequiresConfirmation(operation: ReturnType<typeof createProjec
 
 function toPlanPartData(plan: AgentPlanDraft): AgentPlanPartData {
   return {
-    planId: plan.planId,
+    draftPlanId: plan.draftPlanId,
     goal: plan.goal,
     summary: plan.summary,
     requiresApproval: plan.requiresApproval,
@@ -375,7 +375,7 @@ export function createAgentSkillOperations(): ProjectAgentOperationRegistryDraft
       outputSchema: planDraftOutputSchema,
       execute: async (ctx, input) => {
         const plan = buildAgentPlanDraft({
-          planId: `plan_${crypto.randomUUID()}`,
+          draftPlanId: `draft_plan_${crypto.randomUUID()}`,
           input,
         })
         writeOperationDataPart<AgentPlanPartData>(ctx.writer, 'data-plan', toPlanPartData(plan))
@@ -423,7 +423,7 @@ export function createAgentSkillOperations(): ProjectAgentOperationRegistryDraft
           userId: ctx.userId,
           projectId: ctx.projectId,
           episodeId: ctx.context.episodeId || null,
-          planId: input.planId || null,
+          planId: null,
           input,
           invokeStep: async (step) => invokeAllowedOperation({
             ctx,

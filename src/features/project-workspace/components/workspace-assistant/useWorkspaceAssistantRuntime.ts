@@ -12,6 +12,11 @@ import {
 } from '@/lib/query/hooks'
 import type { ProjectAgentInteractionMode } from '@/lib/project-agent/types'
 import { isPersistableUIMessages } from '@/lib/project-agent/ui-message-validation'
+import {
+  buildWorkspaceAssistantRawContextStorageKey,
+  mergeWorkspaceAssistantRawMessages,
+  serializeWorkspaceAssistantRawContext,
+} from './assistant-raw-context'
 
 interface UseWorkspaceAssistantRuntimeParams {
   projectId: string
@@ -32,8 +37,10 @@ interface UseWorkspaceAssistantRuntimeResult {
   pending: boolean
   error: Error | undefined
   syncError: string | null
+  rawContextStorageError: string | null
   storageError: string | null
   storageLoading: boolean
+  rawContextMessages: UIMessage[]
   sendMessage: (text: string) => Promise<void>
   replaceMessages: (messages: UIMessage[]) => void
   appendMessages: (messages: UIMessage[]) => void
@@ -58,7 +65,6 @@ export function useWorkspaceAssistantRuntime({
   interactionMode,
 }: UseWorkspaceAssistantRuntimeParams): UseWorkspaceAssistantRuntimeResult {
   const locale = useLocale()
-  const threadKey = `${projectId}:${episodeId || 'global'}`
   const chatId = buildWorkspaceAssistantChatId({
     projectId,
     episodeId,
@@ -93,6 +99,13 @@ export function useWorkspaceAssistantRuntime({
   const persistQueueRef = useRef<Promise<void>>(Promise.resolve())
   const persistTimerRef = useRef<number | null>(null)
   const [syncError, setSyncError] = useState<string | null>(null)
+  const [rawContextMessages, setRawContextMessages] = useState<UIMessage[]>([])
+  const [rawContextStorageError, setRawContextStorageError] = useState<string | null>(null)
+  const rawContextMessagesRef = useRef<UIMessage[]>([])
+  const rawContextStorageKey = useMemo(() => buildWorkspaceAssistantRawContextStorageKey({
+    projectId,
+    episodeId,
+  }), [episodeId, projectId])
 
   const replaceMessages = useCallback((messages: UIMessage[]) => {
     chat.setMessages(messages)
@@ -119,6 +132,47 @@ export function useWorkspaceAssistantRuntime({
     hydratedSessionKeyRef.current = chatId
     lastPersistedSignatureRef.current = JSON.stringify(persistedMessages)
   }, [assistantThread.data, assistantThread.isLoading, chat.messages, chatId, replaceMessages])
+
+  useEffect(() => {
+    try {
+      const stored = window.localStorage.getItem(rawContextStorageKey)
+      if (!stored) {
+        rawContextMessagesRef.current = []
+        setRawContextMessages([])
+        setRawContextStorageError(null)
+        return
+      }
+      const parsed = JSON.parse(stored) as unknown
+      if (!isPersistableUIMessages(parsed)) {
+        throw new Error('PROJECT_ASSISTANT_INVALID_RAW_CONTEXT_MESSAGES')
+      }
+      rawContextMessagesRef.current = parsed
+      setRawContextMessages(parsed)
+      setRawContextStorageError(null)
+    } catch (error) {
+      rawContextMessagesRef.current = []
+      setRawContextMessages([])
+      setRawContextStorageError(error instanceof Error ? error.message : String(error))
+    }
+  }, [rawContextStorageKey])
+
+  useEffect(() => {
+    if (hydratedSessionKeyRef.current !== chatId) return
+    if (chat.messages.length === 0) return
+    if (!isPersistableUIMessages(chat.messages)) return
+    const nextMessages = mergeWorkspaceAssistantRawMessages({
+      current: rawContextMessagesRef.current,
+      incoming: chat.messages,
+    })
+    rawContextMessagesRef.current = nextMessages
+    setRawContextMessages(nextMessages)
+    try {
+      window.localStorage.setItem(rawContextStorageKey, serializeWorkspaceAssistantRawContext(nextMessages))
+      setRawContextStorageError(null)
+    } catch (error) {
+      setRawContextStorageError(error instanceof Error ? error.message : String(error))
+    }
+  }, [chat.messages, chatId, rawContextStorageKey])
 
   useEffect(() => {
     if (hydratedSessionKeyRef.current !== chatId) return
@@ -151,7 +205,7 @@ export function useWorkspaceAssistantRuntime({
         persistTimerRef.current = null
       }
     }
-  }, [chat.messages, chatId, saveAssistantThread])
+  }, [chat.messages, chat.status, chatId, saveAssistantThread])
 
   useEffect(() => {
     return () => {
@@ -169,8 +223,10 @@ export function useWorkspaceAssistantRuntime({
     pending: chat.status === 'submitted' || chat.status === 'streaming',
     error: chat.error,
     syncError,
+    rawContextStorageError,
     storageError: assistantThread.error?.message || null,
     storageLoading: assistantThread.isLoading,
+    rawContextMessages,
     sendMessage,
     replaceMessages,
     appendMessages,

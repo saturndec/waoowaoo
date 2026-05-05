@@ -36,7 +36,7 @@ export interface ProjectAgentStopPartData {
 }
 
 export interface AgentPlanPartData {
-  planId: string
+  draftPlanId: string
   goal: string
   summary: string
   requiresApproval: boolean
@@ -64,6 +64,26 @@ export interface AgentDebugPartData {
   requestedGroups: string[][]
   alwaysOnOperationIds: string[]
   operationIds: string[]
+}
+
+export interface AgentRuntimeContextPartData {
+  requestId: string
+  modelKey: string
+  locale: string
+  projectId: string
+  episodeId?: string | null
+  interactionMode: ProjectAgentInteractionMode
+  systemPrompt: string
+  rawMessages: unknown
+  runtimeMessages: unknown
+  modelMessages: unknown
+  projectContext: ProjectAgentContext
+  projectPhase: unknown
+  route: unknown
+  selectedTools: Array<{
+    operationId: string
+    description: string
+  }>
 }
 
 export interface ConfirmationRequestPartData {
@@ -130,6 +150,7 @@ export interface ProjectAssistantThreadSnapshot {
 
 export type WorkspaceAssistantPartType =
   | 'data-agent-debug'
+  | 'data-agent-runtime-context'
   | 'data-agent-stop'
   | 'data-project-phase'
   | 'data-confirmation-request'
