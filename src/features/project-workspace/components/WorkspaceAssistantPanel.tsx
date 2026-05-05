@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useLocale, useTranslations } from 'next-intl'
 import {
   AssistantRuntimeProvider,
@@ -26,12 +26,19 @@ import { WorkspaceAssistantPanelHeader } from './workspace-assistant/WorkspaceAs
 import { WorkspaceAssistantPanelRail } from './workspace-assistant/WorkspaceAssistantPanelRail'
 import { WorkspaceAssistantRawContextDialog } from './workspace-assistant/WorkspaceAssistantRawContextDialog'
 import { buildWorkspaceAssistantPanelLayout, WORKSPACE_ASSISTANT_TOP_OFFSET } from './workspace-assistant/panel-layout'
+import {
+  isWorkspaceAssistantSendMessageEvent,
+  WORKSPACE_ASSISTANT_SEND_MESSAGE_EVENT,
+} from './workspace-assistant/assistant-send-event'
 import type { WorkspaceAssistantSelectionContext } from '../canvas/ProjectWorkspaceCanvas'
 
 interface WorkspaceAssistantPanelProps {
   projectId: string
   episodeId?: string
   selection?: WorkspaceAssistantSelectionContext
+  autoStartMessage?: string | null
+  autoStartKey?: string | null
+  onAutoStartConsumed?: () => void
   isCollapsed: boolean
   onToggleCollapsed: () => void
 }
@@ -63,6 +70,9 @@ export default function WorkspaceAssistantPanel({
   projectId,
   episodeId,
   selection,
+  autoStartMessage,
+  autoStartKey,
+  onAutoStartConsumed,
   isCollapsed,
   onToggleCollapsed,
 }: WorkspaceAssistantPanelProps) {
@@ -84,6 +94,37 @@ export default function WorkspaceAssistantPanel({
     selectedAssetId: selection?.selectedAssetId ?? null,
     interactionMode,
   })
+  const { sendMessage } = assistantRuntime
+  const consumedMessageKeysRef = useRef<Set<string>>(new Set())
+  const sendAssistantMessageOnce = useCallback(async (key: string, message: string) => {
+    const normalizedKey = key.trim()
+    const normalizedMessage = message.trim()
+    if (!normalizedKey || !normalizedMessage) return
+    if (consumedMessageKeysRef.current.has(normalizedKey)) return
+    consumedMessageKeysRef.current.add(normalizedKey)
+    await sendMessage(normalizedMessage)
+  }, [sendMessage])
+  useEffect(() => {
+    if (!autoStartMessage || !autoStartKey) return
+    if (assistantRuntime.storageLoading || assistantRuntime.pending) return
+    void sendAssistantMessageOnce(autoStartKey, autoStartMessage)
+      .finally(() => onAutoStartConsumed?.())
+  }, [
+    assistantRuntime.pending,
+    assistantRuntime.storageLoading,
+    autoStartKey,
+    autoStartMessage,
+    onAutoStartConsumed,
+    sendAssistantMessageOnce,
+  ])
+  useEffect(() => {
+    const handleSendMessage = (event: Event) => {
+      if (!isWorkspaceAssistantSendMessageEvent(event)) return
+      void sendAssistantMessageOnce(event.detail.key, event.detail.message)
+    }
+    window.addEventListener(WORKSPACE_ASSISTANT_SEND_MESSAGE_EVENT, handleSendMessage)
+    return () => window.removeEventListener(WORKSPACE_ASSISTANT_SEND_MESSAGE_EVENT, handleSendMessage)
+  }, [sendAssistantMessageOnce])
   const pendingConfirmationActions = useMemo(
     () => collectPendingConfirmationActions(assistantRuntime.messages),
     [assistantRuntime.messages],
@@ -210,17 +251,16 @@ export default function WorkspaceAssistantPanel({
 
   return (
     <aside
-      className="relative shrink-0 self-stretch transition-[width] duration-300 ease-out"
+      className="pointer-events-none fixed inset-y-0 right-0 z-20 w-0"
       style={{ width: `${layout.occupiedWidthPx}px` }}
       data-state={layout.state}
     >
       <div
-        className="fixed left-0 z-20 overflow-hidden rounded-r-3xl border border-l-0 border-[var(--glass-stroke-base)] bg-[var(--glass-bg-surface)]/95 shadow-xl backdrop-blur-md transition-transform duration-300 ease-out"
+        className="pointer-events-auto fixed right-0 z-20 overflow-hidden rounded-l-3xl border border-r-0 border-[var(--glass-stroke-base)] bg-[var(--glass-bg-surface)]/95 shadow-xl backdrop-blur-md transition-[width] duration-300 ease-out"
         style={{
           top: WORKSPACE_ASSISTANT_TOP_OFFSET,
           width: `${layout.panelWidthPx}px`,
           height: `calc(100vh - ${WORKSPACE_ASSISTANT_TOP_OFFSET} - 1.5rem)`,
-          transform: `translateX(${layout.translateXPx}px)`,
         }}
         data-state={layout.state}
       >

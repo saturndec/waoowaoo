@@ -7,6 +7,9 @@
   "projectNotFound": "Project not found",
   "backToWorkspace": "Back to Workspace",
   "episode": "Episode",
+  "assistantAutoStart": {
+    "homeStory": "I just created this project from Home and entered the current story. First read the current project context, then decide freely what should happen next: search and load relevant Skills, create and validate a plan, and ask for confirmation before any write, long-running, or billable operation."
+  },
   "modelSetup": {
     "title": "Set up default models before starting",
     "description": "No default analysis model is configured for this account. Smart split and downstream AI flows cannot run until it is set.",

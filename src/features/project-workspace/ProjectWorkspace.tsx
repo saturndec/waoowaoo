@@ -74,16 +74,19 @@ function ProjectWorkspaceContent(props: ProjectWorkspaceProps) {
       />
 
       <div className="pt-24">
-        <div className="flex items-start gap-6 pl-0 pr-6 pb-6">
+        <div>
           <WorkspaceAssistantPanel
             projectId={projectId}
             episodeId={episodeId}
             selection={assistantSelection}
+            autoStartMessage={props.assistantAutoStartMessage ?? null}
+            autoStartKey={props.assistantAutoStartKey ?? null}
+            onAutoStartConsumed={props.onAssistantAutoStartConsumed}
             isCollapsed={isAssistantPanelCollapsed}
             onToggleCollapsed={() => setIsAssistantPanelCollapsed((current) => !current)}
           />
 
-          <div className="min-w-0 flex-1">
+          <div className="min-w-0">
             <WorkspaceRuntimeProvider value={vm.runtime.workspaceRuntime}>
               <ProjectWorkspaceCanvas onAssistantSelectionChange={setAssistantSelection} />
             </WorkspaceRuntimeProvider>

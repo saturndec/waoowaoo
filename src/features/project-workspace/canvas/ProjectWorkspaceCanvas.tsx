@@ -5,8 +5,8 @@ import {
   applyNodeChanges,
   Background,
   BackgroundVariant,
-  Controls,
   MiniMap,
+  Panel,
   ReactFlow,
   ReactFlowProvider,
   type NodeMouseHandler,
@@ -14,11 +14,11 @@ import {
   useReactFlow,
 } from '@xyflow/react'
 import { useTranslations } from 'next-intl'
+import { AppIcon } from '@/components/ui/icons'
 import type { UpsertCanvasLayoutInput } from '@/lib/project-canvas/layout/canvas-layout-contract'
 import type { CanvasNodeLayout } from '@/lib/project-canvas/layout/canvas-layout.types'
 import { useWorkspaceEpisodeStageData } from '../hooks/useWorkspaceEpisodeStageData'
 import { useWorkspaceProvider } from '../WorkspaceProvider'
-import CanvasToolbar from './CanvasToolbar'
 import { useCanvasLayoutPersistence } from './hooks/useCanvasLayoutPersistence'
 import {
   buildWorkspaceNodeCanvasProjection,
@@ -35,6 +35,7 @@ import type { WorkspaceCanvasFlowEdge, WorkspaceCanvasFlowNode, WorkspaceCanvasN
 
 const DEFAULT_VIEWPORT = { x: 48, y: 96, zoom: 0.72 }
 const EMPTY_SAVED_NODE_LAYOUTS: readonly CanvasNodeLayout[] = []
+const CANVAS_FLOATING_PANEL_BOTTOM_OFFSET_PX = 112
 
 export interface WorkspaceAssistantSelectionContext {
   selectedScopeRef?: string | null
@@ -45,6 +46,71 @@ export interface WorkspaceAssistantSelectionContext {
 
 interface ProjectWorkspaceCanvasContentProps {
   onAssistantSelectionChange?: (selection: WorkspaceAssistantSelectionContext) => void
+}
+
+interface CanvasViewportControlsProps {
+  readonly resetLabel: string
+  readonly fitViewLabel: string
+  readonly zoomInLabel: string
+  readonly zoomOutLabel: string
+  readonly onResetLayout: () => void
+  readonly onFitView: () => void
+  readonly onZoomIn: () => void
+  readonly onZoomOut: () => void
+}
+
+function CanvasViewportControls({
+  resetLabel,
+  fitViewLabel,
+  zoomInLabel,
+  zoomOutLabel,
+  onResetLayout,
+  onFitView,
+  onZoomIn,
+  onZoomOut,
+}: CanvasViewportControlsProps) {
+  const buttonClassName = 'inline-flex h-10 w-10 items-center justify-center border-r border-[var(--glass-stroke-soft)] text-[var(--glass-text-primary)] transition last:border-r-0 hover:bg-[var(--glass-bg-hover)]'
+
+  return (
+    <div className="overflow-hidden rounded-lg border border-[var(--glass-stroke-base)] bg-[var(--glass-bg-surface)]/95 shadow-lg backdrop-blur-md">
+      <button
+        type="button"
+        className={buttonClassName}
+        aria-label={zoomInLabel}
+        title={zoomInLabel}
+        onClick={onZoomIn}
+      >
+        <AppIcon name="plus" className="h-4 w-4" />
+      </button>
+      <button
+        type="button"
+        className={buttonClassName}
+        aria-label={zoomOutLabel}
+        title={zoomOutLabel}
+        onClick={onZoomOut}
+      >
+        <AppIcon name="minus" className="h-4 w-4" />
+      </button>
+      <button
+        type="button"
+        className={buttonClassName}
+        aria-label={fitViewLabel}
+        title={fitViewLabel}
+        onClick={onFitView}
+      >
+        <AppIcon name="searchPlus" className="h-4 w-4" />
+      </button>
+      <button
+        type="button"
+        className={buttonClassName}
+        aria-label={resetLabel}
+        title={resetLabel}
+        onClick={onResetLayout}
+      >
+        <AppIcon name="refresh" className="h-4 w-4" />
+      </button>
+    </div>
+  )
 }
 
 function ProjectWorkspaceCanvasContent({ onAssistantSelectionChange }: ProjectWorkspaceCanvasContentProps) {
@@ -63,12 +129,7 @@ function ProjectWorkspaceCanvasContent({ onAssistantSelectionChange }: ProjectWo
 
   const {
     layout,
-    isLoading,
     saveLayout,
-    isSaving,
-    loadError,
-    saveError,
-    layoutWarningCode,
     resetLayout: resetSavedLayout,
   } = useCanvasLayoutPersistence({
     projectId,
@@ -176,29 +237,12 @@ function ProjectWorkspaceCanvasContent({ onAssistantSelectionChange }: ProjectWo
   const fitView = useCallback(() => {
     void reactFlow.fitView({ padding: 0.14, duration: 180 })
   }, [reactFlow])
-
-  const statusItems = useMemo(() => {
-    const panels = storyboards.reduce((total, storyboard) => total + (storyboard.panels?.length ?? 0), 0)
-    const images = storyboards.reduce((total, storyboard) => (
-      total + (storyboard.panels ?? []).filter((panel) => Boolean(panel.imageUrl || panel.media?.url || panel.imageTaskRunning)).length
-    ), 0)
-    const videos = storyboards.reduce((total, storyboard) => (
-      total + (storyboard.panels ?? []).filter((panel) => Boolean(panel.videoUrl || panel.videoMedia?.url || panel.videoTaskRunning)).length
-    ), 0)
-    return [
-      t(novelText.trim() ? 'statusBar.storyReady' : 'statusBar.storyEmpty'),
-      t('statusBar.clips', { count: clips.length }),
-      t('statusBar.panels', { count: panels }),
-      t('statusBar.images', { count: images }),
-      t('statusBar.videos', { count: videos }),
-    ]
-  }, [clips.length, novelText, storyboards, t])
-
-  const errorLabel = loadError || saveError || layoutWarningCode ? t('layoutWarning') : null
-  const nodeCountSummary = t('summary', {
-    nodes: nodes.length,
-    edges: projection.edges.length,
-  })
+  const zoomIn = useCallback(() => {
+    void reactFlow.zoomIn({ duration: 160 })
+  }, [reactFlow])
+  const zoomOut = useCallback(() => {
+    void reactFlow.zoomOut({ duration: 160 })
+  }, [reactFlow])
   const selectedNode = useMemo(
     () => nodes.find((node) => node.id === selectedNodeId) ?? null,
     [nodes, selectedNodeId],
@@ -222,24 +266,8 @@ function ProjectWorkspaceCanvasContent({ onAssistantSelectionChange }: ProjectWo
   if (!episodeId) return null
 
   return (
-    <div className="h-[calc(100vh-8rem)] min-h-[640px] overflow-hidden rounded-lg border border-[var(--glass-stroke-soft)] bg-[var(--glass-bg-canvas)]">
-      <CanvasToolbar
-        title={t('title')}
-        subtitle={t('subtitle')}
-        summary={nodeCountSummary}
-        resetLabel={t('toolbar.resetLayout')}
-        fitViewLabel={t('toolbar.fitView')}
-        loadingLabel={t('layoutLoading')}
-        savingLabel={t('layoutSaving')}
-        errorLabel={errorLabel}
-        statusItems={statusItems}
-        isLoading={isLoading}
-        isSaving={isSaving}
-        onResetLayout={resetLayout}
-        onFitView={fitView}
-      />
-
-      <div className="h-[calc(100%-5.75rem)]">
+    <div className="h-[calc(100dvh-6rem)] min-h-0 w-full overflow-hidden bg-[var(--glass-bg-canvas)]">
+      <div className="h-full">
         <ReactFlow
           nodes={nodes}
           edges={flowEdges}
@@ -260,8 +288,43 @@ function ProjectWorkspaceCanvasContent({ onAssistantSelectionChange }: ProjectWo
           onlyRenderVisibleElements
         >
           <Background variant={BackgroundVariant.Dots} gap={24} size={1} />
-          <Controls showInteractive={false} />
-          <MiniMap pannable zoomable />
+          <MiniMap
+            pannable
+            zoomable
+            position="bottom-left"
+            bgColor="var(--glass-bg-canvas)"
+            maskColor="rgba(255,255,255,0.34)"
+            maskStrokeColor="rgba(15,23,42,0.28)"
+            nodeColor="rgba(59,130,246,0.72)"
+            nodeStrokeColor="rgba(15,23,42,0.24)"
+            offsetScale={0}
+            className="!z-[60] !m-0 !overflow-hidden !rounded-lg !border !border-[var(--glass-stroke-base)] !bg-[var(--glass-bg-canvas)] !shadow-lg"
+            style={{
+              left: 16,
+              bottom: CANVAS_FLOATING_PANEL_BOTTOM_OFFSET_PX + 72,
+              width: 180,
+              height: 112,
+            }}
+          />
+          <Panel
+            position="bottom-left"
+            className="!z-[70] !m-0"
+            style={{
+              left: 16,
+              bottom: CANVAS_FLOATING_PANEL_BOTTOM_OFFSET_PX + 16,
+            }}
+          >
+            <CanvasViewportControls
+              resetLabel={t('toolbar.resetLayout')}
+              fitViewLabel={t('toolbar.fitView')}
+              zoomInLabel={t('toolbar.zoomIn')}
+              zoomOutLabel={t('toolbar.zoomOut')}
+              onResetLayout={resetLayout}
+              onFitView={fitView}
+              onZoomIn={zoomIn}
+              onZoomOut={zoomOut}
+            />
+          </Panel>
         </ReactFlow>
       </div>
 

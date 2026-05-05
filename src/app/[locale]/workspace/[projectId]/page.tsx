@@ -19,6 +19,10 @@ import { AppIcon } from '@/components/ui/icons'
 import { readConfiguredAnalysisModel, shouldGuideToModelSetup } from '@/lib/workspace/model-setup'
 import { useRouter } from '@/i18n/navigation'
 import { readApiErrorMessage } from '@/lib/api/read-error-message'
+import {
+  HOME_ASSISTANT_AUTOSTART_QUERY,
+  HOME_ASSISTANT_AUTOSTART_VALUE,
+} from '@/lib/home/create-project-launch'
 
 interface Episode {
   id: string
@@ -50,6 +54,7 @@ export default function ProjectDetailPage() {
 
   // 从URL读取参数
   const urlEpisodeId = searchParams.get('episode') ?? null
+  const shouldAutoStartAssistant = searchParams.get(HOME_ASSISTANT_AUTOSTART_QUERY) === HOME_ASSISTANT_AUTOSTART_VALUE
 
   // 🔥 React Query 数据获取
   const queryClient = useQueryClient()
@@ -67,13 +72,23 @@ export default function ProjectDetailPage() {
   const userModelsQuery = useUserModels()
   const llmModelOptions = userModelsQuery.data?.llm || []
 
-  const updateUrlParams = useCallback((updates: { episode?: string | null }) => {
+  const updateUrlParams = useCallback((updates: {
+    episode?: string | null
+    assistantAutoStart?: string | null
+  }) => {
     const params = new URLSearchParams(searchParams.toString())
     if (updates.episode !== undefined) {
       if (updates.episode) {
         params.set('episode', updates.episode)
       } else {
         params.delete('episode')
+      }
+    }
+    if (updates.assistantAutoStart !== undefined) {
+      if (updates.assistantAutoStart) {
+        params.set(HOME_ASSISTANT_AUTOSTART_QUERY, updates.assistantAutoStart)
+      } else {
+        params.delete(HOME_ASSISTANT_AUTOSTART_QUERY)
       }
     }
     const query = Object.fromEntries(params.entries())
@@ -85,6 +100,9 @@ export default function ProjectDetailPage() {
       { scroll: false },
     )
   }, [router, projectId, searchParams])
+  const clearAssistantAutoStart = useCallback(() => {
+    updateUrlParams({ assistantAutoStart: null })
+  }, [updateUrlParams])
 
   // 获取剧集列表
   const episodes = useMemo<Episode[]>(() => {
@@ -317,6 +335,7 @@ export default function ProjectDetailPage() {
   // 排除：如果要显示导入向导，则不需要等待剧集数据
   const isInitializing = loading ||
     (!shouldShowImportWizard && !isGlobalAssetsView && episodes.length > 0 && (!selectedEpisodeId || !currentEpisode))
+  const isEpisodeWorkspaceReady = !isGlobalAssetsView && !shouldShowImportWizard && Boolean(selectedEpisodeId && currentEpisode)
   const initLoadingState = resolveTaskPresentationState({
     phase: 'processing',
     intent: 'generate',
@@ -363,7 +382,7 @@ export default function ProjectDetailPage() {
 
       {/* 主内容区 - 占满全部宽度 */}
       <main className="flex-1 overflow-y-auto">
-        <div className="w-full px-4 py-8">
+        <div className={isEpisodeWorkspaceReady ? 'w-full' : 'w-full px-4 py-8'}>
           {isGlobalAssetsView ? (
             // 全局资产视图（确保数据准备好）
             <div>
@@ -487,6 +506,13 @@ export default function ProjectDetailPage() {
               episode={currentEpisode}
               viewMode="episode"
               episodes={episodes}
+              assistantAutoStartMessage={shouldAutoStartAssistant
+                ? t('assistantAutoStart.homeStory')
+                : null}
+              assistantAutoStartKey={shouldAutoStartAssistant
+                ? `${projectId}:${selectedEpisodeId}:home-story`
+                : null}
+              onAssistantAutoStartConsumed={clearAssistantAutoStart}
               onEpisodeSelect={handleEpisodeSelect}
               onEpisodeCreate={() => handleCreateEpisode(`${t('episode')} ${episodes.length + 1}`)}
               onEpisodeRename={handleRenameEpisode}

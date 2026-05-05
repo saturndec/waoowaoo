@@ -160,7 +160,8 @@
     "scriptToStoryboardRunning": "Script→Storyboard V2 running",
     "storyToScriptFailed": "Story to script failed",
     "scriptToStoryboardFailed": "Script to storyboard failed",
-    "assistantPlanRequired": "Fixed flow entry points have been removed. Describe the goal in the AI assistant so it can search skills, create a plan, and run atomic operations.",
+    "assistantPlanRequired": "Describe the goal in the AI assistant so it can decide the next step freely.",
+    "assistantPlanRequest": "Read the current story from project context, then decide freely what should happen next. You may search and load relevant Skills, create and validate a plan, and ask for confirmation before any write, long-running, or billable operation.",
     "taskStreamTimeout": "Task timed out. The task may still be running in the background — please check its status or retry"
   },
   "rebuildConfirm": {
@@ -233,10 +234,12 @@
       "layoutWarning": "Canvas layout could not sync. The default node layout remains available.",
       "toolbar": {
         "resetLayout": "Reset Layout",
-        "fitView": "Fit View"
+        "fitView": "Fit View",
+        "zoomIn": "Zoom In",
+        "zoomOut": "Zoom Out"
       },
       "actions": {
-        "generateScript": "Generate Script",
+        "generateScript": "Ask AI to Create",
         "generateStoryboard": "Generate Storyboard",
         "generateImage": "Generate Image",
         "regenerateImage": "Regenerate",

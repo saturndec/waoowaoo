@@ -1,6 +1,9 @@
 import { readApiErrorMessage } from '@/lib/api/read-error-message'
 import type { StylePresetRef } from '@/lib/style-preset/types'
 
+export const HOME_ASSISTANT_AUTOSTART_QUERY = 'assistantAutoStart' as const
+export const HOME_ASSISTANT_AUTOSTART_VALUE = 'home-story' as const
+
 interface ProjectCreationPayload {
   project?: {
     id?: string | null
@@ -21,6 +24,7 @@ export interface HomeWorkspaceLaunchTarget {
   pathname: string
   query: {
     episode: string
+    [HOME_ASSISTANT_AUTOSTART_QUERY]?: typeof HOME_ASSISTANT_AUTOSTART_VALUE
   }
 }
 
@@ -80,6 +84,7 @@ export function buildHomeWorkspaceLaunchTarget(projectId: string, episodeId: str
     pathname: `/workspace/${projectId}`,
     query: {
       episode: episodeId,
+      [HOME_ASSISTANT_AUTOSTART_QUERY]: HOME_ASSISTANT_AUTOSTART_VALUE,
     },
   }
 }

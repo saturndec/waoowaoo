@@ -27,6 +27,9 @@ export interface ProjectWorkspaceProps {
   episode?: Episode | null
   viewMode?: 'global-assets' | 'episode'
   episodes?: Episode[]
+  assistantAutoStartMessage?: string | null
+  assistantAutoStartKey?: string | null
+  onAssistantAutoStartConsumed?: () => void
   onEpisodeSelect?: (episodeId: string) => void
   onEpisodeCreate?: () => void
   onEpisodeRename?: (episodeId: string, newName: string) => void

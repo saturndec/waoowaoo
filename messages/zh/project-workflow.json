@@ -160,7 +160,8 @@
     "scriptToStoryboardRunning": "Script→Storyboard V2 运行中",
     "storyToScriptFailed": "内容转剧本失败",
     "scriptToStoryboardFailed": "剧本转分镜失败",
-    "assistantPlanRequired": "固定流程入口已移除。请在右侧 AI 助手中描述目标，让助手搜索技能、生成计划并按原子操作执行。",
+    "assistantPlanRequired": "请在右侧 AI 助手中描述目标，让助手自由判断下一步。",
+    "assistantPlanRequest": "请读取当前项目上下文里的故事内容，然后自由判断下一步该怎么做。你可以搜索并加载合适的 Skill，创建并校验计划；如果需要写入、长任务或计费操作，请先请求确认。",
     "taskStreamTimeout": "任务执行超时，请检查任务是否仍在运行，或重新触发"
   },
   "rebuildConfirm": {
@@ -233,10 +234,12 @@
       "layoutWarning": "画布布局暂时无法同步，当前仍使用默认节点布局。",
       "toolbar": {
         "resetLayout": "重置布局",
-        "fitView": "适配视图"
+        "fitView": "适配视图",
+        "zoomIn": "放大",
+        "zoomOut": "缩小"
       },
       "actions": {
-        "generateScript": "生成剧本",
+        "generateScript": "交给 AI 创作",
         "generateStoryboard": "生成分镜",
         "generateImage": "生成图片",
         "regenerateImage": "重新生成",

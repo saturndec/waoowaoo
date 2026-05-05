@@ -2,6 +2,8 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import {
   buildHomeWorkspaceLaunchTarget,
   createHomeProjectLaunch,
+  HOME_ASSISTANT_AUTOSTART_QUERY,
+  HOME_ASSISTANT_AUTOSTART_VALUE,
 } from '@/lib/home/create-project-launch'
 
 function buildJsonResponse(body: unknown, status = 200): Response {
@@ -16,7 +18,7 @@ describe('createHomeProjectLaunch', () => {
     vi.restoreAllMocks()
   })
 
-  it('creates project, config, first episode, and returns an auto-run workspace target', async () => {
+  it('creates project, config, first episode, and returns an assistant auto-start workspace target', async () => {
     const apiFetch = vi
       .fn<(
         input: string,
@@ -71,6 +73,7 @@ describe('createHomeProjectLaunch', () => {
         pathname: '/workspace/project-1',
         query: {
           episode: 'episode-1',
+          [HOME_ASSISTANT_AUTOSTART_QUERY]: HOME_ASSISTANT_AUTOSTART_VALUE,
         },
       },
     })
@@ -102,11 +105,12 @@ describe('createHomeProjectLaunch', () => {
 })
 
 describe('buildHomeWorkspaceLaunchTarget', () => {
-  it('points workspace launch to the created episode', () => {
+  it('points workspace launch to the created episode and asks assistant to react once', () => {
     expect(buildHomeWorkspaceLaunchTarget('project-9', 'episode-4')).toEqual({
       pathname: '/workspace/project-9',
       query: {
         episode: 'episode-4',
+        [HOME_ASSISTANT_AUTOSTART_QUERY]: HOME_ASSISTANT_AUTOSTART_VALUE,
       },
     })
   })
