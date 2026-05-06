@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState, type PointerEvent as ReactPointerEvent } from 'react'
 import { useLocale, useTranslations } from 'next-intl'
 import {
   AssistantRuntimeProvider,
@@ -23,7 +23,12 @@ import { WorkspaceAssistantModePicker } from './workspace-assistant/WorkspaceAss
 import { WorkspaceAssistantPanelHeader } from './workspace-assistant/WorkspaceAssistantPanelHeader'
 import { WorkspaceAssistantPanelRail } from './workspace-assistant/WorkspaceAssistantPanelRail'
 import { WorkspaceAssistantRawContextDialog } from './workspace-assistant/WorkspaceAssistantRawContextDialog'
-import { buildWorkspaceAssistantPanelLayout, WORKSPACE_ASSISTANT_TOP_OFFSET } from './workspace-assistant/panel-layout'
+import {
+  buildWorkspaceAssistantPanelLayout,
+  clampWorkspaceAssistantPanelWidth,
+  WORKSPACE_ASSISTANT_PANEL_WIDTH_PX,
+  WORKSPACE_ASSISTANT_TOP_OFFSET,
+} from './workspace-assistant/panel-layout'
 import {
   isWorkspaceAssistantSendMessageEvent,
   WORKSPACE_ASSISTANT_SEND_MESSAGE_EVENT,
@@ -40,6 +45,8 @@ interface WorkspaceAssistantPanelProps {
   isCollapsed: boolean
   onToggleCollapsed: () => void
 }
+
+const WORKSPACE_ASSISTANT_WIDTH_STORAGE_KEY = 'workspace-assistant-panel-width'
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return !!value && typeof value === 'object' && !Array.isArray(value)
@@ -64,6 +71,16 @@ function readOperationResultSummary(payload: unknown): string {
   return [status, taskId || runId].filter(Boolean).join(' · ')
 }
 
+function readStoredAssistantPanelWidth(): number {
+  if (typeof window === 'undefined') return WORKSPACE_ASSISTANT_PANEL_WIDTH_PX
+  const storedValue = window.localStorage.getItem(WORKSPACE_ASSISTANT_WIDTH_STORAGE_KEY)
+  if (!storedValue) return WORKSPACE_ASSISTANT_PANEL_WIDTH_PX
+  const parsedValue = Number(storedValue)
+  return Number.isFinite(parsedValue)
+    ? clampWorkspaceAssistantPanelWidth(parsedValue)
+    : WORKSPACE_ASSISTANT_PANEL_WIDTH_PX
+}
+
 export default function WorkspaceAssistantPanel({
   projectId,
   episodeId,
@@ -76,7 +93,14 @@ export default function WorkspaceAssistantPanel({
 }: WorkspaceAssistantPanelProps) {
   const t = useTranslations('assistantAgent')
   const locale = useLocale()
-  const layout = buildWorkspaceAssistantPanelLayout(isCollapsed)
+  const [assistantPanelWidth, setAssistantPanelWidth] = useState(readStoredAssistantPanelWidth)
+  const [isResizing, setIsResizing] = useState(false)
+  const resizeStateRef = useRef<{
+    startX: number
+    startWidth: number
+    currentWidth: number
+  } | null>(null)
+  const layout = buildWorkspaceAssistantPanelLayout(isCollapsed, assistantPanelWidth)
   const [interactionMode, setInteractionMode] = useState<'auto' | 'plan' | 'fast'>('auto')
   const [rawContextOpen, setRawContextOpen] = useState(false)
   const assistantRuntime = useWorkspaceAssistantRuntime({
@@ -212,14 +236,6 @@ export default function WorkspaceAssistantPanel({
     onCancelOperation: handleCancelOperation,
     confirmationSubmittingKey,
   })
-  const statusText = assistantRuntime.syncError
-    || assistantRuntime.storageError
-    || assistantRuntime.error?.message
-    || (assistantRuntime.pending
-      ? t('panel.streaming')
-      : assistantRuntime.storageLoading
-        ? t('panel.loading')
-        : t('panel.statusReady'))
   const modeOptions = useMemo(() => ([
     {
       value: 'auto' as const,
@@ -243,6 +259,52 @@ export default function WorkspaceAssistantPanel({
     return `/api/projects/${projectId}/assistant/chat/log?${search.toString()}`
   }, [episodeId, projectId])
 
+  const handleResizePointerDown = useCallback((event: ReactPointerEvent<HTMLButtonElement>) => {
+    if (isCollapsed) return
+    event.preventDefault()
+    resizeStateRef.current = {
+      startX: event.clientX,
+      startWidth: assistantPanelWidth,
+      currentWidth: assistantPanelWidth,
+    }
+    setIsResizing(true)
+  }, [assistantPanelWidth, isCollapsed])
+
+  useEffect(() => {
+    if (!isResizing) return
+
+    const previousCursor = document.body.style.cursor
+    const previousUserSelect = document.body.style.userSelect
+    document.body.style.cursor = 'ew-resize'
+    document.body.style.userSelect = 'none'
+
+    const handlePointerMove = (event: PointerEvent) => {
+      const resizeState = resizeStateRef.current
+      if (!resizeState) return
+      const nextWidth = clampWorkspaceAssistantPanelWidth(
+        resizeState.startWidth + resizeState.startX - event.clientX,
+      )
+      resizeState.currentWidth = nextWidth
+      setAssistantPanelWidth(nextWidth)
+    }
+
+    const handlePointerUp = () => {
+      const currentWidth = resizeStateRef.current?.currentWidth ?? assistantPanelWidth
+      window.localStorage.setItem(WORKSPACE_ASSISTANT_WIDTH_STORAGE_KEY, String(currentWidth))
+      resizeStateRef.current = null
+      setIsResizing(false)
+    }
+
+    window.addEventListener('pointermove', handlePointerMove)
+    window.addEventListener('pointerup', handlePointerUp, { once: true })
+    return () => {
+      window.removeEventListener('pointermove', handlePointerMove)
+      window.removeEventListener('pointerup', handlePointerUp)
+      document.body.style.cursor = previousCursor
+      document.body.style.userSelect = previousUserSelect
+    }
+  }, [assistantPanelWidth, isResizing])
+
   return (
     <aside
       className="pointer-events-none fixed inset-y-0 right-0 z-20 w-0"
@@ -250,7 +312,7 @@ export default function WorkspaceAssistantPanel({
       data-state={layout.state}
     >
       <div
-        className="pointer-events-auto fixed right-4 z-20 overflow-hidden rounded-[34px] border border-white/80 bg-white/82 shadow-[0_34px_100px_rgba(15,23,42,0.2)] ring-1 ring-[var(--glass-stroke-base)]/70 backdrop-blur-2xl transition-[width] duration-300 ease-out"
+        className={`pointer-events-auto fixed right-4 z-20 overflow-hidden rounded-[34px] border border-white/80 bg-white/82 ring-1 ring-[var(--glass-stroke-base)]/70 backdrop-blur-2xl ${isResizing ? '' : 'transition-[width] duration-300 ease-out'}`}
         style={{
           top: WORKSPACE_ASSISTANT_TOP_OFFSET,
           width: `${layout.panelWidthPx}px`,
@@ -258,6 +320,15 @@ export default function WorkspaceAssistantPanel({
         }}
         data-state={layout.state}
       >
+        {!isCollapsed ? (
+          <button
+            type="button"
+            aria-label={t('panel.resize')}
+            title={t('panel.resize')}
+            className="absolute inset-y-0 left-0 z-30 w-2 cursor-ew-resize bg-transparent"
+            onPointerDown={handleResizePointerDown}
+          />
+        ) : null}
         <div
           className={`h-full transition-opacity duration-200 ${isCollapsed ? 'pointer-events-none opacity-0' : 'opacity-100'}`}
           aria-hidden={isCollapsed}
@@ -302,7 +373,7 @@ export default function WorkspaceAssistantPanel({
 
             <ThreadPrimitive.Viewport
               autoScroll
-              className="flex-1 overflow-y-auto px-5 pb-44 pt-2"
+              className="flex-1 overflow-y-auto px-5 pb-4 pt-2"
             >
               <div className="space-y-3">
                 {pendingActionItems.length > 0 ? (
@@ -348,13 +419,14 @@ export default function WorkspaceAssistantPanel({
               </div>
             </ThreadPrimitive.Viewport>
 
-            <div className="absolute inset-x-4 bottom-4 rounded-[26px] bg-white/92 p-3 shadow-[0_12px_34px_rgba(15,23,42,0.08)] backdrop-blur-xl">
+            <div className="mx-4 mb-3 shrink-0 rounded-[22px] border border-[var(--glass-stroke-base)] bg-white/92 p-2.5 backdrop-blur-xl">
               <ComposerPrimitive.Root>
                 <ComposerPrimitive.Input
+                  rows={1}
                   placeholder={t('panel.composerPlaceholder')}
-                  className="min-h-20 w-full resize-none rounded-[18px] bg-[var(--glass-bg-muted)] px-4 py-3 text-sm leading-6 text-[var(--glass-text-primary)] outline-none placeholder:text-[var(--glass-text-tertiary)]"
+                  className="max-h-[5.5rem] min-h-9 w-full resize-none overflow-y-auto rounded-[14px] bg-[var(--glass-bg-muted)] px-3.5 py-2 text-sm leading-5 text-[var(--glass-text-primary)] outline-none [field-sizing:content] placeholder:text-[var(--glass-text-tertiary)]"
                 />
-                <div className="mt-3 flex items-center justify-between gap-3">
+                <div className="mt-2 flex items-center justify-between gap-2">
                   <div className="flex min-w-0 flex-1 items-center gap-2">
                     <WorkspaceAssistantModePicker
                       value={interactionMode}
@@ -362,20 +434,8 @@ export default function WorkspaceAssistantPanel({
                       onChange={setInteractionMode}
                       label={t('panel.modeLabel')}
                     />
-                    <div
-                      className={`inline-flex min-w-0 items-center gap-2 rounded-full border px-3 py-2 text-xs ${
-                        assistantRuntime.error
-                          ? 'border-[rgba(239,68,68,0.22)] bg-[rgba(239,68,68,0.08)] text-[rgba(239,68,68,0.92)]'
-                        : assistantRuntime.pending
-                            ? 'border-[var(--glass-stroke-base)] bg-[var(--glass-bg-muted)] text-[var(--glass-text-secondary)]'
-                            : 'border-[var(--glass-stroke-base)] bg-[var(--glass-bg-muted)] text-[var(--glass-text-secondary)]'
-                      }`}
-                    >
-                      <span className={`h-2 w-2 rounded-full bg-[var(--glass-text-secondary)] ${assistantRuntime.pending ? 'animate-pulse' : ''}`} />
-                      <span className="truncate">{statusText}</span>
-                    </div>
                   </div>
-                  <ComposerPrimitive.Send className="rounded-[16px] bg-[var(--glass-text-primary)] px-5 py-2.5 text-sm font-semibold text-white disabled:opacity-60">
+                  <ComposerPrimitive.Send className="h-10 rounded-[14px] bg-[var(--glass-text-primary)] px-4 text-sm font-semibold text-white disabled:opacity-60">
                     {assistantRuntime.pending ? t('panel.sending') : t('panel.send')}
                   </ComposerPrimitive.Send>
                 </div>

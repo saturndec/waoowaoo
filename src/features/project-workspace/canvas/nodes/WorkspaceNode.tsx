@@ -361,61 +361,63 @@ export default function WorkspaceNode({ data }: NodeProps<WorkspaceCanvasFlowNod
   }, [data.body])
 
   return (
-    <article className="h-full overflow-hidden rounded-[24px] border border-slate-200 bg-white/92 shadow-[0_18px_48px_rgba(15,23,42,0.08)] backdrop-blur-xl">
-      {hasTarget ? <Handle type="target" position={Position.Left} className="!h-3.5 !w-3.5 !border-2 !border-white !bg-slate-500 !shadow-sm" /> : null}
-      {hasSource ? <Handle type="source" position={Position.Right} className="!h-3.5 !w-3.5 !border-2 !border-white !bg-slate-500 !shadow-sm" /> : null}
+    <div className="relative h-full overflow-visible">
+      {hasTarget ? <Handle type="target" position={Position.Left} className="!z-10 !h-3.5 !w-3.5 !border-2 !border-white !bg-slate-500 !shadow-sm" /> : null}
+      {hasSource ? <Handle type="source" position={Position.Right} className="!z-10 !h-3.5 !w-3.5 !border-2 !border-white !bg-slate-500 !shadow-sm" /> : null}
 
-      <header className="flex items-start justify-between gap-4 border-b border-slate-100 px-5 py-4">
-        <div className="min-w-0">
-          <div className="flex items-center gap-2 text-[12px] font-semibold text-[var(--glass-text-tertiary)]">
-            <span className="inline-flex h-7 w-7 items-center justify-center rounded-[11px] bg-slate-100 text-[var(--glass-text-secondary)]">
-              <AppIcon name={nodeIconName(data.kind)} className="h-4 w-4" />
-            </span>
-            {data.indexLabel ? (
-              <span className="inline-flex h-6 min-w-6 items-center justify-center rounded-full bg-slate-100 px-2 text-[11px] font-semibold text-[var(--glass-text-secondary)]">
-                {data.indexLabel}
+      <article className="h-full overflow-hidden rounded-[24px] border border-slate-200 bg-white/92 shadow-[0_18px_48px_rgba(15,23,42,0.08)] backdrop-blur-xl">
+        <header className="flex items-start justify-between gap-4 border-b border-slate-100 px-5 py-4">
+          <div className="min-w-0">
+            <div className="flex items-center gap-2 text-[12px] font-semibold text-[var(--glass-text-tertiary)]">
+              <span className="inline-flex h-7 w-7 items-center justify-center rounded-[11px] bg-slate-100 text-[var(--glass-text-secondary)]">
+                <AppIcon name={nodeIconName(data.kind)} className="h-4 w-4" />
               </span>
-            ) : null}
-            <p className="truncate">
-              {data.eyebrow}
-            </p>
+              {data.indexLabel ? (
+                <span className="inline-flex h-6 min-w-6 items-center justify-center rounded-full bg-slate-100 px-2 text-[11px] font-semibold text-[var(--glass-text-secondary)]">
+                  {data.indexLabel}
+                </span>
+              ) : null}
+              <p className="truncate">
+                {data.eyebrow}
+              </p>
+            </div>
+            <h2 className="mt-2 truncate text-xl font-semibold tracking-tight text-[var(--glass-text-primary)]">{data.title}</h2>
           </div>
-          <h2 className="mt-2 truncate text-xl font-semibold tracking-tight text-[var(--glass-text-primary)]">{data.title}</h2>
-        </div>
-        <span className="shrink-0 rounded-full border border-slate-200 bg-white px-3 py-1.5 text-sm font-medium text-[var(--glass-text-secondary)]">
-          {data.statusLabel}
-        </span>
-      </header>
+          <span className="shrink-0 rounded-full border border-slate-200 bg-white px-3 py-1.5 text-sm font-medium text-[var(--glass-text-secondary)]">
+            {data.statusLabel}
+          </span>
+        </header>
 
-      <div className="space-y-4 px-5 py-5">
-        <NodeContent data={data} draft={storyDraft} setDraft={setStoryDraft} labels={labels} />
+        <div className="space-y-4 px-5 py-5">
+          <NodeContent data={data} draft={storyDraft} setDraft={setStoryDraft} labels={labels} />
 
-        <div className="flex items-center justify-between gap-3 border-t border-slate-100 pt-4">
-          <p className="min-w-0 truncate text-xs text-[var(--glass-text-tertiary)]">{data.meta}</p>
-          <div className="flex shrink-0 items-center gap-1.5">
-            {detailNodeId && data.kind !== 'analysis' ? (
-              <button
-                type="button"
-                className="nodrag inline-flex items-center gap-1.5 rounded-[14px] border border-slate-200 bg-white px-3 py-2.5 text-xs font-semibold text-[var(--glass-text-secondary)] shadow-sm transition hover:bg-slate-50"
-                onClick={() => data.onAction?.({ type: 'open_details', nodeId: detailNodeId })}
-              >
-                <AppIcon name="edit" className="h-3.5 w-3.5" />
-                {labels('openDetails')}
-              </button>
-            ) : null}
-            {action && data.actionLabel ? (
-              <button
-                type="button"
-                className="nodrag inline-flex items-center gap-1.5 rounded-[14px] bg-slate-950 px-3 py-2.5 text-xs font-semibold text-white transition hover:bg-slate-900"
-                onClick={() => data.onAction?.(action)}
-              >
-                <AppIcon name="arrowRight" className="h-3.5 w-3.5" />
-                {data.actionLabel}
-              </button>
-            ) : null}
+          <div className="flex items-center justify-between gap-3 border-t border-slate-100 pt-4">
+            <p className="min-w-0 truncate text-xs text-[var(--glass-text-tertiary)]">{data.meta}</p>
+            <div className="flex shrink-0 items-center gap-1.5">
+              {detailNodeId && data.kind !== 'analysis' ? (
+                <button
+                  type="button"
+                  className="nodrag inline-flex items-center gap-1.5 rounded-[14px] border border-slate-200 bg-white px-3 py-2.5 text-xs font-semibold text-[var(--glass-text-secondary)] shadow-sm transition hover:bg-slate-50"
+                  onClick={() => data.onAction?.({ type: 'open_details', nodeId: detailNodeId })}
+                >
+                  <AppIcon name="edit" className="h-3.5 w-3.5" />
+                  {labels('openDetails')}
+                </button>
+              ) : null}
+              {action && data.actionLabel ? (
+                <button
+                  type="button"
+                  className="nodrag inline-flex items-center gap-1.5 rounded-[14px] bg-slate-950 px-3 py-2.5 text-xs font-semibold text-white transition hover:bg-slate-900"
+                  onClick={() => data.onAction?.(action)}
+                >
+                  <AppIcon name="arrowRight" className="h-3.5 w-3.5" />
+                  {data.actionLabel}
+                </button>
+              ) : null}
+            </div>
           </div>
         </div>
-      </div>
-    </article>
+      </article>
+    </div>
   )
 }

@@ -5,6 +5,9 @@ import { WorkspaceAssistantPanelHeader } from '@/features/project-workspace/comp
 import { WorkspaceAssistantPanelRail } from '@/features/project-workspace/components/workspace-assistant/WorkspaceAssistantPanelRail'
 import {
   buildWorkspaceAssistantPanelLayout,
+  clampWorkspaceAssistantPanelWidth,
+  WORKSPACE_ASSISTANT_PANEL_MAX_WIDTH_PX,
+  WORKSPACE_ASSISTANT_PANEL_MIN_WIDTH_PX,
   WORKSPACE_ASSISTANT_PANEL_WIDTH_PX,
   WORKSPACE_ASSISTANT_RAIL_WIDTH_PX,
 } from '@/features/project-workspace/components/workspace-assistant/panel-layout'
@@ -18,6 +21,18 @@ describe('workspace assistant panel layout', () => {
       translateXPx: 0,
       state: 'expanded',
     })
+  })
+
+  it('clamps custom expanded width into the supported resize range', () => {
+    expect(buildWorkspaceAssistantPanelLayout(false, 640)).toEqual({
+      occupiedWidthPx: 0,
+      panelWidthPx: 640,
+      railWidthPx: WORKSPACE_ASSISTANT_RAIL_WIDTH_PX,
+      translateXPx: 0,
+      state: 'expanded',
+    })
+    expect(clampWorkspaceAssistantPanelWidth(200)).toBe(WORKSPACE_ASSISTANT_PANEL_MIN_WIDTH_PX)
+    expect(clampWorkspaceAssistantPanelWidth(1200)).toBe(WORKSPACE_ASSISTANT_PANEL_MAX_WIDTH_PX)
   })
 
   it('keeps the right-side overlay out of canvas layout when collapsed', () => {

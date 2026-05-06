@@ -84,15 +84,10 @@ export function WorkspaceAssistantModePicker(props: WorkspaceAssistantModePicker
       <button
         ref={triggerRef}
         type="button"
-        className="inline-flex min-w-[96px] max-w-[112px] items-center justify-between gap-2 rounded-2xl border border-[var(--glass-stroke-base)] bg-[var(--glass-bg-muted)]/90 px-3 py-2 text-left text-[13px] text-[var(--glass-text-primary)] transition hover:border-[var(--glass-accent-from)]/35 hover:bg-[var(--glass-bg-surface)]"
+        className="inline-flex h-10 min-w-[76px] items-center justify-between gap-2 rounded-full bg-[var(--glass-bg-muted)] px-3 text-left text-sm font-medium text-[var(--glass-text-primary)] transition hover:bg-[var(--glass-bg-surface)]"
         onClick={() => setOpen((current) => !current)}
       >
-        <span className="flex min-w-0 flex-col">
-          <span className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--glass-text-tertiary)]">
-            {props.label}
-          </span>
-          <span className="truncate font-medium">{selectedOption?.label}</span>
-        </span>
+        <span className="truncate">{selectedOption?.label}</span>
         <AppIcon name="chevronDown" className={`h-4 w-4 shrink-0 text-[var(--glass-text-tertiary)] transition-transform ${open ? 'rotate-180' : ''}`} />
       </button>
 

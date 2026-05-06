@@ -375,14 +375,14 @@ export default function ProjectDetailPage() {
   }
 
   return (
-    <div className="glass-page min-h-screen flex flex-col">
+    <div className={isEpisodeWorkspaceReady ? 'glass-page flex h-[100dvh] flex-col overflow-hidden' : 'glass-page min-h-screen flex flex-col'}>
       <Navbar />
 
       {/* V3 UI: 浮动导航替代了旧的 Sidebar */}
 
       {/* 主内容区 - 占满全部宽度 */}
-      <main className="flex-1 overflow-y-auto">
-        <div className={isEpisodeWorkspaceReady ? 'w-full' : 'w-full px-4 py-8'}>
+      <main className={isEpisodeWorkspaceReady ? 'min-h-0 flex-1 overflow-hidden' : 'flex-1 overflow-y-auto'}>
+        <div className={isEpisodeWorkspaceReady ? 'h-full w-full overflow-hidden' : 'w-full px-4 py-8'}>
           {isGlobalAssetsView ? (
             // 全局资产视图（确保数据准备好）
             <div>

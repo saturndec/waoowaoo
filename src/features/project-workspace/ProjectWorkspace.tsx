@@ -19,6 +19,7 @@ function ProjectWorkspaceContent(props: ProjectWorkspaceProps) {
   const vm = useProjectWorkspaceController(props)
   const [isAssistantPanelCollapsed, setIsAssistantPanelCollapsed] = useState(false)
   const [assistantSelection, setAssistantSelection] = useState<WorkspaceAssistantSelectionContext>({})
+  const isEpisodeWorkspace = props.viewMode === 'episode'
 
   const {
     project,
@@ -36,7 +37,7 @@ function ProjectWorkspaceContent(props: ProjectWorkspaceProps) {
   }
 
   return (
-    <div>
+    <div className={isEpisodeWorkspace ? 'h-full min-h-0 overflow-hidden' : undefined}>
       <AnimatedBackground />
 
       <WorkspaceHeaderShell
@@ -73,8 +74,8 @@ function ProjectWorkspaceContent(props: ProjectWorkspaceProps) {
         refreshTitle={vm.i18n.t('buttons.refreshData')}
       />
 
-      <div>
-        <div>
+      <div className={isEpisodeWorkspace ? 'h-full min-h-0 overflow-hidden' : undefined}>
+        <div className={isEpisodeWorkspace ? 'h-full min-h-0 overflow-hidden' : undefined}>
           <WorkspaceAssistantPanel
             projectId={projectId}
             episodeId={episodeId}
@@ -86,7 +87,7 @@ function ProjectWorkspaceContent(props: ProjectWorkspaceProps) {
             onToggleCollapsed={() => setIsAssistantPanelCollapsed((current) => !current)}
           />
 
-          <div className="min-w-0">
+          <div className={isEpisodeWorkspace ? 'h-full min-w-0 overflow-hidden' : 'min-w-0'}>
             <WorkspaceRuntimeProvider value={vm.runtime.workspaceRuntime}>
               <ProjectWorkspaceCanvas onAssistantSelectionChange={setAssistantSelection} />
             </WorkspaceRuntimeProvider>

@@ -35,7 +35,7 @@ import type { WorkspaceCanvasFlowEdge, WorkspaceCanvasFlowNode, WorkspaceCanvasN
 
 const DEFAULT_VIEWPORT = { x: 24, y: 136, zoom: 0.82 }
 const EMPTY_SAVED_NODE_LAYOUTS: readonly CanvasNodeLayout[] = []
-const CANVAS_FLOATING_PANEL_BOTTOM_OFFSET_PX = 112
+const CANVAS_FLOATING_PANEL_BOTTOM_OFFSET_PX = 56
 
 export interface WorkspaceAssistantSelectionContext {
   selectedScopeRef?: string | null
@@ -270,7 +270,7 @@ function ProjectWorkspaceCanvasContent({ onAssistantSelectionChange }: ProjectWo
   if (!episodeId) return null
 
   return (
-    <div className="h-[100dvh] min-h-0 w-full overflow-hidden bg-[var(--glass-bg-canvas)]">
+    <div className="h-full min-h-0 w-full overflow-hidden bg-[var(--glass-bg-canvas)]">
       <div className="h-full">
         <ReactFlow
           nodes={nodes}
@@ -288,6 +288,7 @@ function ProjectWorkspaceCanvasContent({ onAssistantSelectionChange }: ProjectWo
           maxZoom={1.25}
           defaultViewport={DEFAULT_VIEWPORT}
           onlyRenderVisibleElements
+          proOptions={{ hideAttribution: true }}
         >
           <Background variant={BackgroundVariant.Dots} gap={24} size={1} />
           <MiniMap
