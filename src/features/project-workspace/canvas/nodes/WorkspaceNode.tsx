@@ -28,6 +28,10 @@ function nodeIconName(kind: WorkspaceCanvasFlowNode['data']['kind']): AppIconNam
       return 'video'
     case 'finalTimeline':
       return 'film'
+    case 'editScript':
+      return 'clipboardCheck'
+    case 'editRequiredAsset':
+      return 'package'
   }
 }
 
@@ -319,6 +323,51 @@ function FinalContent({ data, labels }: { readonly data: WorkspaceCanvasFlowNode
   )
 }
 
+function EditScriptContent({ data, labels }: { readonly data: WorkspaceCanvasFlowNode['data']; readonly labels: ReturnType<typeof useTranslations> }) {
+  const details = data.editScriptDetails
+  if (!details) return <p className="text-sm leading-6 text-[var(--glass-text-secondary)]">{data.body}</p>
+  return (
+    <div className="nodrag nowheel max-h-[288px] space-y-2 overflow-y-auto pr-1">
+      {renderSection(labels('editScriptMeta'), (
+        <div className="space-y-1">
+          {renderValue(labels('totalDuration'), details.durationSec)}
+          {renderValue(labels('shotCount'), details.shotCount)}
+        </div>
+      ))}
+      <div className="space-y-2">
+        {details.shots.map((shot) => (
+          <section key={shot.shotNumber} className="space-y-1.5 rounded-[14px] bg-slate-50 p-3 ring-1 ring-slate-100">
+            <div className="flex items-center justify-between gap-2 text-[10px] font-semibold uppercase text-[var(--glass-text-tertiary)]">
+              <span>{labels('shotIndex', { index: shot.shotNumber })}</span>
+              <span>{shot.durationSec}s</span>
+            </div>
+            {renderValue(labels('description'), shot.visualAction)}
+            {renderValue(labels('charactersAndScene'), shot.charactersAndScene)}
+            {renderValue(labels('cameraMove'), shot.camera)}
+            {renderValue(labels('videoPrompt'), shot.videoPrompt)}
+            {renderValue(labels('sound'), shot.sound)}
+            {renderValue(labels('transition'), shot.transition)}
+          </section>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+function EditAssetContent({ data, labels }: { readonly data: WorkspaceCanvasFlowNode['data']; readonly labels: ReturnType<typeof useTranslations> }) {
+  const details = data.editAssetDetails
+  if (!details) return <p className="text-sm leading-6 text-[var(--glass-text-secondary)]">{data.body}</p>
+  return (
+    <div className="nodrag nowheel max-h-[210px] space-y-2 overflow-y-auto pr-1">
+      <MediaPreview data={data} />
+      {renderSection(labels('description'), renderTextBlock(details.description))}
+      {renderChips(labels('linkedShots'), details.shotNumbers.map((shotNumber) => String(shotNumber)))}
+      {renderValue(labels('targetAsset'), details.targetId)}
+      {renderSection(labels('error'), renderTextBlock(details.errorMessage))}
+    </div>
+  )
+}
+
 function NodeContent({
   data,
   draft,
@@ -345,6 +394,10 @@ function NodeContent({
       return <VideoContent data={data} labels={labels} />
     case 'finalTimeline':
       return <FinalContent data={data} labels={labels} />
+    case 'editScript':
+      return <EditScriptContent data={data} labels={labels} />
+    case 'editRequiredAsset':
+      return <EditAssetContent data={data} labels={labels} />
   }
 }
 

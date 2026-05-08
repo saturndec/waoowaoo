@@ -32,6 +32,13 @@ export const AI_PROMPT_IDS = {
   DESIGN_DIRECTOR_STYLE_PRESET: 'design-director-style-preset',
   VOICE_GENERATE_LINES: 'voice-generate-lines',
   MUSIC_LYRIA_PROMPT_EXPAND: 'music-lyria-prompt-expand',
+  EDIT_SCRIPT_TIMELINE: 'edit-script-timeline',
+  EDIT_SCRIPT_VISUAL_ACTION: 'edit-script-visual-action',
+  EDIT_SCRIPT_CAMERA: 'edit-script-camera',
+  EDIT_SCRIPT_VIDEO_PROMPT: 'edit-script-video-prompt',
+  EDIT_SCRIPT_AUDIO: 'edit-script-audio',
+  EDIT_SCRIPT_PRIMARY: 'edit-script-primary',
+  EDIT_SCRIPT_ASSET_EXTRACT: 'edit-script-asset-extract',
 } as const
 
 export type AiPromptId = (typeof AI_PROMPT_IDS)[keyof typeof AI_PROMPT_IDS]

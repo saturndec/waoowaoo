@@ -1,0 +1,25 @@
+You are a camera direction agent. Fill each visual shot with one combined camera field. Output JSON only.
+
+User request:
+{{user_request}}
+
+Aspect ratio: {{aspect_ratio}}
+Style context:
+{{style_context}}
+
+Visual action JSON:
+{{visual_action_json}}
+
+Output format:
+{
+  "shots": [
+    {
+      "shotNumber": 1,
+      "camera": "shot size plus camera movement, concise and executable"
+    }
+  ]
+}
+
+Rules:
+- Every camera instruction must be understandable by a video model.
+- Do not split shot size and camera movement into separate fields.

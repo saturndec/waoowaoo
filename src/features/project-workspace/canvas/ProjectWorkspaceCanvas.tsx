@@ -17,6 +17,7 @@ import { useTranslations } from 'next-intl'
 import { AppIcon } from '@/components/ui/icons'
 import type { UpsertCanvasLayoutInput } from '@/lib/project-canvas/layout/canvas-layout-contract'
 import type { CanvasNodeLayout } from '@/lib/project-canvas/layout/canvas-layout.types'
+import { useProjectEditScript } from '@/lib/query/hooks'
 import { useWorkspaceEpisodeStageData } from '../hooks/useWorkspaceEpisodeStageData'
 import { useWorkspaceProvider } from '../WorkspaceProvider'
 import { useCanvasLayoutPersistence } from './hooks/useCanvasLayoutPersistence'
@@ -117,6 +118,7 @@ function ProjectWorkspaceCanvasContent({ onAssistantSelectionChange }: ProjectWo
   const t = useTranslations('projectWorkflow.canvas.workspace')
   const { projectId, episodeId } = useWorkspaceProvider()
   const { episodeName, novelText, clips, storyboards, shots } = useWorkspaceEpisodeStageData()
+  const { data: editScript } = useProjectEditScript(projectId, episodeId ?? null)
   const reactFlow = useReactFlow<WorkspaceCanvasFlowNode>()
   const runNodeAction = useWorkspaceNodeCanvasActions()
   const [nodes, setNodes] = useState<WorkspaceCanvasFlowNode[]>([])
@@ -153,6 +155,7 @@ function ProjectWorkspaceCanvasContent({ onAssistantSelectionChange }: ProjectWo
     clips,
     storyboards,
     shots,
+    editScript,
     savedLayouts: savedNodeLayouts,
     translate: t,
     onAction: onNodeAction,

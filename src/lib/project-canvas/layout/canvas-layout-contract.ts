@@ -11,6 +11,8 @@ export const projectCanvasNodeTypeSchema = z.enum([
   'imageAsset',
   'videoClip',
   'finalTimeline',
+  'editScript',
+  'editRequiredAsset',
 ])
 
 export type CanvasLayoutNodeType = z.infer<typeof projectCanvasNodeTypeSchema>
@@ -21,6 +23,8 @@ export const projectCanvasTargetTypeSchema = z.enum([
   'clip',
   'storyboard',
   'panel',
+  'editScript',
+  'editAssetRequirement',
 ])
 
 const finiteNumberSchema = z.number().finite()

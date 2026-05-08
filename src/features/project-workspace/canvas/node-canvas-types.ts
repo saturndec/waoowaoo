@@ -9,8 +9,10 @@ export type WorkspaceCanvasNodeKind =
   | 'imageAsset'
   | 'videoClip'
   | 'finalTimeline'
+  | 'editScript'
+  | 'editRequiredAsset'
 
-export type WorkspaceCanvasTargetType = 'episode' | 'clip' | 'panel'
+export type WorkspaceCanvasTargetType = 'episode' | 'clip' | 'panel' | 'editScript' | 'editAssetRequirement'
 
 export type WorkspaceCanvasNodeAction =
   | { readonly type: 'open_details'; readonly nodeId: string }
@@ -78,6 +80,7 @@ export type WorkspaceCanvasNodeAction =
   | { readonly type: 'update_panel_video_model'; readonly storyboardId: string; readonly panelIndex: number; readonly model: string }
   | { readonly type: 'toggle_panel_link'; readonly storyboardId: string; readonly panelIndex: number; readonly linked: boolean }
   | { readonly type: 'generate_all_videos' }
+  | { readonly type: 'generate_edit_assets'; readonly editScriptId: string }
 
 export type WorkspaceCanvasNodeActionHandler = (action: WorkspaceCanvasNodeAction) => void
 
@@ -171,6 +174,29 @@ export interface WorkspaceCanvasFinalDetails {
   readonly orderedVideoLabels: readonly string[]
 }
 
+export interface WorkspaceCanvasEditScriptDetails {
+  readonly durationSec: number
+  readonly shotCount: number
+  readonly shots: readonly {
+    readonly shotNumber: number
+    readonly durationSec: number
+    readonly visualAction: string
+    readonly charactersAndScene: string
+    readonly camera: string
+    readonly videoPrompt: string
+    readonly sound: string
+    readonly transition: string
+  }[]
+}
+
+export interface WorkspaceCanvasEditAssetDetails {
+  readonly kind: 'character' | 'location'
+  readonly description: string
+  readonly shotNumbers: readonly number[]
+  readonly targetId?: string | null
+  readonly errorMessage?: string | null
+}
+
 export interface WorkspaceCanvasNodeData extends Record<string, unknown> {
   readonly nodeId?: string
   readonly projectId?: string
@@ -196,6 +222,8 @@ export interface WorkspaceCanvasNodeData extends Record<string, unknown> {
   readonly imageDetails?: WorkspaceCanvasImageDetails
   readonly videoDetails?: WorkspaceCanvasVideoDetails
   readonly finalDetails?: WorkspaceCanvasFinalDetails
+  readonly editScriptDetails?: WorkspaceCanvasEditScriptDetails
+  readonly editAssetDetails?: WorkspaceCanvasEditAssetDetails
 }
 
 export type WorkspaceCanvasFlowNode = Node<WorkspaceCanvasNodeData, 'workspaceNode'>

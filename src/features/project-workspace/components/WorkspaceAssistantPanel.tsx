@@ -19,6 +19,7 @@ import {
 import { createAssistantMessage } from './workspace-assistant/assistant-messages'
 import { useWorkspaceAssistantRuntime } from './workspace-assistant/useWorkspaceAssistantRuntime'
 import { apiFetch } from '@/lib/api-fetch'
+import { EditFirstComposer } from './workspace-assistant/EditFirstComposer'
 import { WorkspaceAssistantModePicker } from './workspace-assistant/WorkspaceAssistantModePicker'
 import { WorkspaceAssistantPanelHeader } from './workspace-assistant/WorkspaceAssistantPanelHeader'
 import { WorkspaceAssistantPanelRail } from './workspace-assistant/WorkspaceAssistantPanelRail'
@@ -420,6 +421,11 @@ export default function WorkspaceAssistantPanel({
             </ThreadPrimitive.Viewport>
 
             <div className="mx-4 mb-3 shrink-0 rounded-[22px] border border-[var(--glass-stroke-base)] bg-white/92 p-2.5 backdrop-blur-xl">
+              <EditFirstComposer
+                projectId={projectId}
+                episodeId={episodeId}
+                appendMessages={assistantRuntime.appendMessages}
+              />
               <ComposerPrimitive.Root>
                 <ComposerPrimitive.Input
                   rows={1}

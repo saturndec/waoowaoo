@@ -244,10 +244,12 @@
         "generateImage": "Generate Image",
         "regenerateImage": "Regenerate",
         "generateVideo": "Generate Video",
-        "generateAllVideos": "Batch Generate"
+        "generateAllVideos": "Batch Generate",
+        "generateEditAssets": "Generate All"
       },
       "status": {
         "empty": "Empty",
+        "pending": "Pending",
         "ready": "Ready",
         "processing": "Processing",
         "failed": "Failed"
@@ -265,7 +267,9 @@
         "panel": "No shot description",
         "image": "No image prompt",
         "video": "No video prompt",
-        "location": "No location"
+        "location": "No location",
+        "editScript": "No edit table",
+        "editAsset": "No asset description"
       },
       "nodeFields": {
         "openDetails": "Details",
@@ -318,6 +322,15 @@
         "totalVideos": "Videos",
         "totalDuration": "Total Duration",
         "videoOrder": "Video Order",
+        "editScriptMeta": "Edit Table Info",
+        "shotIndex": "Shot {index}",
+        "charactersAndScene": "Characters / Scene",
+        "sound": "Sound",
+        "transition": "Transition",
+        "linkedShots": "Linked Shots",
+        "targetAsset": "Asset ID",
+        "characterAsset": "Required Character",
+        "locationAsset": "Required Location",
         "yes": "Yes",
         "lineKind": {
           "action": "Action",
@@ -510,6 +523,13 @@
           "eyebrow": "Final Output",
           "body": "{videos} video clips have entered the final chain.",
           "meta": "Order comes from domain data"
+        },
+        "editScript": {
+          "eyebrow": "Core Edit Table",
+          "meta": "{shots} shots · {duration}s · assets {completed}/{assets}"
+        },
+        "editAsset": {
+          "meta": "Linked shots: {shots}"
         }
       }
     }

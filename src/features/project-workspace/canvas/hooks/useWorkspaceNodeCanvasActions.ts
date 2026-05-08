@@ -106,6 +106,11 @@ export function useWorkspaceNodeCanvasActions() {
 
     if (action.type === 'generate_all_videos') {
       void runtime.onGenerateAllVideos()
+      return
+    }
+
+    if (action.type === 'generate_edit_assets') {
+      void runtime.onGenerateEditAssets(action.editScriptId)
     }
   }, [runtime])
 }

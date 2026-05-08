@@ -18,6 +18,7 @@ import { useWorkspaceImageActions } from './useWorkspaceImageActions'
 import { buildWorkspaceControllerViewModel } from './workspace-controller-view-model'
 import type { ProjectWorkspaceProps } from '../types'
 import { useRouter } from '@/i18n/navigation'
+import { useGenerateProjectEditScriptAssets } from '@/lib/query/hooks'
 
 export function useProjectWorkspaceController({
   project,
@@ -104,6 +105,12 @@ export function useProjectWorkspaceController({
     projectId,
     episodeId,
   })
+  const generateEditAssets = useGenerateProjectEditScriptAssets(projectId)
+  const handleGenerateEditAssets = async (editScriptId: string) => {
+    if (!episodeId) throw new Error('Episode ID is required')
+    await generateEditAssets.mutateAsync({ episodeId, editScriptId })
+    await onRefresh({ mode: 'full' })
+  }
 
   const workspaceRuntime = useWorkspaceRuntime({
     assetsLoading,
@@ -128,6 +135,7 @@ export function useProjectWorkspaceController({
     handleGeneratePanelImage: imageActions.handleGeneratePanelImage,
     handleGenerateVideo: videoActions.handleGenerateVideo,
     handleGenerateAllVideos: videoActions.handleGenerateAllVideos,
+    handleGenerateEditAssets,
     handleUpdateVideoPrompt: videoActions.handleUpdateVideoPrompt,
     handleUpdatePanelVideoModel: videoActions.handleUpdatePanelVideoModel,
   })

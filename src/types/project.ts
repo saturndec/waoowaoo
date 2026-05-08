@@ -241,6 +241,46 @@ export interface ProjectShot {
   imageTaskRunning?: boolean
 }
 
+export type ProjectEditAssetKind = 'character' | 'location'
+export type ProjectEditAssetStatus = 'pending' | 'generating' | 'completed' | 'failed'
+
+export interface ProjectEditScriptShot {
+  shotNumber: number
+  durationSec: number
+  visualAction: string
+  charactersAndScene: string
+  camera: string
+  videoPrompt: string
+  sound: string
+  transition: string
+}
+
+export interface ProjectEditAssetRequirement {
+  id: string
+  kind: ProjectEditAssetKind
+  name: string
+  description: string
+  shotNumbers: number[]
+  status: ProjectEditAssetStatus
+  targetId: string | null
+  errorMessage: string | null
+  previewImageUrl?: string | null
+}
+
+export interface ProjectEditScript {
+  id: string
+  projectId: string
+  episodeId: string
+  userPrompt: string
+  title: string
+  logline: string | null
+  durationSec: number
+  shotCount: number
+  status: string
+  shots: ProjectEditScriptShot[]
+  requirements: ProjectEditAssetRequirement[]
+}
+
 export interface ProjectEpisodeSummary {
   id: string
   episodeNumber: number
@@ -252,6 +292,7 @@ export interface ProjectEpisodeSummary {
   srtContent: string | null
   createdAt: Date
   updatedAt: Date
+  editScript?: ProjectEditScript | null
 }
 
 export interface ProjectWorkflowData {

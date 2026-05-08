@@ -222,6 +222,12 @@ export {
 } from './useProjectData'
 
 export {
+    useProjectEditScript,
+    useCreateProjectEditScript,
+    useGenerateProjectEditScriptAssets,
+} from './useProjectEditScript'
+
+export {
     useProjectCommands,
     useProjectContext,
     useApproveProjectPlan,

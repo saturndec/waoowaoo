@@ -1911,6 +1911,16 @@ export function createGuiOperations(): ProjectAgentOperationRegistryDraft {
             },
             shots: { orderBy: { shotId: 'asc' } },
             voiceLines: { orderBy: { lineIndex: 'asc' } },
+            editScript: {
+              include: {
+                requirements: {
+                  orderBy: [
+                    { kind: 'asc' },
+                    { name: 'asc' },
+                  ],
+                },
+              },
+            },
           },
         })
         if (!episode) throw new ApiError('NOT_FOUND')

@@ -3,7 +3,14 @@
 import { useMemo } from 'react'
 import type { CSSProperties } from 'react'
 import type { CanvasNodeLayout } from '@/lib/project-canvas/layout/canvas-layout.types'
-import type { ProjectClip, ProjectPanel, ProjectShot, ProjectStoryboard } from '@/types/project'
+import type {
+  ProjectClip,
+  ProjectEditAssetRequirement,
+  ProjectEditScript,
+  ProjectPanel,
+  ProjectShot,
+  ProjectStoryboard,
+} from '@/types/project'
 import type {
   WorkspaceCanvasAssetRef,
   WorkspaceCanvasFlowEdge,
@@ -43,6 +50,7 @@ export interface BuildWorkspaceNodeCanvasProjectionInput {
   readonly clips: readonly ProjectClip[]
   readonly storyboards: readonly ProjectStoryboard[]
   readonly shots?: readonly ProjectShot[]
+  readonly editScript?: ProjectEditScript | null
   readonly savedLayouts: readonly CanvasNodeLayout[]
   readonly translate: Translate
   readonly onAction?: WorkspaceCanvasNodeActionHandler
@@ -404,6 +412,17 @@ function panelDisplayNumber(panel: ProjectPanel): string {
   return String(panel.panelNumber ?? panel.panelIndex + 1).padStart(2, '0')
 }
 
+function assetStatusLabel(status: ProjectEditAssetRequirement['status'], translate: Translate): string {
+  if (status === 'generating') return translate('status.processing')
+  if (status === 'failed') return translate('status.failed')
+  if (status === 'completed') return translate('status.ready')
+  return translate('status.pending')
+}
+
+function assetKindLabel(kind: ProjectEditAssetRequirement['kind'], translate: Translate): string {
+  return kind === 'character' ? translate('nodeFields.characterAsset') : translate('nodeFields.locationAsset')
+}
+
 export function buildWorkspaceNodeCanvasProjection({
   projectId,
   episodeId,
@@ -412,6 +431,7 @@ export function buildWorkspaceNodeCanvasProjection({
   clips,
   storyboards,
   shots = [],
+  editScript,
   savedLayouts,
   translate,
   onAction,
@@ -476,6 +496,82 @@ export function buildWorkspaceNodeCanvasProjection({
       },
     }))
     edges.push(createEdge('edge:story-analysis', storyNodeId, analysisNodeId))
+  }
+
+  if (editScript) {
+    const editScriptNodeId = `edit-script:${editScript.id}`
+    const assetsToGenerate = editScript.requirements.some((asset) => asset.status !== 'completed')
+    const completedAssets = editScript.requirements.filter((asset) => asset.status === 'completed').length
+    nodes.push(createNode({
+      id: editScriptNodeId,
+      fallbackX: STORY_COLUMN_X + COLUMN_GAP,
+      fallbackY: hasStory ? 430 : 180,
+      zIndex: zIndex++,
+      savedLayoutByKey,
+      data: {
+        kind: 'editScript',
+        layoutNodeType: 'editScript',
+        targetType: 'editScript',
+        targetId: editScript.id,
+        title: editScript.title,
+        eyebrow: translate('nodes.editScript.eyebrow'),
+        body: compactText(editScript.logline || editScript.userPrompt, translate('empty.editScript')),
+        meta: translate('nodes.editScript.meta', {
+          shots: editScript.shotCount,
+          duration: editScript.durationSec,
+          assets: editScript.requirements.length,
+          completed: completedAssets,
+        }),
+        statusLabel: translate('status.ready'),
+        width: 520,
+        height: 430,
+        indexLabel: 'E',
+        editScriptDetails: {
+          durationSec: editScript.durationSec,
+          shotCount: editScript.shotCount,
+          shots: editScript.shots,
+        },
+        actionLabel: assetsToGenerate ? translate('actions.generateEditAssets') : undefined,
+        action: assetsToGenerate ? { type: 'generate_edit_assets', editScriptId: editScript.id } : undefined,
+        onAction,
+      },
+    }))
+    edges.push(createEdge(`edge:story-edit-script:${editScript.id}`, storyNodeId, editScriptNodeId))
+
+    editScript.requirements.forEach((asset, index) => {
+      const nodeId = `edit-asset:${asset.id}`
+      nodes.push(createNode({
+        id: nodeId,
+        fallbackX: STORY_COLUMN_X + COLUMN_GAP * 2,
+        fallbackY: 430 + index * ROW_GAP,
+        zIndex: zIndex++,
+        savedLayoutByKey,
+        data: {
+          kind: 'editRequiredAsset',
+          layoutNodeType: 'editRequiredAsset',
+          targetType: 'editAssetRequirement',
+          targetId: asset.id,
+          title: asset.name,
+          eyebrow: assetKindLabel(asset.kind, translate),
+          body: compactText(asset.description, translate('empty.editAsset')),
+          meta: translate('nodes.editAsset.meta', { shots: asset.shotNumbers.join(', ') }),
+          statusLabel: assetStatusLabel(asset.status, translate),
+          width: MEDIA_NODE_WIDTH,
+          height: 330,
+          indexLabel: asset.kind === 'character' ? 'C' : 'L',
+          previewImageUrl: asset.previewImageUrl,
+          editAssetDetails: {
+            kind: asset.kind,
+            description: asset.description,
+            shotNumbers: asset.shotNumbers,
+            targetId: asset.targetId,
+            errorMessage: asset.errorMessage,
+          },
+          onAction,
+        },
+      }))
+      edges.push(createEdge(`edge:edit-script-asset:${asset.id}`, editScriptNodeId, nodeId))
+    })
   }
 
   const clipOrder = new Map(clips.map((clip, index) => [clip.id, index]))
@@ -684,6 +780,7 @@ export function useWorkspaceNodeCanvasProjection({
   clips,
   storyboards,
   shots,
+  editScript,
   savedLayouts,
   translate,
   onAction,
@@ -697,6 +794,7 @@ export function useWorkspaceNodeCanvasProjection({
       clips,
       storyboards,
       shots,
+      editScript,
       savedLayouts,
       translate,
       onAction,
@@ -709,6 +807,7 @@ export function useWorkspaceNodeCanvasProjection({
       projectId,
       savedLayouts,
       shots,
+      editScript,
       storyText,
       storyboards,
       translate,

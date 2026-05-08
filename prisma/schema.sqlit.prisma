@@ -134,11 +134,60 @@ model ProjectEpisode {
   storyboards             ProjectStoryboard[]
   voiceLines              ProjectVoiceLine[]
   editorProject           VideoEditorProject?
+  editScript              ProjectEditScript?
+  editAssetRequirements   ProjectEditAssetRequirement[]
 
   @@unique([projectId, episodeNumber])
   @@index([projectId])
   @@index([audioMediaId])
   @@map("project_episodes")
+}
+
+model ProjectEditScript {
+  id             String                         @id @default(uuid())
+  projectId      String
+  episodeId      String                         @unique
+  userPrompt     String
+  title          String
+  logline        String?
+  durationSec    Int
+  shotCount      Int
+  status         String                         @default("ready")
+  shotsJson      Json
+  createdAt      DateTime                       @default(now())
+  updatedAt      DateTime                       @default(now()) @updatedAt
+  project        Project                        @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  episode        ProjectEpisode                 @relation(fields: [episodeId], references: [id], onDelete: Cascade)
+  requirements   ProjectEditAssetRequirement[]
+
+  @@index([projectId])
+  @@index([episodeId])
+  @@map("project_edit_scripts")
+}
+
+model ProjectEditAssetRequirement {
+  id           String            @id @default(uuid())
+  editScriptId String
+  projectId    String
+  episodeId    String
+  kind         String
+  name         String
+  description  String
+  shotIndexes  Json
+  status       String            @default("pending")
+  targetId     String?
+  errorMessage String?
+  createdAt    DateTime          @default(now())
+  updatedAt    DateTime          @default(now()) @updatedAt
+  editScript   ProjectEditScript @relation(fields: [editScriptId], references: [id], onDelete: Cascade)
+  project      Project           @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  episode      ProjectEpisode    @relation(fields: [episodeId], references: [id], onDelete: Cascade)
+
+  @@unique([editScriptId, kind, name])
+  @@index([projectId])
+  @@index([episodeId])
+  @@index([targetId])
+  @@map("project_edit_asset_requirements")
 }
 
 // 视频编辑器项目 - 存储剪辑数据
@@ -349,6 +398,8 @@ model Project {
   episodes           ProjectEpisode[]
   characters         ProjectCharacter[]
   locations          ProjectLocation[]
+  editScripts        ProjectEditScript[]
+  editAssetRequirements ProjectEditAssetRequirement[]
 
   @@index([userId])
   @@map("projects")

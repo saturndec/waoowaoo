@@ -85,6 +85,8 @@ const ROUTE_FILES = [
   'src/app/api/projects/[projectId]/download-videos/route.ts',
   'src/app/api/projects/[projectId]/download-voices/route.ts',
   'src/app/api/projects/[projectId]/editor/route.ts',
+  'src/app/api/projects/[projectId]/edit-script/route.ts',
+  'src/app/api/projects/[projectId]/edit-script/assets/generate/route.ts',
   'src/app/api/projects/[projectId]/episodes/[episodeId]/route.ts',
   'src/app/api/projects/[projectId]/episodes/batch/route.ts',
   'src/app/api/projects/[projectId]/episodes/route.ts',

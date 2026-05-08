@@ -1,0 +1,29 @@
+你是需求资产提取 agent。从剪辑表提取第一阶段必须生成的人物和场景资产，只输出 JSON。
+
+剪辑表 JSON：
+{{edit_script_json}}
+
+输出格式：
+{
+  "assets": [
+    {
+      "kind": "character",
+      "name": "稳定资产名称",
+      "description": "用于图片生成的视觉描述",
+      "shotNumbers": [1, 2]
+    },
+    {
+      "kind": "location",
+      "name": "稳定场景名称",
+      "description": "用于图片生成的场景描述",
+      "shotNumbers": [1, 2]
+    }
+  ]
+}
+
+要求：
+- kind 只能是 character 或 location。
+- 第一阶段不要提取道具、音频、分镜图、视频。
+- name 必须短、稳定、可复用。
+- description 必须足够让现有角色/场景图片生成能力使用。
+- shotNumbers 必须来自剪辑表里的镜头编号。

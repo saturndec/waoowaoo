@@ -354,4 +354,91 @@ describe('workspace node canvas projection', () => {
     expect(projection.nodes.some((node) => node.data.kind === 'finalTimeline')).toBe(true)
     expect(projection.nodes.some((node) => String(node.id).startsWith('voice:'))).toBe(false)
   })
+
+  it('projects edit-first table and required asset nodes on the canvas', () => {
+    const projection = buildWorkspaceNodeCanvasProjection({
+      episodeId: 'episode-1',
+      storyText: '',
+      clips: [],
+      storyboards: [],
+      savedLayouts: [],
+      translate: t,
+      editScript: {
+        id: 'edit-1',
+        projectId: 'project-1',
+        episodeId: 'episode-1',
+        userPrompt: 'one minute sci-fi',
+        title: 'Orbital Silence',
+        logline: 'A pilot meets a machine intelligence.',
+        durationSec: 60,
+        shotCount: 2,
+        status: 'ready',
+        shots: [
+          {
+            shotNumber: 1,
+            durationSec: 30,
+            visualAction: 'Pilot crosses the docking bay.',
+            charactersAndScene: 'Pilot / Docking Bay',
+            camera: 'locked wide shot',
+            videoPrompt: 'Pilot crosses a sterile docking bay.',
+            sound: 'air hum',
+            transition: 'hard cut',
+          },
+          {
+            shotNumber: 2,
+            durationSec: 30,
+            visualAction: 'A red machine eye opens.',
+            charactersAndScene: 'Pilot / AI Chamber',
+            camera: 'slow push in',
+            videoPrompt: 'A red machine eye opens in a chamber.',
+            sound: 'sub bass pulse',
+            transition: 'hard cut',
+          },
+        ],
+        requirements: [
+          {
+            id: 'req-character',
+            kind: 'character',
+            name: 'Pilot',
+            description: 'A quiet astronaut in a minimal suit.',
+            shotNumbers: [1, 2],
+            status: 'pending',
+            targetId: null,
+            errorMessage: null,
+          },
+          {
+            id: 'req-location',
+            kind: 'location',
+            name: 'Docking Bay',
+            description: 'A sterile white docking bay with red warning light.',
+            shotNumbers: [1],
+            status: 'completed',
+            targetId: 'location-1',
+            errorMessage: null,
+            previewImageUrl: 'https://example.com/location.png',
+          },
+        ],
+      },
+    })
+
+    expect(projection.nodes.map((node) => node.id)).toEqual([
+      'story:episode-1',
+      'edit-script:edit-1',
+      'edit-asset:req-character',
+      'edit-asset:req-location',
+    ])
+    const editNode = projection.nodes.find((node) => node.id === 'edit-script:edit-1')
+    expect(editNode?.data.kind).toBe('editScript')
+    expect(editNode?.data.action).toEqual({ type: 'generate_edit_assets', editScriptId: 'edit-1' })
+    expect(editNode?.data.editScriptDetails?.shots).toHaveLength(2)
+
+    const assetNode = projection.nodes.find((node) => node.id === 'edit-asset:req-location')
+    expect(assetNode?.data.kind).toBe('editRequiredAsset')
+    expect(assetNode?.data.previewImageUrl).toBe('https://example.com/location.png')
+    expect(assetNode?.data.editAssetDetails).toMatchObject({
+      kind: 'location',
+      targetId: 'location-1',
+      shotNumbers: [1],
+    })
+  })
 })

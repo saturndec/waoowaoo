@@ -244,10 +244,12 @@
         "generateImage": "生成图片",
         "regenerateImage": "重新生成",
         "generateVideo": "生成视频",
-        "generateAllVideos": "批量生成"
+        "generateAllVideos": "批量生成",
+        "generateEditAssets": "全部生成"
       },
       "status": {
         "empty": "待输入",
+        "pending": "待生成",
         "ready": "已就绪",
         "processing": "处理中",
         "failed": "失败"
@@ -265,7 +267,9 @@
         "panel": "暂无镜头描述",
         "image": "暂无图片提示词",
         "video": "暂无视频提示词",
-        "location": "未指定场景"
+        "location": "未指定场景",
+        "editScript": "暂无剪辑表",
+        "editAsset": "暂无资产描述"
       },
       "nodeFields": {
         "openDetails": "详情",
@@ -318,6 +322,15 @@
         "totalVideos": "视频",
         "totalDuration": "总时长",
         "videoOrder": "视频顺序",
+        "editScriptMeta": "剪辑表信息",
+        "shotIndex": "镜头 {index}",
+        "charactersAndScene": "人物/场景",
+        "sound": "声音",
+        "transition": "转场",
+        "linkedShots": "关联镜头",
+        "targetAsset": "资产 ID",
+        "characterAsset": "需求人物",
+        "locationAsset": "需求场景",
         "yes": "是",
         "lineKind": {
           "action": "动作",
@@ -510,6 +523,13 @@
           "eyebrow": "最终输出",
           "body": "{videos} 个视频片段已进入成片链路。",
           "meta": "顺序来自业务数据"
+        },
+        "editScript": {
+          "eyebrow": "核心剪辑表",
+          "meta": "{shots} 个镜头 · {duration} 秒 · 资产 {completed}/{assets}"
+        },
+        "editAsset": {
+          "meta": "关联镜头：{shots}"
         }
       }
     }

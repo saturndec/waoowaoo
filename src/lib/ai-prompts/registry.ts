@@ -179,6 +179,45 @@ export const AI_PROMPT_CATALOG: Record<AiPromptId, AiPromptCatalogEntry> = {
     pathStem: 'music/lyria-prompt-expand',
     variableKeys: ['user_input', 'duration_seconds', 'vocal_mode', 'genre', 'mood'],
   },
+  [AI_PROMPT_IDS.EDIT_SCRIPT_TIMELINE]: {
+    pathStem: 'edit-script/timeline',
+    variableKeys: ['user_request', 'duration_seconds', 'shot_count'],
+  },
+  [AI_PROMPT_IDS.EDIT_SCRIPT_VISUAL_ACTION]: {
+    pathStem: 'edit-script/visual-action',
+    variableKeys: ['user_request', 'timeline_json'],
+  },
+  [AI_PROMPT_IDS.EDIT_SCRIPT_CAMERA]: {
+    pathStem: 'edit-script/camera',
+    variableKeys: ['user_request', 'visual_action_json', 'aspect_ratio', 'style_context'],
+  },
+  [AI_PROMPT_IDS.EDIT_SCRIPT_VIDEO_PROMPT]: {
+    pathStem: 'edit-script/video-prompt',
+    variableKeys: ['user_request', 'camera_json', 'aspect_ratio', 'style_context'],
+  },
+  [AI_PROMPT_IDS.EDIT_SCRIPT_AUDIO]: {
+    pathStem: 'edit-script/audio',
+    variableKeys: ['user_request', 'video_prompt_json'],
+  },
+  [AI_PROMPT_IDS.EDIT_SCRIPT_PRIMARY]: {
+    pathStem: 'edit-script/primary',
+    variableKeys: [
+      'user_request',
+      'duration_seconds',
+      'shot_count',
+      'timeline_json',
+      'visual_action_json',
+      'camera_json',
+      'video_prompt_json',
+      'audio_json',
+      'aspect_ratio',
+      'style_context',
+    ],
+  },
+  [AI_PROMPT_IDS.EDIT_SCRIPT_ASSET_EXTRACT]: {
+    pathStem: 'edit-script/asset-extract',
+    variableKeys: ['edit_script_json'],
+  },
 }
 
 const OPERATION_TO_AI_PROMPT_ID = new Map<string, AiPromptId>()

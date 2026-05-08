@@ -1,7 +1,7 @@
 'use client'
 
 import { useEpisodeData } from '@/lib/query/hooks'
-import type { ProjectClip, ProjectShot, ProjectStoryboard } from '@/types/project'
+import type { ProjectClip, ProjectEditScript, ProjectShot, ProjectStoryboard } from '@/types/project'
 import { useWorkspaceProvider } from '../WorkspaceProvider'
 
 interface EpisodeStagePayload {
@@ -12,6 +12,7 @@ interface EpisodeStagePayload {
   clips?: ProjectClip[]
   storyboards?: ProjectStoryboard[]
   shots?: ProjectShot[]
+  editScript?: ProjectEditScript | null
 }
 
 export function useWorkspaceEpisodeStageData() {
@@ -27,5 +28,6 @@ export function useWorkspaceEpisodeStageData() {
     clips: payload?.clips || [],
     storyboards: payload?.storyboards || [],
     shots: payload?.shots || [],
+    editScript: payload?.editScript || null,
   }
 }
