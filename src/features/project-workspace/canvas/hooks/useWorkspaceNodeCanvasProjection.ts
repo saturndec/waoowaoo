@@ -7,9 +7,11 @@ import type {
   ProjectClip,
   ProjectEditAssetRequirement,
   ProjectEditScript,
+  ProjectFinalVideo,
   ProjectPanel,
   ProjectShot,
   ProjectStoryboard,
+  ProjectVideoGroup,
 } from '@/types/project'
 import type {
   WorkspaceCanvasAssetRef,
@@ -46,6 +48,9 @@ const SHOT_NODE_HEIGHT = 560
 const SHOT_GRID_ROW_GAP = 632
 const MEDIA_GRID_ROW_GAP = 462
 const PANEL_GRID_BASE_X = STORY_COLUMN_X + COLUMN_GAP * 2
+const NODE_CONTENT_INLINE_PADDING = 40
+const DEFAULT_MEDIA_PREVIEW_HEIGHT = 118
+const MAX_MEDIA_PREVIEW_HEIGHT = 220
 
 interface TranslateValues {
   readonly [key: string]: string | number
@@ -62,7 +67,11 @@ export interface BuildWorkspaceNodeCanvasProjectionInput {
   readonly storyboards: readonly ProjectStoryboard[]
   readonly shots?: readonly ProjectShot[]
   readonly editScript?: ProjectEditScript | null
+  readonly finalVideo?: ProjectFinalVideo | null
+  readonly videoGroups?: readonly ProjectVideoGroup[]
   readonly defaultVideoModel?: string | null
+  readonly finalRenderPhase?: 'idle' | 'queued' | 'processing' | 'completed' | 'failed'
+  readonly finalRenderErrorMessage?: string | null
   readonly savedLayouts: readonly CanvasNodeLayout[]
   readonly translate: Translate
   readonly onAction?: WorkspaceCanvasNodeActionHandler
@@ -270,6 +279,34 @@ function createVideoDetails(panel: ProjectPanel): WorkspaceCanvasVideoDetails {
     linkedToNextPanel: panel.linkedToNextPanel,
     errorMessage: panel.videoErrorMessage,
   }
+}
+
+function mediaAspectRatio(media: { readonly width?: number | null; readonly height?: number | null } | null | undefined): number | null {
+  const width = media?.width
+  const height = media?.height
+  if (typeof width !== 'number' || typeof height !== 'number') return null
+  if (!Number.isFinite(width) || !Number.isFinite(height) || width <= 0 || height <= 0) return null
+  return width / height
+}
+
+function panelImageAspectRatio(panel: ProjectPanel): number | null {
+  return mediaAspectRatio(panel.media)
+}
+
+function panelVideoAspectRatio(panel: ProjectPanel): number | null {
+  return mediaAspectRatio(panel.lipSyncVideoMedia)
+    ?? mediaAspectRatio(panel.videoMedia)
+    ?? panelImageAspectRatio(panel)
+}
+
+function estimateMediaPreviewHeight(nodeWidth: number, aspectRatio: number | null): number {
+  if (!aspectRatio || aspectRatio <= 0 || !Number.isFinite(aspectRatio)) return DEFAULT_MEDIA_PREVIEW_HEIGHT
+  const contentWidth = Math.max(120, nodeWidth - NODE_CONTENT_INLINE_PADDING)
+  return Math.min(MAX_MEDIA_PREVIEW_HEIGHT, Math.max(96, Math.round(contentWidth / aspectRatio)))
+}
+
+function estimateMediaNodeHeight(baseHeight: number, previewHeight: number): number {
+  return baseHeight + Math.max(0, previewHeight - DEFAULT_MEDIA_PREVIEW_HEIGHT)
 }
 
 function findPromptShot(panel: ProjectPanel, shots: readonly ProjectShot[]): ProjectShot | null {
@@ -510,7 +547,11 @@ export function buildWorkspaceNodeCanvasProjection({
   storyboards,
   shots = [],
   editScript,
+  finalVideo,
+  videoGroups = [],
   defaultVideoModel,
+  finalRenderPhase,
+  finalRenderErrorMessage,
   savedLayouts,
   translate,
   onAction,
@@ -688,8 +729,35 @@ export function buildWorkspaceNodeCanvasProjection({
     sortPanels(storyboard.panels ?? []).map((panel) => ({ storyboard, panel }))
   ))
   const panelGridRows = Math.max(1, Math.ceil(panelsWithStoryboard.length / PANEL_GRID_COLUMNS))
+  const shotPreviewByPanelId = new Map<string, { aspectRatio: number | null; height: number; nodeHeight: number }>()
+  const videoPreviewByPanelId = new Map<string, { aspectRatio: number | null; height: number; nodeHeight: number }>()
+  panelsWithStoryboard.forEach(({ panel }) => {
+    const shotAspectRatio = panelImageAspectRatio(panel)
+    const shotPreviewHeight = estimateMediaPreviewHeight(DEFAULT_NODE_WIDTH, shotAspectRatio)
+    shotPreviewByPanelId.set(panel.id, {
+      aspectRatio: shotAspectRatio,
+      height: shotPreviewHeight,
+      nodeHeight: estimateMediaNodeHeight(SHOT_NODE_HEIGHT, shotPreviewHeight),
+    })
+
+    const videoAspectRatio = panelVideoAspectRatio(panel)
+    const videoPreviewHeight = estimateMediaPreviewHeight(MEDIA_NODE_WIDTH, videoAspectRatio)
+    videoPreviewByPanelId.set(panel.id, {
+      aspectRatio: videoAspectRatio,
+      height: videoPreviewHeight,
+      nodeHeight: estimateMediaNodeHeight(410, videoPreviewHeight),
+    })
+  })
+  const shotGridRowGap = Math.max(
+    SHOT_GRID_ROW_GAP,
+    ...Array.from(shotPreviewByPanelId.values()).map((preview) => preview.nodeHeight + 72),
+  )
+  const mediaGridRowGap = Math.max(
+    MEDIA_GRID_ROW_GAP,
+    ...Array.from(videoPreviewByPanelId.values()).map((preview) => preview.nodeHeight + 72),
+  )
   const shotGridBaseY = 24
-  const videoGridBaseY = shotGridBaseY + panelGridRows * SHOT_GRID_ROW_GAP + 160
+  const videoGridBaseY = shotGridBaseY + panelGridRows * shotGridRowGap + 160
 
   const shotNodeIds = new Map<string, string>()
   panelsWithStoryboard.forEach(({ storyboard, panel }, index) => {
@@ -700,8 +768,9 @@ export function buildWorkspaceNodeCanvasProjection({
       baseX: PANEL_GRID_BASE_X,
       baseY: shotGridBaseY,
       width: DEFAULT_NODE_WIDTH,
-      rowGap: SHOT_GRID_ROW_GAP,
+      rowGap: shotGridRowGap,
     })
+    const preview = shotPreviewByPanelId.get(panel.id)
     nodes.push(createNode({
       id: nodeId,
       fallbackX: position.x,
@@ -721,9 +790,11 @@ export function buildWorkspaceNodeCanvasProjection({
         }),
         statusLabel: panel.imageTaskRunning ? translate('status.processing') : translate('status.ready'),
         width: DEFAULT_NODE_WIDTH,
-        height: SHOT_NODE_HEIGHT,
+        height: preview?.nodeHeight ?? SHOT_NODE_HEIGHT,
         indexLabel: panelDisplayNumber(panel),
         previewImageUrl: primaryPanelImageUrl(panel),
+        previewAspectRatio: preview?.aspectRatio ?? null,
+        previewDisplayHeight: preview?.height ?? DEFAULT_MEDIA_PREVIEW_HEIGHT,
         shotDetails: createShotDetails(panel, storyboard, shots),
         imageDetails: createImageDetails(panel),
         actionLabel: panel.imageTaskRunning
@@ -755,8 +826,9 @@ export function buildWorkspaceNodeCanvasProjection({
         baseX: PANEL_GRID_BASE_X,
         baseY: videoGridBaseY,
         width: MEDIA_NODE_WIDTH,
-        rowGap: MEDIA_GRID_ROW_GAP,
+        rowGap: mediaGridRowGap,
       })
+      const preview = videoPreviewByPanelId.get(panel.id)
       nodes.push(createNode({
         id: nodeId,
         fallbackX: position.x,
@@ -774,9 +846,11 @@ export function buildWorkspaceNodeCanvasProjection({
           meta: translate('nodes.video.meta'),
           statusLabel: panel.videoTaskRunning ? translate('status.processing') : translate('status.ready'),
           width: MEDIA_NODE_WIDTH,
-          height: 410,
+          height: preview?.nodeHeight ?? 410,
           indexLabel: `V${panelDisplayNumber(panel)}`,
           previewImageUrl: panel.videoMedia?.url ?? panel.videoUrl ?? primaryPanelImageUrl(panel),
+          previewAspectRatio: preview?.aspectRatio ?? null,
+          previewDisplayHeight: preview?.height ?? DEFAULT_MEDIA_PREVIEW_HEIGHT,
           videoDetails: createVideoDetails(panel),
           actionLabel: panel.videoTaskRunning ? undefined : translate('actions.generateVideo'),
           action: panel.videoTaskRunning
@@ -795,16 +869,79 @@ export function buildWorkspaceNodeCanvasProjection({
     }
   })
 
+  videoGroups.forEach((group, index) => {
+    const nodeId = `video-group:${group.id}`
+    const sourceShotNumber = Array.isArray(group.shotNumbers) && typeof group.shotNumbers[0] === 'number'
+      ? group.shotNumbers[0]
+      : index + 1
+    const position = gridPosition({
+      index,
+      baseX: PANEL_GRID_BASE_X,
+      baseY: videoGridBaseY + panelGridRows * mediaGridRowGap + 40,
+      width: MEDIA_NODE_WIDTH,
+      rowGap: mediaGridRowGap,
+    })
+    const previewAspectRatio = mediaAspectRatio(group.videoMedia) ?? mediaAspectRatio(group.referenceImageMedia) ?? null
+    const previewHeight = estimateMediaPreviewHeight(MEDIA_NODE_WIDTH, previewAspectRatio)
+    const isRunning = group.status === 'queued' || group.status === 'processing'
+    const hasOutput = Boolean(group.videoMedia?.url ?? group.videoUrl)
+    nodes.push(createNode({
+      id: nodeId,
+      fallbackX: position.x,
+      fallbackY: position.y,
+      zIndex: zIndex++,
+      savedLayoutByKey,
+      data: {
+        kind: 'videoClip',
+        layoutNodeType: 'videoClip',
+        targetType: 'videoGroup',
+        targetId: group.id,
+        title: translate('nodes.videoGroup.title', { index: index + 1 }),
+        eyebrow: translate('nodes.videoGroup.eyebrow'),
+        body: compactText(group.prompt || translate('nodes.videoGroup.body'), translate('empty.video')),
+        meta: translate('nodes.videoGroup.meta', {
+          grid: group.gridMode,
+          shots: Array.isArray(group.shotNumbers) ? group.shotNumbers.join(', ') : '',
+          duration: group.durationSec,
+        }),
+        statusLabel: isRunning
+          ? translate('status.processing')
+          : group.status === 'failed'
+            ? translate('status.failed')
+            : hasOutput
+              ? translate('status.ready')
+              : translate('status.pending'),
+        width: MEDIA_NODE_WIDTH,
+        height: 292 + previewHeight,
+        indexLabel: `G${index + 1}`,
+        previewImageUrl: group.videoMedia?.url ?? group.videoUrl ?? group.referenceImageMedia?.url ?? group.referenceImageUrl,
+        previewAspectRatio,
+        previewDisplayHeight: previewHeight,
+        actionLabel: undefined,
+        action: undefined,
+        onAction,
+      },
+    }))
+    const shotNodeId = [...shotNodeIds.entries()].find(([panelId]) => {
+      const found = panelsWithStoryboard.find((item) => item.panel.id === panelId)
+      return found?.panel.panelNumber === sourceShotNumber
+    })?.[1]
+    if (shotNodeId) edges.push(createEdge(`edge:shot-video-group:${group.id}`, shotNodeId, nodeId))
+  })
+
   const videoNodeIds = nodes.filter((node) => node.data.kind === 'videoClip').map((node) => node.id)
   if (videoNodeIds.length > 0) {
     const finalNodeId = `final:${episodeId}`
     const totalDuration = panelsWithStoryboard.reduce((total, item) => total + (item.panel.duration ?? 0), 0)
     const imageCount = panelsWithStoryboard.filter((item) => hasImage(item.panel)).length
     const generatedVideoCount = panelsWithStoryboard.filter((item) => hasGeneratedVideo(item.panel)).length
+    const isFinalRenderRunning = finalRenderPhase === 'queued' || finalRenderPhase === 'processing'
+    const isFinalRenderFailed = finalRenderPhase === 'failed'
+    const hasFinalOutput = Boolean(finalVideo?.outputUrl && finalVideo.renderStatus === 'completed')
     nodes.push(createNode({
       id: finalNodeId,
       fallbackX: PANEL_GRID_BASE_X,
-      fallbackY: videoGridBaseY + panelGridRows * MEDIA_GRID_ROW_GAP + 180,
+      fallbackY: videoGridBaseY + (panelGridRows + Math.ceil(videoGroups.length / PANEL_GRID_COLUMNS)) * mediaGridRowGap + 180,
       zIndex: zIndex++,
       savedLayoutByKey,
       data: {
@@ -815,8 +952,18 @@ export function buildWorkspaceNodeCanvasProjection({
         title: translate('nodes.final.title'),
         eyebrow: translate('nodes.final.eyebrow'),
         body: translate('nodes.final.body', { videos: videoNodeIds.length }),
-        meta: translate('nodes.final.meta'),
-        statusLabel: translate('status.ready'),
+        meta: isFinalRenderFailed && finalRenderErrorMessage
+          ? finalRenderErrorMessage
+          : hasFinalOutput
+            ? translate('nodes.final.outputReady')
+            : translate('nodes.final.meta'),
+        statusLabel: isFinalRenderRunning
+          ? translate('status.aiEditing')
+          : isFinalRenderFailed
+            ? translate('status.failed')
+            : hasFinalOutput
+              ? translate('status.finalReady')
+              : translate('status.ready'),
         width: FINAL_NODE_WIDTH,
         height: 280,
         finalDetails: {
@@ -825,12 +972,12 @@ export function buildWorkspaceNodeCanvasProjection({
           totalVideos: generatedVideoCount,
           totalDuration: totalDuration > 0 ? totalDuration : null,
           orderedVideoLabels: videoNodeIds.map((videoNodeId) => videoNodeId.replace('video:', '')),
+          outputUrl: finalVideo?.outputUrl ?? null,
+          renderStatus: finalVideo?.renderStatus ?? null,
         },
-        actionLabel: translate('actions.generateAllVideos'),
-        action: {
-          type: 'generate_all_videos',
-          videoModel: defaultVideoModel || undefined,
-        },
+        actionLabel: isFinalRenderRunning ? translate('actions.aiEditing') : translate('actions.renderFinalVideo'),
+        action: { type: 'render_final_video' },
+        actionDisabled: isFinalRenderRunning,
         onAction,
       },
     }))
@@ -851,7 +998,10 @@ export function useWorkspaceNodeCanvasProjection({
   storyboards,
   shots,
   editScript,
+  finalVideo,
   defaultVideoModel,
+  finalRenderPhase,
+  finalRenderErrorMessage,
   savedLayouts,
   translate,
   onAction,
@@ -866,7 +1016,10 @@ export function useWorkspaceNodeCanvasProjection({
       storyboards,
       shots,
       editScript,
+      finalVideo,
       defaultVideoModel,
+      finalRenderPhase,
+      finalRenderErrorMessage,
       savedLayouts,
       translate,
       onAction,
@@ -878,6 +1031,9 @@ export function useWorkspaceNodeCanvasProjection({
       onAction,
       projectId,
       defaultVideoModel,
+      finalRenderPhase,
+      finalRenderErrorMessage,
+      finalVideo,
       savedLayouts,
       shots,
       editScript,

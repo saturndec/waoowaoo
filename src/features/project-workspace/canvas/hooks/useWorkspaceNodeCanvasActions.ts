@@ -108,6 +108,11 @@ export function useWorkspaceNodeCanvasActions() {
       return
     }
 
+    if (action.type === 'render_final_video') {
+      void runtime.onRenderFinalVideo()
+      return
+    }
+
     if (action.type === 'generate_edit_assets') {
       void runtime.onGenerateEditAssets(action.editScriptId)
       return

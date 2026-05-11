@@ -12,7 +12,7 @@ export type WorkspaceCanvasNodeKind =
   | 'editScript'
   | 'editRequiredAsset'
 
-export type WorkspaceCanvasTargetType = 'episode' | 'clip' | 'panel' | 'editScript' | 'editAssetRequirement'
+export type WorkspaceCanvasTargetType = 'episode' | 'clip' | 'panel' | 'videoGroup' | 'editScript' | 'editAssetRequirement'
 
 export type WorkspaceCanvasNodeAction =
   | { readonly type: 'update_story'; readonly value: string }
@@ -83,6 +83,7 @@ export type WorkspaceCanvasNodeAction =
       readonly videoModel?: string
       readonly generationOptions?: Record<string, string | number | boolean>
     }
+  | { readonly type: 'render_final_video' }
   | { readonly type: 'generate_edit_assets'; readonly editScriptId: string }
   | { readonly type: 'generate_edit_asset'; readonly editScriptId: string; readonly requirementId: string }
   | { readonly type: 'generate_edit_storyboard'; readonly editScriptId: string }
@@ -177,6 +178,8 @@ export interface WorkspaceCanvasFinalDetails {
   readonly totalVideos: number
   readonly totalDuration?: number | null
   readonly orderedVideoLabels: readonly string[]
+  readonly outputUrl?: string | null
+  readonly renderStatus?: string | null
 }
 
 export interface WorkspaceCanvasEditScriptDetails {
@@ -218,11 +221,14 @@ export interface WorkspaceCanvasNodeData extends Record<string, unknown> {
   readonly height: number
   readonly actionLabel?: string
   readonly action?: WorkspaceCanvasNodeAction
+  readonly actionDisabled?: boolean
   readonly onAction?: WorkspaceCanvasNodeActionHandler
   readonly expanded?: boolean
   readonly onToggleExpanded?: (nodeId: string) => void
   readonly indexLabel?: string
   readonly previewImageUrl?: string | null
+  readonly previewAspectRatio?: number | null
+  readonly previewDisplayHeight?: number | null
   readonly scriptDetails?: WorkspaceCanvasScriptDetails
   readonly shotDetails?: WorkspaceCanvasShotDetails
   readonly imageDetails?: WorkspaceCanvasImageDetails

@@ -280,6 +280,33 @@ export interface ProjectEditScript {
   requirements: ProjectEditAssetRequirement[]
 }
 
+export interface ProjectFinalVideo {
+  id: string
+  episodeId: string
+  renderStatus: string | null
+  renderTaskId: string | null
+  outputUrl: string | null
+  updatedAt: string | null
+}
+
+export interface ProjectVideoGroup {
+  id: string
+  projectId: string
+  episodeId: string
+  gridMode: '2x2' | '3x3' | string
+  shotNumbers: number[] | unknown
+  durationSec: number
+  prompt: string | null
+  status: string
+  taskId: string | null
+  errorCode: string | null
+  errorMessage: string | null
+  referenceImageUrl: string | null
+  referenceImageMedia?: MediaRef | null
+  videoUrl: string | null
+  videoMedia?: MediaRef | null
+}
+
 export interface ProjectEpisodeSummary {
   id: string
   episodeNumber: number
@@ -292,6 +319,8 @@ export interface ProjectEpisodeSummary {
   createdAt: Date
   updatedAt: Date
   editScript?: ProjectEditScript | null
+  finalVideo?: ProjectFinalVideo | null
+  videoGroups?: ProjectVideoGroup[]
 }
 
 export interface ProjectWorkflowData {
@@ -325,6 +354,7 @@ export interface ProjectWorkflowData {
   clips?: ProjectClip[]
   storyboards?: ProjectStoryboard[]
   shots?: ProjectShot[]
+  videoGroups?: ProjectVideoGroup[]
 }
 
 // ============================================

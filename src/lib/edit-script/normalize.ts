@@ -1,4 +1,11 @@
-import type { EditAssetRequirement, EditScriptBriefQuestionsPayload, EditScriptPayload, EditScriptShot } from './types'
+import type { Locale } from '@/i18n/routing'
+import type {
+  EditAssetRequirement,
+  EditScriptBriefQuestion,
+  EditScriptBriefQuestionsPayload,
+  EditScriptPayload,
+  EditScriptShot,
+} from './types'
 import {
   editAssetExtractionSchema,
   editScriptBriefQuestionsSchema,
@@ -16,11 +23,8 @@ function uniquePositiveNumbers(values: readonly number[]): number[] {
   return output.sort((left, right) => left - right)
 }
 
-export function normalizeEditScriptCore(raw: unknown, expectedShotCount: number): Omit<EditScriptPayload, 'requirements'> {
+export function normalizeEditScriptCore(raw: unknown): Omit<EditScriptPayload, 'requirements'> {
   const parsed = editScriptCoreSchema.parse(raw)
-  if (parsed.shots.length !== expectedShotCount) {
-    throw new Error(`EDIT_SCRIPT_SHOT_COUNT_MISMATCH:${parsed.shots.length}:${expectedShotCount}`)
-  }
 
   const shots: EditScriptShot[] = parsed.shots
     .map((shot) => ({
@@ -119,14 +123,55 @@ export function normalizeEditScriptBriefQuestions(raw: unknown): EditScriptBrief
   }
 }
 
-export function resolveEditScriptDefaults(userPrompt: string): { durationSeconds: number; shotCount: number } {
+function buildAspectRatioQuestion(locale: Locale): EditScriptBriefQuestion {
+  if (locale === 'en') {
+    return {
+      id: 'aspect_ratio',
+      label: 'Which aspect ratio should this video use?',
+      options: [
+        { id: 'A', label: '9:16 vertical short video' },
+        { id: 'B', label: '16:9 horizontal video' },
+        { id: 'C', label: '21:9 cinematic ultra-wide' },
+      ],
+    }
+  }
+
+  return {
+    id: 'aspect_ratio',
+    label: '这条视频需要哪种画幅比例？',
+    options: [
+      { id: 'A', label: '9:16 竖屏短视频' },
+      { id: 'B', label: '16:9 横屏视频' },
+      { id: 'C', label: '21:9 电影宽银幕' },
+    ],
+  }
+}
+
+function isAspectRatioQuestion(question: EditScriptBriefQuestion): boolean {
+  if (question.id === 'aspect_ratio') return true
+  const optionText = question.options.map((option) => option.label).join('\n')
+  return optionText.includes('9:16') && optionText.includes('16:9') && optionText.includes('21:9')
+}
+
+export function withRequiredAspectRatioBriefQuestion(
+  payload: EditScriptBriefQuestionsPayload,
+  locale: Locale,
+): EditScriptBriefQuestionsPayload {
+  const aspectRatioQuestion = buildAspectRatioQuestion(locale)
+  const nonRatioQuestions = payload.questions.filter((question) => !isAspectRatioQuestion(question))
+  return {
+    questions: [aspectRatioQuestion, ...nonRatioQuestions].slice(0, 4),
+  }
+}
+
+export function resolveEditScriptDefaults(userPrompt: string): { durationSeconds: number } {
   const text = userPrompt.trim()
   const minuteMatch = text.match(/(\d+(?:\.\d+)?)\s*(?:分钟|minute|minutes|min)/i)
   if (minuteMatch) {
     const minutes = Number(minuteMatch[1])
     if (Number.isFinite(minutes) && minutes > 0) {
       const durationSeconds = Math.max(10, Math.round(minutes * 60))
-      return { durationSeconds, shotCount: Math.max(4, Math.min(20, Math.round(durationSeconds / 7.5))) }
+      return { durationSeconds }
     }
   }
 
@@ -134,9 +179,9 @@ export function resolveEditScriptDefaults(userPrompt: string): { durationSeconds
   if (secondMatch) {
     const durationSeconds = Number(secondMatch[1])
     if (Number.isInteger(durationSeconds) && durationSeconds > 0) {
-      return { durationSeconds, shotCount: Math.max(4, Math.min(20, Math.round(durationSeconds / 7.5))) }
+      return { durationSeconds }
     }
   }
 
-  return { durationSeconds: 60, shotCount: 8 }
+  return { durationSeconds: 60 }
 }

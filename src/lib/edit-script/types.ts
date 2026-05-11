@@ -9,6 +9,9 @@ export type EditAssetStatus = (typeof EDIT_ASSET_STATUSES)[number]
 export const EDIT_BRIEF_OPTION_IDS = ['A', 'B', 'C'] as const
 export type EditBriefOptionId = (typeof EDIT_BRIEF_OPTION_IDS)[number]
 
+export const EDIT_SCRIPT_VIDEO_RATIOS = ['9:16', '16:9', '21:9'] as const
+export type EditScriptVideoRatio = (typeof EDIT_SCRIPT_VIDEO_RATIOS)[number]
+
 export interface EditScriptBriefQuestionOption {
   readonly id: EditBriefOptionId
   readonly label: string
@@ -62,7 +65,7 @@ export interface EditScriptPayload {
 
 export const editScriptShotSchema = z.object({
   shotNumber: z.number().int().positive(),
-  durationSec: z.number().int().positive(),
+  durationSec: z.number().int().min(1).max(5),
   visualAction: z.string().trim().min(1),
   charactersAndScene: z.string().trim().min(1),
   camera: z.string().trim().min(1),
@@ -74,7 +77,7 @@ export const editScriptCoreSchema = z.object({
   title: z.string().trim().min(1),
   logline: z.string().trim().optional().nullable(),
   durationSec: z.number().int().positive(),
-  shots: z.array(editScriptShotSchema).min(1).max(20),
+  shots: z.array(editScriptShotSchema).min(1).max(60),
 })
 
 export const editAssetRequirementSchema = z.object({
@@ -106,6 +109,7 @@ export const editScriptBriefQuestionsSchema = z.object({
 export const createEditScriptRequestSchema = z.object({
   episodeId: z.string().trim().min(1),
   prompt: z.string().trim().min(1),
+  videoRatio: z.enum(EDIT_SCRIPT_VIDEO_RATIOS).optional(),
 })
 
 export const createEditScriptBriefQuestionsRequestSchema = z.object({

@@ -147,6 +147,7 @@ describe('project edit script route', () => {
       body: {
         episodeId: 'episode-1',
         prompt: '给我一个一分钟科幻短片',
+        videoRatio: '16:9',
       },
     })
 
@@ -162,6 +163,7 @@ describe('project edit script route', () => {
       userId: 'user-1',
       locale: 'zh',
       prompt: '给我一个一分钟科幻短片',
+      videoRatio: '16:9',
     }))
   })
 

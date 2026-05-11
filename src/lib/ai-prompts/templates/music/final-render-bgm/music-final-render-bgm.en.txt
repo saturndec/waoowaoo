@@ -1,0 +1,47 @@
+You are writing the final prompt for a music generation model.
+
+Output only one production-ready instrumental music prompt for the final rendered video "{title}". Do not output analysis, labels, JSON, markdown, or explanations.
+
+Story context: {story_context}
+Target edit length: {duration_seconds} seconds.
+
+Core task:
+Write a clean final music prompt that designs one coherent background score following the edit-first script below. The music must behave like a composed soundtrack for the full timeline, not like unrelated short clips stitched together.
+
+Genre and style:
+Infer the most suitable genre, era, style blend, and stylistic keywords from the story context and the shot-by-shot map. State the chosen direction clearly and specifically, using descriptive musical vocabulary rather than generic words like "cinematic" alone.
+
+Mood and emotional arc:
+Describe the full emotional trajectory across the edit. Identify where the music should feel calm, tense, humorous, intimate, mysterious, heroic, unsettling, romantic, or energetic based on the segment directions. The mood must change when the cut or story beat demands it.
+
+Instrumentation:
+Infer the most suitable instruments, timbres, orchestration density, and sonic palette from each timestamped segment. Do not apply a fixed instrument recipe. Name the important instrument families or sound sources only when they are musically justified by the edit-first script. Each segment's instrumentation must serve the corresponding shot action, emotion, space, and pacing while leaving room for dialogue or narration.
+
+Tempo and rhythm:
+Infer tempo, approximate BPM range when useful, rhythmic feel, groove density, pauses, and forward motion from the edit-first script. Rhythm changes must follow the cuts and segment flow; do not force one fixed BPM or groove across the whole edit unless the timeline clearly supports it.
+
+Arrangement and structure:
+Use the timestamped structure below. For each time range, describe the musical event, intensity level, transition behavior, and how the segment connects to the previous and next segment. Keep a coherent theme across the whole piece while allowing meaningful rises, releases, drops, rests, and texture changes.
+
+Soundscape and ambiance:
+Infer any appropriate ambience, space, reverb, texture, or environmental color from the visual action and story context. Use these as musical texture, not literal sound effects, unless the edit-first sound direction clearly asks for that.
+
+Shot-by-shot emotional and rhythm map:
+{timeline_map}
+
+Production quality:
+High-quality finished mix, clean intro, edit-friendly transitions, controlled dynamics, and enough frequency space for dialogue or narration.
+
+Constraints:
+Instrumental only: no vocals, no lyrics, no artist imitation, no copyrighted song references. Avoid sudden unrelated style changes. Avoid overpowering drums or excessive cymbal crashes unless a timestamped segment clearly requires them.
+
+Excellent final prompt examples for specificity and structure only. Do not copy their musical content unless the edit-first script independently supports it:
+
+Example 1:
+Nocturnal chase underscore with tense forward motion, 96-112 BPM, built from a low pulsing rhythm, tight dry percussion, metallic accents, and dark harmonic swells. Start with a restrained pulse and narrow stereo field, then increase rhythmic density at each cut. Use short rises before action beats and quick releases after each impact. Keep the mix modern, clean, and spacious enough for dialogue, with no vocals or lyrics.
+
+Example 2:
+Intimate memory sequence score with fragile emotional warmth, slow rubato pacing, sparse melodic fragments, soft high-register textures, and gentle room ambience. Begin almost weightless, let the harmony open gradually through the middle, then resolve with a small bittersweet lift. Avoid heavy drums; keep dynamics controlled and transitions smooth so the music supports narration without drawing attention away from the image.
+
+Example 3:
+Bright comedic montage cue with playful rhythmic bounce, light syncopation, crisp short-note motifs, and quick texture changes aligned to the cuts. Keep the arrangement agile and uncluttered, with small musical punctuation at each visual gag. Use a clean, upbeat mix, short transitions, and a loop-friendly ending; no vocals or lyrics.

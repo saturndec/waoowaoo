@@ -42,6 +42,9 @@ describe('project agent operation registry', () => {
     expect(registry.generate_panel_video?.channels?.tool ?? true).toBe(true)
     expect(registry.generate_episode_voice_audio?.channels?.api ?? false).toBe(true)
     expect(registry.generate_episode_videos?.channels?.api ?? false).toBe(true)
+    expect(registry.generate_video_group?.channels).toEqual({ tool: true, api: true })
+    expect(registry.generate_episode_video_groups?.channels).toEqual({ tool: true, api: true })
+    expect(registry.render_final_video?.channels).toEqual({ tool: true, api: true })
 
     expect(registry.delete_storyboard_panel?.groupPath).toEqual(['storyboard', 'edit'])
     expect(registry.update_storyboard_panel_prompt?.groupPath).toEqual(['storyboard', 'edit'])
@@ -67,6 +70,26 @@ describe('project agent operation registry', () => {
       destructive: false,
       overwrite: false,
       bulk: false,
+      externalSideEffects: true,
+      longRunning: true,
+    })
+  })
+
+  it('registers final video render as a confirmed assistant-callable operation', () => {
+    const registry = createProjectAgentOperationRegistry()
+    const operation = registry.render_final_video
+
+    expect(operation).toBeDefined()
+    expect(operation.channels).toEqual({ tool: true, api: true })
+    expect(operation.groupPath).toEqual(['media', 'video'])
+    expect(operation.confirmation.required).toBe(true)
+    expect(operation.prerequisites.episodeId).toBe('required')
+    expect(operation.effects).toEqual({
+      writes: true,
+      billable: true,
+      destructive: false,
+      overwrite: true,
+      bulk: true,
       externalSideEffects: true,
       longRunning: true,
     })

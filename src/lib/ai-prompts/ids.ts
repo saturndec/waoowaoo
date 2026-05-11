@@ -32,6 +32,8 @@ export const AI_PROMPT_IDS = {
   DESIGN_DIRECTOR_STYLE_PRESET: 'design-director-style-preset',
   VOICE_GENERATE_LINES: 'voice-generate-lines',
   MUSIC_LYRIA_PROMPT_EXPAND: 'music-lyria-prompt-expand',
+  MUSIC_FINAL_RENDER_BGM: 'music-final-render-bgm',
+  VIDEO_GROUP_GRID_PROMPT: 'video-group-grid-prompt',
   EDIT_SCRIPT_BRIEF_QUESTIONS: 'edit-script-brief-questions',
   EDIT_SCRIPT_TIMELINE: 'edit-script-timeline',
   EDIT_SCRIPT_VISUAL_ACTION: 'edit-script-visual-action',

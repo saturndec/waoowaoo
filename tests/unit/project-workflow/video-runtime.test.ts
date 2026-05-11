@@ -43,6 +43,9 @@ vi.mock('@/lib/query/hooks/useStoryboards', () => ({
   useBatchGenerateVideos: () => ({
     mutateAsync: batchGenerateVideosMutateAsyncMock,
   }),
+  useRenderFinalVideo: () => ({
+    mutateAsync: vi.fn(),
+  }),
 }))
 
 vi.mock('@/lib/query/hooks', () => ({

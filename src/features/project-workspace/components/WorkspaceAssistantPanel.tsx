@@ -24,7 +24,7 @@ import {
 import { useWorkspaceAssistantRuntime } from './workspace-assistant/useWorkspaceAssistantRuntime'
 import { apiFetch } from '@/lib/api-fetch'
 import { useCreateProjectEditScript, useCreateProjectEditScriptBriefQuestions } from '@/lib/query/hooks'
-import type { EditBriefOptionId } from '@/lib/edit-script/types'
+import type { EditBriefOptionId, EditScriptVideoRatio } from '@/lib/edit-script/types'
 import { EditFirstComposer } from './workspace-assistant/EditFirstComposer'
 import { EditFirstInlineReply, type EditFirstProgressKind } from './workspace-assistant/EditFirstInlineReply'
 import { WorkspaceAssistantPanelHeader } from './workspace-assistant/WorkspaceAssistantPanelHeader'
@@ -56,6 +56,7 @@ interface WorkspaceAssistantPanelProps {
 const WORKSPACE_ASSISTANT_WIDTH_STORAGE_KEY = 'workspace-assistant-panel-width'
 
 type EditFirstPhase = 'idle' | 'briefQuestions' | 'answeringQuestions' | 'editScript'
+const EDIT_FIRST_VIDEO_RATIOS: readonly EditScriptVideoRatio[] = ['9:16', '16:9', '21:9'] as const
 
 interface EditFirstBriefFlow {
   readonly originalPrompt: string
@@ -85,6 +86,13 @@ function readOperationResultSummary(payload: unknown): string {
   const runId = typeof result.runId === 'string' ? result.runId.trim() : ''
   const status = typeof result.status === 'string' ? result.status.trim() : ''
   return [status, taskId || runId].filter(Boolean).join(' · ')
+}
+
+function resolveEditFirstVideoRatio(answers: readonly EditFirstAnswer[]): EditScriptVideoRatio | undefined {
+  const ratioAnswer = answers.find((answer) => answer.questionId === 'aspect_ratio')
+  if (!ratioAnswer) return undefined
+  const answerText = `${ratioAnswer.optionLabel} ${ratioAnswer.questionLabel}`
+  return EDIT_FIRST_VIDEO_RATIOS.find((ratio) => answerText.includes(ratio))
 }
 
 function readStoredAssistantPanelWidth(): number {
@@ -155,11 +163,16 @@ export default function WorkspaceAssistantPanel({
       answerSectionTitle: t('panel.briefAnswerPromptTitle'),
       answers: buildAnswerSummaries(answers),
     })
+    const videoRatio = resolveEditFirstVideoRatio(answers)
 
     setComposerError(null)
     setEditFirstPhase('editScript')
     try {
-      const editScript = await createEditScript.mutateAsync({ episodeId, prompt })
+      const editScript = await createEditScript.mutateAsync({
+        episodeId,
+        prompt,
+        ...(videoRatio ? { videoRatio } : {}),
+      })
       assistantRuntime.appendMessages([
         createAssistantMessage([
           {

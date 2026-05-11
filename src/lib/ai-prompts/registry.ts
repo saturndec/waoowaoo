@@ -179,13 +179,30 @@ export const AI_PROMPT_CATALOG: Record<AiPromptId, AiPromptCatalogEntry> = {
     pathStem: 'music/lyria-prompt-expand',
     variableKeys: ['user_input', 'duration_seconds', 'vocal_mode', 'genre', 'mood'],
   },
+  [AI_PROMPT_IDS.MUSIC_FINAL_RENDER_BGM]: {
+    pathStem: 'music/final-render-bgm',
+    variableKeys: ['title', 'story_context', 'duration_seconds', 'timeline_map'],
+  },
+  [AI_PROMPT_IDS.VIDEO_GROUP_GRID_PROMPT]: {
+    pathStem: 'video/group-grid-prompt',
+    variableKeys: [
+      'title',
+      'story_context',
+      'aspect_ratio',
+      'grid_mode',
+      'duration_seconds',
+      'grid_map',
+      'timeline_map',
+      'style_context',
+    ],
+  },
   [AI_PROMPT_IDS.EDIT_SCRIPT_BRIEF_QUESTIONS]: {
     pathStem: 'edit-script/brief-questions',
-    variableKeys: ['user_request', 'duration_seconds', 'shot_count', 'style_context'],
+    variableKeys: ['user_request', 'duration_seconds', 'style_context'],
   },
   [AI_PROMPT_IDS.EDIT_SCRIPT_TIMELINE]: {
     pathStem: 'edit-script/timeline',
-    variableKeys: ['user_request', 'duration_seconds', 'shot_count'],
+    variableKeys: ['user_request', 'duration_seconds'],
   },
   [AI_PROMPT_IDS.EDIT_SCRIPT_VISUAL_ACTION]: {
     pathStem: 'edit-script/visual-action',
@@ -208,7 +225,6 @@ export const AI_PROMPT_CATALOG: Record<AiPromptId, AiPromptCatalogEntry> = {
     variableKeys: [
       'user_request',
       'duration_seconds',
-      'shot_count',
       'timeline_json',
       'visual_action_json',
       'camera_json',

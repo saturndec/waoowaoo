@@ -11,20 +11,20 @@
 {{user_request}}
 
 总时长秒数：{{duration_seconds}}
-镜头数量：{{shot_count}}
 
 输出格式：
 {
   "title": "短标题",
   "logline": "一句话概念",
   "shots": [
-    { "shotNumber": 1, "durationSec": 8, "beat": "这一镜头的叙事节拍" }
+    { "shotNumber": 1, "durationSec": 3, "beat": "这一镜头的叙事节拍" }
   ]
 }
 
 要求：
-- shots 数量必须等于镜头数量。
+- shots 数量由影片节奏自行判断，不要平均分配，不要为了凑数机械拆分。
+- 可以使用 1-2 秒快切、3-5 秒较长镜头和节奏起伏；每个镜头必须服务于剪辑功能。
 - shotNumber 从 1 连续递增。
-- durationSec 必须为正整数，总和接近总时长。
+- durationSec 必须为 1 到 5 的正整数，单个镜头绝对不能超过 5 秒，总和接近总时长。
 - 不要生成剧本、对白剧本、分镜图或视频。
 - beat 必须说明这一镜头在剪辑中的功能，例如建立空间、引入主体、制造转折、释放信息、留白收束。

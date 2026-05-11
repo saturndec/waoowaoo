@@ -57,4 +57,15 @@ describe('task queues', () => {
     expect(queue).toBeDefined()
     expect(QueueMock).toHaveBeenCalledTimes(1)
   })
+
+  it('routes final video render tasks to the video queue', async () => {
+    const queuesModule = await import('@/lib/task/queues')
+    const taskTypes = await import('@/lib/task/types')
+
+    expect(queuesModule.getQueueTypeByTaskType(taskTypes.TASK_TYPE.FINAL_VIDEO_RENDER)).toBe('video')
+
+    const queue = queuesModule.getQueueByType('video')
+    expect(queue).toBeDefined()
+    expect(QueueMock).toHaveBeenCalledTimes(1)
+  })
 })

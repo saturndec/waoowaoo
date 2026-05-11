@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import type { Prisma } from '@prisma/client'
 import { prisma } from '@/lib/prisma'
 import { resolveRequiredTaskLocale } from '@/lib/task/resolve-locale'
 import { TASK_TYPE } from '@/lib/task/types'
@@ -6,7 +7,7 @@ import { buildDefaultTaskBillingInfo } from '@/lib/billing'
 import { BillingOperationError } from '@/lib/billing/errors'
 import { withTaskUiPayload } from '@/lib/task/ui-payload'
 import { createMutationBatch } from '@/lib/mutation-batch/service'
-import { hasPanelVideoOutput } from '@/lib/task/has-output'
+import { hasPanelVideoOutput, hasVideoGroupOutput } from '@/lib/task/has-output'
 import { parseModelKeyStrict } from '@/lib/ai-registry/selection'
 import type { CapabilityValue } from '@/lib/ai-registry/types'
 import { ensureAiCatalogsRegistered } from '@/lib/ai-exec/catalog-bootstrap'
@@ -28,6 +29,8 @@ import {
   taskBatchSubmitOperationOutputSchemaBase,
   taskSubmitOperationOutputSchemaBase,
 } from '@/lib/operations/output-schemas'
+import { chunkVideoGroupShots, totalVideoGroupDuration, validateVideoGroupShotNumbers } from '@/lib/video-groups/core'
+import { VIDEO_GRID_MODES, type VideoGridMode, type VideoGroupShot } from '@/lib/video-groups/types'
 
 type UnknownObject = { [key: string]: unknown }
 
@@ -187,6 +190,26 @@ function buildVideoPanelBillingInfoOrThrow(payload: unknown) {
   }
 }
 
+function buildVideoGroupBillingInfoOrThrow(payload: unknown) {
+  try {
+    return buildDefaultTaskBillingInfo(TASK_TYPE.VIDEO_GROUP, isRecord(payload) ? payload : null)
+  } catch (error) {
+    if (
+      error instanceof BillingOperationError
+      && (
+        error.code === 'BILLING_UNKNOWN_VIDEO_CAPABILITY_COMBINATION'
+        || error.code === 'BILLING_UNKNOWN_VIDEO_RESOLUTION'
+      )
+    ) {
+      throw new Error('PROJECT_AGENT_VIDEO_CAPABILITY_COMBINATION_UNSUPPORTED')
+    }
+    if (error instanceof BillingOperationError && error.code === 'BILLING_UNKNOWN_MODEL') {
+      return null
+    }
+    throw error
+  }
+}
+
 function buildVideoTaskPayload(params: {
   ctx: ProjectAgentOperationContext
   input: UnknownObject
@@ -329,6 +352,360 @@ async function executeGenerateEpisodeVideosOperation(params: {
   }
 }
 
+function parseShotNumbersJson(value: unknown): number[] {
+  if (!Array.isArray(value)) return []
+  return value
+    .map((item) => (typeof item === 'number' ? item : Number(item)))
+    .filter((item) => Number.isInteger(item) && item > 0)
+}
+
+function sameShotNumbers(left: readonly number[], right: readonly number[]): boolean {
+  if (left.length !== right.length) return false
+  return left.every((value, index) => value === right[index])
+}
+
+async function findExistingVideoGroup(params: {
+  episodeId: string
+  gridMode: VideoGridMode
+  shotNumbers: readonly number[]
+}) {
+  const candidates = await prisma.projectVideoGroup.findMany({
+    where: {
+      episodeId: params.episodeId,
+      gridMode: params.gridMode,
+    },
+    select: {
+      id: true,
+      status: true,
+      taskId: true,
+      errorCode: true,
+      errorMessage: true,
+      referenceImageUrl: true,
+      referenceImageMediaId: true,
+      videoUrl: true,
+      videoMediaId: true,
+      shotNumbers: true,
+    },
+  })
+  return candidates.find((candidate) => sameShotNumbers(parseShotNumbersJson(candidate.shotNumbers), params.shotNumbers)) ?? null
+}
+
+function parseEditScriptShots(value: unknown): VideoGroupShot[] {
+  if (!Array.isArray(value)) throw new Error('PROJECT_AGENT_EDIT_SCRIPT_SHOTS_INVALID')
+  return value.map((item) => {
+    if (!isRecord(item)) throw new Error('PROJECT_AGENT_EDIT_SCRIPT_SHOT_INVALID')
+    const shotNumber = Number(item.shotNumber)
+    const durationSec = Number(item.durationSec)
+    if (!Number.isInteger(shotNumber) || shotNumber <= 0) throw new Error('PROJECT_AGENT_EDIT_SCRIPT_SHOT_NUMBER_INVALID')
+    if (!Number.isInteger(durationSec) || durationSec < 1 || durationSec > 5) throw new Error('PROJECT_AGENT_EDIT_SCRIPT_SHOT_DURATION_INVALID')
+    return {
+      shotNumber,
+      durationSec,
+      visualAction: normalizeString(item.visualAction),
+      charactersAndScene: normalizeString(item.charactersAndScene),
+      camera: normalizeString(item.camera),
+      videoPrompt: normalizeString(item.videoPrompt),
+      sound: normalizeString(item.sound),
+    }
+  })
+}
+
+async function resolveVideoGroupInput(params: {
+  projectId: string
+  episodeId: string
+  gridMode: VideoGridMode
+  shotNumbers: readonly number[]
+}) {
+  const shotNumbers = validateVideoGroupShotNumbers({
+    gridMode: params.gridMode,
+    shotNumbers: params.shotNumbers,
+  })
+  const [episode, editScript, panels] = await Promise.all([
+    prisma.projectEpisode.findFirst({
+      where: { id: params.episodeId, projectId: params.projectId },
+      select: { id: true },
+    }),
+    prisma.projectEditScript.findFirst({
+      where: { episodeId: params.episodeId, projectId: params.projectId },
+      select: { id: true, title: true, logline: true, shotsJson: true },
+    }),
+    prisma.projectPanel.findMany({
+      where: {
+        storyboard: { episodeId: params.episodeId },
+        panelNumber: { in: shotNumbers },
+      },
+      select: {
+        id: true,
+        panelNumber: true,
+        imageUrl: true,
+        imageMediaId: true,
+      },
+    }),
+  ])
+  if (!episode) throw new Error('PROJECT_AGENT_EPISODE_NOT_FOUND')
+  if (!editScript) throw new Error('PROJECT_AGENT_EDIT_SCRIPT_REQUIRED')
+  const shots = parseEditScriptShots(editScript.shotsJson)
+  const selectedShots = shotNumbers.map((shotNumber) => {
+    const shot = shots.find((item) => item.shotNumber === shotNumber)
+    if (!shot) throw new Error(`PROJECT_AGENT_VIDEO_GROUP_SHOT_NOT_FOUND:${shotNumber}`)
+    return shot
+  })
+  const panelByShotNumber = new Map<number, (typeof panels)[number]>()
+  panels.forEach((panel) => {
+    if (typeof panel.panelNumber === 'number') panelByShotNumber.set(panel.panelNumber, panel)
+  })
+  shotNumbers.forEach((shotNumber) => {
+    const panel = panelByShotNumber.get(shotNumber)
+    if (!panel) throw new Error(`PROJECT_AGENT_VIDEO_GROUP_PANEL_NOT_FOUND:${shotNumber}`)
+    if (!panel.imageUrl && !panel.imageMediaId) throw new Error(`PROJECT_AGENT_VIDEO_GROUP_PANEL_IMAGE_MISSING:${shotNumber}`)
+  })
+  return {
+    editScript,
+    shotNumbers,
+    selectedShots,
+  }
+}
+
+async function upsertVideoGroupForTask(params: {
+  projectId: string
+  episodeId: string
+  gridMode: VideoGridMode
+  shotNumbers: readonly number[]
+  durationSec: number
+}) {
+  const existing = await findExistingVideoGroup({
+    episodeId: params.episodeId,
+    gridMode: params.gridMode,
+    shotNumbers: params.shotNumbers,
+  })
+  if (existing) {
+    await prisma.projectVideoGroup.update({
+      where: { id: existing.id },
+      data: {
+        durationSec: params.durationSec,
+        status: 'queued',
+        taskId: null,
+        errorCode: null,
+        errorMessage: null,
+      },
+    })
+    return { groupId: existing.id, previous: existing }
+  }
+  const created = await prisma.projectVideoGroup.create({
+    data: {
+      projectId: params.projectId,
+      episodeId: params.episodeId,
+      gridMode: params.gridMode,
+      shotNumbers: params.shotNumbers as unknown as Prisma.InputJsonValue,
+      durationSec: params.durationSec,
+      status: 'queued',
+    },
+    select: { id: true },
+  })
+  return { groupId: created.id, previous: null }
+}
+
+async function rollbackVideoGroupTaskRecord(params: {
+  groupId: string
+  previous: Awaited<ReturnType<typeof findExistingVideoGroup>> | null
+}) {
+  if (!params.previous) {
+    await prisma.projectVideoGroup.delete({ where: { id: params.groupId } }).catch(() => undefined)
+    return
+  }
+  await prisma.projectVideoGroup.update({
+    where: { id: params.groupId },
+    data: {
+      status: params.previous.status,
+      taskId: params.previous.taskId,
+      errorCode: params.previous.errorCode,
+      errorMessage: params.previous.errorMessage,
+      referenceImageUrl: params.previous.referenceImageUrl,
+      referenceImageMediaId: params.previous.referenceImageMediaId,
+      videoUrl: params.previous.videoUrl,
+      videoMediaId: params.previous.videoMediaId,
+    },
+  }).catch(() => undefined)
+}
+
+async function submitVideoGroupTask(params: {
+  ctx: ProjectAgentOperationContext
+  input: UnknownObject
+  operationId: string
+  episodeId: string
+  gridMode: VideoGridMode
+  shotNumbers: readonly number[]
+}) {
+  const resolved = await resolveVideoGroupInput({
+    projectId: params.ctx.projectId,
+    episodeId: params.episodeId,
+    gridMode: params.gridMode,
+    shotNumbers: params.shotNumbers,
+  })
+  const durationSec = totalVideoGroupDuration(resolved.selectedShots)
+  const { payload, localeForTask } = buildVideoTaskPayload({ ctx: params.ctx, input: params.input })
+  const rawGenerationOptions = isRecord(payload.generationOptions) ? payload.generationOptions : {}
+  payload.generationOptions = {
+    ...rawGenerationOptions,
+    duration: durationSec,
+  }
+  payload.episodeId = params.episodeId
+  payload.gridMode = params.gridMode
+  payload.shotNumbers = resolved.shotNumbers
+  payload.durationSec = durationSec
+
+  await validateVideoTaskPayloadOrThrow({
+    payload,
+    projectId: params.ctx.projectId,
+    userId: params.ctx.userId,
+  })
+
+  const { groupId, previous } = await upsertVideoGroupForTask({
+    projectId: params.ctx.projectId,
+    episodeId: params.episodeId,
+    gridMode: params.gridMode,
+    shotNumbers: resolved.shotNumbers,
+    durationSec,
+  })
+
+  try {
+    const result = await submitOperationTask({
+      request: params.ctx.request,
+      userId: params.ctx.userId,
+      locale: localeForTask,
+      projectId: params.ctx.projectId,
+      episodeId: params.episodeId,
+      type: TASK_TYPE.VIDEO_GROUP,
+      targetType: 'ProjectVideoGroup',
+      targetId: groupId,
+      operationId: params.operationId,
+      source: params.ctx.source,
+      confirmed: params.input.confirmed === true,
+      payload: withTaskUiPayload(payload, {
+        hasOutputAtStart: await hasVideoGroupOutput(groupId),
+      }),
+      dedupeKey: `video_group:${groupId}`,
+      billingInfo: buildVideoGroupBillingInfoOrThrow(payload),
+      decoratePayload: false,
+    })
+    await prisma.projectVideoGroup.update({
+      where: { id: groupId },
+      data: {
+        taskId: result.taskId,
+        status: result.status,
+      },
+    })
+    return {
+      result,
+      groupId,
+      durationSec,
+      shotNumbers: resolved.shotNumbers,
+    }
+  } catch (error) {
+    await rollbackVideoGroupTaskRecord({ groupId, previous })
+    throw error
+  }
+}
+
+async function executeGenerateVideoGroupOperation(params: {
+  ctx: ProjectAgentOperationContext
+  input: UnknownObject
+  operationId: string
+}) {
+  const episodeId = normalizeString(params.input.episodeId) || normalizeString(params.ctx.context.episodeId)
+  if (!episodeId) throw new Error('PROJECT_AGENT_EPISODE_REQUIRED')
+  const gridMode = params.input.gridMode === '3x3' ? '3x3' : '2x2'
+  const shotNumbers = Array.isArray(params.input.shotNumbers)
+    ? params.input.shotNumbers.map((value) => Number(value))
+    : []
+  const submitted = await submitVideoGroupTask({
+    ctx: params.ctx,
+    input: params.input,
+    operationId: params.operationId,
+    episodeId,
+    gridMode,
+    shotNumbers,
+  })
+  writeOperationDataPart<TaskSubmittedPartData>(params.ctx.writer, 'data-task-submitted', {
+    operationId: params.operationId,
+    taskId: submitted.result.taskId,
+    status: submitted.result.status,
+    runId: submitted.result.runId || null,
+    deduped: submitted.result.deduped,
+  })
+  return {
+    ...submitted.result,
+    groupId: submitted.groupId,
+    episodeId,
+    gridMode,
+    shotNumbers: submitted.shotNumbers,
+    durationSec: submitted.durationSec,
+  }
+}
+
+async function executeGenerateEpisodeVideoGroupsOperation(params: {
+  ctx: ProjectAgentOperationContext
+  input: UnknownObject
+  operationId: string
+}) {
+  const episodeId = normalizeString(params.input.episodeId) || normalizeString(params.ctx.context.episodeId)
+  if (!episodeId) throw new Error('PROJECT_AGENT_EPISODE_REQUIRED')
+  const gridMode = params.input.gridMode === '3x3' ? '3x3' : '2x2'
+  const editScript = await prisma.projectEditScript.findFirst({
+    where: { episodeId, projectId: params.ctx.projectId },
+    select: { shotsJson: true },
+  })
+  if (!editScript) throw new Error('PROJECT_AGENT_EDIT_SCRIPT_REQUIRED')
+  const shots = parseEditScriptShots(editScript.shotsJson)
+  const chunks = chunkVideoGroupShots({
+    gridMode,
+    shotNumbers: shots.map((shot) => shot.shotNumber),
+  })
+  if (chunks.length === 0) {
+    return {
+      success: true,
+      async: true,
+      total: 0,
+      taskIds: [],
+      results: [],
+      noop: true,
+      reason: '没有足够镜头组成宫格连续视频',
+    }
+  }
+
+  const submitted = []
+  for (const shotNumbers of chunks) {
+    submitted.push(await submitVideoGroupTask({
+      ctx: params.ctx,
+      input: params.input,
+      operationId: params.operationId,
+      episodeId,
+      gridMode,
+      shotNumbers,
+    }))
+  }
+  const taskIds = submitted.map((item) => item.result.taskId)
+  writeOperationDataPart<TaskBatchSubmittedPartData>(params.ctx.writer, 'data-task-batch-submitted', {
+    operationId: params.operationId,
+    total: submitted.length,
+    taskIds,
+    results: submitted.map((item) => ({ refId: item.groupId, taskId: item.result.taskId })),
+  })
+  return {
+    success: true,
+    async: true,
+    total: submitted.length,
+    taskIds,
+    results: submitted.map((item) => ({
+      refId: item.groupId,
+      taskId: item.result.taskId,
+      shotNumbers: item.shotNumbers,
+      durationSec: item.durationSec,
+    })),
+    gridMode,
+  }
+}
+
 async function executeGeneratePanelVideoOperation(params: {
   ctx: ProjectAgentOperationContext
   input: UnknownObject
@@ -454,6 +831,23 @@ const generateEpisodeVideosInputSchema = z.object({
   generationOptions: z.record(z.unknown()).optional(),
 }).passthrough()
 
+const generateVideoGroupInputSchema = z.object({
+  confirmed: z.boolean().optional(),
+  episodeId: z.string().min(1).optional(),
+  gridMode: z.enum(VIDEO_GRID_MODES),
+  shotNumbers: z.array(z.number().int().positive()).min(1).max(9),
+  videoModel: z.string().min(1),
+  generationOptions: z.record(z.unknown()).optional(),
+}).passthrough()
+
+const generateEpisodeVideoGroupsInputSchema = z.object({
+  confirmed: z.boolean().optional(),
+  episodeId: z.string().min(1).optional(),
+  gridMode: z.enum(VIDEO_GRID_MODES),
+  videoModel: z.string().min(1),
+  generationOptions: z.record(z.unknown()).optional(),
+}).passthrough()
+
 export function createVideoGenerationOperations(): ProjectAgentOperationRegistryDraft {
   const generatePanelVideoOutputSchema = refineTaskSubmitOperationOutputSchema(
     taskSubmitOperationOutputSchemaBase.extend({
@@ -468,6 +862,28 @@ export function createVideoGenerationOperations(): ProjectAgentOperationRegistry
         refId: z.string().min(1),
         taskId: z.string().min(1),
       })),
+    }).passthrough(),
+  )
+
+  const generateVideoGroupOutputSchema = refineTaskSubmitOperationOutputSchema(
+    taskSubmitOperationOutputSchemaBase.extend({
+      groupId: z.string().min(1),
+      episodeId: z.string().min(1),
+      gridMode: z.enum(VIDEO_GRID_MODES),
+      shotNumbers: z.array(z.number().int().positive()),
+      durationSec: z.number().int().positive(),
+    }).passthrough(),
+  )
+
+  const generateEpisodeVideoGroupsOutputSchema = refineTaskBatchSubmitOperationOutputSchema(
+    taskBatchSubmitOperationOutputSchemaBase.extend({
+      results: z.array(z.object({
+        refId: z.string().min(1),
+        taskId: z.string().min(1),
+        shotNumbers: z.array(z.number().int().positive()),
+        durationSec: z.number().int().positive(),
+      })),
+      gridMode: z.enum(VIDEO_GRID_MODES),
     }).passthrough(),
   )
 
@@ -522,6 +938,60 @@ export function createVideoGenerationOperations(): ProjectAgentOperationRegistry
         ctx,
         input: input as UnknownObject,
         operationId: 'generate_episode_videos',
+      }),
+    }),
+
+    generate_video_group: defineOperation({
+      id: 'generate_video_group',
+      summary: 'Generate one continuous video segment from a 2x2 or 3x3 storyboard reference grid.',
+      intent: 'act',
+      prerequisites: { episodeId: 'required' },
+      effects: {
+        writes: true,
+        billable: true,
+        destructive: false,
+        overwrite: true,
+        bulk: false,
+        externalSideEffects: true,
+        longRunning: true,
+      },
+      confirmation: {
+        required: true,
+        summary: '将把一组分镜图合成为宫格参考图并生成连续视频片段（可能消耗额度/产生计费）。确认继续后请重新调用并传入 confirmed=true。',
+      },
+      inputSchema: generateVideoGroupInputSchema,
+      outputSchema: generateVideoGroupOutputSchema,
+      execute: async (ctx, input) => executeGenerateVideoGroupOperation({
+        ctx,
+        input: input as UnknownObject,
+        operationId: 'generate_video_group',
+      }),
+    }),
+
+    generate_episode_video_groups: defineOperation({
+      id: 'generate_episode_video_groups',
+      summary: 'Batch generate continuous grid video segments for an episode.',
+      intent: 'act',
+      prerequisites: { episodeId: 'required' },
+      effects: {
+        writes: true,
+        billable: true,
+        destructive: false,
+        overwrite: true,
+        bulk: true,
+        externalSideEffects: true,
+        longRunning: true,
+      },
+      confirmation: {
+        required: true,
+        summary: '将按剪辑先行顺序批量生成宫格连续视频片段（可能消耗额度/产生计费）。确认继续后请重新调用并传入 confirmed=true。',
+      },
+      inputSchema: generateEpisodeVideoGroupsInputSchema,
+      outputSchema: generateEpisodeVideoGroupsOutputSchema,
+      execute: async (ctx, input) => executeGenerateEpisodeVideoGroupsOperation({
+        ctx,
+        input: input as UnknownObject,
+        operationId: 'generate_episode_video_groups',
       }),
     }),
   }

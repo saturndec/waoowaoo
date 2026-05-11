@@ -96,7 +96,7 @@ describe('workspace node rendering', () => {
 
     expect(html).toContain('/api/storage/sign?key=images%2Fcharacter-1.jpg')
     expect(html).toContain('object-contain')
-    expect(html).toContain('h-[240px]')
+    expect(html).toContain('style="height:240px"')
     expect(html).not.toContain('Asset ID')
     expect(html).not.toContain('asset-target-id')
     expect(html).not.toContain('shots 1')

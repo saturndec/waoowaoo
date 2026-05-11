@@ -37,7 +37,12 @@ interface VideoDetailProps {
       readonly customPrompt?: string
     },
   ) => Promise<void>
-  readonly onGenerateAllVideos: (model: string, generationOptions: VideoGenerationOptions) => Promise<void>
+  readonly onGenerateAllVideos: (
+    model: string,
+    generationOptions: VideoGenerationOptions,
+    mode?: 'single' | 'grid',
+    gridMode?: '2x2' | '3x3',
+  ) => Promise<void>
   readonly onDownloadVideos: () => Promise<void>
 }
 
@@ -48,6 +53,8 @@ export default function VideoDetail(props: VideoDetailProps) {
   const [videoPrompt, setVideoPrompt] = useState(panel.videoPrompt ?? '')
   const [firstLastPrompt, setFirstLastPrompt] = useState(panel.firstLastFramePrompt ?? '')
   const [flModel, setFlModel] = useState(panel.videoModel ?? runtime.videoModel ?? '')
+  const [batchMode, setBatchMode] = useState<'single' | 'grid'>('single')
+  const [gridMode, setGridMode] = useState<'2x2' | '3x3'>('2x2')
   const nextContext = useMemo(() => findNextPanelContext(props.storyboards, props.context), [props.context, props.storyboards])
   const videoModel = usePanelVideoModel({
     defaultVideoModel: panel.videoModel ?? runtime.videoModel ?? '',
@@ -174,9 +181,48 @@ export default function VideoDetail(props: VideoDetailProps) {
       </DetailSection>
 
       <DetailSection title={t('sections.batchVideo')}>
-        <div className="flex flex-wrap gap-2">
-          <ActionButton onClick={() => props.onGenerateAllVideos(videoModel.selectedModel, videoModel.generationOptions)} disabled={!videoModel.selectedModel || missingCapabilities.length > 0} variant="primary">{t('actions.generateAllVideos')}</ActionButton>
+        <div className="space-y-3">
+          <div className="flex flex-wrap gap-2">
+            <button
+              type="button"
+              onClick={() => setBatchMode('single')}
+              className={`rounded-md border px-3 py-2 text-sm ${batchMode === 'single' ? 'border-black bg-black text-white' : 'border-black/10 bg-white text-[var(--glass-text-secondary)]'}`}
+            >
+              {t('fields.singleVideoMode')}
+            </button>
+            <button
+              type="button"
+              onClick={() => setBatchMode('grid')}
+              className={`rounded-md border px-3 py-2 text-sm ${batchMode === 'grid' ? 'border-black bg-black text-white' : 'border-black/10 bg-white text-[var(--glass-text-secondary)]'}`}
+            >
+              {t('fields.gridVideoMode')}
+            </button>
+            {batchMode === 'grid' ? (
+              <select
+                value={gridMode}
+                onChange={(event) => setGridMode(event.target.value === '3x3' ? '3x3' : '2x2')}
+                className="rounded-md border border-black/10 bg-white px-3 py-2 text-sm"
+              >
+                <option value="2x2">{t('fields.grid2x2')}</option>
+                <option value="3x3">{t('fields.grid3x3')}</option>
+              </select>
+            ) : null}
+          </div>
+          <div className="flex flex-wrap gap-2">
+          <ActionButton
+            onClick={() => props.onGenerateAllVideos(
+              videoModel.selectedModel,
+              videoModel.generationOptions,
+              batchMode,
+              batchMode === 'grid' ? gridMode : undefined,
+            )}
+            disabled={!videoModel.selectedModel || missingCapabilities.length > 0}
+            variant="primary"
+          >
+            {batchMode === 'grid' ? t('actions.generateGridVideos') : t('actions.generateAllVideos')}
+          </ActionButton>
           <ActionButton onClick={props.onDownloadVideos}>{t('actions.downloadVideos')}</ActionButton>
+          </div>
         </div>
       </DetailSection>
     </div>

@@ -148,6 +148,16 @@ describe('workspace node canvas projection', () => {
               panelIndex: 0,
               description: 'first panel',
               imageUrl: 'https://example.com/panel-1.png',
+              media: {
+                id: 'media-panel-1',
+                publicId: 'media-panel-1',
+                url: 'https://example.com/panel-1.png',
+                mimeType: 'image/png',
+                sizeBytes: null,
+                width: 1080,
+                height: 1920,
+                durationMs: null,
+              },
             }),
           ],
         }),
@@ -174,6 +184,8 @@ describe('workspace node canvas projection', () => {
     const shotNode = projection.nodes.find((node) => node.id === 'shot:panel-1')
     expect(shotNode?.data.action).toEqual({ type: 'generate_image', panelId: 'panel-1' })
     expect(shotNode?.data.previewImageUrl).toBe('https://example.com/panel-1.png')
+    expect(shotNode?.data.previewAspectRatio).toBeCloseTo(1080 / 1920)
+    expect(shotNode?.data.previewDisplayHeight).toBeGreaterThan(118)
     expect(projection.nodes.some((node) => node.id === 'image:panel-1')).toBe(false)
 
     const pendingVideoNode = projection.nodes.find((node) => node.id === 'video:panel-1')
@@ -188,9 +200,106 @@ describe('workspace node canvas projection', () => {
     const finalNode = projection.nodes.find((node) => node.id === 'final:episode-1')
     expect(finalNode?.data.finalDetails?.totalVideos).toBe(1)
     expect(finalNode?.data.action).toEqual({
-      type: 'generate_all_videos',
-      videoModel: 'project-video-model',
+      type: 'render_final_video',
     })
+    expect(finalNode?.data.actionLabel).toBe('actions.renderFinalVideo')
+  })
+
+  it('marks final timeline as AI editing while final render task is running', () => {
+    const projection = buildWorkspaceNodeCanvasProjection({
+      episodeId: 'episode-1',
+      storyText: 'A real story',
+      clips: [createClip('clip-1', 'clip content')],
+      storyboards: [
+        createStoryboard({
+          id: 'storyboard-1',
+          clipId: 'clip-1',
+          panels: [
+            createPanel({
+              id: 'panel-1',
+              panelIndex: 0,
+              videoUrl: 'https://example.com/panel-1.mp4',
+            }),
+          ],
+        }),
+      ],
+      savedLayouts: [],
+      finalRenderPhase: 'processing',
+      translate: t,
+    })
+
+    const finalNode = projection.nodes.find((node) => node.id === 'final:episode-1')
+    expect(finalNode?.data.statusLabel).toBe('status.aiEditing')
+    expect(finalNode?.data.actionLabel).toBe('actions.aiEditing')
+    expect(finalNode?.data.actionDisabled).toBe(true)
+  })
+
+  it('shows final render failures on the final timeline node', () => {
+    const projection = buildWorkspaceNodeCanvasProjection({
+      episodeId: 'episode-1',
+      storyText: 'A real story',
+      clips: [createClip('clip-1', 'clip content')],
+      storyboards: [
+        createStoryboard({
+          id: 'storyboard-1',
+          clipId: 'clip-1',
+          panels: [
+            createPanel({
+              id: 'panel-1',
+              panelIndex: 0,
+              videoUrl: 'https://example.com/panel-1.mp4',
+            }),
+          ],
+        }),
+      ],
+      savedLayouts: [],
+      finalRenderPhase: 'failed',
+      finalRenderErrorMessage: 'Google music network failed',
+      translate: t,
+    })
+
+    const finalNode = projection.nodes.find((node) => node.id === 'final:episode-1')
+    expect(finalNode?.data.statusLabel).toBe('status.failed')
+    expect(finalNode?.data.meta).toBe('Google music network failed')
+    expect(finalNode?.data.actionLabel).toBe('actions.renderFinalVideo')
+    expect(finalNode?.data.actionDisabled).toBe(false)
+  })
+
+  it('shows completed final render output on the final timeline node', () => {
+    const projection = buildWorkspaceNodeCanvasProjection({
+      episodeId: 'episode-1',
+      storyText: 'A real story',
+      clips: [createClip('clip-1', 'clip content')],
+      storyboards: [
+        createStoryboard({
+          id: 'storyboard-1',
+          clipId: 'clip-1',
+          panels: [
+            createPanel({
+              id: 'panel-1',
+              panelIndex: 0,
+              videoUrl: 'https://example.com/panel-1.mp4',
+            }),
+          ],
+        }),
+      ],
+      finalVideo: {
+        id: 'editor-1',
+        episodeId: 'episode-1',
+        renderStatus: 'completed',
+        renderTaskId: 'task-1',
+        outputUrl: '/m/final-video.mp4',
+        updatedAt: '2026-05-11T04:50:59.342Z',
+      },
+      savedLayouts: [],
+      translate: t,
+    })
+
+    const finalNode = projection.nodes.find((node) => node.id === 'final:episode-1')
+    expect(finalNode?.data.statusLabel).toBe('status.finalReady')
+    expect(finalNode?.data.meta).toBe('nodes.final.outputReady')
+    expect(finalNode?.data.finalDetails?.outputUrl).toBe('/m/final-video.mp4')
+    expect(finalNode?.data.finalDetails?.renderStatus).toBe('completed')
   })
 
   it('uses saved layout only for node position and preserves business ordering', () => {

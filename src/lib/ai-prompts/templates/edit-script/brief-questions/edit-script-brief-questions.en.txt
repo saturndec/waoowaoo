@@ -4,7 +4,6 @@ User request:
 {{user_request}}
 
 Default total duration seconds: {{duration_seconds}}
-Default shot count: {{shot_count}}
 
 Project style context:
 {{style_context}}
@@ -26,8 +25,9 @@ Output format:
 
 Requirements:
 - Return 2 to 4 questions, based on what the user request is missing. Do not mechanically use a fixed questionnaire.
+- You must include one aspect-ratio question. Its id must be "aspect_ratio", and its 3 options must be, in order: 9:16 vertical short video, 16:9 horizontal video, 21:9 cinematic ultra-wide.
 - Each question must help the later edit table generation. Prioritize information that affects aspect ratio, protagonist, mood, rhythm, ending, or visual strategy.
-- If the user already stated something clearly, do not ask the same thing again.
+- If the user already stated a non-aspect-ratio detail clearly, do not ask the same thing again; still ask the user to click-confirm the aspect ratio.
 - Each question must have exactly 3 options, and option ids must be exactly A, B, C.
 - Write labels in the user's current language, short and specific, suitable for direct display in the agent chat panel.
 - Do not generate screenplay, storyboard images, video, assets, or explanatory text.

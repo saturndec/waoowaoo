@@ -32,6 +32,7 @@ vi.mock('@/lib/adapters/api/execute-project-agent-operation', () => apiAdapterMo
 import { POST as modifyAssetImagePost } from '@/app/api/projects/[projectId]/modify-asset-image/route'
 import { POST as voiceGeneratePost } from '@/app/api/projects/[projectId]/voice-generate/route'
 import { POST as generateVideoPost } from '@/app/api/projects/[projectId]/generate-video/route'
+import { POST as finalVideoRenderPost } from '@/app/api/projects/[projectId]/final-video-render/route'
 import { POST as regeneratePanelImagePost } from '@/app/api/projects/[projectId]/regenerate-panel-image/route'
 
 describe('api contract - project media generation routes (operation adapter)', () => {
@@ -165,6 +166,8 @@ describe('api contract - project media generation routes (operation adapter)', (
     apiAdapterMock.executeProjectAgentOperationFromApi
       .mockResolvedValueOnce({ success: true })
       .mockResolvedValueOnce({ success: true })
+      .mockResolvedValueOnce({ success: true })
+      .mockResolvedValueOnce({ success: true })
 
     const singleRes = await generateVideoPost(
       buildMockRequest({
@@ -184,13 +187,85 @@ describe('api contract - project media generation routes (operation adapter)', (
       { params: Promise.resolve({ projectId: 'project-1' }) },
     )
 
+    const gridSingleRes = await generateVideoPost(
+      buildMockRequest({
+        path: '/api/projects/project-1/generate-video',
+        method: 'POST',
+        body: {
+          episodeId: 'episode-1',
+          mode: 'grid',
+          gridMode: '2x2',
+          shotNumbers: [1, 2, 3, 4],
+          videoModel: 'provider/model',
+        },
+      }),
+      { params: Promise.resolve({ projectId: 'project-1' }) },
+    )
+
+    const gridBatchRes = await generateVideoPost(
+      buildMockRequest({
+        path: '/api/projects/project-1/generate-video',
+        method: 'POST',
+        body: {
+          episodeId: 'episode-1',
+          mode: 'grid',
+          gridMode: '3x3',
+          all: true,
+          videoModel: 'provider/model',
+        },
+      }),
+      { params: Promise.resolve({ projectId: 'project-1' }) },
+    )
+
     expect(singleRes.status).toBe(200)
     expect(batchRes.status).toBe(200)
+    expect(gridSingleRes.status).toBe(200)
+    expect(gridBatchRes.status).toBe(200)
     expect(apiAdapterMock.executeProjectAgentOperationFromApi).toHaveBeenNthCalledWith(1, expect.objectContaining({
       operationId: 'generate_panel_video',
     }))
     expect(apiAdapterMock.executeProjectAgentOperationFromApi).toHaveBeenNthCalledWith(2, expect.objectContaining({
       operationId: 'generate_episode_videos',
+    }))
+    expect(apiAdapterMock.executeProjectAgentOperationFromApi).toHaveBeenNthCalledWith(3, expect.objectContaining({
+      operationId: 'generate_video_group',
+      input: expect.objectContaining({
+        gridMode: '2x2',
+        shotNumbers: [1, 2, 3, 4],
+      }),
+    }))
+    expect(apiAdapterMock.executeProjectAgentOperationFromApi).toHaveBeenNthCalledWith(4, expect.objectContaining({
+      operationId: 'generate_episode_video_groups',
+      input: expect.objectContaining({
+        gridMode: '3x3',
+      }),
+    }))
+  })
+
+  it('POST /api/projects/[projectId]/final-video-render -> routes to final render operation with confirmation', async () => {
+    apiAdapterMock.executeProjectAgentOperationFromApi.mockResolvedValueOnce({ success: true })
+
+    const res = await finalVideoRenderPost(
+      buildMockRequest({
+        path: '/api/projects/project-1/final-video-render',
+        method: 'POST',
+        body: { episodeId: 'episode-1', confirmed: true, bgmVolume: 0.35 },
+      }),
+      { params: Promise.resolve({ projectId: 'project-1' }) },
+    )
+
+    expect(res.status).toBe(200)
+    expect(apiAdapterMock.executeProjectAgentOperationFromApi).toHaveBeenCalledWith(expect.objectContaining({
+      operationId: 'render_final_video',
+      projectId: 'project-1',
+      userId: 'user-1',
+      context: { episodeId: 'episode-1' },
+      input: {
+        confirmed: true,
+        episodeId: 'episode-1',
+        bgmVolume: 0.35,
+      },
+      source: 'project-ui',
     }))
   })
 })

@@ -154,6 +154,7 @@
     "prepareFailed": "准备失败",
     "generationFailed": "生成失败",
     "batchVideoFailed": "批量生成视频失败",
+    "finalRenderFailed": "AI 剪辑失败",
     "updateFailed": "更新失败",
     "saveFailed": "保存失败",
     "storyToScriptRunning": "Story→Script V2 运行中",
@@ -245,6 +246,8 @@
         "regenerateImage": "重新生成",
         "generateVideo": "生成视频",
         "generateAllVideos": "批量生成",
+        "renderFinalVideo": "AI剪辑",
+        "aiEditing": "AI剪辑中",
         "generateEditAssets": "全部生成",
         "generateEditAsset": "生成资产"
       },
@@ -252,6 +255,8 @@
         "empty": "待输入",
         "pending": "待生成",
         "ready": "已就绪",
+        "finalReady": "已成片",
+        "aiEditing": "AI剪辑中",
         "processing": "处理中",
         "failed": "失败"
       },
@@ -353,6 +358,7 @@
           "imageGeneration": "图片生成 / 编辑",
           "videoPreview": "视频预览",
           "videoControls": "视频控制",
+          "finalOutput": "成片输出",
           "finalStats": "成片统计",
           "timelineOrder": "时间线顺序",
           "storyInput": "故事输入",
@@ -390,6 +396,10 @@
           "videoModel": "视频模型",
           "linkedToNextPanel": "衔接下一个镜头",
           "generationOptions": "生成参数 JSON",
+          "singleVideoMode": "单镜头",
+          "gridVideoMode": "宫格连续",
+          "grid2x2": "2x2 四宫格",
+          "grid3x3": "3x3 九宫格",
           "characterAsset": "资产角色",
           "appearanceAsset": "角色形象",
           "locationAsset": "资产场景",
@@ -430,6 +440,9 @@
           "generateVideo": "生成视频",
           "generateFirstLastVideo": "首尾帧生成",
           "generateAllVideos": "批量生成视频",
+          "generateGridVideos": "生成宫格连续视频",
+          "renderFinalVideo": "AI剪辑",
+          "openFinalVideo": "打开成片",
           "downloadVideos": "下载视频"
         },
         "defaults": {
@@ -465,7 +478,7 @@
         "messages": {
           "referenceSelection": "已选择 {count} 张参考图，可包含分镜、角色、场景、道具、URL、上传或粘贴图片。",
           "noNextPanelForFirstLast": "当前镜头后面没有下一个镜头，无法使用首尾帧模式。",
-          "finalExportUnavailable": "AI 剪辑和最终成片导出本轮不接入。"
+          "finalRenderRequiresVideos": "所有镜头视频生成完成后才可 AI 剪辑成片。"
         },
         "status": {
           "videoReady": "已生成",
@@ -521,11 +534,18 @@
           "eyebrow": "视频节点",
           "meta": "绑定来源镜头"
         },
+        "videoGroup": {
+          "title": "连续片段 {index}",
+          "eyebrow": "宫格连续视频",
+          "body": "按剪辑先行顺序生成的连续视频片段",
+          "meta": "{grid} · 镜头 {shots} · {duration} 秒"
+        },
         "final": {
           "title": "成片时间线",
           "eyebrow": "最终输出",
           "body": "{videos} 个视频片段已进入成片链路。",
-          "meta": "顺序来自业务数据"
+          "meta": "顺序来自业务数据",
+          "outputReady": "成片已生成，可在详情中预览"
         },
         "editScript": {
           "eyebrow": "核心剪辑表",

@@ -21,6 +21,7 @@ import { logWarn as _ulogWarn } from '@/lib/logging/core'
 import type { UpsertCanvasLayoutInput } from '@/lib/project-canvas/layout/canvas-layout-contract'
 import type { CanvasNodeLayout } from '@/lib/project-canvas/layout/canvas-layout.types'
 import { useProjectEditScript } from '@/lib/query/hooks'
+import { useTaskTargetStateMap } from '@/lib/query/hooks/useTaskTargetStateMap'
 import { useWorkspaceEpisodeStageData } from '../hooks/useWorkspaceEpisodeStageData'
 import { useWorkspaceProvider } from '../WorkspaceProvider'
 import { useWorkspaceRuntime } from '../WorkspaceRuntimeContext'
@@ -124,7 +125,7 @@ function ProjectWorkspaceCanvasContent({ onAssistantSelectionChange }: ProjectWo
   const t = useTranslations('projectWorkflow.canvas.workspace')
   const { projectId, episodeId } = useWorkspaceProvider()
   const runtime = useWorkspaceRuntime()
-  const { episodeName, novelText, clips, storyboards, shots } = useWorkspaceEpisodeStageData()
+  const { episodeName, novelText, clips, storyboards, shots, finalVideo, videoGroups } = useWorkspaceEpisodeStageData()
   const { data: editScript } = useProjectEditScript(projectId, episodeId ?? null)
   const reactFlow = useReactFlow<WorkspaceCanvasFlowNode>()
   const runNodeAction = useWorkspaceNodeCanvasActions()
@@ -149,6 +150,15 @@ function ProjectWorkspaceCanvasContent({ onAssistantSelectionChange }: ProjectWo
   })
 
   const savedNodeLayouts = layout?.nodeLayouts ?? EMPTY_SAVED_NODE_LAYOUTS
+  const finalRenderTargets = useMemo(
+    () => episodeId
+      ? [{ targetType: 'ProjectEpisode', targetId: episodeId, types: ['final_video_render'] }]
+      : [],
+    [episodeId],
+  )
+  const finalRenderTaskState = useTaskTargetStateMap(projectId, finalRenderTargets, {
+    enabled: Boolean(projectId && episodeId),
+  }).byKey.get(episodeId ? `ProjectEpisode:${episodeId}` : '')
   const onNodeAction = useCallback((action: WorkspaceCanvasNodeAction) => {
     runNodeAction(action)
   }, [runNodeAction])
@@ -181,7 +191,11 @@ function ProjectWorkspaceCanvasContent({ onAssistantSelectionChange }: ProjectWo
     storyboards,
     shots,
     editScript,
+    finalVideo,
+    videoGroups,
     defaultVideoModel: runtime.videoModel ?? null,
+    finalRenderPhase: finalRenderTaskState?.phase,
+    finalRenderErrorMessage: finalRenderTaskState?.lastError?.message ?? null,
     savedLayouts: savedNodeLayouts,
     translate: t,
     onAction: onNodeAction,
@@ -302,7 +316,11 @@ function ProjectWorkspaceCanvasContent({ onAssistantSelectionChange }: ProjectWo
       storyboards,
       shots,
       editScript,
+      finalVideo,
+      videoGroups,
       defaultVideoModel: runtime.videoModel ?? null,
+      finalRenderPhase: finalRenderTaskState?.phase,
+      finalRenderErrorMessage: finalRenderTaskState?.lastError?.message ?? null,
       savedLayouts: EMPTY_SAVED_NODE_LAYOUTS,
       translate: t,
       onAction: onNodeAction,
@@ -312,7 +330,7 @@ function ProjectWorkspaceCanvasContent({ onAssistantSelectionChange }: ProjectWo
     void resetSavedLayout().catch((error: unknown) => {
       _ulogWarn('[ProjectWorkspaceCanvas] canvas layout reset failed', error)
     })
-  }, [attachNodeUiState, clips, editScript, episodeId, episodeName, novelText, onNodeAction, projectId, reactFlow, resetSavedLayout, runtime.videoModel, shots, storyboards, t])
+  }, [attachNodeUiState, clips, editScript, episodeId, episodeName, finalRenderTaskState?.lastError?.message, finalRenderTaskState?.phase, finalVideo, novelText, onNodeAction, projectId, reactFlow, resetSavedLayout, runtime.videoModel, shots, storyboards, t, videoGroups])
 
   const fitView = useCallback(() => {
     void reactFlow.fitView({ padding: 0.14, duration: 180 })

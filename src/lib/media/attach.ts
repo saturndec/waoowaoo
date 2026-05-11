@@ -203,6 +203,18 @@ async function attachMediaFieldsToVoiceLine<T extends Record<string, unknown>>(l
   }
 }
 
+async function attachMediaFieldsToVideoGroup<T extends Record<string, unknown>>(group: T) {
+  const referenceImageMedia = await resolveMediaRef(group.referenceImageMediaId, group.referenceImageUrl)
+  const videoMedia = await resolveMediaRef(group.videoMediaId, group.videoUrl)
+  return {
+    ...group,
+    referenceImageMedia,
+    videoMedia,
+    referenceImageUrl: referenceImageMedia?.url || group.referenceImageUrl || null,
+    videoUrl: videoMedia?.url || group.videoUrl || null,
+  }
+}
+
 export async function attachMediaFieldsToProject<T extends Record<string, unknown>>(projectLike: T) {
   const audioMedia = await resolveMediaRef(projectLike.audioMediaId, projectLike.audioUrl)
   const characters = await Promise.all(
@@ -223,6 +235,9 @@ export async function attachMediaFieldsToProject<T extends Record<string, unknow
   const voiceLines = await Promise.all(
     ((projectLike.voiceLines as Array<Record<string, unknown>>) || []).map(attachMediaFieldsToVoiceLine),
   )
+  const videoGroups = await Promise.all(
+    ((projectLike.videoGroups as Array<Record<string, unknown>>) || []).map(attachMediaFieldsToVideoGroup),
+  )
 
   return {
     ...projectLike,
@@ -235,6 +250,7 @@ export async function attachMediaFieldsToProject<T extends Record<string, unknow
     shots,
     storyboards,
     voiceLines,
+    videoGroups,
   }
 }
 

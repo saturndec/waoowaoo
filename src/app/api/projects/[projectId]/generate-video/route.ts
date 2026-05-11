@@ -27,6 +27,9 @@ export const POST = apiHandler(async (
     videoModel: body.videoModel,
   }
   if (body.all === true) input.all = true
+  if (body.mode === 'grid') input.mode = 'grid'
+  if (body.gridMode === '2x2' || body.gridMode === '3x3') input.gridMode = body.gridMode
+  if (Array.isArray(body.shotNumbers)) input.shotNumbers = body.shotNumbers
   if (typeof body.episodeId === 'string') input.episodeId = body.episodeId
   if (typeof body.panelId === 'string') input.panelId = body.panelId
   if (typeof body.storyboardId === 'string') input.storyboardId = body.storyboardId
@@ -35,9 +38,13 @@ export const POST = apiHandler(async (
   if (body.firstLastFrame !== undefined) input.firstLastFrame = body.firstLastFrame
   if (isRecord(body.generationOptions)) input.generationOptions = body.generationOptions
 
+  const operationId = body.mode === 'grid'
+    ? (body.all === true ? 'generate_episode_video_groups' : 'generate_video_group')
+    : (body.all === true ? 'generate_episode_videos' : 'generate_panel_video')
+
   const result = await executeProjectAgentOperationFromApi({
     request,
-    operationId: body.all === true ? 'generate_episode_videos' : 'generate_panel_video',
+    operationId,
     projectId,
     userId: authResult.session.user.id,
     context: {

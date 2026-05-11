@@ -18,6 +18,7 @@ import {
   normalizeEditScriptBriefQuestions,
   normalizeEditScriptCore,
   resolveEditScriptDefaults,
+  withRequiredAspectRatioBriefQuestion,
 } from './normalize'
 import type {
   EditAssetKind,
@@ -36,6 +37,7 @@ interface GenerateEditScriptInput {
   readonly userId: string
   readonly locale: Locale
   readonly prompt: string
+  readonly videoRatio?: '9:16' | '16:9' | '21:9'
 }
 
 interface GenerateEditScriptBriefQuestionsInput {
@@ -444,7 +446,6 @@ export async function generateProjectEditScriptBriefQuestions(
     variables: {
       user_request: input.prompt,
       duration_seconds: String(defaults.durationSeconds),
-      shot_count: String(defaults.shotCount),
       style_context: buildStyleContext({
         artStyle: project.artStyle,
         directorStyleDoc: project.directorStyleDoc,
@@ -456,7 +457,10 @@ export async function generateProjectEditScriptBriefQuestions(
     stepTotal: 1,
   })
 
-  return normalizeEditScriptBriefQuestions(rawQuestions)
+  return withRequiredAspectRatioBriefQuestion(
+    normalizeEditScriptBriefQuestions(rawQuestions),
+    locale,
+  )
 }
 
 export async function generateProjectEditScript(input: GenerateEditScriptInput): Promise<EditScriptPayload> {
@@ -478,17 +482,23 @@ export async function generateProjectEditScript(input: GenerateEditScriptInput):
     getProjectModelConfig(input.projectId, input.userId),
   ])
   if (!episode || !project) throw new ApiError('NOT_FOUND')
+  const effectiveVideoRatio = input.videoRatio ?? project.videoRatio
+  if (input.videoRatio && input.videoRatio !== project.videoRatio) {
+    await prisma.project.update({
+      where: { id: project.id },
+      data: { videoRatio: input.videoRatio },
+    })
+  }
   const model = resolveTextModel(config)
   const defaults = resolveEditScriptDefaults(input.prompt)
   const styleContext = buildStyleContext({
     artStyle: project.artStyle,
     directorStyleDoc: project.directorStyleDoc,
-    videoRatio: project.videoRatio,
+    videoRatio: effectiveVideoRatio,
   })
   const commonVariables = {
     user_request: input.prompt,
     duration_seconds: String(defaults.durationSeconds),
-    shot_count: String(defaults.shotCount),
   }
 
   const timeline = await runPromptStep({
@@ -525,7 +535,7 @@ export async function generateProjectEditScript(input: GenerateEditScriptInput):
     variables: {
       user_request: input.prompt,
       visual_action_json: stringifyForPrompt(visualAction),
-      aspect_ratio: project.videoRatio || '9:16',
+      aspect_ratio: effectiveVideoRatio,
       style_context: styleContext,
     },
     stepTitle: 'Edit camera',
@@ -541,7 +551,7 @@ export async function generateProjectEditScript(input: GenerateEditScriptInput):
     variables: {
       user_request: input.prompt,
       camera_json: stringifyForPrompt(camera),
-      aspect_ratio: project.videoRatio || '9:16',
+      aspect_ratio: effectiveVideoRatio,
       style_context: styleContext,
     },
     stepTitle: 'Edit video prompt',
@@ -575,14 +585,14 @@ export async function generateProjectEditScript(input: GenerateEditScriptInput):
       camera_json: stringifyForPrompt(camera),
       video_prompt_json: stringifyForPrompt(videoPrompt),
       audio_json: stringifyForPrompt(audio),
-      aspect_ratio: project.videoRatio || '9:16',
+      aspect_ratio: effectiveVideoRatio,
       style_context: styleContext,
     },
     stepTitle: 'Edit primary table',
     stepIndex: 6,
     stepTotal: 7,
   })
-  const core = normalizeEditScriptCore(primary, defaults.shotCount)
+  const core = normalizeEditScriptCore(primary)
   const assetRaw = await runPromptStep({
     userId: input.userId,
     projectId: input.projectId,

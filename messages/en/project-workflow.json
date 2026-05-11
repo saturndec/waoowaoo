@@ -154,6 +154,7 @@
     "prepareFailed": "Preparation failed",
     "generationFailed": "Generation failed",
     "batchVideoFailed": "Batch video generation failed",
+    "finalRenderFailed": "AI final edit failed",
     "updateFailed": "Update failed",
     "saveFailed": "Save failed",
     "storyToScriptRunning": "Story→Script V2 running",
@@ -245,6 +246,8 @@
         "regenerateImage": "Regenerate",
         "generateVideo": "Generate Video",
         "generateAllVideos": "Batch Generate",
+        "renderFinalVideo": "AI Edit",
+        "aiEditing": "AI Editing",
         "generateEditAssets": "Generate All",
         "generateEditAsset": "Generate Asset"
       },
@@ -252,6 +255,8 @@
         "empty": "Empty",
         "pending": "Pending",
         "ready": "Ready",
+        "finalReady": "Final Ready",
+        "aiEditing": "AI Editing",
         "processing": "Processing",
         "failed": "Failed"
       },
@@ -353,6 +358,7 @@
           "imageGeneration": "Image Generation / Edit",
           "videoPreview": "Video Preview",
           "videoControls": "Video Controls",
+          "finalOutput": "Final Output",
           "finalStats": "Final Stats",
           "timelineOrder": "Timeline Order",
           "storyInput": "Story Input",
@@ -390,6 +396,10 @@
           "videoModel": "Video Model",
           "linkedToNextPanel": "Linked To Next Shot",
           "generationOptions": "Generation Options JSON",
+          "singleVideoMode": "Single Shot",
+          "gridVideoMode": "Grid Continuous",
+          "grid2x2": "2x2 Four-grid",
+          "grid3x3": "3x3 Nine-grid",
           "characterAsset": "Character Asset",
           "appearanceAsset": "Appearance",
           "locationAsset": "Location Asset",
@@ -430,6 +440,9 @@
           "generateVideo": "Generate Video",
           "generateFirstLastVideo": "Generate First/Last Video",
           "generateAllVideos": "Batch Generate Videos",
+          "generateGridVideos": "Generate Grid Videos",
+          "renderFinalVideo": "AI Edit",
+          "openFinalVideo": "Open Final Video",
           "downloadVideos": "Download Videos"
         },
         "defaults": {
@@ -465,7 +478,7 @@
         "messages": {
           "referenceSelection": "{count} reference images selected. References can come from panels, characters, locations, props, URLs, uploads, or pasted images.",
           "noNextPanelForFirstLast": "This shot has no next shot, so first/last frame mode cannot be used.",
-          "finalExportUnavailable": "AI editing and final export are not connected in this pass."
+          "finalRenderRequiresVideos": "Generate every shot video before running the AI final edit."
         },
         "status": {
           "videoReady": "Ready",
@@ -521,11 +534,18 @@
           "eyebrow": "Video Node",
           "meta": "Bound to source shot"
         },
+        "videoGroup": {
+          "title": "Continuous Segment {index}",
+          "eyebrow": "Grid Video",
+          "body": "Continuous video segment generated from edit-first order",
+          "meta": "{grid} · shots {shots} · {duration}s"
+        },
         "final": {
           "title": "Final Timeline",
           "eyebrow": "Final Output",
           "body": "{videos} video clips have entered the final chain.",
-          "meta": "Order comes from domain data"
+          "meta": "Order comes from domain data",
+          "outputReady": "Final video generated. Preview it in details."
         },
         "editScript": {
           "eyebrow": "Core Edit Table",

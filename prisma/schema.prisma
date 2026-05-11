@@ -141,6 +141,7 @@ model ProjectEpisode {
   canvasLayout            ProjectCanvasLayout?
   editScript              ProjectEditScript?
   editAssetRequirements   ProjectEditAssetRequirement[]
+  videoGroups             ProjectVideoGroup[]
 
   @@unique([projectId, episodeNumber])
   @@index([projectId])
@@ -208,6 +209,37 @@ model VideoEditorProject {
   episode      ProjectEpisode @relation(fields: [episodeId], references: [id], onDelete: Cascade)
 
   @@map("video_editor_projects")
+}
+
+model ProjectVideoGroup {
+  id                    String          @id @default(uuid())
+  projectId             String
+  episodeId             String
+  gridMode              String
+  shotNumbers           Json
+  durationSec           Int
+  prompt                String?         @db.LongText
+  status                String          @default("pending")
+  taskId                String?
+  errorCode             String?
+  errorMessage          String?         @db.LongText
+  referenceImageUrl     String?         @db.Text
+  referenceImageMediaId String?
+  referenceImageMedia   MediaObject?    @relation("ProjectVideoGroupReferenceImageMedia", fields: [referenceImageMediaId], references: [id], onDelete: SetNull)
+  videoUrl              String?         @db.Text
+  videoMediaId          String?
+  videoMedia            MediaObject?    @relation("ProjectVideoGroupVideoMedia", fields: [videoMediaId], references: [id], onDelete: SetNull)
+  createdAt             DateTime        @default(now())
+  updatedAt             DateTime        @default(now()) @updatedAt
+  project               Project         @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  episode               ProjectEpisode  @relation(fields: [episodeId], references: [id], onDelete: Cascade)
+
+  @@index([projectId])
+  @@index([episodeId])
+  @@index([referenceImageMediaId])
+  @@index([videoMediaId])
+  @@index([taskId])
+  @@map("project_video_groups")
 }
 
 model ProjectClip {
@@ -614,6 +646,7 @@ model Project {
   characters         ProjectCharacter[]
   locations          ProjectLocation[]
   canvasLayouts      ProjectCanvasLayout[]
+  videoGroups        ProjectVideoGroup[]
 
   @@index([userId])
   @@map("projects")
@@ -1251,6 +1284,8 @@ model MediaObject {
   projectPanelLipSyncVideos      ProjectPanel[]       @relation("ProjectPanelLipSyncVideoMedia")
   projectPanelSketchImages       ProjectPanel[]       @relation("ProjectPanelSketchMedia")
   projectPanelPreviousImages     ProjectPanel[]       @relation("ProjectPanelPreviousImageMedia")
+  projectVideoGroupReferenceImages ProjectVideoGroup[] @relation("ProjectVideoGroupReferenceImageMedia")
+  projectVideoGroupVideos          ProjectVideoGroup[] @relation("ProjectVideoGroupVideoMedia")
   projectShotImages              ProjectShot[]        @relation("ProjectShotImageMedia")
   supplementaryPanelImages              SupplementaryPanel[]        @relation("SupplementaryPanelImageMedia")
   projectVoiceLineAudios         ProjectVoiceLine[]   @relation("ProjectVoiceLineAudioMedia")

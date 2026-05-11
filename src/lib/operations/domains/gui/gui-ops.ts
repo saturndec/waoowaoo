@@ -78,6 +78,29 @@ function normalizeString(value: unknown): string {
   return typeof value === 'string' ? value.trim() : ''
 }
 
+function normalizeNullableString(value: unknown): string | null {
+  const normalized = normalizeString(value)
+  return normalized.length > 0 ? normalized : null
+}
+
+function normalizeFinalVideoSummary(value: unknown) {
+  const record = toObject(value)
+  const id = normalizeString(record.id)
+  const episodeId = normalizeString(record.episodeId)
+  if (!id || !episodeId) return null
+
+  return {
+    id,
+    episodeId,
+    renderStatus: normalizeNullableString(record.renderStatus),
+    renderTaskId: normalizeNullableString(record.renderTaskId),
+    outputUrl: normalizeNullableString(record.outputUrl),
+    updatedAt: record.updatedAt instanceof Date
+      ? record.updatedAt.toISOString()
+      : normalizeNullableString(record.updatedAt),
+  }
+}
+
 function resolveStoryboardGroupInsertCreatedAt<T extends { createdAt: Date }>(
   existingClips: T[],
   insertIndex?: number,
@@ -1911,6 +1934,9 @@ export function createGuiOperations(): ProjectAgentOperationRegistryDraft {
             },
             shots: { orderBy: { shotId: 'asc' } },
             voiceLines: { orderBy: { lineIndex: 'asc' } },
+            videoGroups: {
+              orderBy: { createdAt: 'asc' },
+            },
             editScript: {
               include: {
                 requirements: {
@@ -1919,6 +1945,16 @@ export function createGuiOperations(): ProjectAgentOperationRegistryDraft {
                     { name: 'asc' },
                   ],
                 },
+              },
+            },
+            editorProject: {
+              select: {
+                id: true,
+                episodeId: true,
+                renderStatus: true,
+                renderTaskId: true,
+                outputUrl: true,
+                updatedAt: true,
               },
             },
           },
@@ -1931,7 +1967,12 @@ export function createGuiOperations(): ProjectAgentOperationRegistryDraft {
         }).catch((error: unknown) => logError('update lastEpisodeId failed', error))
 
         const episodeWithSignedUrls = await attachMediaFieldsToProject(episode)
-        return { episode: episodeWithSignedUrls }
+        return {
+          episode: {
+            ...episodeWithSignedUrls,
+            finalVideo: normalizeFinalVideoSummary(episodeWithSignedUrls.editorProject),
+          },
+        }
       },
     }),
     update_episode: defineOperation({

@@ -55,6 +55,8 @@ type VideoGenerationOptions = Record<string, VideoGenerationOptionValue>
 interface BatchVideoGenerationParams {
     videoModel: string
     generationOptions?: VideoGenerationOptions
+    mode?: 'single' | 'grid'
+    gridMode?: '2x2' | '3x3'
 }
 
 // ============ 查询 Hooks ============
@@ -135,8 +137,24 @@ export function useModifyPanelImage(projectId: string | null, episodeId: string 
             return res.json()
         },
         onMutate: async () => {
-            if (!projectId) return
+            if (!projectId || !episodeId) return
+            upsertTaskTargetOverlay(queryClient, {
+                projectId,
+                targetType: 'ProjectEpisode',
+                targetId: episodeId,
+                runningTaskType: 'final_video_render',
+                intent: 'process',
+                stage: 'final_render_prepare',
+            })
             await queryClient.invalidateQueries({ queryKey: queryKeys.tasks.all(projectId), exact: false })
+        },
+        onError: () => {
+            if (!projectId || !episodeId) return
+            clearTaskTargetOverlay(queryClient, {
+                projectId,
+                targetType: 'ProjectEpisode',
+                targetId: episodeId,
+            })
         },
         onSettled: () => {
             if (episodeId) {
@@ -256,10 +274,16 @@ export function useBatchGenerateVideos(projectId: string | null, episodeId: stri
                 episodeId: string
                 videoModel: string
                 generationOptions?: VideoGenerationOptions
+                mode?: 'single' | 'grid'
+                gridMode?: '2x2' | '3x3'
             } = {
                 all: true,
                 episodeId,
                 videoModel: params.videoModel,
+            }
+            if (params.mode === 'grid') {
+                requestBody.mode = 'grid'
+                requestBody.gridMode = params.gridMode === '3x3' ? '3x3' : '2x2'
             }
             if (params.generationOptions && typeof params.generationOptions === 'object') {
                 requestBody.generationOptions = params.generationOptions
@@ -283,6 +307,57 @@ export function useBatchGenerateVideos(projectId: string | null, episodeId: stri
             if (episodeId && projectId) {
                 queryClient.invalidateQueries({ queryKey: queryKeys.episodeData(projectId, episodeId) })
                 queryClient.invalidateQueries({ queryKey: queryKeys.storyboards.all(episodeId) })
+            }
+        },
+    })
+}
+
+/**
+ * AI 剪辑成片
+ */
+export function useRenderFinalVideo(projectId: string | null, episodeId: string | null) {
+    const queryClient = useQueryClient()
+
+    return useMutation({
+        mutationFn: async () => {
+            if (!projectId) throw new Error('Project ID is required')
+            if (!episodeId) throw new Error('Episode ID is required')
+
+            const res = await apiFetch(`/api/projects/${projectId}/final-video-render`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    confirmed: true,
+                    episodeId,
+                }),
+            })
+            await checkApiResponse(res)
+            return res.json()
+        },
+        onMutate: async () => {
+            if (!projectId || !episodeId) return
+            upsertTaskTargetOverlay(queryClient, {
+                projectId,
+                targetType: 'ProjectEpisode',
+                targetId: episodeId,
+                runningTaskType: 'final_video_render',
+                intent: 'process',
+                stage: 'final_render_prepare',
+            })
+            await queryClient.invalidateQueries({ queryKey: queryKeys.tasks.all(projectId), exact: false })
+        },
+        onError: () => {
+            if (!projectId || !episodeId) return
+            clearTaskTargetOverlay(queryClient, {
+                projectId,
+                targetType: 'ProjectEpisode',
+                targetId: episodeId,
+            })
+        },
+        onSettled: () => {
+            if (episodeId && projectId) {
+                queryClient.invalidateQueries({ queryKey: queryKeys.episodeData(projectId, episodeId) })
+                queryClient.invalidateQueries({ queryKey: queryKeys.tasks.all(projectId), exact: false })
             }
         },
     })

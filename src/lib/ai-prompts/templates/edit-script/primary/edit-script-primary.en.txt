@@ -10,7 +10,6 @@ User request:
 {{user_request}}
 
 Total duration seconds: {{duration_seconds}}
-Shot count: {{shot_count}}
 Aspect ratio: {{aspect_ratio}}
 Style context:
 {{style_context}}
@@ -38,7 +37,7 @@ Output format:
   "shots": [
     {
       "shotNumber": 1,
-      "durationSec": 8,
+      "durationSec": 3,
       "visualAction": "visual action",
       "charactersAndScene": "characters/scenes",
       "camera": "shot size and camera movement",
@@ -49,9 +48,10 @@ Output format:
 }
 
 Hard requirements:
-- The shots array length must equal the requested shot count and shotNumber must be continuous.
+- Decide the shots array length from cinematic rhythm and keep shotNumber continuous. Do not average the runtime and do not create shots just to hit a fixed count.
+- You may mix 1-2 second fast cuts, 3-5 second longer shots, openings, releases, and rhythm changes.
 - Every shot must include the seven minimum fields: shotNumber, durationSec, visualAction, charactersAndScene, camera, videoPrompt, sound.
 - Do not output a transition field.
-- durationSec must be a positive integer and total duration should be close to the user request.
+- durationSec must be an integer from 1 to 5. A single shot must never exceed 5 seconds. Total duration should be close to the user request.
 - Do not output screenplay, clips, storyboard, panel, image, or video structures.
 - Do not introduce asset names unsupported by specialist outputs; only merge aliases when needed.

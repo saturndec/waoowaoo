@@ -23,6 +23,7 @@ export const projectCanvasTargetTypeSchema = z.enum([
   'clip',
   'storyboard',
   'panel',
+  'videoGroup',
   'editScript',
   'editAssetRequirement',
 ])

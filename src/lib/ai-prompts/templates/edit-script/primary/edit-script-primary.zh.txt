@@ -10,7 +10,6 @@
 {{user_request}}
 
 总时长秒数：{{duration_seconds}}
-镜头数量：{{shot_count}}
 画幅：{{aspect_ratio}}
 风格上下文：
 {{style_context}}
@@ -38,7 +37,7 @@
   "shots": [
     {
       "shotNumber": 1,
-      "durationSec": 8,
+      "durationSec": 3,
       "visualAction": "画面和动作",
       "charactersAndScene": "人物/场景",
       "camera": "景别和运镜",
@@ -49,9 +48,10 @@
 }
 
 硬性要求：
-- shots 数量必须等于镜头数量，shotNumber 连续。
+- shots 数量由影片节奏决定，shotNumber 连续；不要平均分配总时长，不要机械凑镜头数。
+- 可以混合 1-2 秒快切、3-5 秒较长镜头、开合节奏和段落起伏。
 - 每个镜头必须包含 7 个最小字段：shotNumber、durationSec、visualAction、charactersAndScene、camera、videoPrompt、sound。
 - 不要输出 transition 或转场字段。
-- durationSec 必须为正整数，总时长接近用户需求。
+- durationSec 必须为 1 到 5 的正整数，单个镜头绝对不能超过 5 秒，总时长接近用户需求。
 - 不输出 screenplay、clips、storyboard、panel、image 或 video 结构。
 - 不要新增专业 agent 没有支持的资产名；如果需要统一名称，只做同义合并。

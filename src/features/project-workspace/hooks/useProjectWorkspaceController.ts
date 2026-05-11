@@ -141,6 +141,7 @@ export function useProjectWorkspaceController({
     handleGeneratePanelImage: imageActions.handleGeneratePanelImage,
     handleGenerateVideo: videoActions.handleGenerateVideo,
     handleGenerateAllVideos: videoActions.handleGenerateAllVideos,
+    handleRenderFinalVideo: videoActions.handleRenderFinalVideo,
     handleGenerateEditAssets,
     handleGenerateEditStoryboard,
     handleUpdateVideoPrompt: videoActions.handleUpdateVideoPrompt,

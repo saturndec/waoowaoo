@@ -43,15 +43,50 @@ const concurrencyGateMock = vi.hoisted(() => ({
     run: () => Promise<T>
   }) => await input.run()),
 }))
+const videoGroupMocks = vi.hoisted(() => ({
+  composeAndStoreGridReferenceImage: vi.fn(async () => ({
+    id: 'reference-media-1',
+    publicId: 'reference-public-1',
+    url: '/m/reference-public-1',
+    storageKey: 'images/video-group-reference/group-1.png',
+    mimeType: 'image/png',
+    sizeBytes: 1000,
+    width: 1536,
+    height: 1536,
+    durationMs: null,
+  })),
+  executeAiTextStep: vi.fn(async () => ({ text: 'continuous group prompt', reasoning: '', usage: null, completion: null })),
+  ensureMediaObjectFromStorageKey: vi.fn(async () => ({
+    id: 'video-media-1',
+    publicId: 'video-public-1',
+    url: '/m/video-public-1',
+    storageKey: 'group-video/group-1.mp4',
+    mimeType: 'video/mp4',
+    sizeBytes: 1000,
+    width: null,
+    height: null,
+    durationMs: 14000,
+  })),
+}))
 
 const prismaMock = vi.hoisted(() => ({
   projectPanel: {
     findUnique: vi.fn(),
     findFirst: vi.fn(),
+    findMany: vi.fn(),
     update: vi.fn(async () => undefined),
   },
   projectVoiceLine: {
     findUnique: vi.fn(),
+  },
+  projectVideoGroup: {
+    update: vi.fn(async () => undefined),
+  },
+  project: {
+    findUnique: vi.fn(),
+  },
+  projectEditScript: {
+    findFirst: vi.fn(),
   },
 }))
 
@@ -88,7 +123,34 @@ vi.mock('@/lib/media/outbound-image', () => ({
   normalizeToBase64ForGeneration: vi.fn(async (input: string) => input),
 }))
 vi.mock('@/lib/ai-registry/capabilities-catalog', () => ({
+  registerBuiltinCapabilityCatalogEntries: vi.fn(),
   resolveBuiltinCapabilitiesByModelKey: vi.fn(() => ({ video: { firstlastframe: true } })),
+}))
+vi.mock('@/lib/ai-registry/pricing-resolution', () => ({
+  registerBuiltinPricingCatalogEntries: vi.fn(),
+}))
+vi.mock('@/lib/ai-registry/pricing-catalog', () => ({
+  registerBuiltinPricingCatalogEntries: vi.fn(),
+}))
+vi.mock('@/lib/ai-registry/api-config-catalog', () => ({
+  DEFAULT_LIPSYNC_MODEL_KEY: 'fal::lipsync',
+  DEFAULT_VOICE_DESIGN_MODEL_KEY: 'openai::voice-design',
+  DEFAULT_VOICE_MODEL_KEY: 'openai::voice',
+  BUILTIN_API_CONFIG_CATALOG: {},
+  registerBuiltinApiConfigCatalog: vi.fn(),
+}))
+vi.mock('@/lib/ai-exec/engine', () => ({
+  executeAiTextStep: videoGroupMocks.executeAiTextStep,
+}))
+vi.mock('@/lib/video-groups/grid-image', () => ({
+  composeAndStoreGridReferenceImage: videoGroupMocks.composeAndStoreGridReferenceImage,
+}))
+vi.mock('@/lib/video-groups/core', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@/lib/video-groups/core')>()
+  return actual
+})
+vi.mock('@/lib/media/service', () => ({
+  ensureMediaObjectFromStorageKey: videoGroupMocks.ensureMediaObjectFromStorageKey,
 }))
 vi.mock('@/lib/ai-registry/selection', () => ({
   composeModelKey: vi.fn((provider: string, modelId: string) => `${provider}::${modelId}`),
@@ -146,9 +208,113 @@ describe('worker video processor behavior', () => {
       audioUrl: 'cos/line-1.mp3',
       audioDuration: 1200,
     })
+    prismaMock.project.findUnique.mockResolvedValue({
+      analysisModel: 'openai::gpt-4.1',
+      videoRatio: '9:16',
+      artStyle: 'cinematic',
+      directorStyleDoc: null,
+    })
+    prismaMock.projectEditScript.findFirst.mockResolvedValue({
+      title: 'Grid Film',
+      logline: 'A continuous test.',
+      shotsJson: [
+        {
+          shotNumber: 1,
+          durationSec: 2,
+          visualAction: 'Shot one',
+          charactersAndScene: 'A',
+          camera: 'wide',
+          videoPrompt: 'shot one prompt',
+          sound: 'tone',
+        },
+        {
+          shotNumber: 2,
+          durationSec: 3,
+          visualAction: 'Shot two',
+          charactersAndScene: 'B',
+          camera: 'medium',
+          videoPrompt: 'shot two prompt',
+          sound: 'pulse',
+        },
+        {
+          shotNumber: 3,
+          durationSec: 4,
+          visualAction: 'Shot three',
+          charactersAndScene: 'C',
+          camera: 'close',
+          videoPrompt: 'shot three prompt',
+          sound: 'rise',
+        },
+        {
+          shotNumber: 4,
+          durationSec: 5,
+          visualAction: 'Shot four',
+          charactersAndScene: 'D',
+          camera: 'pull back',
+          videoPrompt: 'shot four prompt',
+          sound: 'release',
+        },
+      ],
+    })
 
     const mod = await import('@/lib/workers/video.worker')
     mod.createVideoWorker()
+  })
+
+  it('VIDEO_GROUP: generates a continuous grid clip and writes ProjectVideoGroup output', async () => {
+    const processor = workerState.processor
+    expect(processor).toBeTruthy()
+
+    prismaMock.projectPanel.findMany.mockResolvedValueOnce([
+      { ...buildPanel({ id: 'panel-1' }), panelNumber: 1, imageMedia: { storageKey: 'images/panel-1.png' } },
+      { ...buildPanel({ id: 'panel-2' }), panelNumber: 2, imageMedia: { storageKey: 'images/panel-2.png' } },
+      { ...buildPanel({ id: 'panel-3' }), panelNumber: 3, imageMedia: { storageKey: 'images/panel-3.png' } },
+      { ...buildPanel({ id: 'panel-4' }), panelNumber: 4, imageMedia: { storageKey: 'images/panel-4.png' } },
+    ])
+    utilsMock.uploadVideoSourceToCos.mockResolvedValueOnce('group-video/group-1.mp4')
+
+    const result = await processor!(buildJob({
+      type: TASK_TYPE.VIDEO_GROUP,
+      targetType: 'ProjectVideoGroup',
+      targetId: 'group-1',
+      payload: {
+        videoModel: 'google::veo',
+        gridMode: '2x2',
+        shotNumbers: [1, 2, 3, 4],
+        generationOptions: { resolution: '720p' },
+      },
+    }))
+
+    expect(result).toEqual(expect.objectContaining({
+      groupId: 'group-1',
+      videoUrl: '/m/video-public-1',
+      videoMediaId: 'video-media-1',
+      durationSec: 14,
+      shotNumbers: [1, 2, 3, 4],
+    }))
+    expect(videoGroupMocks.composeAndStoreGridReferenceImage).toHaveBeenCalledWith(expect.objectContaining({
+      gridMode: '2x2',
+      targetId: 'group-1',
+    }))
+    expect(videoGroupMocks.executeAiTextStep).toHaveBeenCalledWith(expect.objectContaining({
+      action: 'video_group_prompt',
+    }))
+    expect(utilsMock.resolveVideoSourceFromGeneration).toHaveBeenCalledWith(expect.anything(), expect.objectContaining({
+      modelId: 'google::veo',
+      options: expect.objectContaining({
+        prompt: 'continuous group prompt',
+        duration: 14,
+        aspectRatio: '9:16',
+      }),
+    }))
+    expect(prismaMock.projectVideoGroup.update).toHaveBeenLastCalledWith(expect.objectContaining({
+      where: { id: 'group-1' },
+      data: expect.objectContaining({
+        status: 'completed',
+        videoUrl: '/m/video-public-1',
+        videoMediaId: 'video-media-1',
+      }),
+    }))
   })
 
   it('VIDEO_PANEL: 缺少 payload.videoModel 时显式失败', async () => {

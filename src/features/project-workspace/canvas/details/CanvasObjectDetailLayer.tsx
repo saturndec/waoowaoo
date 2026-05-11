@@ -25,7 +25,7 @@ import type { SelectedAsset } from '../../components/storyboard/hooks/useImageGe
 import type { VideoGenerationOptions } from '../../components/video/types'
 import { useWorkspaceProvider } from '../../WorkspaceProvider'
 import { useWorkspaceRuntime } from '../../WorkspaceRuntimeContext'
-import type { ProjectClip, ProjectStoryboard } from '@/types/project'
+import type { ProjectClip, ProjectFinalVideo, ProjectStoryboard } from '@/types/project'
 import type { WorkspaceCanvasFlowNode } from '../node-canvas-types'
 import FinalDetail from './FinalDetail'
 import ImageDetail from './ImageDetail'
@@ -44,6 +44,7 @@ interface CanvasObjectDetailLayerProps {
   readonly selectedNode: WorkspaceCanvasFlowNode | null
   readonly clips: readonly ProjectClip[]
   readonly storyboards: readonly ProjectStoryboard[]
+  readonly finalVideo?: ProjectFinalVideo | null
   readonly onClose: () => void
 }
 
@@ -59,6 +60,7 @@ export default function CanvasObjectDetailLayer({
   selectedNode,
   clips,
   storyboards,
+  finalVideo,
   onClose,
 }: CanvasObjectDetailLayerProps) {
   const t = useTranslations('projectWorkflow.canvas.workspace.detail')
@@ -292,8 +294,13 @@ export default function CanvasObjectDetailLayer({
           onGenerateVideo={async (storyboardId, panelIndex, panelId, model, options: VideoGenerationOptions, firstLastFrame) => {
             await runtime.onGenerateVideo(storyboardId, panelIndex, model, firstLastFrame, options, panelId)
           }}
-          onGenerateAllVideos={async (model, options) => {
-            await runtime.onGenerateAllVideos({ videoModel: model, generationOptions: options })
+          onGenerateAllVideos={async (model, options, mode, gridMode) => {
+            await runtime.onGenerateAllVideos({
+              videoModel: model,
+              generationOptions: options,
+              mode,
+              gridMode,
+            })
           }}
           onDownloadVideos={downloadVideos}
         />
@@ -304,7 +311,9 @@ export default function CanvasObjectDetailLayer({
       return (
         <FinalDetail
           storyboards={storyboards}
+          finalVideo={finalVideo}
           onGenerateAllVideos={async () => runtime.onGenerateAllVideos()}
+          onRenderFinalVideo={async () => runtime.onRenderFinalVideo()}
           onDownloadVideos={downloadVideos}
         />
       )
