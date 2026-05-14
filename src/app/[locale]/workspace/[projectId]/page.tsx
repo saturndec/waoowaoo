@@ -22,6 +22,8 @@ import { readApiErrorMessage } from '@/lib/api/read-error-message'
 import {
   HOME_ASSISTANT_AUTOSTART_QUERY,
   HOME_ASSISTANT_AUTOSTART_VALUE,
+  readHomeAssistantAutoStartMessage,
+  removeHomeAssistantAutoStartMessage,
 } from '@/lib/home/create-project-launch'
 
 interface Episode {
@@ -100,9 +102,6 @@ export default function ProjectDetailPage() {
       { scroll: false },
     )
   }, [router, projectId, searchParams])
-  const clearAssistantAutoStart = useCallback(() => {
-    updateUrlParams({ assistantAutoStart: null })
-  }, [updateUrlParams])
 
   // 获取剧集列表
   const episodes = useMemo<Episode[]>(() => {
@@ -127,6 +126,25 @@ export default function ProjectDetailPage() {
     projectId,
     !isGlobalAssetsView ? selectedEpisodeId : null
   )
+  const assistantAutoStartMessage = useMemo(() => (
+    shouldAutoStartAssistant && selectedEpisodeId
+      ? readHomeAssistantAutoStartMessage(projectId, selectedEpisodeId)
+      : null
+  ), [projectId, selectedEpisodeId, shouldAutoStartAssistant])
+  const assistantAutoStartKey = shouldAutoStartAssistant && selectedEpisodeId
+    ? `${projectId}:${selectedEpisodeId}:home-input`
+    : null
+  const clearAssistantAutoStart = useCallback(() => {
+    if (selectedEpisodeId) {
+      removeHomeAssistantAutoStartMessage(projectId, selectedEpisodeId)
+    }
+    updateUrlParams({ assistantAutoStart: null })
+  }, [projectId, selectedEpisodeId, updateUrlParams])
+
+  useEffect(() => {
+    if (!shouldAutoStartAssistant || !selectedEpisodeId || assistantAutoStartMessage) return
+    clearAssistantAutoStart()
+  }, [assistantAutoStartMessage, clearAssistantAutoStart, selectedEpisodeId, shouldAutoStartAssistant])
 
   // 获取导入状态
   const importStatus = project?.importStatus
@@ -506,12 +524,8 @@ export default function ProjectDetailPage() {
               episode={currentEpisode}
               viewMode="episode"
               episodes={episodes}
-              assistantAutoStartMessage={shouldAutoStartAssistant
-                ? t('assistantAutoStart.homeStory')
-                : null}
-              assistantAutoStartKey={shouldAutoStartAssistant
-                ? `${projectId}:${selectedEpisodeId}:home-story`
-                : null}
+              assistantAutoStartMessage={assistantAutoStartMessage}
+              assistantAutoStartKey={assistantAutoStartKey}
               onAssistantAutoStartConsumed={clearAssistantAutoStart}
               onEpisodeSelect={handleEpisodeSelect}
               onEpisodeCreate={() => handleCreateEpisode(`${t('episode')} ${episodes.length + 1}`)}

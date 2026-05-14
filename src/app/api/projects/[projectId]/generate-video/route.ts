@@ -16,7 +16,8 @@ export const POST = apiHandler(async (
   if (isErrorResponse(authResult)) return authResult
 
   const body = await request.json()
-  if (!isRecord(body) || typeof body.videoModel !== 'string') {
+  const videoModel = isRecord(body) && typeof body.videoModel === 'string' ? body.videoModel.trim() : ''
+  if (!videoModel) {
     throw new ApiError('INVALID_PARAMS', {
       code: 'VIDEO_MODEL_REQUIRED',
       field: 'videoModel',
@@ -24,7 +25,7 @@ export const POST = apiHandler(async (
   }
 
   const input: Record<string, unknown> = {
-    videoModel: body.videoModel,
+    videoModel,
   }
   if (body.all === true) input.all = true
   if (body.mode === 'grid') input.mode = 'grid'

@@ -25,6 +25,7 @@ import { useWorkspaceAssistantRuntime } from './workspace-assistant/useWorkspace
 import { apiFetch } from '@/lib/api-fetch'
 import { useCreateProjectEditScript, useCreateProjectEditScriptBriefQuestions } from '@/lib/query/hooks'
 import type { EditBriefOptionId, EditScriptVideoRatio } from '@/lib/edit-script/types'
+import { ART_STYLES, type ArtStyleValue } from '@/lib/constants'
 import { EditFirstComposer } from './workspace-assistant/EditFirstComposer'
 import { EditFirstInlineReply, type EditFirstProgressKind } from './workspace-assistant/EditFirstInlineReply'
 import { WorkspaceAssistantPanelHeader } from './workspace-assistant/WorkspaceAssistantPanelHeader'
@@ -94,6 +95,16 @@ function resolveEditFirstVideoRatio(answers: readonly EditFirstAnswer[]): EditSc
   if (!ratioAnswer) return undefined
   const answerText = `${ratioAnswer.optionLabel} ${ratioAnswer.questionLabel}`
   return EDIT_FIRST_VIDEO_RATIOS.find((ratio) => answerText.includes(ratio))
+}
+
+function resolveEditFirstArtStyle(answers: readonly EditFirstAnswer[]): ArtStyleValue | undefined {
+  const styleAnswer = answers.find((answer) => answer.questionId === 'visual_style')
+  if (!styleAnswer) return undefined
+  const answerText = `${styleAnswer.optionLabel} ${styleAnswer.questionLabel}`.toLocaleLowerCase()
+  return ART_STYLES.find((style) => (
+    answerText.includes(style.value.toLocaleLowerCase())
+    || answerText.includes(style.label.toLocaleLowerCase())
+  ))?.value
 }
 
 function readStoredAssistantPanelWidth(): number {
@@ -166,6 +177,7 @@ export default function WorkspaceAssistantPanel({
       answers: buildAnswerSummaries(answers),
     })
     const videoRatio = resolveEditFirstVideoRatio(answers)
+    const artStyle = resolveEditFirstArtStyle(answers)
 
     setComposerError(null)
     setEditFirstPhase('editScript')
@@ -174,6 +186,7 @@ export default function WorkspaceAssistantPanel({
         episodeId,
         prompt,
         ...(videoRatio ? { videoRatio } : {}),
+        ...(artStyle ? { artStyle } : {}),
       })
       assistantRuntime.appendMessages([
         createAssistantMessage([
@@ -217,6 +230,12 @@ export default function WorkspaceAssistantPanel({
         episodeId,
         prompt: normalizedMessage,
       })
+      if (briefQuestions.questions.length === 0) {
+        setBriefFlow(null)
+        setEditFirstPhase('editScript')
+        await generateEditGraphFromBrief(normalizedMessage, [], { clearComposer: options?.clearComposer })
+        return
+      }
       setBriefFlow({
         originalPrompt: normalizedMessage,
         questionIndex: 0,
@@ -231,7 +250,7 @@ export default function WorkspaceAssistantPanel({
       setEditFirstPhase('idle')
       assistantRuntime.appendMessages([createAssistantMessage([{ type: 'text', text: messageText }])])
     }
-  }, [assistantRuntime, createBriefQuestions, episodeId, t])
+  }, [assistantRuntime, createBriefQuestions, episodeId, generateEditGraphFromBrief, t])
   const createEditGraphOnce = useCallback(async (key: string, message: string) => {
     const normalizedKey = key.trim()
     const normalizedMessage = message.trim()
@@ -295,8 +314,8 @@ export default function WorkspaceAssistantPanel({
   useEffect(() => {
     if (!autoStartMessage || !autoStartKey) return
     if (assistantRuntime.storageLoading || createBriefQuestions.isPending || createEditScript.isPending) return
+    onAutoStartConsumed?.()
     void createEditGraphOnce(autoStartKey, autoStartMessage)
-      .finally(() => onAutoStartConsumed?.())
   }, [
     assistantRuntime.storageLoading,
     autoStartKey,

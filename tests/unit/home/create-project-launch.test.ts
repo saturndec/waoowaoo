@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import {
+  buildHomeAssistantAutoStartStorageKey,
   buildHomeWorkspaceLaunchTarget,
   createHomeProjectLaunch,
   HOME_ASSISTANT_AUTOSTART_QUERY,
@@ -18,7 +19,7 @@ describe('createHomeProjectLaunch', () => {
     vi.restoreAllMocks()
   })
 
-  it('creates project, config, first episode, and returns an assistant auto-start workspace target', async () => {
+  it('creates project, config, empty first episode, and returns an assistant auto-start workspace target', async () => {
     const apiFetch = vi
       .fn<(
         input: string,
@@ -63,7 +64,6 @@ describe('createHomeProjectLaunch', () => {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         name: '第 1 集',
-        novelText: '第一章内容',
       }),
     })
     expect(result).toEqual({
@@ -105,7 +105,7 @@ describe('createHomeProjectLaunch', () => {
 })
 
 describe('buildHomeWorkspaceLaunchTarget', () => {
-  it('points workspace launch to the created episode and asks assistant to react once', () => {
+  it('points workspace launch to the created episode and marks home input for assistant auto-start', () => {
     expect(buildHomeWorkspaceLaunchTarget('project-9', 'episode-4')).toEqual({
       pathname: '/workspace/project-9',
       query: {
@@ -113,5 +113,11 @@ describe('buildHomeWorkspaceLaunchTarget', () => {
         [HOME_ASSISTANT_AUTOSTART_QUERY]: HOME_ASSISTANT_AUTOSTART_VALUE,
       },
     })
+  })
+
+  it('builds a stable storage key for the assistant auto-start message', () => {
+    expect(buildHomeAssistantAutoStartStorageKey('project-9', 'episode-4')).toBe(
+      'waoowaoo:home-assistant-autostart:project-9:episode-4',
+    )
   })
 })

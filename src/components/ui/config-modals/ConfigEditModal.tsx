@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslations } from 'next-intl'
 import {
     ART_STYLES,
@@ -130,6 +130,16 @@ function readCapabilitySelectionForModel(
     return normalized
 }
 
+function capabilityFieldsSignature(fields: readonly CapabilityFieldDefinition[]): Array<{
+    readonly field: string
+    readonly options: readonly CapabilityValue[]
+}> {
+    return fields.map((field) => ({
+        field: field.field,
+        options: field.options,
+    }))
+}
+
 export function ensureCapabilityDefaultsForModels(input: {
     capabilityOverrides?: CapabilitySelections
     targets: readonly CapabilityDefaultTarget[]
@@ -192,6 +202,7 @@ export function SettingsModal({
 }: SettingsModalProps) {
     const t = useTranslations('configModal')
     const [saveStatus, setSaveStatus] = useState<'idle' | 'saved'>('idle')
+    const lastAppliedCapabilityDefaultsSignatureRef = useRef<string | null>(null)
     const userModels = useMemo<UserModels>(() => ({
         llm: Array.isArray(availableModels?.llm) ? availableModels.llm : [],
         image: Array.isArray(availableModels?.image) ? availableModels.image : [],
@@ -298,22 +309,34 @@ export function SettingsModal({
 
     useEffect(() => {
         if (!isOpen || !onCapabilityOverridesChange) return
+        const targets = [
+            { modelKey: analysisModel, fields: analysisCapabilityFields },
+            { modelKey: characterModel, fields: characterCapabilityFields },
+            { modelKey: locationModel, fields: locationCapabilityFields },
+            { modelKey: imageModel, fields: storyboardCapabilityFields },
+            { modelKey: editModel, fields: editCapabilityFields },
+            { modelKey: effectiveSingleShotVideoModel, fields: singleShotVideoCapabilityFields },
+            { modelKey: sequenceVideoModel, fields: sequenceVideoCapabilityFields },
+            { modelKey: audioModel, fields: audioCapabilityFields },
+        ]
+        const defaultsSignature = JSON.stringify({
+            capabilityOverrides: capabilityOverrides || {},
+            targets: targets.map((target) => ({
+                modelKey: target.modelKey || null,
+                fields: capabilityFieldsSignature(target.fields),
+            })),
+        })
         const result = ensureCapabilityDefaultsForModels({
             capabilityOverrides,
-            targets: [
-                { modelKey: analysisModel, fields: analysisCapabilityFields },
-                { modelKey: characterModel, fields: characterCapabilityFields },
-                { modelKey: locationModel, fields: locationCapabilityFields },
-                { modelKey: imageModel, fields: storyboardCapabilityFields },
-                { modelKey: editModel, fields: editCapabilityFields },
-                { modelKey: effectiveSingleShotVideoModel, fields: singleShotVideoCapabilityFields },
-                { modelKey: sequenceVideoModel, fields: sequenceVideoCapabilityFields },
-                { modelKey: audioModel, fields: audioCapabilityFields },
-            ],
+            targets,
         })
         if (result.changed) {
+            if (lastAppliedCapabilityDefaultsSignatureRef.current === defaultsSignature) return
+            lastAppliedCapabilityDefaultsSignatureRef.current = defaultsSignature
             onCapabilityOverridesChange(result.capabilityOverrides)
+            return
         }
+        lastAppliedCapabilityDefaultsSignatureRef.current = null
     }, [
         isOpen,
         onCapabilityOverridesChange,

@@ -31,8 +31,8 @@ import {
   taskSubmitOperationOutputSchemaBase,
 } from '@/lib/operations/output-schemas'
 import { chunkVideoGroupShots, totalVideoGroupDuration, validateVideoGroupShotNumbers } from '@/lib/video-groups/core'
-import { normalizeVideoGenerationPlanResponse } from '@/lib/video-groups/planner'
-import { VIDEO_GRID_MODES, type VideoGenerationPlan, type VideoGenerationPlanItem, type VideoGridMode, type VideoGroupShot } from '@/lib/video-groups/types'
+import { normalizeVideoBlockPlanResponse } from '@/lib/video-groups/planner'
+import { VIDEO_GRID_MODES, type VideoBlockPlan, type VideoBlockPlanItem, type VideoGridMode, type VideoGroupShot } from '@/lib/video-groups/types'
 
 type UnknownObject = { [key: string]: unknown }
 const ASSET_REFERENCE_GRID_MODE = 'asset_reference'
@@ -442,7 +442,7 @@ function parseEditScriptShots(value: unknown): VideoGroupShot[] {
   })
 }
 
-async function buildEpisodeVideoGenerationPlan(params: {
+async function buildEpisodeVideoBlockPlan(params: {
   ctx: ProjectAgentOperationContext
   episodeId: string
 }): Promise<{
@@ -453,7 +453,7 @@ async function buildEpisodeVideoGenerationPlan(params: {
     readonly videoBlocksJson: Prisma.JsonValue | null
   }
   readonly shots: readonly VideoGroupShot[]
-  readonly plan: VideoGenerationPlan
+  readonly plan: VideoBlockPlan
 }> {
   const editScript = await prisma.projectEditScript.findFirst({
     where: { projectId: params.ctx.projectId, episodeId: params.episodeId },
@@ -474,7 +474,7 @@ async function buildEpisodeVideoGenerationPlan(params: {
   return {
     editScript,
     shots,
-    plan: normalizeVideoGenerationPlanResponse({
+    plan: normalizeVideoBlockPlanResponse({
       response: { items: editScript.videoBlocksJson },
       allShotNumbers: shots.map((shot) => shot.shotNumber),
       shots,
@@ -482,7 +482,7 @@ async function buildEpisodeVideoGenerationPlan(params: {
   }
 }
 
-async function resolvePanelIdForVideoPlanShot(params: {
+async function resolvePanelIdForVideoBlockShot(params: {
   episodeId: string
   shotNumber: number
 }): Promise<string> {
@@ -629,7 +629,7 @@ function durationForShotNumbers(shots: readonly VideoGroupShot[], shotNumbers: r
   }, 0)
 }
 
-function gridModeForAssetReferenceItem(item: VideoGenerationPlanItem): string {
+function gridModeForAssetReferenceItem(item: VideoBlockPlanItem): string {
   if (item.kind === 'group') return item.gridMode ?? ASSET_REFERENCE_GRID_MODE
   return ASSET_REFERENCE_GRID_MODE
 }
@@ -639,7 +639,7 @@ async function submitAssetReferenceVideoBlockTask(params: {
   input: UnknownObject
   operationId: string
   episodeId: string
-  item: VideoGenerationPlanItem
+  item: VideoBlockPlanItem
   shots?: readonly VideoGroupShot[]
 }) {
   const referenceImageUrls = normalizeStringList(params.input.referenceImageUrls)
@@ -647,7 +647,7 @@ async function submitAssetReferenceVideoBlockTask(params: {
     throw new Error('PROJECT_AGENT_ASSET_REFERENCE_IMAGES_REQUIRED')
   }
   const shotNumbers = validateAssetReferenceShotNumbers(params.item.shotNumbers)
-  const shots = params.shots ?? (await buildEpisodeVideoGenerationPlan({
+  const shots = params.shots ?? (await buildEpisodeVideoBlockPlan({
     ctx: params.ctx,
     episodeId: params.episodeId,
   })).shots
@@ -883,7 +883,7 @@ async function executeGenerateEpisodeVideoGroupsOperation(params: {
       taskIds: [],
       results: [],
       noop: true,
-      reason: '没有足够镜头组成宫格连续视频',
+      reason: '没有足够镜头组成连续视频片段',
     }
   }
 
@@ -931,7 +931,7 @@ async function executeGenerateEpisodeVideosAutoOperation(params: {
   const singleVideoModel = normalizeString(params.input.videoModel)
   if (!singleVideoModel) throw new Error('PROJECT_AGENT_VIDEO_MODEL_REQUIRED')
   const groupVideoModel = normalizeString(params.input.groupVideoModel) || DEFAULT_GROUP_VIDEO_MODEL
-  const planned = await buildEpisodeVideoGenerationPlan({
+  const planned = await buildEpisodeVideoBlockPlan({
     ctx: params.ctx,
     episodeId,
   })
@@ -939,7 +939,7 @@ async function executeGenerateEpisodeVideosAutoOperation(params: {
   const submitted: Array<{
     readonly refId: string
     readonly taskId: string
-    readonly kind: VideoGenerationPlanItem['kind']
+    readonly kind: VideoBlockPlanItem['kind']
     readonly shotNumbers: readonly number[]
     readonly durationSec?: number
   }> = []
@@ -947,7 +947,7 @@ async function executeGenerateEpisodeVideosAutoOperation(params: {
 
   for (const item of planned.plan.items) {
     if (item.kind === 'single') {
-      const panelId = await resolvePanelIdForVideoPlanShot({
+      const panelId = await resolvePanelIdForVideoBlockShot({
         episodeId,
         shotNumber: item.shotNumbers[0],
       })
@@ -957,6 +957,7 @@ async function executeGenerateEpisodeVideosAutoOperation(params: {
           confirmed: params.input.confirmed,
           panelId,
           videoModel: singleVideoModel,
+          customPrompt: item.prompt,
           generationOptions: params.input.generationOptions,
         },
         operationId: params.operationId,
@@ -1025,7 +1026,7 @@ async function executeGenerateAssetReferenceVideoOperation(params: {
     ? params.input.blockIndex
     : -1
   if (blockIndex < 0) throw new Error('PROJECT_AGENT_ASSET_REFERENCE_BLOCK_REQUIRED')
-  const planned = await buildEpisodeVideoGenerationPlan({
+  const planned = await buildEpisodeVideoBlockPlan({
     ctx: params.ctx,
     episodeId,
   })
@@ -1065,7 +1066,7 @@ async function executeGenerateEpisodeAssetReferenceVideosOperation(params: {
 }) {
   const episodeId = normalizeString(params.input.episodeId) || normalizeString(params.ctx.context.episodeId)
   if (!episodeId) throw new Error('PROJECT_AGENT_EPISODE_REQUIRED')
-  const planned = await buildEpisodeVideoGenerationPlan({
+  const planned = await buildEpisodeVideoBlockPlan({
     ctx: params.ctx,
     episodeId,
   })
@@ -1414,7 +1415,7 @@ export function createVideoGenerationOperations(): ProjectAgentOperationRegistry
 
     generate_video_group: defineOperation({
       id: 'generate_video_group',
-      summary: 'Generate one continuous video segment from a 2x2 or 3x3 storyboard reference grid.',
+      summary: 'Generate one continuous video segment from ordered storyboard reference images.',
       intent: 'act',
       prerequisites: { episodeId: 'required' },
       effects: {
@@ -1428,7 +1429,7 @@ export function createVideoGenerationOperations(): ProjectAgentOperationRegistry
       },
       confirmation: {
         required: true,
-        summary: '将把一组分镜图合成为宫格参考图并生成连续视频片段（可能消耗额度/产生计费）。确认继续后请重新调用并传入 confirmed=true。',
+        summary: '将使用一组有序分镜参考图生成连续视频片段（可能消耗额度/产生计费）。确认继续后请重新调用并传入 confirmed=true。',
       },
       inputSchema: generateVideoGroupInputSchema,
       outputSchema: generateVideoGroupOutputSchema,
@@ -1441,7 +1442,7 @@ export function createVideoGenerationOperations(): ProjectAgentOperationRegistry
 
     generate_episode_video_groups: defineOperation({
       id: 'generate_episode_video_groups',
-      summary: 'Batch generate continuous grid video segments for an episode.',
+      summary: 'Batch generate continuous video segments for an episode.',
       intent: 'act',
       prerequisites: { episodeId: 'required' },
       effects: {
@@ -1455,7 +1456,7 @@ export function createVideoGenerationOperations(): ProjectAgentOperationRegistry
       },
       confirmation: {
         required: true,
-        summary: '将按剪辑先行顺序批量生成宫格连续视频片段（可能消耗额度/产生计费）。确认继续后请重新调用并传入 confirmed=true。',
+        summary: '将按剪辑先行顺序批量生成连续视频片段（可能消耗额度/产生计费）。确认继续后请重新调用并传入 confirmed=true。',
       },
       inputSchema: generateEpisodeVideoGroupsInputSchema,
       outputSchema: generateEpisodeVideoGroupsOutputSchema,
@@ -1482,7 +1483,7 @@ export function createVideoGenerationOperations(): ProjectAgentOperationRegistry
       },
       confirmation: {
         required: true,
-        summary: '将按剪辑先行表中的视频生成编排提交单镜头和 Seedance 2.0 连续片段任务（可能消耗额度/产生计费）。确认继续后请重新调用并传入 confirmed=true。',
+        summary: '将按剪辑先行表中的视频片段提交单镜头和 Seedance 2.0 连续片段任务（可能消耗额度/产生计费）。确认继续后请重新调用并传入 confirmed=true。',
       },
       inputSchema: generateEpisodeVideosAutoInputSchema,
       outputSchema: generateEpisodeVideosAutoOutputSchema,

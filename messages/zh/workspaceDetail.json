@@ -7,9 +7,6 @@
   "projectNotFound": "项目不存在",
   "backToWorkspace": "返回工作区",
   "episode": "剧集",
-  "assistantAutoStart": {
-    "homeStory": "我刚从首页创建了这个项目，并输入了当前故事。请先读取当前项目上下文里的故事内容，然后自由判断下一步该怎么做：你可以搜索并加载合适的 Skill，创建并校验计划；如果需要写入、长任务或计费操作，请先请求确认。"
-  },
   "modelSetup": {
     "title": "开始创作前，请先配置默认模型",
     "description": "当前账号还没有默认分析模型，智能分集和后续 AI 流程无法使用。请先完成默认模型配置。",

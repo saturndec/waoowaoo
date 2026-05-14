@@ -62,7 +62,7 @@ export function useWorkspaceVideoActions({
         ? singleShotVideoModel.trim()
         : ''
     if (!normalizedVideoModel) {
-      alert('Video model is required')
+      alert(t('execution.videoModelRequired'))
       return
     }
     try {
@@ -95,7 +95,7 @@ export function useWorkspaceVideoActions({
         ? singleShotVideoModel.trim()
         : ''
     if (!normalizedVideoModel) {
-      alert('Video model is required')
+      alert(t('execution.videoModelRequired'))
       return
     }
 

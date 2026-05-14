@@ -183,31 +183,9 @@ export const AI_PROMPT_CATALOG: Record<AiPromptId, AiPromptCatalogEntry> = {
     pathStem: 'music/final-render-bgm',
     variableKeys: ['title', 'story_context', 'duration_seconds', 'timeline_map'],
   },
-  [AI_PROMPT_IDS.VIDEO_GENERATION_PLAN]: {
-    pathStem: 'video/generation-plan',
-    variableKeys: [
-      'title',
-      'story_context',
-      'aspect_ratio',
-      'shots_json',
-    ],
-  },
-  [AI_PROMPT_IDS.VIDEO_GROUP_GRID_PROMPT]: {
-    pathStem: 'video/group-grid-prompt',
-    variableKeys: [
-      'title',
-      'story_context',
-      'aspect_ratio',
-      'grid_mode',
-      'duration_seconds',
-      'grid_map',
-      'timeline_map',
-      'style_context',
-    ],
-  },
   [AI_PROMPT_IDS.EDIT_SCRIPT_BRIEF_QUESTIONS]: {
     pathStem: 'edit-script/brief-questions',
-    variableKeys: ['user_request', 'duration_seconds', 'style_context'],
+    variableKeys: ['user_request', 'duration_seconds', 'available_visual_styles', 'style_context'],
   },
   [AI_PROMPT_IDS.EDIT_SCRIPT_TIMELINE]: {
     pathStem: 'edit-script/timeline',
@@ -221,13 +199,9 @@ export const AI_PROMPT_CATALOG: Record<AiPromptId, AiPromptCatalogEntry> = {
     pathStem: 'edit-script/camera',
     variableKeys: ['user_request', 'visual_action_json', 'aspect_ratio', 'style_context'],
   },
-  [AI_PROMPT_IDS.EDIT_SCRIPT_VIDEO_PROMPT]: {
-    pathStem: 'edit-script/video-prompt',
-    variableKeys: ['user_request', 'camera_json', 'aspect_ratio', 'style_context'],
-  },
   [AI_PROMPT_IDS.EDIT_SCRIPT_AUDIO]: {
     pathStem: 'edit-script/audio',
-    variableKeys: ['user_request', 'video_prompt_json'],
+    variableKeys: ['user_request', 'camera_json'],
   },
   [AI_PROMPT_IDS.EDIT_SCRIPT_PRIMARY]: {
     pathStem: 'edit-script/primary',
@@ -237,7 +211,6 @@ export const AI_PROMPT_CATALOG: Record<AiPromptId, AiPromptCatalogEntry> = {
       'timeline_json',
       'visual_action_json',
       'camera_json',
-      'video_prompt_json',
       'audio_json',
       'aspect_ratio',
       'style_context',

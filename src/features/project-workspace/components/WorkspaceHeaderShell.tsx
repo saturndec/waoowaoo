@@ -1,5 +1,6 @@
 'use client'
 
+import { useCallback } from 'react'
 import { EpisodeSelector } from '@/components/ui/CapsuleNav'
 import { SettingsModal, WorldContextModal } from '@/components/ui/ConfigModals'
 import WorkspaceTopActions from './WorkspaceTopActions'
@@ -104,6 +105,10 @@ export default function WorkspaceHeaderShell({
   settingsLabel,
   refreshTitle,
 }: WorkspaceHeaderShellProps) {
+  const handleCapabilityOverridesChange = useCallback((value: CapabilitySelections) => {
+    void onUpdateConfig('capabilityOverrides', value)
+  }, [onUpdateConfig])
+
   return (
     <>
       <SettingsModal
@@ -134,7 +139,7 @@ export default function WorkspaceHeaderShell({
         onSequenceVideoModelChange={(value) => { onUpdateConfig('sequenceVideoModel', value) }}
         onAudioModelChange={(value) => { onUpdateConfig('audioModel', value) }}
         onVideoRatioChange={(value) => { onUpdateConfig('videoRatio', value) }}
-        onCapabilityOverridesChange={(value) => { onUpdateConfig('capabilityOverrides', value) }}
+        onCapabilityOverridesChange={handleCapabilityOverridesChange}
       />
 
       <WorldContextModal

@@ -17,17 +17,17 @@ export function useWorkspaceConfigActions({
   projectId,
   episodeId,
 }: UseWorkspaceConfigActionsParams) {
-  const updateProjectConfigMutation = useUpdateProjectConfig(projectId)
-  const updateProjectEpisodeMutation = useUpdateProjectEpisodeField(projectId)
-  const getProjectStoryboardStatsMutation = useGetProjectStoryboardStats(projectId)
+  const { mutateAsync: updateProjectConfig } = useUpdateProjectConfig(projectId)
+  const { mutateAsync: updateProjectEpisode } = useUpdateProjectEpisodeField(projectId)
+  const { mutateAsync: getProjectStoryboardStatsMutation } = useGetProjectStoryboardStats(projectId)
 
   const handleUpdateConfig = useCallback(async (key: string, value: unknown) => {
     try {
-      await updateProjectConfigMutation.mutateAsync({ key, value })
+      await updateProjectConfig({ key, value })
     } catch (error: unknown) {
       _ulogError('Update config error:', error)
     }
-  }, [updateProjectConfigMutation])
+  }, [updateProjectConfig])
 
   const handleUpdateEpisode = useCallback(async (key: string, value: unknown) => {
     if (!episodeId) {
@@ -36,14 +36,14 @@ export function useWorkspaceConfigActions({
     }
 
     try {
-      await updateProjectEpisodeMutation.mutateAsync({ episodeId, key, value })
+      await updateProjectEpisode({ episodeId, key, value })
     } catch (error: unknown) {
       _ulogError('Update episode error:', error)
     }
-  }, [episodeId, updateProjectEpisodeMutation])
+  }, [episodeId, updateProjectEpisode])
 
   const getProjectStoryboardStats = useCallback(async (targetEpisodeId: string) => {
-    return getProjectStoryboardStatsMutation.mutateAsync({ episodeId: targetEpisodeId })
+    return getProjectStoryboardStatsMutation({ episodeId: targetEpisodeId })
   }, [getProjectStoryboardStatsMutation])
 
   return {

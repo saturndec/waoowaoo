@@ -336,7 +336,19 @@ describe('workspace node rendering', () => {
         gridMode: '2x2',
         reason: 'motion continuity',
         prompt: 'editable arrangement prompt',
-        sourceImages: [],
+        sourceImages: [
+          { shotNumber: 1, imageUrl: 'https://example.com/shot-1.png', aspectRatio: 16 / 9 },
+          { shotNumber: 2, imageUrl: 'https://example.com/shot-2.png', aspectRatio: 16 / 9 },
+        ],
+        assetReferences: [
+          {
+            id: 'asset-1',
+            name: 'Pilot',
+            kind: 'character',
+            imageUrl: 'https://example.com/pilot.png',
+            shotNumbers: [1, 2],
+          },
+        ],
       },
     })
 
@@ -344,6 +356,11 @@ describe('workspace node rendering', () => {
     expect(videoPlanHtml.match(/aria-label="editPrompt"/g)).toHaveLength(1)
     expect(`${shotHtml}${videoPlanHtml}`).toContain('data-icon="edit"')
     expect(`${shotHtml}${videoPlanHtml}`).not.toContain('<textarea')
+    expect(videoPlanHtml).not.toContain('gridMode')
+    expect(videoPlanHtml).toContain('videoPlanModelMissing')
+    expect(videoPlanHtml).toContain('videoPlanPendingVideo')
+    expect(videoPlanHtml).toContain('grid grid-cols-2')
+    expect(videoPlanHtml).not.toContain('overflow-x-auto')
   })
 
   it('does not render empty expanded detail sections as blank cards', () => {

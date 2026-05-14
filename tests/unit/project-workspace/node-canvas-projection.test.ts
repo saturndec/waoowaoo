@@ -279,6 +279,41 @@ describe('workspace node canvas projection', () => {
     )
   })
 
+  it('keeps a persisted generating edit table visible after refresh', () => {
+    const projection = buildWorkspaceNodeCanvasProjection({
+      episodeId: 'episode-1',
+      storyText: '',
+      clips: [],
+      storyboards: [],
+      savedLayouts: [],
+      translate: t,
+      editScript: {
+        id: 'edit-generating',
+        projectId: 'project-1',
+        episodeId: 'episode-1',
+        userPrompt: '做一个科幻短片',
+        title: 'Generating edit table',
+        logline: null,
+        durationSec: 60,
+        shotCount: 0,
+        status: 'generating',
+        shots: [],
+        videoBlocks: [],
+        requirements: [],
+      },
+    })
+
+    const node = projection.nodes.find((item) => item.id === 'edit-script:edit-generating')
+
+    expect(node?.data.kind).toBe('editScript')
+    expect(node?.data.title).toBe('nodes.editScript.pendingTitle')
+    expect(node?.data.body).toBe('nodes.editScript.pendingBody')
+    expect(node?.data.statusLabel).toBe('status.processing')
+    expect(node?.data.isRunning).toBe(true)
+    expect(node?.data.actionLabel).toBeUndefined()
+    expect(node?.data.editScriptDetails).toBeUndefined()
+  })
+
   it('shows final render failures on the final timeline node', () => {
     const projection = buildWorkspaceNodeCanvasProjection({
       episodeId: 'episode-1',
@@ -829,7 +864,86 @@ describe('workspace node canvas projection', () => {
     expect(projection.edges.some((edge) => edge.id === 'edge:shot-video-plan:video-plan:edit-2:1')).toBe(true)
   })
 
-  it('projects one-shot video arrangement blocks without separate video nodes', () => {
+  it('does not fall back to the default video model when the video segment model is missing', () => {
+    const projection = buildWorkspaceNodeCanvasProjection({
+      episodeId: 'episode-1',
+      storyText: '',
+      clips: [],
+      storyboards: [
+        createStoryboard({
+          id: 'storyboard-1',
+          clipId: 'clip-1',
+          panels: [
+            createPanel({
+              id: 'panel-1',
+              panelIndex: 0,
+              panelNumber: 1,
+              imageUrl: 'https://example.com/shot-1.png',
+            }),
+            createPanel({
+              id: 'panel-2',
+              panelIndex: 1,
+              panelNumber: 2,
+              imageUrl: 'https://example.com/shot-2.png',
+            }),
+          ],
+        }),
+      ],
+      savedLayouts: [],
+      translate: t,
+      defaultVideoModel: 'ark::default-panel-model',
+      defaultSequenceVideoModel: null,
+      editScript: {
+        id: 'edit-3',
+        projectId: 'project-1',
+        episodeId: 'episode-1',
+        userPrompt: 'short sci-fi',
+        title: 'Orbital Silence',
+        logline: 'A pilot meets a machine intelligence.',
+        durationSec: 9,
+        shotCount: 2,
+        status: 'ready',
+        shots: [
+          {
+            shotNumber: 1,
+            durationSec: 5,
+            visualAction: 'Pilot crosses the docking bay.',
+            charactersAndScene: 'Pilot / Docking Bay',
+            camera: 'locked wide shot',
+            videoPrompt: 'Pilot crosses a sterile docking bay.',
+            sound: 'air hum',
+          },
+          {
+            shotNumber: 2,
+            durationSec: 4,
+            visualAction: 'A red machine eye opens.',
+            charactersAndScene: 'Pilot / AI Chamber',
+            camera: 'slow push in',
+            videoPrompt: 'A red machine eye opens in a chamber.',
+            sound: 'sub bass pulse',
+          },
+        ],
+        videoBlocks: [
+          {
+            kind: 'group',
+            shotNumbers: [1, 2],
+            gridMode: '2x2',
+            reason: 'Shared camera movement should be generated as one segment.',
+            prompt: 'Edit-first combined prompt.',
+          },
+        ],
+        requirements: [],
+      },
+    })
+
+    const videoPlanNode = projection.nodes.find((node) => node.id === 'video-plan:edit-3:1')
+    expect(videoPlanNode?.data.action).toBeUndefined()
+    expect(videoPlanNode?.data.statusLabel).toBe('status.failed')
+    expect(videoPlanNode?.data.videoPlanDetails?.assetReferenceVideoModel).toBe('')
+    expect(videoPlanNode?.data.videoPlanDetails?.errorMessage).toBe('errors.sequenceVideoModelMissing')
+  })
+
+  it('projects one-shot video segment blocks without separate video nodes', () => {
     const projection = buildWorkspaceNodeCanvasProjection({
       episodeId: 'episode-1',
       storyText: '',
@@ -845,7 +959,8 @@ describe('workspace node canvas projection', () => {
       ],
       savedLayouts: [],
       translate: t,
-      defaultVideoModel: 'google::veo-test',
+      defaultVideoModel: 'google::default-panel-model',
+      defaultSequenceVideoModel: 'google::veo-test',
       editScript: {
         id: 'edit-single',
         projectId: 'project-1',

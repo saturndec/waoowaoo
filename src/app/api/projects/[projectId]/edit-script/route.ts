@@ -58,6 +58,7 @@ export const POST = apiHandler(async (
     locale: resolveRequiredTaskLocale(request, body),
     prompt: parsed.data.prompt,
     videoRatio: parsed.data.videoRatio,
+    artStyle: parsed.data.artStyle,
   })
 
   return NextResponse.json({ editScript })

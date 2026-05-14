@@ -598,7 +598,6 @@ export function buildWorkspaceNodeCanvasProjection({
   editScriptPending = false,
   finalVideo,
   videoGroups = [],
-  defaultVideoModel,
   defaultSequenceVideoModel,
   finalRenderPhase,
   finalRenderErrorMessage,
@@ -645,11 +644,18 @@ export function buildWorkspaceNodeCanvasProjection({
   if (editScript) {
     const editScriptNodeId = `edit-script:${editScript.id}`
     const editScriptFallbackY = hasStory ? 430 : 180
-    const editScriptHeight = estimateEditScriptNodeHeight(editScript)
+    const editScriptIsGenerating = editScript.status === 'generating'
+    const editScriptIsFailed = editScript.status === 'failed'
+    const editScriptIsReady = !editScriptIsGenerating && !editScriptIsFailed
+    const editScriptHeight = editScriptIsGenerating && editScript.shotCount === 0
+      ? 520
+      : estimateEditScriptNodeHeight(editScript)
     const assetsToGenerate = editScript.requirements.some((asset) => asset.status !== 'completed')
     const completedAssets = editScript.requirements.filter((asset) => asset.status === 'completed').length
     const hasStoryboardPanels = storyboards.some((storyboard) => (storyboard.panels?.length ?? 0) > 0)
-    const editScriptAction = assetsToGenerate
+    const editScriptAction = !editScriptIsReady
+      ? null
+      : assetsToGenerate
       ? { label: translate('actions.generateEditAssets'), action: { type: 'generate_edit_assets', editScriptId: editScript.id } as const }
       : hasStoryboardPanels
         ? null
@@ -666,24 +672,33 @@ export function buildWorkspaceNodeCanvasProjection({
         layoutNodeType: 'editScript',
         targetType: 'editScript',
         targetId: editScript.id,
-        title: editScript.title,
+        title: editScriptIsGenerating ? translate('nodes.editScript.pendingTitle') : editScript.title,
         eyebrow: translate('nodes.editScript.eyebrow'),
-        body: compactText(editScript.logline || editScript.userPrompt, translate('empty.editScript')),
-        meta: translate('nodes.editScript.meta', {
-          shots: editScript.shotCount,
-          duration: editScript.durationSec,
-          assets: editScript.requirements.length,
-          completed: completedAssets,
-        }),
-        statusLabel: translate('status.ready'),
+        body: editScriptIsGenerating
+          ? translate('nodes.editScript.pendingBody')
+          : compactText(editScript.logline || editScript.userPrompt, translate('empty.editScript')),
+        meta: editScriptIsGenerating
+          ? translate('nodes.editScript.pendingMeta')
+          : translate('nodes.editScript.meta', {
+              shots: editScript.shotCount,
+              duration: editScript.durationSec,
+              assets: editScript.requirements.length,
+              completed: completedAssets,
+            }),
+        statusLabel: editScriptIsGenerating
+          ? translate('status.processing')
+          : editScriptIsFailed
+            ? translate('status.failed')
+            : translate('status.ready'),
+        isRunning: editScriptIsGenerating,
         width: EDIT_SCRIPT_TABLE_NODE_WIDTH,
         height: editScriptHeight,
         indexLabel: 'E',
-        editScriptDetails: {
+        editScriptDetails: editScriptIsReady ? {
           durationSec: editScript.durationSec,
           shotCount: editScript.shotCount,
           shots: editScript.shots,
-        },
+        } : undefined,
         actionLabel: editScriptAction?.label,
         action: editScriptAction?.action,
         onAction,
@@ -693,7 +708,7 @@ export function buildWorkspaceNodeCanvasProjection({
     const assetBaseY = editScriptFallbackY + editScriptHeight + EDIT_SCRIPT_ASSET_LAYER_GAP_Y
     let assetRowY = assetBaseY
     let assetRowMaxHeight = 0
-    editScript.requirements.forEach((asset, index) => {
+    if (editScriptIsReady) editScript.requirements.forEach((asset, index) => {
       const nodeId = `edit-asset:${asset.id}`
       const canGenerateAsset = asset.status === 'pending' || asset.status === 'failed'
       const nodeHeight = estimateEditAssetNodeHeight(asset)
@@ -814,7 +829,7 @@ export function buildWorkspaceNodeCanvasProjection({
     const shotNumber = panel.panelNumber ?? panel.panelIndex + 1
     panelByShotNumberForVideoPlan.set(shotNumber, panel)
   })
-  const hasVideoBlocks = Boolean(editScript?.videoBlocks?.length)
+  const hasVideoBlocks = editScript?.status === 'ready' && Boolean(editScript.videoBlocks?.length)
   const canShowVideoPlanLayer = hasVideoBlocks
   const panelGridRows = Math.max(1, Math.ceil(panelsWithStoryboard.length / PANEL_GRID_COLUMNS))
   const shotPreviewByPanelId = new Map<string, { aspectRatio: number | null; height: number; nodeHeight: number }>()
@@ -917,8 +932,8 @@ export function buildWorkspaceNodeCanvasProjection({
       const isGroupRunning = matchingGroup?.status === 'queued' || matchingGroup?.status === 'processing'
       const isRunning = isGroupRunning || (block.kind === 'single' && singlePanel?.videoTaskRunning === true)
       const sequenceVideoModel = typeof defaultSequenceVideoModel === 'string' ? defaultSequenceVideoModel.trim() : ''
-      const assetReferenceVideoModel = sequenceVideoModel || (typeof defaultVideoModel === 'string' ? defaultVideoModel.trim() : '')
-      const sequenceModelMissing = block.kind === 'group' && !sequenceVideoModel
+      const assetReferenceVideoModel = sequenceVideoModel
+      const sequenceModelMissing = !sequenceVideoModel
       const runtimeErrorMessage = sequenceModelMissing
         ? translate('errors.sequenceVideoModelMissing')
         : matchingGroup?.status === 'failed'
@@ -952,7 +967,7 @@ export function buildWorkspaceNodeCanvasProjection({
                 storyboardId: singlePanel.storyboardId,
                 panelIndex: singlePanel.panelIndex,
                 panelId: singlePanel.id,
-                videoModel: singlePanel.videoModel || defaultVideoModel || undefined,
+                videoModel: sequenceVideoModel || undefined,
               }
             : undefined
       const modeLabel = block.kind === 'group' ? translate('nodeFields.videoPlanGroup') : translate('nodeFields.videoPlanSingle')
@@ -1109,7 +1124,6 @@ export function useWorkspaceNodeCanvasProjection({
   editScriptPending,
   finalVideo,
   videoGroups,
-  defaultVideoModel,
   defaultSequenceVideoModel,
   finalRenderPhase,
   finalRenderErrorMessage,
@@ -1130,7 +1144,6 @@ export function useWorkspaceNodeCanvasProjection({
       editScriptPending,
       finalVideo,
       videoGroups,
-      defaultVideoModel,
       defaultSequenceVideoModel,
       finalRenderPhase,
       finalRenderErrorMessage,
@@ -1144,7 +1157,6 @@ export function useWorkspaceNodeCanvasProjection({
       episodeName,
       onAction,
       projectId,
-      defaultVideoModel,
       defaultSequenceVideoModel,
       finalRenderPhase,
       finalRenderErrorMessage,

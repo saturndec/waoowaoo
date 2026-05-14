@@ -1,53 +1,55 @@
 import { describe, expect, it } from 'vitest'
 import {
+  finalizeEditScriptBriefQuestions,
   normalizeEditAssetRequirements,
   normalizeEditScriptBriefQuestions,
   normalizeEditScriptCore,
   resolveEditScriptDefaults,
-  withRequiredAspectRatioBriefQuestion,
 } from '@/lib/edit-script/normalize'
 
 describe('edit script normalization', () => {
-  it('accepts AI generated brief questions with exactly A/B/C options', () => {
+  it('accepts only the three edit-first brief question categories', () => {
     expect(normalizeEditScriptBriefQuestions({
       questions: [
         {
-          id: 'visual_direction',
-          label: '这条短片更偏向哪种视觉方向？',
+          id: 'visual_style',
+          label: '这条视频需要哪种画风？',
           options: [
-            { id: 'A', label: '冷峻对称' },
-            { id: 'B', label: '神秘留白' },
-            { id: 'C', label: '压迫推进' },
+            { id: 'A', label: '漫画风' },
+            { id: 'B', label: '精致国漫' },
+            { id: 'C', label: '日系动漫风' },
+            { id: 'D', label: '真人风格' },
           ],
         },
         {
-          id: 'ending_tone',
-          label: '结尾更需要哪种余味？',
+          id: 'duration',
+          label: '这条视频需要多长？',
           options: [
-            { id: 'A', label: '开放留白' },
-            { id: 'B', label: '反转揭示' },
-            { id: 'C', label: '冷峻收束' },
+            { id: 'A', label: '15秒' },
+            { id: 'B', label: '30秒' },
+            { id: 'C', label: '60秒' },
           ],
         },
       ],
     })).toEqual({
       questions: [
         {
-          id: 'visual_direction',
-          label: '这条短片更偏向哪种视觉方向？',
+          id: 'visual_style',
+          label: '这条视频需要哪种画风？',
           options: [
-            { id: 'A', label: '冷峻对称' },
-            { id: 'B', label: '神秘留白' },
-            { id: 'C', label: '压迫推进' },
+            { id: 'A', label: '漫画风' },
+            { id: 'B', label: '精致国漫' },
+            { id: 'C', label: '日系动漫风' },
+            { id: 'D', label: '真人风格' },
           ],
         },
         {
-          id: 'ending_tone',
-          label: '结尾更需要哪种余味？',
+          id: 'duration',
+          label: '这条视频需要多长？',
           options: [
-            { id: 'A', label: '开放留白' },
-            { id: 'B', label: '反转揭示' },
-            { id: 'C', label: '冷峻收束' },
+            { id: 'A', label: '15秒' },
+            { id: 'B', label: '30秒' },
+            { id: 'C', label: '60秒' },
           ],
         },
       ],
@@ -58,29 +60,20 @@ describe('edit script normalization', () => {
     expect(() => normalizeEditScriptBriefQuestions({
       questions: [
         {
-          id: 'visual_direction',
-          label: '这条短片更偏向哪种视觉方向？',
+          id: 'duration',
+          label: '这条视频需要多长？',
           options: [
-            { id: 'A', label: '冷峻对称' },
-            { id: 'C', label: '压迫推进' },
-            { id: 'B', label: '神秘留白' },
-          ],
-        },
-        {
-          id: 'ending_tone',
-          label: '结尾更需要哪种余味？',
-          options: [
-            { id: 'A', label: '开放留白' },
-            { id: 'B', label: '反转揭示' },
-            { id: 'C', label: '冷峻收束' },
+            { id: 'A', label: '15秒' },
+            { id: 'C', label: '60秒' },
+            { id: 'B', label: '30秒' },
           ],
         },
       ],
     })).toThrow('EDIT_SCRIPT_BRIEF_OPTION_ORDER')
   })
 
-  it('prepends required aspect ratio choices when the brief agent omits them', () => {
-    const payload = withRequiredAspectRatioBriefQuestion(normalizeEditScriptBriefQuestions({
+  it('rejects unsupported brief question categories', () => {
+    expect(() => normalizeEditScriptBriefQuestions({
       questions: [
         {
           id: 'visual_direction',
@@ -91,35 +84,25 @@ describe('edit script normalization', () => {
             { id: 'C', label: '压迫推进' },
           ],
         },
-        {
-          id: 'ending_tone',
-          label: '结尾更需要哪种余味？',
-          options: [
-            { id: 'A', label: '开放留白' },
-            { id: 'B', label: '反转揭示' },
-            { id: 'C', label: '冷峻收束' },
-          ],
-        },
       ],
-    }), 'zh')
-
-    expect(payload.questions[0]).toEqual({
-      id: 'aspect_ratio',
-      label: '这条视频需要哪种画幅比例？',
-      options: [
-        { id: 'A', label: '9:16 竖屏短视频' },
-        { id: 'B', label: '16:9 横屏视频' },
-        { id: 'C', label: '21:9 电影宽银幕' },
-      ],
-    })
-    expect(payload.questions).toHaveLength(3)
+    })).toThrow('EDIT_SCRIPT_BRIEF_UNSUPPORTED_QUESTION:visual_direction')
   })
 
-  it('deduplicates brief-agent aspect ratio questions and keeps the local copy first', () => {
-    const payload = withRequiredAspectRatioBriefQuestion(normalizeEditScriptBriefQuestions({
+  it('keeps only missing visual style, aspect ratio, and duration questions', () => {
+    const payload = finalizeEditScriptBriefQuestions(normalizeEditScriptBriefQuestions({
       questions: [
         {
-          id: 'video_ratio',
+          id: 'visual_style',
+          label: '画风？',
+          options: [
+            { id: 'A', label: 'wrong one' },
+            { id: 'B', label: 'wrong two' },
+            { id: 'C', label: 'wrong three' },
+            { id: 'D', label: 'wrong four' },
+          ],
+        },
+        {
+          id: 'aspect_ratio',
           label: '画幅？',
           options: [
             { id: 'A', label: '9:16' },
@@ -128,16 +111,91 @@ describe('edit script normalization', () => {
           ],
         },
         {
-          id: 'visual_direction',
-          label: 'Visual style?',
+          id: 'duration',
+          label: '时长？',
           options: [
-            { id: 'A', label: 'Clean' },
-            { id: 'B', label: 'Mystery' },
-            { id: 'C', label: 'Pressure' },
+            { id: 'A', label: '15秒' },
+            { id: 'B', label: '30秒' },
+            { id: 'C', label: '60秒' },
           ],
         },
       ],
-    }), 'en')
+    }), 'zh', '生成一个30秒视频')
+
+    expect(payload.questions).toEqual([
+      {
+        id: 'visual_style',
+        label: '这条视频需要哪种画风？',
+        options: [
+          { id: 'A', label: '漫画风' },
+          { id: 'B', label: '精致国漫' },
+          { id: 'C', label: '日系动漫风' },
+          { id: 'D', label: '真人风格' },
+        ],
+      },
+      {
+        id: 'aspect_ratio',
+        label: '这条视频需要哪种画幅比例？',
+        options: [
+          { id: 'A', label: '9:16 竖屏短视频' },
+          { id: 'B', label: '16:9 横屏视频' },
+          { id: 'C', label: '21:9 电影宽银幕' },
+        ],
+      },
+    ])
+  })
+
+  it('returns no brief questions when the user already states all three basics', () => {
+    const payload = finalizeEditScriptBriefQuestions(normalizeEditScriptBriefQuestions({
+      questions: [
+        {
+          id: 'visual_style',
+          label: '画风？',
+          options: [
+            { id: 'A', label: '漫画风' },
+            { id: 'B', label: '精致国漫' },
+            { id: 'C', label: '日系动漫风' },
+            { id: 'D', label: '真人风格' },
+          ],
+        },
+        {
+          id: 'aspect_ratio',
+          label: '画幅？',
+          options: [
+            { id: 'A', label: '9:16' },
+            { id: 'B', label: '16:9' },
+            { id: 'C', label: '21:9' },
+          ],
+        },
+        {
+          id: 'duration',
+          label: '时长？',
+          options: [
+            { id: 'A', label: '15秒' },
+            { id: 'B', label: '30秒' },
+            { id: 'C', label: '60秒' },
+          ],
+        },
+      ],
+    }), 'zh', '生成一个30秒9:16真人风格视频')
+
+    expect(payload.questions).toEqual([])
+  })
+
+  it('deduplicates brief-agent aspect ratio questions and keeps the local copy first', () => {
+    const payload = finalizeEditScriptBriefQuestions(normalizeEditScriptBriefQuestions({
+      questions: [
+        {
+          id: 'aspect_ratio',
+          label: '画幅？',
+          options: [
+            { id: 'A', label: '9:16' },
+            { id: 'B', label: '16:9' },
+            { id: 'C', label: '21:9' },
+          ],
+        },
+      ],
+    }), 'en', 'realistic 30 seconds')
 
     expect(payload.questions).toEqual([
       {
@@ -149,18 +207,8 @@ describe('edit script normalization', () => {
           { id: 'C', label: '21:9 cinematic ultra-wide' },
         ],
       },
-      {
-        id: 'visual_direction',
-        label: 'Visual style?',
-        options: [
-          { id: 'A', label: 'Clean' },
-          { id: 'B', label: 'Mystery' },
-          { id: 'C', label: 'Pressure' },
-        ],
-      },
     ])
   })
-
   it('keeps the minimum edit table fields and enforces continuous shot numbers', () => {
     const normalized = normalizeEditScriptCore({
       title: 'Orbital Silence',
@@ -302,7 +350,7 @@ describe('edit script normalization', () => {
       videoBlocks: [
         { type: 'group', shotNumbers: [1, 2, 3, 4], gridMode: '2x2', reason: 'too long for one Seedance segment', prompt: 'too long group prompt' },
       ],
-    })).toThrow('VIDEO_GENERATION_PLAN_GROUP_DURATION_UNSUPPORTED:17')
+    })).toThrow('VIDEO_BLOCK_PLAN_GROUP_DURATION_UNSUPPORTED:17')
   })
 
   it('extracts only character and location requirements linked to real shots', () => {

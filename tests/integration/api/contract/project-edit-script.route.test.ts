@@ -9,21 +9,22 @@ const serviceMock = vi.hoisted(() => ({
   generateProjectEditScriptBriefQuestions: vi.fn(async () => ({
     questions: [
       {
-        id: 'visual_direction',
-        label: '这条短片更偏向哪种视觉方向？',
+        id: 'visual_style',
+        label: '这条视频需要哪种画风？',
         options: [
-          { id: 'A', label: '冷峻对称' },
-          { id: 'B', label: '神秘留白' },
-          { id: 'C', label: '压迫推进' },
+          { id: 'A', label: '漫画风' },
+          { id: 'B', label: '精致国漫' },
+          { id: 'C', label: '日系动漫风' },
+          { id: 'D', label: '真人风格' },
         ],
       },
       {
-        id: 'ending_tone',
-        label: '结尾更需要哪种余味？',
+        id: 'duration',
+        label: '这条视频需要多长？',
         options: [
-          { id: 'A', label: '开放留白' },
-          { id: 'B', label: '反转揭示' },
-          { id: 'C', label: '冷峻收束' },
+          { id: 'A', label: '15秒' },
+          { id: 'B', label: '30秒' },
+          { id: 'C', label: '60秒' },
         ],
       },
     ],
@@ -207,12 +208,13 @@ describe('project edit script route', () => {
     expect(response.status).toBe(200)
     expect(payload.briefQuestions.questions).toHaveLength(2)
     expect(payload.briefQuestions.questions[0]).toEqual({
-      id: 'visual_direction',
-      label: '这条短片更偏向哪种视觉方向？',
+      id: 'visual_style',
+      label: '这条视频需要哪种画风？',
       options: [
-        { id: 'A', label: '冷峻对称' },
-        { id: 'B', label: '神秘留白' },
-        { id: 'C', label: '压迫推进' },
+        { id: 'A', label: '漫画风' },
+        { id: 'B', label: '精致国漫' },
+        { id: 'C', label: '日系动漫风' },
+        { id: 'D', label: '真人风格' },
       ],
     })
     expect(serviceMock.generateProjectEditScriptBriefQuestions).toHaveBeenCalledWith(expect.objectContaining({

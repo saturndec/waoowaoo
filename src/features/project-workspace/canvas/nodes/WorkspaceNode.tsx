@@ -844,11 +844,9 @@ function VideoPlanContent({
     setPreviewMode(displayOutputUrl ? 'video' : 'reference')
   }, [displayOutputUrl])
   if (!details) return <p className={`${SELECTABLE_TEXT_CLASS} text-sm leading-6 text-[var(--glass-text-secondary)]`}>{data.body}</p>
-  const gridClass = details.gridMode === '3x3' ? 'grid-cols-3' : details.kind === 'group' ? 'grid-cols-2' : 'grid-cols-1'
-  const cellCount = details.kind === 'single' ? 1 : details.gridMode === '3x3' ? 9 : 4
-  const cells = Array.from({ length: cellCount }, (_, index) => details.sourceImages[index] ?? null)
+  const referenceCells = details.sourceImages
   const running = data.__running === true
-  const referenceAspectRatio = cells.find((cell) => (
+  const referenceAspectRatio = referenceCells.find((cell) => (
     typeof cell?.aspectRatio === 'number' && Number.isFinite(cell.aspectRatio) && cell.aspectRatio > 0
   ))?.aspectRatio ?? 16 / 9
   const outputAspectRatio = typeof details.outputAspectRatio === 'number' && Number.isFinite(details.outputAspectRatio) && details.outputAspectRatio > 0
@@ -860,6 +858,7 @@ function VideoPlanContent({
   const assetReferenceImageUrls = assetReferences.map((asset) => asset.imageUrl)
   const assetReferenceVideoModel = videoPlanModel(data)
   const canGenerateAssetReference = assetReferenceImageUrls.length > 0 && assetReferenceVideoModel.length > 0 && !running
+  const shouldShowVideoModelHint = assetReferenceImageUrls.length > 0 && assetReferenceVideoModel.length === 0
   return (
     <div className="nodrag nowheel space-y-3">
       {displayOutputUrl ? (
@@ -890,39 +889,43 @@ function VideoPlanContent({
           />
         </div>
       ) : (
-        <div className={`grid ${gridClass} gap-2 rounded-[18px] bg-slate-950 p-3 ${running ? 'workspace-node-loading-surface' : ''}`}>
-          {cells.map((cell, index) => {
-            const imageUrl = cell?.imageUrl ? toDisplayImageUrl(cell.imageUrl) ?? cell.imageUrl : null
-            const aspectRatio = typeof cell?.aspectRatio === 'number' && Number.isFinite(cell.aspectRatio) && cell.aspectRatio > 0
-              ? cell.aspectRatio
-              : referenceAspectRatio
-            return (
-              <div
-                key={`${cell?.shotNumber ?? 'empty'}:${index}`}
-                className="relative overflow-hidden rounded-[12px] bg-slate-800"
-                style={{ aspectRatio }}
-              >
-                {imageUrl ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img src={imageUrl} alt={labels('videoPlanShotAlt', { shot: cell?.shotNumber ?? index + 1 })} className="h-full w-full object-contain" />
-                ) : (
-                  <div className="h-full w-full bg-slate-900" />
-                )}
-                {cell ? (
-                  <span className="absolute left-1.5 top-1.5 rounded-full bg-black/70 px-1.5 py-0.5 text-[10px] font-semibold text-white">
-                    {cell.shotNumber}
-                  </span>
-                ) : null}
-              </div>
-            )
-          })}
+        <div className={`space-y-2 rounded-[18px] bg-white p-3 ring-1 ring-slate-200 ${running ? 'workspace-node-loading-surface' : ''}`}>
+          <div className="flex w-full items-center justify-center rounded-[14px] bg-white text-slate-400 ring-1 ring-slate-200" style={outputStyle}>
+            <div className="flex flex-col items-center gap-1 py-8">
+              <AppIcon name="video" className="h-5 w-5" />
+              <span className="text-[10px] font-semibold">{labels('videoPlanPendingVideo')}</span>
+            </div>
+          </div>
+          {referenceCells.length > 0 ? (
+            <div className="grid grid-cols-2 gap-2">
+              {referenceCells.map((cell) => {
+                const imageUrl = cell.imageUrl ? toDisplayImageUrl(cell.imageUrl) ?? cell.imageUrl : null
+                return (
+                  <div
+                    key={cell.shotNumber}
+                    className="relative overflow-hidden rounded-[10px] bg-slate-50 ring-1 ring-slate-200"
+                    style={{ aspectRatio: '16 / 9' }}
+                  >
+                    {imageUrl ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={imageUrl} alt={labels('videoPlanShotAlt', { shot: cell.shotNumber })} className="h-full w-full object-cover" />
+                    ) : (
+                      <div className="h-full w-full bg-slate-50" />
+                    )}
+                    <span className="absolute left-1.5 top-1.5 rounded-full bg-white/90 px-1.5 py-0.5 text-[10px] font-semibold text-slate-700 shadow-sm ring-1 ring-slate-200">
+                      {cell.shotNumber}
+                    </span>
+                  </div>
+                )
+              })}
+            </div>
+          ) : null}
         </div>
       )}
       {renderSection(labels('videoPlanMeta'), (
         <div className="space-y-1">
           {renderValue(labels('generationMode'), details.kind === 'group' ? labels('videoPlanGroup') : labels('videoPlanSingle'))}
           {renderValue(labels('duration'), `${details.durationSec}s`)}
-          {renderValue(labels('gridMode'), details.gridMode)}
         </div>
       ))}
       {assetReferences.length > 0 ? renderSection(labels('assetReferenceImages'), (
@@ -952,6 +955,9 @@ function VideoPlanContent({
           >
             {labels('generateAssetReferenceVideo')}
           </button>
+          {shouldShowVideoModelHint ? (
+            <p className="text-xs leading-5 text-[var(--glass-tone-danger-fg)]">{labels('videoPlanModelMissing')}</p>
+          ) : null}
         </div>
       )) : null}
       {details.prompt ? (

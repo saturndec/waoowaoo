@@ -346,6 +346,7 @@ export function resolveArkOptionSchema(modality: MediaModality, modelId: string)
     const spec = ARK_VIDEO_SPECS[modelId]
     return buildMediaOptionSchema('video', {
       ...ARK_VIDEO_OPTION_SCHEMA_CONFIG,
+      allowedKeys: ['referenceImages'],
       validators: {
         aspectRatio: enumValidator(ARK_VIDEO_RATIOS),
         resolution: enumValidator(spec?.resolutions || ['480p', '720p', '1080p']),

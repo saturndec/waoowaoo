@@ -315,6 +315,28 @@ describe('api contract - project media generation routes (operation adapter)', (
     }))
   })
 
+  it('POST /api/projects/[projectId]/generate-video -> rejects blank video model before submitting an operation', async () => {
+    const response = await generateVideoPost(
+      buildMockRequest({
+        path: '/api/projects/project-1/generate-video',
+        method: 'POST',
+        body: { panelId: 'panel-1', videoModel: '   ' },
+      }),
+      { params: Promise.resolve({ projectId: 'project-1' }) },
+    )
+    const body = await response.json()
+
+    expect(response.status).toBe(400)
+    expect(body.error).toMatchObject({
+      code: 'INVALID_PARAMS',
+      details: {
+        code: 'VIDEO_MODEL_REQUIRED',
+        field: 'videoModel',
+      },
+    })
+    expect(apiAdapterMock.executeProjectAgentOperationFromApi).not.toHaveBeenCalled()
+  })
+
   it('POST /api/projects/[projectId]/final-video-render -> routes to final render operation with confirmation', async () => {
     apiAdapterMock.executeProjectAgentOperationFromApi.mockResolvedValueOnce({ success: true })
 

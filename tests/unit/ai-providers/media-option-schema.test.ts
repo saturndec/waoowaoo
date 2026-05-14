@@ -182,6 +182,28 @@ describe('media adapter option schema', () => {
 })
 
 describe('media adapter video option schema', () => {
+  it('allows Ark Seedance video reference images before provider execution', () => {
+    const descriptor = arkAdapter.video?.describe(mediaSelection({
+      provider: 'ark',
+      modelId: 'doubao-seedance-2-0-fast-260128',
+      modelKey: 'ark::doubao-seedance-2-0-fast-260128',
+    }))
+    expect(descriptor).toBeDefined()
+
+    expect(() => validateDescriptorOptions({
+      schema: descriptor!.optionSchema,
+      options: {
+        prompt: 'continuous segment prompt',
+        duration: 5,
+        resolution: '720p',
+        aspectRatio: '9:16',
+        generateAudio: true,
+        referenceImages: ['https://example.com/character.png', 'https://example.com/location.png'],
+      },
+      context: 'video:ark::doubao-seedance-2-0-fast-260128',
+    })).not.toThrow()
+  })
+
   it('rejects MiniMax invalid duration/resolution combinations before generator', () => {
     const descriptor = minimaxAdapter.video?.describe(mediaSelection({
       provider: 'minimax',

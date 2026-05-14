@@ -5,6 +5,7 @@ import { apiFetch } from '@/lib/api-fetch'
 import { resolveTaskErrorMessage } from '@/lib/task/error-message'
 import type { EditScriptBriefQuestionsPayload } from '@/lib/edit-script/types'
 import type { EditScriptVideoRatio } from '@/lib/edit-script/types'
+import type { ArtStyleValue } from '@/lib/constants'
 import type { ProjectEditScript } from '@/types/project'
 import { queryKeys } from '../keys'
 
@@ -16,6 +17,7 @@ interface CreateEditScriptInput {
   episodeId: string
   prompt: string
   videoRatio?: EditScriptVideoRatio
+  artStyle?: ArtStyleValue
 }
 
 interface CreateEditScriptBriefQuestionsInput {

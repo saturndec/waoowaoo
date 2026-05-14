@@ -16,7 +16,7 @@
     "editModel": "Edit Model",
     "videoModel": "Video Model",
     "singleShotVideoModel": "Single-shot Video Model",
-    "sequenceVideoModel": "Arrangement Video Model",
+    "sequenceVideoModel": "Video Segment Generation Model",
     "audioModel": "Speech Synthesis Model",
     "videoResolution": "Video Resolution",
     "ttsVoice": "TTS Voice",

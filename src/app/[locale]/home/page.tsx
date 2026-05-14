@@ -18,7 +18,10 @@ import type { StylePresetRef, StylePresetView } from '@/lib/style-preset/types'
 import { Link, useRouter } from '@/i18n/navigation'
 import { apiFetch } from '@/lib/api-fetch'
 import { expandHomeStory } from '@/lib/home/ai-story-expand'
-import { createHomeProjectLaunch } from '@/lib/home/create-project-launch'
+import {
+  createHomeProjectLaunch,
+  writeHomeAssistantAutoStartMessage,
+} from '@/lib/home/create-project-launch'
 import { formatDefaultProjectTimestamp } from '@/lib/projects/default-name'
 import { HOME_QUICK_START_MIN_ROWS } from '@/lib/ui/textarea-height'
 import AiWriteModal from '@/components/home/AiWriteModal'
@@ -142,6 +145,11 @@ export default function HomePage() {
         episodeName: `${tc('episode')} 1`,
       })
 
+      writeHomeAssistantAutoStartMessage({
+        projectId: result.projectId,
+        episodeId: result.episodeId,
+        message: storyText,
+      })
       router.push(result.target)
     } catch (error) {
       const message = error instanceof Error ? error.message : t('createFailed')

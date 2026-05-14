@@ -11,25 +11,16 @@ export interface VideoGroupShot {
   readonly sound: string
 }
 
-export interface VideoGroupPromptInput {
-  readonly title: string
-  readonly logline?: string | null
-  readonly aspectRatio?: string | null
-  readonly gridMode: VideoGridMode
-  readonly styleContext?: string | null
-  readonly shots: readonly VideoGroupShot[]
-}
+export type VideoBlockPlanItemKind = 'single' | 'group'
 
-export type VideoGenerationPlanItemKind = 'single' | 'group'
-
-export interface VideoGenerationPlanItem {
-  readonly kind: VideoGenerationPlanItemKind
+export interface VideoBlockPlanItem {
+  readonly kind: VideoBlockPlanItemKind
   readonly shotNumbers: readonly number[]
   readonly gridMode?: VideoGridMode
   readonly reason: string
   readonly prompt: string
 }
 
-export interface VideoGenerationPlan {
-  readonly items: readonly VideoGenerationPlanItem[]
+export interface VideoBlockPlan {
+  readonly items: readonly VideoBlockPlanItem[]
 }

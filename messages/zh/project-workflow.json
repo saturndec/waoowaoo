@@ -154,6 +154,7 @@
     "prepareFailed": "准备失败",
     "generationFailed": "生成失败",
     "batchVideoFailed": "批量生成视频失败",
+    "videoModelRequired": "请先选择视频模型",
     "finalRenderFailed": "AI 剪辑失败",
     "updateFailed": "更新失败",
     "saveFailed": "保存失败",
@@ -278,10 +279,10 @@
         "editAsset": "暂无资产描述"
       },
       "errors": {
-        "videoPlanSingleInvalid": "单镜头编排只能包含 1 个镜头",
+        "videoPlanSingleInvalid": "单镜头片段只能包含 1 个镜头",
         "videoPlanGroupCountInvalid": "连续片段必须包含 2-9 个镜头",
         "videoPlanGroupDurationInvalid": "连续片段时长必须在 2-15 秒之间",
-        "sequenceVideoModelMissing": "请先在项目配置中设置编排镜头视频模型"
+        "sequenceVideoModelMissing": "请先在项目设置中选择视频片段生成模型"
       },
       "nodeFields": {
         "openDetails": "详情",
@@ -330,17 +331,19 @@
         "firstLastFramePrompt": "首尾帧提示词",
         "videoMeta": "视频信息",
         "generationMode": "生成模式",
-        "gridMode": "宫格",
+        "gridMode": "参考布局",
         "reason": "判断理由",
-        "videoPlanMeta": "编排信息",
-        "videoPlanPrompt": "汇总提示词",
+        "videoPlanMeta": "片段信息",
+        "videoPlanPrompt": "最终视频提示词",
         "videoPlanGroup": "连续片段",
-        "videoPlanSingle": "编排片段",
+        "videoPlanSingle": "单镜头片段",
         "videoPlanReference": "图片",
         "videoPlanOutput": "视频",
-        "videoPlanShotAlt": "编排镜头 {shot}",
+        "videoPlanPendingVideo": "待生成视频",
+        "videoPlanShotAlt": "片段参考图 {shot}",
         "assetReferenceImages": "全能参考资产图",
         "generateAssetReferenceVideo": "全能参考生视频",
+        "videoPlanModelMissing": "请先在项目设置中选择视频片段生成模型。",
         "videoModel": "视频模型",
         "linkedToNextPanel": "衔接下镜",
         "baseVideo": "基础视频",
@@ -419,13 +422,10 @@
           "videoModel": "视频模型",
           "linkedToNextPanel": "衔接下一个镜头",
           "generationOptions": "生成参数 JSON",
-          "autoVideoMode": "按剪辑编排",
+          "autoVideoMode": "按视频片段",
           "singleVideoMode": "单镜头",
-          "gridVideoMode": "宫格连续",
           "assetReferenceVideoMode": "全能参考",
           "assetReferenceImages": "参考资产图",
-          "grid2x2": "2x2 四宫格",
-          "grid3x3": "3x3 九宫格",
           "characterAsset": "资产角色",
           "appearanceAsset": "角色形象",
           "locationAsset": "资产场景",
@@ -466,8 +466,7 @@
           "generateVideo": "生成视频",
           "generateFirstLastVideo": "首尾帧生成",
           "generateAllVideos": "批量生成视频",
-          "generateAutoVideos": "按编排生成视频",
-          "generateGridVideos": "生成宫格连续视频",
+          "generateAutoVideos": "按视频片段生成视频",
           "generateAssetReferenceVideos": "全能参考生视频",
           "uploadReferenceImage": "上传参考图",
           "uploadingReference": "上传中",
@@ -570,14 +569,14 @@
         },
         "videoGroup": {
           "title": "连续片段 {index}",
-          "eyebrow": "宫格连续视频",
+          "eyebrow": "连续视频",
           "body": "按剪辑先行顺序生成的连续视频片段",
           "meta": "{grid} · 镜头 {shots} · {duration} 秒"
         },
         "videoPlan": {
-          "title": "视频编排 {index}",
-          "eyebrow": "视频生成编排",
-          "body": "剪辑先行表中的视频生成块",
+          "title": "视频片段 {index}",
+          "eyebrow": "视频生成片段",
+          "body": "剪辑先行表中的视频生成片段",
           "meta": "{mode} · 镜头 {shots} · {duration} 秒"
         },
         "final": {
@@ -591,7 +590,7 @@
           "eyebrow": "核心剪辑表",
           "meta": "{shots} 个镜头 · {duration} 秒 · 资产 {completed}/{assets}",
           "pendingTitle": "剪辑表生成中",
-          "pendingBody": "AI 正在根据当前短片需求生成剪辑先行表，并提取人物、场景、镜头节奏、视频编排和声音设计。",
+          "pendingBody": "AI 正在根据当前短片需求生成剪辑先行表，并提取人物、场景、镜头节奏、视频片段和声音设计。",
           "pendingMeta": "生成完成后会替换为可编辑剪辑表"
         },
         "editAsset": {

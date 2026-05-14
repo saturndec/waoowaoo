@@ -6,7 +6,7 @@ export type EditAssetKind = (typeof EDIT_ASSET_KINDS)[number]
 export const EDIT_ASSET_STATUSES = ['pending', 'generating', 'completed', 'failed'] as const
 export type EditAssetStatus = (typeof EDIT_ASSET_STATUSES)[number]
 
-export const EDIT_BRIEF_OPTION_IDS = ['A', 'B', 'C'] as const
+export const EDIT_BRIEF_OPTION_IDS = ['A', 'B', 'C', 'D', 'E', 'F'] as const
 export type EditBriefOptionId = (typeof EDIT_BRIEF_OPTION_IDS)[number]
 
 export const EDIT_SCRIPT_VIDEO_RATIOS = ['9:16', '16:9', '21:9'] as const
@@ -116,17 +116,18 @@ export const editScriptBriefQuestionOptionSchema = z.object({
 export const editScriptBriefQuestionSchema = z.object({
   id: z.string().trim().min(1),
   label: z.string().trim().min(1),
-  options: z.array(editScriptBriefQuestionOptionSchema).length(3),
+  options: z.array(editScriptBriefQuestionOptionSchema).min(1).max(6),
 })
 
 export const editScriptBriefQuestionsSchema = z.object({
-  questions: z.array(editScriptBriefQuestionSchema).min(2).max(4),
+  questions: z.array(editScriptBriefQuestionSchema).min(0).max(3),
 })
 
 export const createEditScriptRequestSchema = z.object({
   episodeId: z.string().trim().min(1),
   prompt: z.string().trim().min(1),
   videoRatio: z.enum(EDIT_SCRIPT_VIDEO_RATIOS).optional(),
+  artStyle: z.string().trim().min(1).optional(),
 })
 
 export const createEditScriptBriefQuestionsRequestSchema = z.object({

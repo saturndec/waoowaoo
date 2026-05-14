@@ -143,6 +143,7 @@ type ArkVideoOptions = NonNullable<AiProviderVideoExecutionContext['options']> &
   cameraFixed?: boolean
   watermark?: boolean
   frames?: number
+  referenceImages?: string[]
 }
 
 function assertAllowedArkVideoOptions(options: ArkVideoOptions) {
@@ -165,6 +166,7 @@ function assertAllowedArkVideoOptions(options: ArkVideoOptions) {
     'watermark',
     'prompt',
     'fps',
+    'referenceImages',
   ])
   for (const [key, value] of Object.entries(options)) {
     if (value === undefined) continue

@@ -1,6 +1,17 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { arkCreateVideoTask } from '@/lib/ai-providers/ark/video'
+import { arkCreateVideoTask, executeArkVideoGeneration } from '@/lib/ai-providers/ark/video'
 import { querySeedanceVideoStatus } from '@/lib/ai-providers/ark/poll'
+
+const runtimeConfigMock = vi.hoisted(() => ({
+  getProviderConfig: vi.fn(async () => ({ apiKey: 'ark-key' })),
+}))
+
+const outboundImageMock = vi.hoisted(() => ({
+  normalizeToBase64ForGeneration: vi.fn(async (url: string) => `normalized:${url}`),
+}))
+
+vi.mock('@/lib/user-api/runtime-config', () => runtimeConfigMock)
+vi.mock('@/lib/media/outbound-image', () => outboundImageMock)
 
 describe('provider contract - ark seedance', () => {
   beforeEach(() => {
@@ -64,6 +75,57 @@ describe('provider contract - ark seedance', () => {
       generate_audio: true,
       watermark: true,
       tools: [{ type: 'web_search' }],
+    })
+  })
+
+  it('executes Seedance video generation with referenceImages as reference_image content', async () => {
+    const fetchMock = vi.fn(async () => new Response(JSON.stringify({ id: 'cgt-task-ref-1' }), {
+      status: 200,
+      headers: { 'Content-Type': 'application/json' },
+    }))
+    vi.stubGlobal('fetch', fetchMock as unknown as typeof fetch)
+
+    const result = await executeArkVideoGeneration({
+      userId: 'user-1',
+      selection: {
+        provider: 'ark',
+        modelId: 'doubao-seedance-2-0-fast-260128',
+        modelKey: 'ark::doubao-seedance-2-0-fast-260128',
+        variantSubKind: 'official',
+      },
+      imageUrl: 'https://example.com/first.png',
+      options: {
+        prompt: 'continuous segment prompt',
+        duration: 5,
+        resolution: '720p',
+        aspectRatio: '9:16',
+        generateAudio: true,
+        referenceImages: ['https://example.com/character.png', 'https://example.com/location.png'],
+      },
+    })
+
+    expect(result).toEqual(expect.objectContaining({
+      success: true,
+      async: true,
+      requestId: 'cgt-task-ref-1',
+      externalId: 'ARK:VIDEO:cgt-task-ref-1',
+    }))
+    expect(outboundImageMock.normalizeToBase64ForGeneration).toHaveBeenCalledTimes(3)
+    const firstCall = fetchMock.mock.calls[0]
+    expect(firstCall).toBeTruthy()
+    const [, init] = firstCall as unknown as [string, RequestInit]
+    expect(JSON.parse(String(init.body))).toEqual({
+      model: 'doubao-seedance-2-0-fast-260128',
+      content: [
+        { type: 'text', text: 'continuous segment prompt' },
+        { type: 'image_url', image_url: { url: 'normalized:https://example.com/first.png' } },
+        { type: 'image_url', image_url: { url: 'normalized:https://example.com/character.png' }, role: 'reference_image' },
+        { type: 'image_url', image_url: { url: 'normalized:https://example.com/location.png' }, role: 'reference_image' },
+      ],
+      resolution: '720p',
+      ratio: '9:16',
+      duration: 5,
+      generate_audio: true,
     })
   })
 

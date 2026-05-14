@@ -40,7 +40,7 @@ describe('api specific - novel promotion episode create text', () => {
     vi.clearAllMocks()
   })
 
-  it('persists novelText when creating the first episode from home launch', async () => {
+  it('persists novelText when callers explicitly provide episode text', async () => {
     const mod = await import('@/app/api/projects/[projectId]/episodes/route')
     const req = buildMockRequest({
       path: '/api/projects/project-1/episodes',

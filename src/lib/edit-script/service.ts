@@ -9,17 +9,17 @@ import { getProjectModelConfig } from '@/lib/config-service'
 import { resolveModelSelection } from '@/lib/user-api/runtime-config'
 import { safeParseJsonObject } from '@/lib/json-repair'
 import { encodeImageUrls, decodeImageUrlsFromDb } from '@/lib/contracts/image-urls-contract'
-import { PRIMARY_APPEARANCE_INDEX } from '@/lib/constants'
+import { ART_STYLES, PRIMARY_APPEARANCE_INDEX, isArtStyleValue } from '@/lib/constants'
 import { submitAssetGenerateTask } from '@/lib/assets/services/asset-actions'
 import { executeProjectAgentOperationFromApi } from '@/lib/adapters/api/execute-project-agent-operation'
-import { normalizeVideoGenerationPlanResponse } from '@/lib/video-groups/planner'
+import { normalizeVideoBlockPlanResponse } from '@/lib/video-groups/planner'
 import type { Locale } from '@/i18n/routing'
 import {
   normalizeEditAssetRequirements,
+  finalizeEditScriptBriefQuestions,
   normalizeEditScriptBriefQuestions,
   normalizeEditScriptCore,
   resolveEditScriptDefaults,
-  withRequiredAspectRatioBriefQuestion,
 } from './normalize'
 import type {
   EditAssetKind,
@@ -39,6 +39,7 @@ interface GenerateEditScriptInput {
   readonly locale: Locale
   readonly prompt: string
   readonly videoRatio?: '9:16' | '16:9' | '21:9'
+  readonly artStyle?: string
 }
 
 interface GenerateEditScriptBriefQuestionsInput {
@@ -82,7 +83,6 @@ type PromptStepId =
   | typeof AI_PROMPT_IDS.EDIT_SCRIPT_TIMELINE
   | typeof AI_PROMPT_IDS.EDIT_SCRIPT_VISUAL_ACTION
   | typeof AI_PROMPT_IDS.EDIT_SCRIPT_CAMERA
-  | typeof AI_PROMPT_IDS.EDIT_SCRIPT_VIDEO_PROMPT
   | typeof AI_PROMPT_IDS.EDIT_SCRIPT_AUDIO
   | typeof AI_PROMPT_IDS.EDIT_SCRIPT_PRIMARY
   | typeof AI_PROMPT_IDS.EDIT_SCRIPT_ASSET_EXTRACT
@@ -185,6 +185,17 @@ function buildStyleContext(input: {
   ].filter((line): line is string => Boolean(line)).join('\n') || 'No additional style context.'
 }
 
+function buildAvailableVisualStyles(locale: Locale): string {
+  return ART_STYLES.map((style, index) => {
+    const optionId = ['A', 'B', 'C', 'D', 'E', 'F'][index]
+    if (!optionId) {
+      throw new Error(`EDIT_SCRIPT_STYLE_OPTION_ID_MISSING:${style.value}`)
+    }
+    const prompt = locale === 'en' ? style.promptEn : style.promptZh
+    return `${optionId}. ${style.label} (${style.value}) - ${prompt}`
+  }).join('\n')
+}
+
 async function runPromptStep(input: {
   readonly userId: string
   readonly projectId: string
@@ -273,7 +284,7 @@ function parseShotsJson(value: Prisma.JsonValue): EditScriptShot[] {
 
 function parseVideoBlocksJson(value: Prisma.JsonValue | null, shots: readonly EditScriptShot[]) {
   if (!Array.isArray(value) || value.length === 0) return []
-  return normalizeVideoGenerationPlanResponse({
+  return normalizeVideoBlockPlanResponse({
     response: { items: value },
     allShotNumbers: shots.map((shot) => shot.shotNumber),
     shots,
@@ -426,6 +437,63 @@ async function getPersistedEditScript(projectId: string, episodeId: string, edit
   })
 }
 
+async function markEditScriptGenerating(input: {
+  readonly projectId: string
+  readonly episodeId: string
+  readonly userPrompt: string
+  readonly durationSeconds: number
+}): Promise<void> {
+  await prisma.projectEditScript.upsert({
+    where: { episodeId: input.episodeId },
+    create: {
+      projectId: input.projectId,
+      episodeId: input.episodeId,
+      userPrompt: input.userPrompt,
+      title: 'Generating edit table',
+      logline: null,
+      durationSec: input.durationSeconds,
+      shotCount: 0,
+      status: 'generating',
+      shotsJson: [] as unknown as Prisma.InputJsonValue,
+      videoBlocksJson: [] as unknown as Prisma.InputJsonValue,
+    },
+    update: {
+      userPrompt: input.userPrompt,
+      status: 'generating',
+    },
+  })
+}
+
+async function markEditScriptFailed(input: {
+  readonly projectId: string
+  readonly episodeId: string
+  readonly userPrompt: string
+  readonly durationSeconds: number
+  readonly message: string
+}): Promise<void> {
+  await prisma.projectEditScript.upsert({
+    where: { episodeId: input.episodeId },
+    create: {
+      projectId: input.projectId,
+      episodeId: input.episodeId,
+      userPrompt: input.userPrompt,
+      title: 'Edit table generation failed',
+      logline: input.message,
+      durationSec: input.durationSeconds,
+      shotCount: 0,
+      status: 'failed',
+      shotsJson: [] as unknown as Prisma.InputJsonValue,
+      videoBlocksJson: [] as unknown as Prisma.InputJsonValue,
+    },
+    update: {
+      userPrompt: input.userPrompt,
+      title: 'Edit table generation failed',
+      logline: input.message,
+      status: 'failed',
+    },
+  })
+}
+
 export async function readProjectEditScript(input: {
   readonly projectId: string
   readonly episodeId: string
@@ -503,6 +571,7 @@ export async function generateProjectEditScriptBriefQuestions(
     variables: {
       user_request: input.prompt,
       duration_seconds: String(defaults.durationSeconds),
+      available_visual_styles: buildAvailableVisualStyles(locale),
       style_context: buildStyleContext({
         artStyle: project.artStyle,
         directorStyleDoc: project.directorStyleDoc,
@@ -514,9 +583,10 @@ export async function generateProjectEditScriptBriefQuestions(
     stepTotal: 1,
   })
 
-  return withRequiredAspectRatioBriefQuestion(
+  return finalizeEditScriptBriefQuestions(
     normalizeEditScriptBriefQuestions(rawQuestions),
     locale,
+    input.prompt,
   )
 }
 
@@ -540,16 +610,35 @@ export async function generateProjectEditScript(input: GenerateEditScriptInput):
   ])
   if (!episode || !project) throw new ApiError('NOT_FOUND')
   const effectiveVideoRatio = input.videoRatio ?? project.videoRatio
-  if (input.videoRatio && input.videoRatio !== project.videoRatio) {
+  const effectiveArtStyle = input.artStyle ?? project.artStyle
+  if (input.artStyle && !isArtStyleValue(input.artStyle)) {
+    throw new ApiError('INVALID_PARAMS', {
+      code: 'INVALID_ART_STYLE',
+      message: 'artStyle must be a supported value',
+    })
+  }
+  if ((input.videoRatio && input.videoRatio !== project.videoRatio)
+    || (input.artStyle && input.artStyle !== project.artStyle)) {
     await prisma.project.update({
       where: { id: project.id },
-      data: { videoRatio: input.videoRatio },
+      data: {
+        ...(input.videoRatio ? { videoRatio: input.videoRatio } : {}),
+        ...(input.artStyle ? { artStyle: input.artStyle } : {}),
+      },
     })
   }
   const model = resolveTextModel(config)
   const defaults = resolveEditScriptDefaults(input.prompt)
+  await markEditScriptGenerating({
+    projectId: input.projectId,
+    episodeId: input.episodeId,
+    userPrompt: input.prompt,
+    durationSeconds: defaults.durationSeconds,
+  })
+
+  try {
   const styleContext = buildStyleContext({
-    artStyle: project.artStyle,
+    artStyle: effectiveArtStyle,
     directorStyleDoc: project.directorStyleDoc,
     videoRatio: effectiveVideoRatio,
   })
@@ -567,7 +656,7 @@ export async function generateProjectEditScript(input: GenerateEditScriptInput):
     variables: commonVariables,
     stepTitle: 'Edit timeline',
     stepIndex: 1,
-    stepTotal: 7,
+    stepTotal: 6,
   })
   const visualAction = await runPromptStep({
     userId: input.userId,
@@ -581,7 +670,7 @@ export async function generateProjectEditScript(input: GenerateEditScriptInput):
     },
     stepTitle: 'Edit visual action',
     stepIndex: 2,
-    stepTotal: 7,
+    stepTotal: 6,
   })
   const camera = await runPromptStep({
     userId: input.userId,
@@ -597,23 +686,7 @@ export async function generateProjectEditScript(input: GenerateEditScriptInput):
     },
     stepTitle: 'Edit camera',
     stepIndex: 3,
-    stepTotal: 7,
-  })
-  const videoPrompt = await runPromptStep({
-    userId: input.userId,
-    projectId: input.projectId,
-    model,
-    locale,
-    promptId: AI_PROMPT_IDS.EDIT_SCRIPT_VIDEO_PROMPT,
-    variables: {
-      user_request: input.prompt,
-      camera_json: stringifyForPrompt(camera),
-      aspect_ratio: effectiveVideoRatio,
-      style_context: styleContext,
-    },
-    stepTitle: 'Edit video prompt',
-    stepIndex: 4,
-    stepTotal: 7,
+    stepTotal: 6,
   })
   const audio = await runPromptStep({
     userId: input.userId,
@@ -623,11 +696,11 @@ export async function generateProjectEditScript(input: GenerateEditScriptInput):
     promptId: AI_PROMPT_IDS.EDIT_SCRIPT_AUDIO,
     variables: {
       user_request: input.prompt,
-      video_prompt_json: stringifyForPrompt(videoPrompt),
+      camera_json: stringifyForPrompt(camera),
     },
     stepTitle: 'Edit audio',
-    stepIndex: 5,
-    stepTotal: 7,
+    stepIndex: 4,
+    stepTotal: 6,
   })
   const primary = await runPromptStep({
     userId: input.userId,
@@ -640,14 +713,13 @@ export async function generateProjectEditScript(input: GenerateEditScriptInput):
       timeline_json: stringifyForPrompt(timeline),
       visual_action_json: stringifyForPrompt(visualAction),
       camera_json: stringifyForPrompt(camera),
-      video_prompt_json: stringifyForPrompt(videoPrompt),
       audio_json: stringifyForPrompt(audio),
       aspect_ratio: effectiveVideoRatio,
       style_context: styleContext,
     },
     stepTitle: 'Edit primary table',
-    stepIndex: 6,
-    stepTotal: 7,
+    stepIndex: 5,
+    stepTotal: 6,
   })
   const core = normalizeEditScriptCore(primary)
   const assetRaw = await runPromptStep({
@@ -660,8 +732,8 @@ export async function generateProjectEditScript(input: GenerateEditScriptInput):
       edit_script_json: stringifyForPrompt(core),
     },
     stepTitle: 'Edit required assets',
-    stepIndex: 7,
-    stepTotal: 7,
+    stepIndex: 6,
+    stepTotal: 6,
   })
   const requirements = await designEditAssetRequirements({
     userId: input.userId,
@@ -731,6 +803,17 @@ export async function generateProjectEditScript(input: GenerateEditScriptInput):
   })
 
   return await mapPersistedEditScript(saved)
+  } catch (caught) {
+    const message = caught instanceof Error ? caught.message : String(caught)
+    await markEditScriptFailed({
+      projectId: input.projectId,
+      episodeId: input.episodeId,
+      userPrompt: input.prompt,
+      durationSeconds: defaults.durationSeconds,
+      message,
+    })
+    throw caught
+  }
 }
 
 async function findExistingAsset(input: {
@@ -1193,10 +1276,10 @@ async function upsertEditScriptStoryboardPanels(input: {
           shots: input.editScript.shots,
         }),
         photographyPlan: JSON.stringify({
-          source: 'edit_script',
-          editScriptId,
-          rules: 'Use edit-script camera and video prompt fields as the absolute source of truth.',
-        }),
+        source: 'edit_script',
+        editScriptId,
+        rules: 'Use edit-script block-first shot fields as the source of truth for storyboard panels.',
+      }),
       },
       include: {
         clip: true,

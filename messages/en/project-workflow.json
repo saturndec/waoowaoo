@@ -154,6 +154,7 @@
     "prepareFailed": "Preparation failed",
     "generationFailed": "Generation failed",
     "batchVideoFailed": "Batch video generation failed",
+    "videoModelRequired": "Please choose a video model first",
     "finalRenderFailed": "AI final edit failed",
     "updateFailed": "Update failed",
     "saveFailed": "Save failed",
@@ -278,10 +279,10 @@
         "editAsset": "No asset description"
       },
       "errors": {
-        "videoPlanSingleInvalid": "A single-shot arrangement must contain exactly 1 shot",
+        "videoPlanSingleInvalid": "A single-shot segment must contain exactly 1 shot",
         "videoPlanGroupCountInvalid": "A continuous segment must contain 2-9 shots",
         "videoPlanGroupDurationInvalid": "A continuous segment must be 2-15 seconds",
-        "sequenceVideoModelMissing": "Set the arrangement video model in project config first"
+        "sequenceVideoModelMissing": "Choose a video segment generation model in project settings first"
       },
       "nodeFields": {
         "openDetails": "Details",
@@ -330,17 +331,19 @@
         "firstLastFramePrompt": "First/Last Frame Prompt",
         "videoMeta": "Video Info",
         "generationMode": "Generation Mode",
-        "gridMode": "Grid",
+        "gridMode": "Reference Layout",
         "reason": "Reason",
-        "videoPlanMeta": "Arrangement Info",
-        "videoPlanPrompt": "Combined Prompt",
+        "videoPlanMeta": "Segment Info",
+        "videoPlanPrompt": "Final Video Prompt",
         "videoPlanGroup": "Continuous Segment",
-        "videoPlanSingle": "Arranged Segment",
+        "videoPlanSingle": "Single-Shot Segment",
         "videoPlanReference": "Images",
         "videoPlanOutput": "Video",
-        "videoPlanShotAlt": "Arrangement shot {shot}",
+        "videoPlanPendingVideo": "Video pending",
+        "videoPlanShotAlt": "Segment reference image {shot}",
         "assetReferenceImages": "Universal Reference Assets",
         "generateAssetReferenceVideo": "Generate With References",
+        "videoPlanModelMissing": "Choose a video segment generation model in project settings first.",
         "videoModel": "Video Model",
         "linkedToNextPanel": "Linked To Next",
         "baseVideo": "Base Video",
@@ -419,13 +422,10 @@
           "videoModel": "Video Model",
           "linkedToNextPanel": "Linked To Next Shot",
           "generationOptions": "Generation Options JSON",
-          "autoVideoMode": "Edit Arrangement",
+          "autoVideoMode": "Video Segments",
           "singleVideoMode": "Single Shot",
-          "gridVideoMode": "Grid Continuous",
           "assetReferenceVideoMode": "Universal Reference",
           "assetReferenceImages": "Reference Asset Images",
-          "grid2x2": "2x2 Four-grid",
-          "grid3x3": "3x3 Nine-grid",
           "characterAsset": "Character Asset",
           "appearanceAsset": "Appearance",
           "locationAsset": "Location Asset",
@@ -466,8 +466,7 @@
           "generateVideo": "Generate Video",
           "generateFirstLastVideo": "Generate First/Last Video",
           "generateAllVideos": "Batch Generate Videos",
-          "generateAutoVideos": "Generate From Arrangement",
-          "generateGridVideos": "Generate Grid Videos",
+          "generateAutoVideos": "Generate From Video Segments",
           "generateAssetReferenceVideos": "Generate With References",
           "uploadReferenceImage": "Upload Reference",
           "uploadingReference": "Uploading",
@@ -570,14 +569,14 @@
         },
         "videoGroup": {
           "title": "Continuous Segment {index}",
-          "eyebrow": "Grid Video",
+          "eyebrow": "Continuous Video",
           "body": "Continuous video segment generated from edit-first order",
           "meta": "{grid} · shots {shots} · {duration}s"
         },
         "videoPlan": {
-          "title": "Video Arrangement {index}",
-          "eyebrow": "Video Generation Arrangement",
-          "body": "Video generation block from the edit-first table",
+          "title": "Video Segment {index}",
+          "eyebrow": "Video Generation Segment",
+          "body": "Video generation segment from the edit-first table",
           "meta": "{mode} · shots {shots} · {duration}s"
         },
         "final": {
@@ -591,7 +590,7 @@
           "eyebrow": "Core Edit Table",
           "meta": "{shots} shots · {duration}s · assets {completed}/{assets}",
           "pendingTitle": "Generating Edit Table",
-          "pendingBody": "AI is generating the edit-first table from the current video brief, including characters, locations, shot rhythm, video arrangement, and sound design.",
+          "pendingBody": "AI is generating the edit-first table from the current video brief, including characters, locations, shot rhythm, video segments, and sound design.",
           "pendingMeta": "This will become an editable edit table when generation completes"
         },
         "editAsset": {

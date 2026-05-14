@@ -2,7 +2,9 @@ import { readApiErrorMessage } from '@/lib/api/read-error-message'
 import type { StylePresetRef } from '@/lib/style-preset/types'
 
 export const HOME_ASSISTANT_AUTOSTART_QUERY = 'assistantAutoStart' as const
-export const HOME_ASSISTANT_AUTOSTART_VALUE = 'home-story' as const
+export const HOME_ASSISTANT_AUTOSTART_VALUE = 'home-input' as const
+
+const HOME_ASSISTANT_AUTOSTART_STORAGE_PREFIX = 'waoowaoo:home-assistant-autostart' as const
 
 interface ProjectCreationPayload {
   project?: {
@@ -24,7 +26,7 @@ export interface HomeWorkspaceLaunchTarget {
   pathname: string
   query: {
     episode: string
-    [HOME_ASSISTANT_AUTOSTART_QUERY]?: typeof HOME_ASSISTANT_AUTOSTART_VALUE
+    [HOME_ASSISTANT_AUTOSTART_QUERY]: typeof HOME_ASSISTANT_AUTOSTART_VALUE
   }
 }
 
@@ -89,6 +91,39 @@ export function buildHomeWorkspaceLaunchTarget(projectId: string, episodeId: str
   }
 }
 
+export function buildHomeAssistantAutoStartStorageKey(projectId: string, episodeId: string): string {
+  return `${HOME_ASSISTANT_AUTOSTART_STORAGE_PREFIX}:${projectId}:${episodeId}`
+}
+
+export function writeHomeAssistantAutoStartMessage(input: {
+  readonly projectId: string
+  readonly episodeId: string
+  readonly message: string
+}): void {
+  if (typeof window === 'undefined') {
+    throw new Error('HOME_ASSISTANT_AUTOSTART_STORAGE_UNAVAILABLE')
+  }
+  const message = input.message.trim()
+  if (!message) {
+    throw new Error('HOME_ASSISTANT_AUTOSTART_MESSAGE_EMPTY')
+  }
+  window.sessionStorage.setItem(
+    buildHomeAssistantAutoStartStorageKey(input.projectId, input.episodeId),
+    message,
+  )
+}
+
+export function readHomeAssistantAutoStartMessage(projectId: string, episodeId: string): string | null {
+  if (typeof window === 'undefined') return null
+  const message = window.sessionStorage.getItem(buildHomeAssistantAutoStartStorageKey(projectId, episodeId))
+  return message?.trim() || null
+}
+
+export function removeHomeAssistantAutoStartMessage(projectId: string, episodeId: string): void {
+  if (typeof window === 'undefined') return
+  window.sessionStorage.removeItem(buildHomeAssistantAutoStartStorageKey(projectId, episodeId))
+}
+
 export async function createHomeProjectLaunch({
   apiFetch,
   projectName,
@@ -100,6 +135,10 @@ export async function createHomeProjectLaunch({
   directorStylePresetId,
   episodeName,
 }: CreateHomeProjectLaunchParams): Promise<CreateHomeProjectLaunchResult> {
+  if (!storyText.trim()) {
+    throw new Error('HOME_STORY_TEXT_EMPTY')
+  }
+
   const projectResponse = await apiFetch('/api/projects', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -135,7 +174,6 @@ export async function createHomeProjectLaunch({
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
       name: episodeName,
-      novelText: storyText,
     }),
   })
 
