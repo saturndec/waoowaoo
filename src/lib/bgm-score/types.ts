@@ -2,7 +2,6 @@ import { z } from 'zod'
 
 export const BGM_STEM_ROLES = [
   'atmosphere',
-  'pulse',
   'low_end',
   'harmony',
   'motif',
@@ -22,6 +21,66 @@ export type BgmScoreStatus = (typeof BGM_SCORE_STATUS)[keyof typeof BGM_SCORE_ST
 
 export const bgmStemRoleSchema = z.enum(BGM_STEM_ROLES)
 
+const timedSectionSchema = z.object({
+  startSec: z.number().min(0),
+  endSec: z.number().positive(),
+})
+
+function refineBlueprintTimedSection<T extends z.ZodRawShape>(schema: z.ZodObject<T>) {
+  return schema.refine(
+    (section) => section.endSec > section.startSec,
+    { message: 'BGM_SCORE_BLUEPRINT_SECTION_INVALID' },
+  )
+}
+
+export const bgmScoreBlueprintSchema = z.object({
+  tempoMap: z.array(refineBlueprintTimedSection(timedSectionSchema.extend({
+    bpm: z.number().int().min(20).max(300),
+    timeSignature: z.string().trim().min(1),
+    barStart: z.number().int().min(1),
+    barEnd: z.number().int().min(1),
+    downbeatSec: z.number().min(0).optional().nullable(),
+    feel: z.string().trim().min(1).optional().nullable(),
+  })).refine((section) => section.barEnd >= section.barStart, {
+    message: 'BGM_SCORE_BLUEPRINT_BAR_RANGE_INVALID',
+  })).min(1).max(24),
+  keyMap: z.array(refineBlueprintTimedSection(timedSectionSchema.extend({
+    key: z.string().trim().min(1),
+    mode: z.string().trim().min(1).optional().nullable(),
+    function: z.string().trim().min(1).optional().nullable(),
+  }))).min(1).max(24),
+  chordMap: z.array(refineBlueprintTimedSection(timedSectionSchema.extend({
+    bars: z.string().trim().min(1),
+    chords: z.array(z.string().trim().min(1)).min(1).max(16),
+    harmonicRhythm: z.string().trim().min(1),
+  }))).min(1).max(48),
+  hitPoints: z.array(z.object({
+    timeSec: z.number().min(0),
+    label: z.string().trim().min(1),
+    musicalAction: z.string().trim().min(1),
+  })).min(1).max(48),
+  motif: z.object({
+    description: z.string().trim().min(1),
+    scaleDegrees: z.string().trim().min(1),
+    rhythm: z.string().trim().min(1),
+    usage: z.string().trim().min(1),
+  }).optional().nullable(),
+  orchestrationMap: z.array(refineBlueprintTimedSection(timedSectionSchema.extend({
+    registerPlan: z.string().trim().min(1),
+    instrumentation: z.string().trim().min(1),
+    frequencyFocus: z.string().trim().min(1),
+    density: z.number().min(0).max(100),
+  }))).min(1).max(32),
+  stemRules: z.array(z.object({
+    role: bgmStemRoleSchema,
+    allowedMaterial: z.string().trim().min(1),
+    forbiddenMaterial: z.string().trim().min(1),
+    register: z.string().trim().min(1),
+    rhythmicRule: z.string().trim().min(1),
+    chordRule: z.string().trim().min(1),
+  })).min(1).max(5),
+})
+
 export const bgmScorePlanSchema = z.object({
   durationSeconds: z.number().positive().max(600),
   global: z.object({
@@ -34,6 +93,7 @@ export const bgmScorePlanSchema = z.object({
       intensity: z.number().min(0).max(100),
     })).min(1).max(24),
   }),
+  blueprint: bgmScoreBlueprintSchema,
   stems: z.array(z.object({
     role: bgmStemRoleSchema,
     reason: z.string().trim().min(1),
@@ -48,9 +108,10 @@ export const bgmScorePlanSchema = z.object({
     motion: z.number().min(0).max(100),
     prompt: z.string().trim().min(1),
     negativePrompt: z.string().trim().optional().nullable(),
-  })).min(1).max(6),
+  })).min(1).max(5),
 }).superRefine((plan, ctx) => {
   const seenRoles = new Set<BgmStemRole>()
+  const stemRoles = new Set(plan.stems.map((stem) => stem.role))
   plan.stems.forEach((stem, index) => {
     if (seenRoles.has(stem.role)) {
       ctx.addIssue({
@@ -74,6 +135,48 @@ export const bgmScorePlanSchema = z.object({
         code: z.ZodIssueCode.custom,
         path: ['stems', index, 'fadeOutSec'],
         message: 'BGM_SCORE_STEM_FADE_EXCEEDS_DURATION',
+      })
+    }
+  })
+  plan.blueprint.stemRules.forEach((rule, index) => {
+    if (!stemRoles.has(rule.role)) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['blueprint', 'stemRules', index, 'role'],
+        message: 'BGM_SCORE_BLUEPRINT_UNUSED_STEM_RULE',
+      })
+    }
+  })
+  const checkTimedSection = (path: Array<string | number>, startSec: number, endSec: number) => {
+    if (endSec > plan.durationSeconds + 0.001) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path,
+        message: 'BGM_SCORE_BLUEPRINT_TIMING_OUT_OF_RANGE',
+      })
+    }
+    if (startSec > plan.durationSeconds + 0.001) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path,
+        message: 'BGM_SCORE_BLUEPRINT_TIMING_OUT_OF_RANGE',
+      })
+    }
+  }
+  plan.blueprint.tempoMap.forEach((section, index) =>
+    checkTimedSection(['blueprint', 'tempoMap', index, 'endSec'], section.startSec, section.endSec))
+  plan.blueprint.keyMap.forEach((section, index) =>
+    checkTimedSection(['blueprint', 'keyMap', index, 'endSec'], section.startSec, section.endSec))
+  plan.blueprint.chordMap.forEach((section, index) =>
+    checkTimedSection(['blueprint', 'chordMap', index, 'endSec'], section.startSec, section.endSec))
+  plan.blueprint.orchestrationMap.forEach((section, index) =>
+    checkTimedSection(['blueprint', 'orchestrationMap', index, 'endSec'], section.startSec, section.endSec))
+  plan.blueprint.hitPoints.forEach((hitPoint, index) => {
+    if (hitPoint.timeSec > plan.durationSeconds + 0.001) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['blueprint', 'hitPoints', index, 'timeSec'],
+        message: 'BGM_SCORE_BLUEPRINT_TIMING_OUT_OF_RANGE',
       })
     }
   })

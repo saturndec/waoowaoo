@@ -160,6 +160,64 @@ function buildValidPlanText(): string {
         { timeSec: 3, intensity: 55 },
       ],
     },
+    blueprint: {
+      tempoMap: [{
+        startSec: 0,
+        endSec: 3,
+        bpm: 96,
+        timeSignature: '4/4',
+        barStart: 1,
+        barEnd: 2,
+        downbeatSec: 0,
+        feel: 'steady restrained underscore',
+      }],
+      keyMap: [{
+        startSec: 0,
+        endSec: 3,
+        key: 'D minor',
+        mode: 'minor',
+        function: 'single tonal center',
+      }],
+      chordMap: [{
+        startSec: 0,
+        endSec: 3,
+        bars: '1-2',
+        chords: ['Dm'],
+        harmonicRhythm: 'static pedal harmony',
+      }],
+      hitPoints: [{
+        timeSec: 2,
+        label: 'shot resolves',
+        musicalAction: 'small swell without impact sound',
+      }],
+      motif: null,
+      orchestrationMap: [{
+        startSec: 0,
+        endSec: 3,
+        registerPlan: 'atmosphere high, low_end below 120 Hz',
+        instrumentation: 'dark pad and sub string support',
+        frequencyFocus: 'separate low and high bands',
+        density: 35,
+      }],
+      stemRules: [
+        {
+          role: 'atmosphere',
+          allowedMaterial: 'sustained chord tones only',
+          forbiddenMaterial: 'melody, bass movement, percussion, independent harmony',
+          register: 'mid-high',
+          rhythmicRule: 'no rhythmic pulse',
+          chordRule: 'follow chordMap exactly',
+        },
+        {
+          role: 'low_end',
+          allowedMaterial: 'root pedal and soft sub swell only',
+          forbiddenMaterial: 'chords, melody, percussion, independent rhythm',
+          register: 'sub and low strings',
+          rhythmicRule: 'slow pressure movement only',
+          chordRule: 'root of chordMap only',
+        },
+      ],
+    },
     stems: [
       {
         role: 'atmosphere',
@@ -177,8 +235,8 @@ function buildValidPlanText(): string {
         negativePrompt: 'melody, drums, vocals',
       },
       {
-        role: 'pulse',
-        reason: 'Adds restrained motion under the edit.',
+        role: 'low_end',
+        reason: 'Adds restrained low-frequency weight without independent rhythm.',
         startSec: 0,
         durationSec: 3,
         gainDb: -12,
@@ -188,8 +246,8 @@ function buildValidPlanText(): string {
         tension: 65,
         brightness: 25,
         motion: 55,
-        prompt: 'Muted low pulse, isolated stem only.',
-        negativePrompt: 'full drums, vocals',
+        prompt: 'Muted low-end root pedal, isolated stem only.',
+        negativePrompt: 'full drums, vocals, independent rhythm',
       },
     ],
   })
@@ -285,7 +343,7 @@ describe('bgm score worker', () => {
       })
       .mockResolvedValueOnce({
         success: true,
-        audioBase64: Buffer.from('pulse').toString('base64'),
+        audioBase64: Buffer.from('low_end').toString('base64'),
         audioMimeType: 'audio/mpeg',
       })
 
@@ -323,10 +381,10 @@ describe('bgm score worker', () => {
     mockCompleteTimeline()
     executeAiTextStepMock.mockResolvedValue({ text: buildValidPlanText() })
     const atmosphere = createDeferred<GenerateResult>()
-    const pulse = createDeferred<GenerateResult>()
+    const lowEnd = createDeferred<GenerateResult>()
     generateMusicMock
       .mockImplementationOnce(() => atmosphere.promise)
-      .mockImplementationOnce(() => pulse.promise)
+      .mockImplementationOnce(() => lowEnd.promise)
 
     const { handleBgmScoreGenerateTask } = await import('@/lib/bgm-score/generate')
     const resultPromise = handleBgmScoreGenerateTask(buildJob({
@@ -351,9 +409,9 @@ describe('bgm score worker', () => {
       audioBase64: Buffer.from('atmosphere').toString('base64'),
       audioMimeType: 'audio/mpeg',
     })
-    pulse.resolve({
+    lowEnd.resolve({
       success: true,
-      audioBase64: Buffer.from('pulse').toString('base64'),
+      audioBase64: Buffer.from('low_end').toString('base64'),
       audioMimeType: 'audio/mpeg',
     })
 
@@ -375,21 +433,21 @@ describe('bgm score worker', () => {
       })
       .mockResolvedValueOnce({
         success: false,
-        error: 'provider rejected pulse stem',
+        error: 'provider rejected low_end stem',
       })
 
     const { handleBgmScoreGenerateTask } = await import('@/lib/bgm-score/generate')
     await expect(handleBgmScoreGenerateTask(buildJob({
       episodeId: 'episode-1',
       musicModel: 'google::lyria-3-pro-preview',
-    }))).rejects.toThrow('provider rejected pulse stem')
+    }))).rejects.toThrow('provider rejected low_end stem')
 
     expect(storageMock.uploadObject).not.toHaveBeenCalled()
     const failedCall = prismaMock.videoEditorProject.upsert.mock.calls.find((call) => {
       const arg = call[0] as { update?: { projectData?: string } }
       const projectData = JSON.parse(arg.update?.projectData ?? '{}') as { bgmScore?: { status?: string; errorMessage?: string } }
       return projectData.bgmScore?.status === 'failed'
-        && projectData.bgmScore.errorMessage === 'provider rejected pulse stem'
+        && projectData.bgmScore.errorMessage === 'provider rejected low_end stem'
     })
     expect(failedCall).toBeTruthy()
   })

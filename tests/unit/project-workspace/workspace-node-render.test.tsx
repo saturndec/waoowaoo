@@ -442,13 +442,13 @@ describe('workspace node rendering', () => {
             url: 'https://example.com/atmosphere.m4a',
           },
           {
-            role: 'pulse',
-            reason: 'motion layer',
+            role: 'low_end',
+            reason: 'weight layer',
             startSec: 2,
             durationSec: 8,
             gainDb: -12,
-            prompt: 'isolated pulse stem',
-            url: 'https://example.com/pulse.m4a',
+            prompt: 'isolated low end stem',
+            url: 'https://example.com/low-end.m4a',
           },
         ],
       },
@@ -457,9 +457,9 @@ describe('workspace node rendering', () => {
     expect(html).toContain('finalBgmMix')
     expect(html).toContain('src="https://example.com/final-mix.m4a"')
     expect(html).toContain('src="https://example.com/atmosphere.m4a"')
-    expect(html).toContain('src="https://example.com/pulse.m4a"')
+    expect(html).toContain('src="https://example.com/low-end.m4a"')
     expect(html).toContain('aria-label="stemAudio: atmosphere"')
-    expect(html).toContain('aria-label="stemAudio: pulse"')
+    expect(html).toContain('aria-label="stemAudio: low_end"')
   })
 
   it('renders a disabled video reference action with an asset-image prerequisite hint', () => {

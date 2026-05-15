@@ -44,6 +44,11 @@ describe('bgm score prompt and mixer', () => {
     })
 
     expect(prompt).toContain('Allowed stem roles')
+    expect(prompt).not.toContain('- pulse:')
+    expect(prompt).toContain('Score Blueprint')
+    expect(prompt).toContain('tempoMap')
+    expect(prompt).toContain('chordMap')
+    expect(prompt).toContain('stemRules')
     expect(prompt).toContain('isolated stem only')
     expect(prompt).toContain('Final rendered media timeline JSON')
     expect(prompt).toContain('The detective enters the room')

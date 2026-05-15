@@ -267,6 +267,7 @@ async function uploadGeneratedStem(input: {
 
 function buildStemPrompt(plan: BgmScorePlan, stem: BgmScorePlan['stems'][number]): string {
   const negativePrompt = stem.negativePrompt?.trim()
+  const stemRule = plan.blueprint.stemRules.find((rule) => rule.role === stem.role)
   return [
     stem.prompt,
     '',
@@ -275,6 +276,18 @@ function buildStemPrompt(plan: BgmScorePlan, stem: BgmScorePlan['stems'][number]
     `Global BGM direction: ${plan.global.genre}, ${plan.global.mood}.`,
     plan.global.bpm ? `Tempo: ${plan.global.bpm} BPM.` : '',
     plan.global.key ? `Key / tonal center: ${plan.global.key}.` : '',
+    '',
+    'Shared Score Blueprint source of truth. Follow this exactly; do not create an independent cue:',
+    `Tempo map: ${JSON.stringify(plan.blueprint.tempoMap)}.`,
+    `Key map: ${JSON.stringify(plan.blueprint.keyMap)}.`,
+    `Chord map: ${JSON.stringify(plan.blueprint.chordMap)}.`,
+    `Hit points: ${JSON.stringify(plan.blueprint.hitPoints)}.`,
+    plan.blueprint.motif ? `Motif rule: ${JSON.stringify(plan.blueprint.motif)}.` : 'Motif rule: no independent motif.',
+    `Orchestration map: ${JSON.stringify(plan.blueprint.orchestrationMap)}.`,
+    stemRule ? `This stem rule: ${JSON.stringify(stemRule)}.` : '',
+    '',
+    'Stay locked to the blueprint downbeat, BPM, time signature, bar ranges, chord progression, and hit points.',
+    'Do not invent independent harmony, independent bass movement, off-grid rhythm, extra melody, or full arrangement.',
     'Leave room for video dialogue, native video sound, and source audio.',
     'No vocals, no lyrics, no dialogue, no Foley, no literal sound effects, no complete song arrangement.',
     negativePrompt ? `Avoid: ${negativePrompt}.` : '',
