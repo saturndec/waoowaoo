@@ -53,9 +53,29 @@ describe('billing/task-policy', () => {
     expect(buildDefaultTaskBillingInfo(TASK_TYPE.BGM_SCORE_GENERATE, {})).toBeNull()
   })
 
+  it('builds music billing info for built-in Google Lyria models', () => {
+    const clipInfo = expectBillableInfo(buildDefaultTaskBillingInfo(TASK_TYPE.MUSIC_GENERATE, {
+      musicModel: 'google::lyria-3-clip-preview',
+      durationSeconds: 30,
+    }))
+    expect(clipInfo.apiType).toBe('music')
+    expect(clipInfo.model).toBe('google::lyria-3-clip-preview')
+    expect(clipInfo.quantity).toBe(30)
+    expect(clipInfo.maxFrozenCost).toBeGreaterThan(0)
+
+    const proInfo = expectBillableInfo(buildDefaultTaskBillingInfo(TASK_TYPE.BGM_SCORE_GENERATE, {
+      musicModel: 'google::lyria-3-pro-preview',
+      durationSeconds: 60,
+    }))
+    expect(proInfo.apiType).toBe('music')
+    expect(proInfo.model).toBe('google::lyria-3-pro-preview')
+    expect(proInfo.quantity).toBe(60)
+    expect(proInfo.maxFrozenCost).toBeGreaterThan(0)
+  })
+
   it('fails music billing explicitly when model pricing is not configured', () => {
     expect(() => buildDefaultTaskBillingInfo(TASK_TYPE.MUSIC_GENERATE, {
-      musicModel: 'google::lyria-3-clip-preview',
+      musicModel: 'google::unknown-music',
       durationSeconds: 30,
     })).toThrow('Unknown music model pricing')
   })

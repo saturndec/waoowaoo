@@ -189,7 +189,7 @@ export default function Navbar({ reserveLayoutSpace = true }: NavbarProps) {
                 className="group"
               >
                 <Image
-                  src="/logo-small.png?v=1"
+                  src="/logo-small.png"
                   alt={tc('appName')}
                   width={250}
                   height={78}

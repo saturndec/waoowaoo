@@ -11,7 +11,7 @@ import { buildAuthenticatedHomeTarget } from '@/lib/home/default-route'
 
 export default function Home() {
   const t = useTranslations('landing')
-  const { data: session, status } = useSession()
+  const { status } = useSession()
   const router = useRouter()
 
   // 已登录用户自动跳转到 home
@@ -27,7 +27,7 @@ export default function Home() {
       <div className="glass-page min-h-screen flex items-center justify-center">
         <div className="flex flex-col items-center gap-4">
           <Image
-            src="/logo-small.png?v=1"
+            src="/logo-small.png"
             alt="waoowaoo"
             width={80}
             height={80}

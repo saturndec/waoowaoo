@@ -152,6 +152,8 @@ export const GOOGLE_BUILTIN_PRICING_CATALOG_ENTRIES = [
   { apiType: 'image', provider: 'google', modelId: 'imagen-4.0-generate-001', pricing: googleFlatPricing(0.288) },
   { apiType: 'image', provider: 'google', modelId: 'imagen-4.0-ultra-generate-001', pricing: googleFlatPricing(0.432) },
   { apiType: 'image', provider: 'google', modelId: 'imagen-4.0-fast-generate-001', pricing: googleFlatPricing(0.144) },
+  { apiType: 'music', provider: 'google', modelId: 'lyria-3-clip-preview', pricing: googleFlatPricing(0.0096) },
+  { apiType: 'music', provider: 'google', modelId: 'lyria-3-pro-preview', pricing: googleFlatPricing(0.0192) },
   {
     apiType: 'video',
     provider: 'google',
