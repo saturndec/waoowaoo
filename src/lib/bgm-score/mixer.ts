@@ -8,6 +8,8 @@ export type BgmScoreCommandRunner = (
   args: readonly string[],
 ) => Promise<BgmScoreCommandResult>
 
+const BGM_SCORE_MIX_LOUDNORM = 'loudnorm=I=-16.000:TP=-1.500:LRA=11.000'
+
 export interface BgmScoreStemMixInput {
   readonly inputPath: string
   readonly startSec: number
@@ -50,8 +52,8 @@ export function buildBgmScoreMixFilter(input: {
   const stemFilters = input.stems.map((stem, index) => stemFilter(stem, index))
   const stemLabels = input.stems.map((_, index) => `[s${index}]`).join('')
   const mixFilter = input.stems.length === 1
-    ? `${stemLabels}apad,atrim=0:${formatFilterNumber(input.durationSeconds)},asetpts=PTS-STARTPTS,loudnorm=I=-24.000:TP=-2.000:LRA=11.000,alimiter=limit=0.95[aout]`
-    : `${stemLabels}amix=inputs=${input.stems.length}:duration=longest:normalize=0,apad,atrim=0:${formatFilterNumber(input.durationSeconds)},asetpts=PTS-STARTPTS,loudnorm=I=-24.000:TP=-2.000:LRA=11.000,alimiter=limit=0.95[aout]`
+    ? `${stemLabels}apad,atrim=0:${formatFilterNumber(input.durationSeconds)},asetpts=PTS-STARTPTS,${BGM_SCORE_MIX_LOUDNORM},alimiter=limit=0.95[aout]`
+    : `${stemLabels}amix=inputs=${input.stems.length}:duration=longest:normalize=0,apad,atrim=0:${formatFilterNumber(input.durationSeconds)},asetpts=PTS-STARTPTS,${BGM_SCORE_MIX_LOUDNORM},alimiter=limit=0.95[aout]`
   return [...stemFilters, mixFilter].join(';')
 }
 

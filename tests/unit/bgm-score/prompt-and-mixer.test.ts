@@ -76,6 +76,6 @@ describe('bgm score prompt and mixer', () => {
     expect(filter).toContain('volume=-12.000dB')
     expect(filter).toContain('adelay=5000:all=1')
     expect(filter).toContain('amix=inputs=2')
-    expect(filter).toContain('loudnorm=I=-24.000')
+    expect(filter).toContain('loudnorm=I=-16.000')
   })
 })

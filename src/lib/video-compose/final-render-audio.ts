@@ -35,8 +35,8 @@ export const MAIN_AUDIO_TARGET: AudioLoudnessTarget = {
 }
 
 export const BGM_AUDIO_TARGET: AudioLoudnessTarget = {
-  integratedLufs: -24,
-  truePeakDb: -2,
+  integratedLufs: -16,
+  truePeakDb: -1.5,
   loudnessRange: 11,
 }
 
