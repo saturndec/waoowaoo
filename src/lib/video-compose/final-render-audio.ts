@@ -271,10 +271,8 @@ export async function muxFinalRenderAudio(input: {
     '-filter_complex',
     [
       `[1:a]loudnorm=${loudnormApplyFilter(MAIN_AUDIO_TARGET, mainMeasurement)}[main_norm]`,
-      '[main_norm]asplit=2[main_mix][main_sidechain]',
       `[2:a]atrim=0:${input.durationSeconds.toFixed(3)},asetpts=PTS-STARTPTS,afade=t=in:st=0:d=${fadeDuration.toFixed(3)},afade=t=out:st=${fadeOutStart.toFixed(3)}:d=${fadeDuration.toFixed(3)},loudnorm=${loudnormApplyFilter(BGM_AUDIO_TARGET, bgmMeasurement)},volume=${input.volume.toFixed(3)}[bgm_norm]`,
-      '[bgm_norm][main_sidechain]sidechaincompress=threshold=0.025:ratio=8:attack=80:release=800[ducked_bgm]',
-      '[main_mix][ducked_bgm]amix=inputs=2:duration=first:dropout_transition=0,alimiter=limit=0.95[aout]',
+      '[main_norm][bgm_norm]amix=inputs=2:duration=first:dropout_transition=0,alimiter=limit=0.95[aout]',
     ].join(';'),
     '-map',
     '0:v:0',
