@@ -69,6 +69,8 @@ describe('workspace assistant panel layout', () => {
     expect(headerHtml).toContain('Collapse AI assistant sidebar')
     expect(headerHtml).toContain('View full raw context')
     expect(headerHtml).toContain('Download Log')
+    expect(headerHtml).toContain('bg-transparent')
+    expect(headerHtml).not.toContain('bg-white/70')
     expect(railHtml).toContain('Expand AI assistant sidebar')
     expect(railHtml).not.toContain('Workspace Chat')
   })

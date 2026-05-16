@@ -16,7 +16,7 @@ interface WorkspaceAssistantPanelHeaderProps {
 
 export function WorkspaceAssistantPanelHeader(props: WorkspaceAssistantPanelHeaderProps) {
   return (
-    <div className="sticky top-0 z-10 bg-white/70 px-5 py-4 backdrop-blur-xl">
+    <div className="sticky top-0 z-10 bg-transparent px-5 py-4 backdrop-blur-xl">
       <div className="flex items-center justify-between gap-4">
         <div className="min-w-0">
           <h2 className="truncate text-xl font-semibold tracking-tight text-[var(--glass-text-primary)]">{props.title}</h2>
