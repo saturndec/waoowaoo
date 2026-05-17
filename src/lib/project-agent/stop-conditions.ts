@@ -8,6 +8,7 @@ import {
 import type { ProjectAgentStopPartData } from './types'
 
 export const PROJECT_AGENT_MAX_STEPS = 12
+const PROJECT_AGENT_MAX_CONSECUTIVE_SAME_TOOL = 3
 
 type RuntimeSignalDescriptor =
   | {
@@ -153,6 +154,55 @@ function detectRepeatedToolCall<TOOLS extends ToolSet>(steps: StepResult<TOOLS>[
   return null
 }
 
+function readStepToolCalls<TOOLS extends ToolSet>(step: StepResult<TOOLS>): Array<{ toolName: string; input: unknown }> {
+  const toolCalls = Array.isArray(step.toolCalls) ? step.toolCalls : []
+  const toolResults = Array.isArray(step.toolResults) ? step.toolResults : []
+  return toolCalls.length > 0
+    ? toolCalls.map((call) => ({
+        toolName: call.toolName,
+        input: call.input,
+      }))
+    : toolResults.map((result) => ({
+        toolName: result.toolName,
+        input: result.input,
+      }))
+}
+
+function detectSameToolChurn<TOOLS extends ToolSet>(steps: StepResult<TOOLS>[]): ProjectAgentStopPartData | null {
+  if (steps.length < PROJECT_AGENT_MAX_CONSECUTIVE_SAME_TOOL) return null
+  let consecutiveToolName: string | null = null
+  let consecutiveCount = 0
+  let latestArgsHash = ''
+
+  for (const step of steps) {
+    const calls = readStepToolCalls(step)
+    const stepToolName = calls.length === 1 ? calls[0]?.toolName ?? null : null
+    if (!stepToolName) {
+      consecutiveToolName = null
+      consecutiveCount = 0
+      latestArgsHash = ''
+      continue
+    }
+    latestArgsHash = stableArgsHash(calls[0]?.input ?? {})
+    if (stepToolName === consecutiveToolName) {
+      consecutiveCount += 1
+    } else {
+      consecutiveToolName = stepToolName
+      consecutiveCount = 1
+    }
+    if (consecutiveCount >= PROJECT_AGENT_MAX_CONSECUTIVE_SAME_TOOL) {
+      return {
+        reason: 'repeated_tool_call',
+        stepCount: steps.length,
+        toolName: stepToolName,
+        argsHash: latestArgsHash,
+      }
+    }
+  }
+
+  return null
+}
+
 export function createProjectAgentStopController<TToolSet extends ToolSet>(_tools: TToolSet) {
   void _tools
   let stopPart: ProjectAgentStopPartData | null = null
@@ -169,6 +219,12 @@ export function createProjectAgentStopController<TToolSet extends ToolSet>(_tool
     const repeatStop = detectRepeatedToolCall(steps)
     if (repeatStop) {
       stopPart = repeatStop
+      return true
+    }
+
+    const churnStop = detectSameToolChurn(steps)
+    if (churnStop) {
+      stopPart = churnStop
       return true
     }
 

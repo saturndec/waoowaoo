@@ -135,4 +135,13 @@ describe('project agent runtime signal', () => {
   it('[stable hash] -> same object values hash the same regardless of key order', () => {
     expect(stableArgsHash({ b: 2, a: 1 })).toBe(stableArgsHash({ a: 1, b: 2 }))
   })
+
+  it('[stable hash] -> trims strings and ignores undefined object fields', () => {
+    expect(stableArgsHash({
+      prompt: ' make it cinematic ',
+      optional: undefined,
+    })).toBe(stableArgsHash({
+      prompt: 'make it cinematic',
+    }))
+  })
 })

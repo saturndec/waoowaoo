@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import type { StepResult, ToolSet } from 'ai'
 import { createProjectAgentStopController, PROJECT_AGENT_MAX_STEPS } from '@/lib/project-agent/stop-conditions'
+import { stableArgsHash } from '@/lib/project-agent/runtime-signal'
 
 function buildSteps(count: number): StepResult<ToolSet>[] {
   const step = {} as StepResult<ToolSet>
@@ -9,6 +10,7 @@ function buildSteps(count: number): StepResult<ToolSet>[] {
 
 function buildToolResultStep(params: {
   toolName: string
+  input?: unknown
   output: unknown
 }): StepResult<ToolSet> {
   return {
@@ -16,7 +18,7 @@ function buildToolResultStep(params: {
       type: 'tool-result',
       toolCallId: 'tool-call-1',
       toolName: params.toolName,
-      input: {},
+      input: params.input ?? {},
       output: params.output,
     }],
   } as unknown as StepResult<ToolSet>
@@ -164,6 +166,30 @@ describe('project agent stop conditions', () => {
       stepCount: 2,
       toolName: 'get_task_status',
       argsHash: '44136fa355b3678a',
+    })
+  })
+
+  it('[same tool churn] -> stops on third consecutive same tool even with different args', () => {
+    const controller = createProjectAgentStopController({} as ToolSet)
+    const steps = [1, 2, 3].map((attempt) => buildToolResultStep({
+      toolName: 'get_project_context',
+      input: { attempt },
+      output: {
+        ok: true,
+        data: {
+          context: {
+            activeOperationTasks: [],
+          },
+        },
+      },
+    }))
+
+    expect(controller.stopWhen({ steps })).toBe(true)
+    expect(controller.buildStopPart(steps.length)).toEqual({
+      reason: 'repeated_tool_call',
+      stepCount: 3,
+      toolName: 'get_project_context',
+      argsHash: stableArgsHash({ attempt: 3 }),
     })
   })
 })

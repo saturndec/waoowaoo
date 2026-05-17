@@ -72,7 +72,7 @@
     "batchCompleted": "Background batch task {operation} completed ({total} tasks). Read the latest project state and task results first, then decide the next production step. Do not assume the result. If the next step writes data or may bill usage, request confirmation under the current rules.",
     "batchFailed": "Background batch task {operation} finished with {failed}/{total} failures. Read the latest project state and task errors, then explain the failure scope and actionable next step to the user.",
     "waitCompleted": "The system detected that background task {operation} completed ({total} total). Call get_project_context first to read the latest project state and task result, then summarize for the user. Do not poll task status directly.",
-    "waitFailed": "The system detected that background task {operation} finished with {failed}/{total} failures. Call get_project_context first to read the latest project state and task errors, then explain the failure scope and next step. Do not poll task status directly."
+    "waitFailed": "The system detected that background task {operation} finished: {success} succeeded and {failed}/{total} failed. Call get_project_context first to read the latest project state and task errors, then handle only failed items or explain why to abandon them. Do not redo successful items or poll task status directly."
   },
   "thread": {
     "user": "User",

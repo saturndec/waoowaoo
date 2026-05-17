@@ -56,6 +56,9 @@ interface ProjectAgentWaitFollowUp {
   failedTaskIds: string[]
   terminalStatus: 'completed' | 'failed'
   total: number
+  successCount: number
+  failedCount: number
+  claimId: string
 }
 
 interface ProjectAgentWaitFollowUpResponse {
@@ -192,13 +195,11 @@ export default function WorkspaceAssistantPanel({
     if (pendingSyncs.length === 0) return
     void Promise.all(pendingSyncs)
   }, [assistantRuntime.messages, episodeId, projectId, queryClient])
-  const sendAutoFollowUpMessage = useCallback((message: string) => {
+  const sendAutoFollowUpMessage = useCallback(async (message: string): Promise<boolean> => {
     const runtime = assistantRuntimeRef.current
-    if (runtime.pending || runtime.storageLoading) {
-      queuedAutoFollowUpRef.current = [...queuedAutoFollowUpRef.current, message]
-      return
-    }
-    void runtime.sendMessage(message)
+    if (runtime.pending || runtime.storageLoading) return false
+    await runtime.sendMessage(message)
+    return true
   }, [])
   useEffect(() => {
     if (assistantRuntime.pending || assistantRuntime.storageLoading) return
@@ -208,20 +209,28 @@ export default function WorkspaceAssistantPanel({
     void assistantRuntime.sendMessage(queuedMessage)
   }, [assistantRuntime, assistantRuntime.pending, assistantRuntime.storageLoading])
   const flushResolvedWaitFollowUps = useCallback(async () => {
-    const search = new URLSearchParams()
-    if (episodeId) search.set('episodeId', episodeId)
-    const response = await apiFetch(`/api/projects/${projectId}/assistant/waits?${search.toString()}`)
+    const runtime = assistantRuntimeRef.current
+    if (runtime.pending || runtime.storageLoading) return
+    const response = await apiFetch(`/api/projects/${projectId}/assistant/waits`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({
+        action: 'claim',
+        ...(episodeId ? { episodeId } : {}),
+      }),
+    })
     if (!response.ok) return
     const payload = await response.json().catch(() => null) as ProjectAgentWaitFollowUpResponse | null
     if (!payload?.success || !Array.isArray(payload.followUps)) return
     for (const followUp of payload.followUps) {
       if (consumedWaitFollowUpKeysRef.current.has(followUp.followUpKey)) continue
       consumedWaitFollowUpKeysRef.current.add(followUp.followUpKey)
-      sendAutoFollowUpMessage(
+      const sent = await sendAutoFollowUpMessage(
         followUp.terminalStatus === 'failed'
           ? t('autoFollowUp.waitFailed', {
               operation: followUp.operationId,
-              failed: followUp.failedTaskIds.length,
+              success: followUp.successCount,
+              failed: followUp.failedCount,
               total: followUp.total,
             })
           : t('autoFollowUp.waitCompleted', {
@@ -229,10 +238,14 @@ export default function WorkspaceAssistantPanel({
               total: followUp.total,
             }),
       )
+      if (!sent) continue
       await apiFetch(`/api/projects/${projectId}/assistant/waits`, {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ waitId: followUp.waitId }),
+        body: JSON.stringify({
+          waitId: followUp.waitId,
+          claimId: followUp.claimId,
+        }),
       })
     }
   }, [episodeId, projectId, sendAutoFollowUpMessage, t])

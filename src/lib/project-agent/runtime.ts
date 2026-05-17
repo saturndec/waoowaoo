@@ -30,6 +30,10 @@ import type { ProjectAgentInteractionMode } from './types'
 import { resolveProjectAgentExecutionMode } from './execution-mode'
 import { createProjectAgentWait } from './waits'
 import { stableArgsHash } from './runtime-signal'
+import {
+  safelyReleaseProjectAgentRunLock,
+  type ProjectAgentRunLock,
+} from './run-lock'
 
 type UnknownObject = { [key: string]: unknown }
 
@@ -145,6 +149,7 @@ export async function createProjectAgentChatResponse(input: {
   projectId: string
   context: unknown
   messages: unknown
+  runLock?: ProjectAgentRunLock | null
 }): Promise<Response> {
   const stableRequestId = getRequestId(input.request) ?? crypto.randomUUID()
   const validation = await safeValidateUIMessages({ messages: input.messages })
@@ -186,6 +191,12 @@ export async function createProjectAgentChatResponse(input: {
   const stream = createUIMessageStream({
     originalMessages: runtimeMessages,
     execute: async ({ writer }) => {
+      let runLockReleased = false
+      const releaseRunLockOnce = async () => {
+        if (!input.runLock || runLockReleased) return
+        runLockReleased = true
+        await safelyReleaseProjectAgentRunLock(input.runLock)
+      }
       const agentDebug = new URL(input.request.url).searchParams.get('agentDebug') === '1'
       const operations = createProjectAgentOperationRegistry()
       const allowedRequestedGroups = Array.from(new Set(
@@ -236,6 +247,7 @@ export async function createProjectAgentChatResponse(input: {
         writer.write({ type: 'text-end', id: 'clarification' })
         writer.write({ type: 'finish-step' })
         writer.write({ type: 'finish', finishReason: 'stop' })
+        await releaseRunLockOnce()
         return
       }
       const allowedIntents = executionMode.effectiveIntent === 'query'
@@ -375,46 +387,51 @@ export async function createProjectAgentChatResponse(input: {
             })
           },
           onFinish: async ({ steps }) => {
-            const stopPart = stopController.buildStopPart(steps.length)
-            const stopReason = stopPart?.reason ?? null
-            steps.forEach((step, stepIndex) => {
-              const usage = readUsageTokens((step as Record<string, unknown>).usage)
-              const toolCalls = readToolNamesAndHashes(step)
-              projectAgentLogger.info({
-                audit: true,
-                action: 'assistant.step.audit',
-                message: 'Project agent step audit',
-                requestId,
-                projectId: input.projectId,
-                userId: input.userId,
-                details: {
-                  stepIndex,
-                  modelKey: analysisModelKey,
-                  finishReason: (step as Record<string, unknown>).finishReason ?? null,
-                  toolName: toolCalls.map((toolCall) => toolCall.toolName).join(',') || null,
-                  argsHash: toolCalls.map((toolCall) => toolCall.argsHash).join(',') || null,
-                  stopReason,
-                  inputTokens: usage.inputTokens,
-                  outputTokens: usage.outputTokens,
-                },
+            try {
+              const stopPart = stopController.buildStopPart(steps.length)
+              const stopReason = stopPart?.reason ?? null
+              steps.forEach((step, stepIndex) => {
+                const usage = readUsageTokens((step as Record<string, unknown>).usage)
+                const toolCalls = readToolNamesAndHashes(step)
+                projectAgentLogger.info({
+                  audit: true,
+                  action: 'assistant.step.audit',
+                  message: 'Project agent step audit',
+                  requestId,
+                  projectId: input.projectId,
+                  userId: input.userId,
+                  details: {
+                    stepIndex,
+                    modelKey: analysisModelKey,
+                    finishReason: (step as Record<string, unknown>).finishReason ?? null,
+                    toolName: toolCalls.map((toolCall) => toolCall.toolName).join(',') || null,
+                    argsHash: toolCalls.map((toolCall) => toolCall.argsHash).join(',') || null,
+                    stopReason,
+                    inputTokens: usage.inputTokens,
+                    outputTokens: usage.outputTokens,
+                  },
+                })
               })
-            })
-            if (!stopPart) return
-            if (stopPart.reason === 'awaiting_external_task' && stopPart.taskIds.length > 0) {
-              await createProjectAgentWait({
-                projectId: input.projectId,
-                userId: input.userId,
-                episodeId: context.episodeId || null,
-                assistantId: 'workspace-command',
-                operationId: stopPart.operationIds.join(','),
-                taskIds: stopPart.taskIds,
-              })
+              if (!stopPart) return
+              if (stopPart.reason === 'awaiting_external_task' && stopPart.taskIds.length > 0) {
+                await createProjectAgentWait({
+                  projectId: input.projectId,
+                  userId: input.userId,
+                  episodeId: context.episodeId || null,
+                  assistantId: 'workspace-command',
+                  operationId: stopPart.operationIds.join(','),
+                  taskIds: stopPart.taskIds,
+                })
+              }
+              writeOperationDataPart<ProjectAgentStopPartData>(writer, 'data-agent-stop', stopPart)
+            } finally {
+              await releaseRunLockOnce()
             }
-            writeOperationDataPart<ProjectAgentStopPartData>(writer, 'data-agent-stop', stopPart)
           },
           temperature: 0.2,
         })
       } catch (error) {
+        await releaseRunLockOnce()
         const message = error instanceof Error ? error.message : String(error)
         projectAgentLogger.error({
           action: 'assistant.streamText.failed',

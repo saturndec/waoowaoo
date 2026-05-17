@@ -20,7 +20,13 @@ const apiAdapterMock = vi.hoisted(() => ({
 const waitMock = vi.hoisted(() => ({
   createProjectAgentWait: vi.fn(async (): Promise<string> => 'wait-1'),
   listResolvedProjectAgentWaitFollowUps: vi.fn(async (): Promise<unknown[]> => []),
+  claimResolvedProjectAgentWaitFollowUps: vi.fn(async (): Promise<unknown[]> => []),
   markProjectAgentWaitFollowed: vi.fn(async (): Promise<void> => undefined),
+}))
+
+const runLockMock = vi.hoisted(() => ({
+  acquireProjectAgentRunLock: vi.fn(async (): Promise<unknown> => ({ key: 'lock-key', token: 'lock-token' })),
+  safelyReleaseProjectAgentRunLock: vi.fn(async (): Promise<void> => undefined),
 }))
 
 const compressionState = vi.hoisted(() => ({
@@ -95,6 +101,7 @@ vi.mock('@/lib/project-agent', () => projectAgentMock)
 vi.mock('@/lib/adapters/api/execute-project-agent-operation', () => apiAdapterMock)
 vi.mock('@/lib/project-agent/persistence', () => persistenceMock)
 vi.mock('@/lib/project-agent/waits', () => waitMock)
+vi.mock('@/lib/project-agent/run-lock', () => runLockMock)
 vi.mock('@/lib/project-agent/thread-log', () => threadLogMock)
 vi.mock('@/lib/config-service', () => modelConfigMock)
 vi.mock('@/lib/project-agent/model', () => modelResolverMock)
@@ -159,6 +166,50 @@ describe('project assistant chat route', () => {
         selectedClipId: 'clip-1',
         selectedAssetId: 'asset-1',
       },
+    }))
+    expect(runLockMock.acquireProjectAgentRunLock).toHaveBeenCalledWith({
+      projectId: 'project-1',
+      userId: 'user-1',
+      episodeId: 'episode-1',
+      assistantId: 'workspace-command',
+    })
+    expect(projectAgentMock.createProjectAgentChatResponse).toHaveBeenCalledWith(expect.objectContaining({
+      runLock: { key: 'lock-key', token: 'lock-token' },
+    }))
+  })
+
+  it('POST /api/projects/[projectId]/assistant/chat -> rejects concurrent runs in the same assistant scope', async () => {
+    runLockMock.acquireProjectAgentRunLock.mockResolvedValueOnce(null)
+
+    const response = await chatPost(
+      buildMockRequest({
+        path: '/api/projects/project-1/assistant/chat',
+        method: 'POST',
+        body: {
+          messages: [
+            {
+              id: 'u1',
+              role: 'user',
+              parts: [{ type: 'text', text: '继续' }],
+            },
+          ],
+          context: {
+            episodeId: 'episode-1',
+          },
+        },
+      }),
+      { params: Promise.resolve({ projectId: 'project-1' }) },
+    )
+
+    expect(response.status).toBe(409)
+    expect(projectAgentMock.createProjectAgentChatResponse).not.toHaveBeenCalled()
+    await expect(response.json()).resolves.toEqual(expect.objectContaining({
+      error: expect.objectContaining({
+        code: 'CONFLICT',
+        details: expect.objectContaining({
+          code: 'PROJECT_AGENT_RUN_ACTIVE',
+        }),
+      }),
     }))
   })
 
@@ -396,6 +447,9 @@ describe('project assistant chat route', () => {
       failedTaskIds: [],
       terminalStatus: 'completed',
       total: 1,
+      successCount: 1,
+      failedCount: 0,
+      claimId: '',
     }])
 
     const response = await waitsGet(
@@ -423,6 +477,60 @@ describe('project assistant chat route', () => {
         failedTaskIds: [],
         terminalStatus: 'completed',
         total: 1,
+        successCount: 1,
+        failedCount: 0,
+        claimId: '',
+      }],
+    })
+  })
+
+  it('POST /api/projects/[projectId]/assistant/waits -> atomically claims one follow-up before client wake-up', async () => {
+    waitMock.claimResolvedProjectAgentWaitFollowUps.mockResolvedValueOnce([{
+      waitId: 'wait-1',
+      followUpKey: 'project-agent-wait:wait-1:failed',
+      operationId: 'generate_edit_script',
+      taskIds: ['task-1', 'task-2'],
+      failedTaskIds: ['task-2'],
+      terminalStatus: 'failed',
+      total: 2,
+      successCount: 1,
+      failedCount: 1,
+      claimId: 'claim-1',
+    }])
+
+    const response = await waitsPost(
+      buildMockRequest({
+        path: '/api/projects/project-1/assistant/waits',
+        method: 'POST',
+        body: {
+          action: 'claim',
+          episodeId: 'episode-1',
+        },
+      }),
+      { params: Promise.resolve({ projectId: 'project-1' }) },
+    )
+
+    expect(response.status).toBe(200)
+    expect(waitMock.claimResolvedProjectAgentWaitFollowUps).toHaveBeenCalledWith({
+      projectId: 'project-1',
+      userId: 'user-1',
+      episodeId: 'episode-1',
+      assistantId: 'workspace-command',
+      limit: 1,
+    })
+    await expect(response.json()).resolves.toEqual({
+      success: true,
+      followUps: [{
+        waitId: 'wait-1',
+        followUpKey: 'project-agent-wait:wait-1:failed',
+        operationId: 'generate_edit_script',
+        taskIds: ['task-1', 'task-2'],
+        failedTaskIds: ['task-2'],
+        terminalStatus: 'failed',
+        total: 2,
+        successCount: 1,
+        failedCount: 1,
+        claimId: 'claim-1',
       }],
     })
   })
@@ -432,7 +540,7 @@ describe('project assistant chat route', () => {
       buildMockRequest({
         path: '/api/projects/project-1/assistant/waits',
         method: 'POST',
-        body: { waitId: 'wait-1' },
+        body: { waitId: 'wait-1', claimId: 'claim-1' },
       }),
       { params: Promise.resolve({ projectId: 'project-1' }) },
     )
@@ -440,6 +548,7 @@ describe('project assistant chat route', () => {
     expect(response.status).toBe(200)
     expect(waitMock.markProjectAgentWaitFollowed).toHaveBeenCalledWith({
       waitId: 'wait-1',
+      claimId: 'claim-1',
       projectId: 'project-1',
       userId: 'user-1',
     })

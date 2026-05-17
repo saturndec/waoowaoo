@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { apiHandler, ApiError } from '@/lib/api-errors'
 import { isErrorResponse, requireProjectAuth } from '@/lib/api-auth'
 import {
+  claimResolvedProjectAgentWaitFollowUps,
   listResolvedProjectAgentWaitFollowUps,
   markProjectAgentWaitFollowed,
 } from '@/lib/project-agent/waits'
@@ -60,8 +61,29 @@ export const POST = apiHandler(async (
     })
   }
   const bodyRecord = body as Record<string, unknown>
+  const action = typeof bodyRecord.action === 'string' ? bodyRecord.action.trim() : ''
+  if (action === 'claim') {
+    const episodeId = typeof bodyRecord.episodeId === 'string' && bodyRecord.episodeId.trim()
+      ? bodyRecord.episodeId.trim()
+      : readEpisodeId(request)
+    const followUps = await claimResolvedProjectAgentWaitFollowUps({
+      projectId,
+      userId: authResult.session.user.id,
+      episodeId,
+      assistantId: 'workspace-command',
+      limit: 1,
+    })
+    return NextResponse.json({
+      success: true,
+      followUps,
+    })
+  }
+
   const waitId = typeof bodyRecord.waitId === 'string'
     ? bodyRecord.waitId.trim()
+    : ''
+  const claimId = typeof bodyRecord.claimId === 'string'
+    ? bodyRecord.claimId.trim()
     : ''
   if (!waitId) {
     throw new ApiError('INVALID_PARAMS', {
@@ -70,9 +92,17 @@ export const POST = apiHandler(async (
       message: 'waitId is required',
     })
   }
+  if (!claimId) {
+    throw new ApiError('INVALID_PARAMS', {
+      code: 'CLAIM_ID_REQUIRED',
+      field: 'claimId',
+      message: 'claimId is required',
+    })
+  }
 
   await markProjectAgentWaitFollowed({
     waitId,
+    claimId,
     projectId,
     userId: authResult.session.user.id,
   })

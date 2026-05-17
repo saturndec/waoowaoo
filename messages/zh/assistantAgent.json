@@ -72,7 +72,7 @@
     "batchCompleted": "后台批量任务 {operation} 已全部完成（共 {total} 个）。请先读取最新项目状态和任务结果，再判断制作流程下一步；不要假设结果，如果下一步需要写入或计费，按当前确认规则请求用户确认。",
     "batchFailed": "后台批量任务 {operation} 已结束，其中 {failed}/{total} 个失败。请读取最新项目状态和任务错误，向用户说明失败范围和可执行的下一步。",
     "waitCompleted": "系统检测到后台任务 {operation} 已完成（共 {total} 个）。请先调用 get_project_context 读取最新项目状态和任务结果，再向用户汇总；不要直接轮询任务状态。",
-    "waitFailed": "系统检测到后台任务 {operation} 已结束，其中 {failed}/{total} 个失败。请先调用 get_project_context 读取最新项目状态和任务错误，再向用户说明失败范围和下一步；不要直接轮询任务状态。"
+    "waitFailed": "系统检测到后台任务 {operation} 已结束：{success} 个成功，{failed}/{total} 个失败。请先调用 get_project_context 读取最新项目状态和任务错误，只处理失败项或向用户说明放弃原因；不要重做已成功项，也不要直接轮询任务状态。"
   },
   "thread": {
     "user": "用户",

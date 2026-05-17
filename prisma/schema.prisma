@@ -537,6 +537,9 @@ model ProjectAgentWait {
   terminalTaskIds Json?
   failedTaskIds   Json?
   followUpKey     String?
+  claimId         String?
+  claimedAt       DateTime?
+  claimExpiresAt  DateTime?
   followedAt      DateTime?
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
@@ -547,6 +550,7 @@ model ProjectAgentWait {
   @@index([projectId, userId, assistantId, scopeRef, status, createdAt])
   @@index([projectId, status, createdAt])
   @@index([followUpKey])
+  @@index([claimId])
   @@map("project_agent_waits")
 }
 

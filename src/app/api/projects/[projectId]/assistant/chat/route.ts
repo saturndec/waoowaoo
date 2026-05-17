@@ -13,6 +13,10 @@ import {
   saveProjectAssistantThread,
 } from '@/lib/project-agent/persistence'
 import { writeWorkspaceAssistantThreadLog } from '@/lib/project-agent/thread-log'
+import {
+  acquireProjectAgentRunLock,
+  safelyReleaseProjectAgentRunLock,
+} from '@/lib/project-agent/run-lock'
 
 type RequestBody = {
   messages?: unknown
@@ -22,6 +26,7 @@ type RequestBody = {
 }
 
 function mapProjectAgentError(error: unknown): ApiError {
+  if (error instanceof ApiError) return error
   if (error instanceof Error) {
     if (error.message === 'PROJECT_AGENT_MODEL_NOT_CONFIGURED') {
       return new ApiError('MISSING_CONFIG', {
@@ -59,6 +64,18 @@ function readEpisodeIdFromBody(body: RequestBody): string | null {
   return typeof body.episodeId === 'string' && body.episodeId.trim()
     ? body.episodeId.trim()
     : null
+}
+
+function readEpisodeIdFromRequestBody(body: RequestBody): string | null {
+  const bodyEpisodeId = readEpisodeIdFromBody(body)
+  if (bodyEpisodeId) return bodyEpisodeId
+  if (body.context && typeof body.context === 'object' && !Array.isArray(body.context)) {
+    const contextEpisodeId = (body.context as Record<string, unknown>).episodeId
+    return typeof contextEpisodeId === 'string' && contextEpisodeId.trim()
+      ? contextEpisodeId.trim()
+      : null
+  }
+  return null
 }
 
 function readLocaleFromBody(body: RequestBody): 'zh' | 'en' {
@@ -209,13 +226,32 @@ export const POST = apiHandler(async (
       locale,
       messages: body.messages,
     })
-    return await createProjectAgentChatResponse({
-      request,
-      userId: authResult.session.user.id,
+    const episodeId = readEpisodeIdFromRequestBody(body)
+    const runLock = await acquireProjectAgentRunLock({
       projectId,
-      context: body.context,
-      messages,
+      userId: authResult.session.user.id,
+      episodeId,
+      assistantId: 'workspace-command',
     })
+    if (!runLock) {
+      throw new ApiError('CONFLICT', {
+        code: 'PROJECT_AGENT_RUN_ACTIVE',
+        message: 'another assistant run is already active for this thread',
+      })
+    }
+    try {
+      return await createProjectAgentChatResponse({
+        request,
+        userId: authResult.session.user.id,
+        projectId,
+        context: body.context,
+        messages,
+        runLock,
+      })
+    } catch (error) {
+      await safelyReleaseProjectAgentRunLock(runLock)
+      throw error
+    }
   } catch (error) {
     throw mapProjectAgentError(error)
   }
