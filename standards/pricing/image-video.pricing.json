@@ -1204,6 +1204,28 @@
   {
     "apiType": "video",
     "provider": "fal",
+    "modelId": "bytedance/seedance-2.0/fast",
+    "pricing": {
+      "mode": "capability",
+      "tiers": [
+        {
+          "when": {
+            "resolution": "480p"
+          },
+          "amount": 0.1077
+        },
+        {
+          "when": {
+            "resolution": "720p"
+          },
+          "amount": 0.2419
+        }
+      ]
+    }
+  },
+  {
+    "apiType": "video",
+    "provider": "fal",
     "modelId": "fal-ai/kling-video/v2.5-turbo/pro/image-to-video",
     "pricing": {
       "mode": "capability",

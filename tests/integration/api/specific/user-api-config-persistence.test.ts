@@ -131,6 +131,14 @@ describe('api specific - user api-config persistence', () => {
       && model.capabilities?.video?.resolutionOptions?.includes('1080p') === true
       && model.capabilities?.video?.durationOptions?.includes(15) === true
     ))).toBe(true)
+    expect(json.catalog?.models?.some((model) => (
+      model.provider === 'fal'
+      && model.modelId === 'bytedance/seedance-2.0/fast'
+      && model.type === 'video'
+      && model.name === 'Seedance 2.0 Fast'
+      && model.capabilities?.video?.resolutionOptions?.includes('720p') === true
+      && model.capabilities?.video?.resolutionOptions?.includes('1080p') === false
+    ))).toBe(true)
   })
 
   it('accepts bailian lipsync models and persists them', async () => {

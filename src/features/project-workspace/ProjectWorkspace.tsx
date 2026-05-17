@@ -61,6 +61,7 @@ function ProjectWorkspaceContent(props: ProjectWorkspaceProps) {
         capabilityOverrides={vm.project.capabilityOverrides}
         videoRatio={vm.project.videoRatio}
         onUpdateConfig={vm.actions.handleUpdateConfig}
+        onUpdateConfigPatch={vm.actions.handleUpdateConfigPatch}
         globalAssetText={vm.project.globalAssetText}
         projectName={project.name}
         episodes={episodes}

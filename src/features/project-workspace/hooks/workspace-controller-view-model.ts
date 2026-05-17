@@ -107,6 +107,7 @@ interface BuildWorkspaceControllerViewModelParams {
   workspaceRuntime: WorkspaceRuntimeValue
   actionsState: {
     handleUpdateConfig: (key: string, value: unknown) => Promise<void>
+    handleUpdateConfigPatch: (patch: Record<string, unknown>) => Promise<void>
     handleUpdateEpisode: (key: string, value: unknown) => Promise<void>
   }
 }

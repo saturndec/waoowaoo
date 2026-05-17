@@ -275,6 +275,7 @@ describe('media adapter video option schema', () => {
         duration: 15,
         resolution: '1080p',
         aspectRatio: '16:9',
+        referenceImages: ['https://example.com/character.png', 'https://example.com/location.png'],
       },
       context: 'fal-happy-horse',
     })).not.toThrow()
@@ -288,6 +289,11 @@ describe('media adapter video option schema', () => {
       options: { duration: 5, resolution: '4k' },
       context: 'fal-happy-horse',
     })).toThrow('AI_OPTION_INVALID:fal-happy-horse:resolution:unsupported_value=4k')
+    expect(() => validateDescriptorOptions({
+      schema: descriptor!.optionSchema,
+      options: { duration: 5, resolution: '720p', aspectRatio: '2:3' },
+      context: 'fal-happy-horse',
+    })).toThrow('AI_OPTION_INVALID:fal-happy-horse:aspectRatio:unsupported_value=2:3')
   })
 
   it('validates Fal Seedance 2.0 video duration, resolution, and aspect ratio before provider execution', () => {
@@ -306,6 +312,7 @@ describe('media adapter video option schema', () => {
         resolution: '1080p',
         aspectRatio: '9:16',
         generateAudio: true,
+        referenceImages: ['https://example.com/hero.png', 'https://example.com/location.png'],
       },
       context: 'fal-seedance-2',
     })).not.toThrow()
@@ -324,6 +331,33 @@ describe('media adapter video option schema', () => {
       options: { duration: 5, resolution: '720p', aspectRatio: '2:3' },
       context: 'fal-seedance-2',
     })).toThrow('AI_OPTION_INVALID:fal-seedance-2:aspectRatio:unsupported_value=2:3')
+  })
+
+  it('validates Fal Seedance 2.0 Fast without 1080p before provider execution', () => {
+    const descriptor = falAdapter.video?.describe(mediaSelection({
+      provider: 'fal',
+      modelId: 'bytedance/seedance-2.0/fast',
+      modelKey: 'fal::bytedance/seedance-2.0/fast',
+    }))
+    expect(descriptor).toBeDefined()
+
+    expect(() => validateDescriptorOptions({
+      schema: descriptor!.optionSchema,
+      options: {
+        prompt: 'animate quickly',
+        duration: 4,
+        resolution: '720p',
+        aspectRatio: '9:16',
+        generateAudio: true,
+        referenceImages: ['https://example.com/hero.png', 'https://example.com/location.png'],
+      },
+      context: 'fal-seedance-2-fast',
+    })).not.toThrow()
+    expect(() => validateDescriptorOptions({
+      schema: descriptor!.optionSchema,
+      options: { duration: 5, resolution: '1080p' },
+      context: 'fal-seedance-2-fast',
+    })).toThrow('AI_OPTION_INVALID:fal-seedance-2-fast:resolution:unsupported_value=1080p')
   })
 
   it('rejects Vidu invalid duration/resolution combinations from descriptor schema', () => {

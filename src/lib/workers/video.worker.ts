@@ -24,6 +24,11 @@ import { composeAndStoreGridReferenceImage } from '@/lib/video-groups/grid-image
 import { totalVideoGroupDuration, validateVideoGroupShotNumbers } from '@/lib/video-groups/core'
 import type { VideoGridMode, VideoGroupShot } from '@/lib/video-groups/types'
 import { ensureMediaObjectFromStorageKey } from '@/lib/media/service'
+import {
+  FAL_HAPPY_HORSE_IMAGE_TO_VIDEO_MODEL_ID,
+  FAL_SEEDANCE_2_FAST_VIDEO_MODEL_ID,
+  FAL_SEEDANCE_2_VIDEO_MODEL_ID,
+} from '@/lib/ai-providers/fal/models'
 
 type AnyObj = Record<string, unknown>
 type VideoOptionValue = string | number | boolean
@@ -353,6 +358,20 @@ function buildAssetReferencePrompt(params: {
   ].join('\n\n')
 }
 
+function supportsAssetReferenceMultiReference(modelId: string): boolean {
+  if (modelId === `fal::${FAL_HAPPY_HORSE_IMAGE_TO_VIDEO_MODEL_ID}`) return true
+  if (modelId === `fal::${FAL_SEEDANCE_2_VIDEO_MODEL_ID}`) return true
+  if (modelId === `fal::${FAL_SEEDANCE_2_FAST_VIDEO_MODEL_ID}`) return true
+  const parsedModel = parseModelKeyStrict(modelId)
+  return parsedModel?.provider === 'ark'
+    || (parsedModel?.provider === 'fal'
+      && (
+        parsedModel.modelId === FAL_HAPPY_HORSE_IMAGE_TO_VIDEO_MODEL_ID
+        || parsedModel.modelId === FAL_SEEDANCE_2_VIDEO_MODEL_ID
+        || parsedModel.modelId === FAL_SEEDANCE_2_FAST_VIDEO_MODEL_ID
+      ))
+}
+
 async function handleAssetReferenceVideoGroupTask(params: {
   readonly job: Job<TaskJobData>
   readonly payload: AnyObj
@@ -363,8 +382,7 @@ async function handleAssetReferenceVideoGroupTask(params: {
   const { job, payload, groupId, modelId, generationOptions } = params
   const shotNumbers = validateAssetReferenceShotNumbers(payload.shotNumbers)
   const referenceImageUrls = parseReferenceImageUrls(payload.referenceImageUrls)
-  const parsedModel = parseModelKeyStrict(modelId)
-  if (referenceImageUrls.length > 1 && parsedModel?.provider !== 'ark') {
+  if (referenceImageUrls.length > 1 && !supportsAssetReferenceMultiReference(modelId)) {
     throw new Error(`ASSET_REFERENCE_VIDEO_MULTI_REFERENCE_UNSUPPORTED:${modelId}`)
   }
 
@@ -461,6 +479,7 @@ async function handleAssetReferenceVideoGroupTask(params: {
   if (generatedVideo.downloadHeaders) {
     downloadHeaders = generatedVideo.downloadHeaders
   } else if (typeof videoSource === 'string') {
+    const parsedModel = parseModelKeyStrict(modelId)
     const isGoogleDownloadUrl = videoSource.includes('generativelanguage.googleapis.com/')
       && videoSource.includes('/files/')
       && videoSource.includes(':download')

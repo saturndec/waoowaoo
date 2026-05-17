@@ -31,7 +31,7 @@ interface UserModels {
     audio: ModelOption[]
 }
 
-interface CapabilityFieldDefinition {
+export interface CapabilityFieldDefinition {
     field: string
     options: CapabilityValue[]
     label: string
@@ -73,6 +73,7 @@ interface SettingsModalProps {
     onAudioModelChange?: (value: string) => void
     onVideoRatioChange?: (value: string) => void
     onCapabilityOverridesChange?: (value: CapabilitySelections) => void
+    onConfigPatch?: (value: Record<string, unknown>) => void
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -170,6 +171,26 @@ export function ensureCapabilityDefaultsForModels(input: {
     return { changed, capabilityOverrides: nextOverrides }
 }
 
+export function buildModelCapabilityConfigPatch(input: {
+    configPatch: Record<string, unknown>
+    capabilityOverrides?: CapabilitySelections
+    modelKey: string
+    fields: CapabilityFieldDefinition[]
+}): { changed: boolean; patch: Record<string, unknown> } {
+    const capabilityResult = ensureCapabilityDefaultsForModels({
+        capabilityOverrides: input.capabilityOverrides,
+        targets: [{ modelKey: input.modelKey, fields: input.fields }],
+    })
+
+    return {
+        changed: capabilityResult.changed,
+        patch: {
+            ...input.configPatch,
+            ...(capabilityResult.changed ? { capabilityOverrides: capabilityResult.capabilityOverrides } : {}),
+        },
+    }
+}
+
 export function SettingsModal({
     isOpen,
     onClose,
@@ -199,6 +220,7 @@ export function SettingsModal({
     onAudioModelChange,
     onVideoRatioChange,
     onCapabilityOverridesChange,
+    onConfigPatch,
 }: SettingsModalProps) {
     const t = useTranslations('configModal')
     const [saveStatus, setSaveStatus] = useState<'idle' | 'saved'>('idle')
@@ -393,31 +415,33 @@ export function SettingsModal({
         modelKey: string,
         modelOptions: ModelOption[],
         namespace: 'llm' | 'image' | 'video' | 'audio',
+        configPatch: Record<string, unknown>,
         onModelChangeFn?: (v: string) => void,
     ) => {
-        onModelChangeFn?.(modelKey)
-        showSaved()
-        if (!onCapabilityOverridesChange) return
         // 用新选中的模型的 capabilities 计算 fields，而不是旧模型的
         const newModel = modelOptions.find((m) => m.value === modelKey)
         const capabilityFieldsForModel = extractCapabilityFields(newModel?.capabilities, namespace)
-        const nextOverrides: CapabilitySelections = { ...(capabilityOverrides || {}) }
-        const existing = isRecord(nextOverrides[modelKey])
-            ? { ...(nextOverrides[modelKey] as Record<string, CapabilityValue>) }
-            : {}
-        if (capabilityFieldsForModel.length === 0) return
-        // 只对尚未配置的 field 设置默认值（不覆盖已有配置）
-        let changed = false
-        for (const def of capabilityFieldsForModel) {
-            if (existing[def.field] === undefined && def.options.length > 0) {
-                existing[def.field] = def.options[0]
-                changed = true
+        const configPatchResult = buildModelCapabilityConfigPatch({
+            configPatch,
+            capabilityOverrides,
+            modelKey,
+            fields: capabilityFieldsForModel,
+        })
+
+        if (onConfigPatch) {
+            onConfigPatch(configPatchResult.patch)
+            showSaved()
+            return
+        }
+
+        onModelChangeFn?.(modelKey)
+        if (configPatchResult.changed) {
+            const nextCapabilityOverrides = configPatchResult.patch.capabilityOverrides
+            if (isRecord(nextCapabilityOverrides)) {
+                onCapabilityOverridesChange?.(nextCapabilityOverrides as CapabilitySelections)
             }
         }
-        if (changed) {
-            nextOverrides[modelKey] = existing
-            onCapabilityOverridesChange(nextOverrides)
-        }
+        showSaved()
     }
 
     useEffect(() => {
@@ -511,7 +535,7 @@ export function SettingsModal({
                                 <ModelCapabilityDropdown
                                     models={userModels.llm}
                                     value={analysisModel}
-                                    onModelChange={(v) => handleChange(onAnalysisModelChange)(v)}
+                                    onModelChange={(v) => handleModelChange(v, userModels.llm, 'llm', { analysisModel: v }, onAnalysisModelChange)}
                                     capabilityFields={analysisCapabilityFields}
                                     capabilityOverrides={selectedAnalysisOverrides}
                                     onCapabilityChange={(field, rawValue, sample) => {
@@ -526,7 +550,7 @@ export function SettingsModal({
                                 <ModelCapabilityDropdown
                                     models={userModels.image}
                                     value={characterModel}
-                                    onModelChange={(v) => handleModelChange(v, userModels.image, 'image', onCharacterModelChange)}
+                                    onModelChange={(v) => handleModelChange(v, userModels.image, 'image', { characterModel: v }, onCharacterModelChange)}
                                     capabilityFields={characterCapabilityFields}
                                     capabilityOverrides={selectedCharacterOverrides}
                                     onCapabilityChange={(field, rawValue, sample) => {
@@ -540,7 +564,7 @@ export function SettingsModal({
                                 <ModelCapabilityDropdown
                                     models={userModels.image}
                                     value={locationModel}
-                                    onModelChange={(v) => handleModelChange(v, userModels.image, 'image', onLocationModelChange)}
+                                    onModelChange={(v) => handleModelChange(v, userModels.image, 'image', { locationModel: v }, onLocationModelChange)}
                                     capabilityFields={locationCapabilityFields}
                                     capabilityOverrides={selectedLocationOverrides}
                                     onCapabilityChange={(field, rawValue, sample) => {
@@ -554,7 +578,7 @@ export function SettingsModal({
                                 <ModelCapabilityDropdown
                                     models={userModels.image}
                                     value={imageModel}
-                                    onModelChange={(v) => handleModelChange(v, userModels.image, 'image', onImageModelChange)}
+                                    onModelChange={(v) => handleModelChange(v, userModels.image, 'image', { storyboardModel: v }, onImageModelChange)}
                                     capabilityFields={storyboardCapabilityFields}
                                     capabilityOverrides={selectedStoryboardOverrides}
                                     onCapabilityChange={(field, rawValue, sample) => {
@@ -568,7 +592,7 @@ export function SettingsModal({
                                 <ModelCapabilityDropdown
                                     models={userModels.image}
                                     value={editModel}
-                                    onModelChange={(v) => handleModelChange(v, userModels.image, 'image', onEditModelChange)}
+                                    onModelChange={(v) => handleModelChange(v, userModels.image, 'image', { editModel: v }, onEditModelChange)}
                                     capabilityFields={editCapabilityFields}
                                     capabilityOverrides={selectedEditOverrides}
                                     onCapabilityChange={(field, rawValue, sample) => {
@@ -583,7 +607,7 @@ export function SettingsModal({
                                     models={normalVideoModels}
                                     value={effectiveSingleShotVideoModel}
                                     onModelChange={(v) => {
-                                        handleModelChange(v, normalVideoModels, 'video', (value) => {
+                                        handleModelChange(v, normalVideoModels, 'video', { singleShotVideoModel: v, videoModel: v }, (value) => {
                                             onSingleShotVideoModelChange?.(value)
                                             onVideoModelChange?.(value)
                                         })
@@ -601,7 +625,7 @@ export function SettingsModal({
                                 <ModelCapabilityDropdown
                                     models={normalVideoModels}
                                     value={sequenceVideoModel}
-                                    onModelChange={(v) => handleModelChange(v, normalVideoModels, 'video', onSequenceVideoModelChange)}
+                                    onModelChange={(v) => handleModelChange(v, normalVideoModels, 'video', { sequenceVideoModel: v }, onSequenceVideoModelChange)}
                                     capabilityFields={sequenceVideoCapabilityFields}
                                     capabilityOverrides={selectedSequenceVideoOverrides}
                                     onCapabilityChange={(field, rawValue, sample) => {
@@ -615,7 +639,7 @@ export function SettingsModal({
                                 <ModelCapabilityDropdown
                                     models={userModels.audio}
                                     value={audioModel}
-                                    onModelChange={(v) => handleModelChange(v, userModels.audio, 'audio', onAudioModelChange)}
+                                    onModelChange={(v) => handleModelChange(v, userModels.audio, 'audio', { audioModel: v }, onAudioModelChange)}
                                     capabilityFields={audioCapabilityFields}
                                     capabilityOverrides={selectedAudioOverrides}
                                     onCapabilityChange={(field, rawValue, sample) => {

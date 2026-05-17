@@ -298,6 +298,7 @@ describe('final video render worker', () => {
     expect(ffmpegCalls.some((args) => args.includes('aformat=sample_fmts=fltp:channel_layouts=stereo'))).toBe(true)
     expect(ffmpegCalls.some((args) => args.includes('concat=n=1:v=0:a=1'))).toBe(true)
     expect(ffmpegCalls.some((args) => args.includes('loudnorm=I=-16.000'))).toBe(true)
+    expect(ffmpegCalls.some((args) => args.includes('loudnorm=I=-12.000'))).toBe(true)
     expect(ffmpegCalls.some((args) => args.includes('loudnorm=I=-24.000'))).toBe(false)
     expect(ffmpegCalls.some((args) => args.includes('volume=1.000'))).toBe(true)
     expect(ffmpegCalls.some((args) => args.includes('sidechaincompress='))).toBe(false)
@@ -319,7 +320,7 @@ describe('final video render worker', () => {
       hasSourceAudio: true,
       targets: {
         mainIntegratedLufs: -16,
-        bgmIntegratedLufs: -16,
+        bgmIntegratedLufs: -12,
       },
     })
   })

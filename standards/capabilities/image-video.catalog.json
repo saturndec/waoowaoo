@@ -745,6 +745,43 @@
   {
     "modelType": "video",
     "provider": "fal",
+    "modelId": "bytedance/seedance-2.0/fast",
+    "capabilities": {
+      "video": {
+        "generationModeOptions": [
+          "normal",
+          "firstlastframe"
+        ],
+        "generateAudioOptions": [
+          true,
+          false
+        ],
+        "durationOptions": [
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15
+        ],
+        "resolutionOptions": [
+          "480p",
+          "720p"
+        ],
+        "firstlastframe": true,
+        "supportGenerateAudio": true
+      }
+    }
+  },
+  {
+    "modelType": "video",
+    "provider": "fal",
     "modelId": "fal-ai/kling-video/v2.5-turbo/pro/image-to-video",
     "capabilities": {
       "video": {

@@ -374,6 +374,132 @@ describe('worker video processor behavior', () => {
     }))
   })
 
+  it('VIDEO_GROUP asset_reference: allows Fal Seedance 2.0 multi-reference assets', async () => {
+    const processor = workerState.processor
+    expect(processor).toBeTruthy()
+
+    utilsMock.uploadVideoSourceToCos.mockResolvedValueOnce('asset-reference-video/group-seedance.mp4')
+
+    const result = await processor!(buildJob({
+      type: TASK_TYPE.VIDEO_GROUP,
+      targetType: 'ProjectVideoGroup',
+      targetId: 'group-seedance-1',
+      payload: {
+        sourceMode: 'asset_reference',
+        videoModel: 'fal::bytedance/seedance-2.0',
+        shotNumbers: [1, 2],
+        prompt: 'seedance asset reference block prompt',
+        referenceImageUrls: ['https://example.com/hero.png', 'https://example.com/location.png'],
+        generationOptions: { resolution: '720p' },
+      },
+    }))
+
+    expect(result).toEqual(expect.objectContaining({
+      groupId: 'group-seedance-1',
+      videoUrl: '/m/video-public-1',
+      videoMediaId: 'video-media-1',
+      durationSec: 5,
+      shotNumbers: [1, 2],
+      sourceMode: 'asset_reference',
+    }))
+    expect(utilsMock.resolveVideoSourceFromGeneration).toHaveBeenCalledWith(expect.anything(), expect.objectContaining({
+      modelId: 'fal::bytedance/seedance-2.0',
+      referenceImages: [
+        { url: 'https://example.com/hero.png', role: 'reference', order: 1, source: 'asset' },
+        { url: 'https://example.com/location.png', role: 'reference', order: 2, source: 'asset' },
+      ],
+      options: expect.objectContaining({
+        prompt: expect.stringContaining('seedance asset reference block prompt'),
+        duration: 5,
+        aspectRatio: '9:16',
+      }),
+    }))
+  })
+
+  it('VIDEO_GROUP asset_reference: allows Fal Happy Horse multi-reference assets', async () => {
+    const processor = workerState.processor
+    expect(processor).toBeTruthy()
+
+    utilsMock.uploadVideoSourceToCos.mockResolvedValueOnce('asset-reference-video/group-happy-horse.mp4')
+
+    const result = await processor!(buildJob({
+      type: TASK_TYPE.VIDEO_GROUP,
+      targetType: 'ProjectVideoGroup',
+      targetId: 'group-happy-horse-1',
+      payload: {
+        sourceMode: 'asset_reference',
+        videoModel: 'fal::alibaba/happy-horse/image-to-video',
+        shotNumbers: [1, 2],
+        prompt: 'happy horse asset reference block prompt',
+        referenceImageUrls: ['https://example.com/hero.png', 'https://example.com/location.png'],
+        generationOptions: { resolution: '720p' },
+      },
+    }))
+
+    expect(result).toEqual(expect.objectContaining({
+      groupId: 'group-happy-horse-1',
+      videoUrl: '/m/video-public-1',
+      videoMediaId: 'video-media-1',
+      durationSec: 5,
+      shotNumbers: [1, 2],
+      sourceMode: 'asset_reference',
+    }))
+    expect(utilsMock.resolveVideoSourceFromGeneration).toHaveBeenCalledWith(expect.anything(), expect.objectContaining({
+      modelId: 'fal::alibaba/happy-horse/image-to-video',
+      referenceImages: [
+        { url: 'https://example.com/hero.png', role: 'reference', order: 1, source: 'asset' },
+        { url: 'https://example.com/location.png', role: 'reference', order: 2, source: 'asset' },
+      ],
+      options: expect.objectContaining({
+        prompt: expect.stringContaining('happy horse asset reference block prompt'),
+        duration: 5,
+        aspectRatio: '9:16',
+      }),
+    }))
+  })
+
+  it('VIDEO_GROUP asset_reference: allows Fal Seedance 2.0 Fast multi-reference assets', async () => {
+    const processor = workerState.processor
+    expect(processor).toBeTruthy()
+
+    utilsMock.uploadVideoSourceToCos.mockResolvedValueOnce('asset-reference-video/group-seedance-fast.mp4')
+
+    const result = await processor!(buildJob({
+      type: TASK_TYPE.VIDEO_GROUP,
+      targetType: 'ProjectVideoGroup',
+      targetId: 'group-seedance-fast-1',
+      payload: {
+        sourceMode: 'asset_reference',
+        videoModel: 'fal::bytedance/seedance-2.0/fast',
+        shotNumbers: [1, 2],
+        prompt: 'seedance fast asset reference block prompt',
+        referenceImageUrls: ['https://example.com/hero.png', 'https://example.com/location.png'],
+        generationOptions: { resolution: '720p' },
+      },
+    }))
+
+    expect(result).toEqual(expect.objectContaining({
+      groupId: 'group-seedance-fast-1',
+      videoUrl: '/m/video-public-1',
+      videoMediaId: 'video-media-1',
+      durationSec: 5,
+      shotNumbers: [1, 2],
+      sourceMode: 'asset_reference',
+    }))
+    expect(utilsMock.resolveVideoSourceFromGeneration).toHaveBeenCalledWith(expect.anything(), expect.objectContaining({
+      modelId: 'fal::bytedance/seedance-2.0/fast',
+      referenceImages: [
+        { url: 'https://example.com/hero.png', role: 'reference', order: 1, source: 'asset' },
+        { url: 'https://example.com/location.png', role: 'reference', order: 2, source: 'asset' },
+      ],
+      options: expect.objectContaining({
+        prompt: expect.stringContaining('seedance fast asset reference block prompt'),
+        duration: 5,
+        aspectRatio: '9:16',
+      }),
+    }))
+  })
+
   it('VIDEO_GROUP: fails explicitly when the edit-first video block has no stored prompt', async () => {
     const processor = workerState.processor
     expect(processor).toBeTruthy()

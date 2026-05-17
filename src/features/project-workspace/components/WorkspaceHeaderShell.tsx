@@ -54,6 +54,7 @@ interface WorkspaceHeaderShellProps {
   capabilityOverrides: CapabilitySelections
   videoRatio: string | null | undefined
   onUpdateConfig: (key: string, value: unknown) => Promise<void>
+  onUpdateConfigPatch: (patch: Record<string, unknown>) => Promise<void>
   globalAssetText: string
   projectName: string
   episodes: EpisodeSummary[]
@@ -90,6 +91,7 @@ export default function WorkspaceHeaderShell({
   capabilityOverrides,
   videoRatio,
   onUpdateConfig,
+  onUpdateConfigPatch,
   globalAssetText,
   projectName,
   episodes,
@@ -108,6 +110,9 @@ export default function WorkspaceHeaderShell({
   const handleCapabilityOverridesChange = useCallback((value: CapabilitySelections) => {
     void onUpdateConfig('capabilityOverrides', value)
   }, [onUpdateConfig])
+  const handleConfigPatch = useCallback((patch: Record<string, unknown>) => {
+    void onUpdateConfigPatch(patch)
+  }, [onUpdateConfigPatch])
 
   return (
     <>
@@ -140,6 +145,7 @@ export default function WorkspaceHeaderShell({
         onAudioModelChange={(value) => { onUpdateConfig('audioModel', value) }}
         onVideoRatioChange={(value) => { onUpdateConfig('videoRatio', value) }}
         onCapabilityOverridesChange={handleCapabilityOverridesChange}
+        onConfigPatch={handleConfigPatch}
       />
 
       <WorldContextModal

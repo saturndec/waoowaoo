@@ -215,6 +215,7 @@ export function useProjectWorkspaceController({
 
   const actionsState = {
     handleUpdateConfig: configActions.handleUpdateConfig,
+    handleUpdateConfigPatch: configActions.handleUpdateConfigPatch,
     handleUpdateEpisode: configActions.handleUpdateEpisode,
   }
 

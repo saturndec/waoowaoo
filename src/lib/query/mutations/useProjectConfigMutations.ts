@@ -80,30 +80,40 @@ export function useCopyProjectAssetFromGlobal(projectId: string) {
  * AI 修改镜头提示词（项目）
  */
 
+type ProjectConfigMutationInput =
+    | { key: string; value: unknown }
+    | { patch: Record<string, unknown> }
+
+function resolveProjectConfigPatch(input: ProjectConfigMutationInput): Record<string, unknown> {
+    if ('patch' in input) return input.patch
+    return { [input.key]: input.value }
+}
+
 export function useUpdateProjectConfig(projectId: string) {
     const queryClient = useQueryClient()
 
     return useMutation({
-        mutationFn: async ({ key, value }: { key: string; value: unknown }) =>
+        mutationFn: async (input: ProjectConfigMutationInput) =>
             await requestJsonWithError(
                 `/api/projects/${projectId}/config`,
                 {
                     method: 'PATCH',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ [key]: value }),
+                    body: JSON.stringify(resolveProjectConfigPatch(input)),
                 },
                 'Failed to update config',
             ),
-        onMutate: async ({ key, value }) => {
+        onMutate: async (input) => {
             const projectQueryKey = queryKeys.projectData(projectId)
             await queryClient.cancelQueries({ queryKey: projectQueryKey })
             const previousProject = queryClient.getQueryData<Project>(projectQueryKey)
+            const patch = resolveProjectConfigPatch(input)
 
             queryClient.setQueryData<Project | undefined>(projectQueryKey, (prev) => {
                 if (!prev) return prev
                 return {
                     ...prev,
-                    [key]: value,
+                    ...patch,
                 }
             })
 

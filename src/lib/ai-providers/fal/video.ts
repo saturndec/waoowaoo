@@ -5,6 +5,7 @@ import { buildFalQueueUrl } from '@/lib/ai-providers/fal/base-url'
 import { requireSelectedModelId } from '@/lib/ai-providers/shared/model-selection'
 import {
   FAL_HAPPY_HORSE_IMAGE_TO_VIDEO_MODEL_ID,
+  FAL_SEEDANCE_2_FAST_VIDEO_MODEL_ID,
   FAL_SEEDANCE_2_VIDEO_MODEL_ID,
 } from '@/lib/ai-providers/fal/models'
 
@@ -48,6 +49,14 @@ type FalHappyHorseVideoPayload = {
   duration?: number
 }
 
+type FalHappyHorseReferenceVideoPayload = {
+  prompt: string
+  image_urls: string[]
+  aspect_ratio?: string
+  resolution?: string
+  duration?: number
+}
+
 type FalSeedance2ImageVideoPayload = {
   prompt: string
   image_url: string
@@ -67,27 +76,40 @@ type FalSeedance2ReferenceVideoPayload = {
   generate_audio?: boolean
 }
 
+type FalSeedance2TextVideoPayload = {
+  prompt: string
+  resolution?: string
+  duration?: string
+  aspect_ratio?: string
+  generate_audio?: boolean
+}
+
 type FalVideoPayload =
   | FalWanVideoPayload
   | FalVeo31VideoPayload
   | FalKlingV25VideoPayload
   | FalKlingV3VideoPayload
   | FalHappyHorseVideoPayload
+  | FalHappyHorseReferenceVideoPayload
   | FalSeedance2ImageVideoPayload
   | FalSeedance2ReferenceVideoPayload
+  | FalSeedance2TextVideoPayload
 
 const FAL_VIDEO_ENDPOINTS: Record<string, string> = {
   'fal-wan25': 'wan/v2.6/image-to-video',
   'fal-veo31': 'fal-ai/veo3.1/fast/image-to-video',
   [FAL_HAPPY_HORSE_IMAGE_TO_VIDEO_MODEL_ID]: FAL_HAPPY_HORSE_IMAGE_TO_VIDEO_MODEL_ID,
   [FAL_SEEDANCE_2_VIDEO_MODEL_ID]: 'bytedance/seedance-2.0/image-to-video',
+  [FAL_SEEDANCE_2_FAST_VIDEO_MODEL_ID]: 'bytedance/seedance-2.0/fast/image-to-video',
   'fal-ai/kling-video/v2.5-turbo/pro/image-to-video': 'fal-ai/kling-video/v2.5-turbo/pro/image-to-video',
   'fal-ai/kling-video/v3/standard/image-to-video': 'fal-ai/kling-video/v3/standard/image-to-video',
   'fal-ai/kling-video/v3/pro/image-to-video': 'fal-ai/kling-video/v3/pro/image-to-video',
 }
 
 const FAL_HAPPY_HORSE_RESOLUTIONS = new Set(['720p', '1080p'])
+const FAL_HAPPY_HORSE_ASPECT_RATIOS = new Set(['16:9', '9:16', '1:1', '4:3', '3:4'])
 const FAL_SEEDANCE_2_RESOLUTIONS = new Set(['480p', '720p', '1080p'])
+const FAL_SEEDANCE_2_FAST_RESOLUTIONS = new Set(['480p', '720p'])
 const FAL_SEEDANCE_2_ASPECT_RATIOS = new Set(['auto', '21:9', '16:9', '4:3', '1:1', '3:4', '9:16'])
 
 function assertHappyHorseVideoOptions(options: FalVideoOptions) {
@@ -99,6 +121,9 @@ function assertHappyHorseVideoOptions(options: FalVideoOptions) {
       throw new Error(`FAL_VIDEO_OPTION_VALUE_UNSUPPORTED: duration=${options.duration}`)
     }
   }
+  if (options.aspectRatio !== undefined && !FAL_HAPPY_HORSE_ASPECT_RATIOS.has(options.aspectRatio)) {
+    throw new Error(`FAL_VIDEO_OPTION_VALUE_UNSUPPORTED: aspectRatio=${options.aspectRatio}`)
+  }
   if (options.generateAudio !== undefined) {
     throw new Error('FAL_VIDEO_OPTION_UNSUPPORTED: generateAudio')
   }
@@ -107,9 +132,47 @@ function assertHappyHorseVideoOptions(options: FalVideoOptions) {
   }
 }
 
-function assertSeedance2VideoOptions(options: FalVideoOptions) {
-  if (options.resolution !== undefined && !FAL_SEEDANCE_2_RESOLUTIONS.has(options.resolution)) {
+function buildHappyHorsePayload(input: {
+  imageUrl: string
+  options: FalVideoOptions
+}): { endpoint: string; payload: FalHappyHorseVideoPayload | FalHappyHorseReferenceVideoPayload } {
+  assertHappyHorseVideoOptions(input.options)
+  const referenceImages = Array.isArray(input.options.referenceImages)
+    ? input.options.referenceImages.filter((url): url is string => typeof url === 'string' && url.trim().length > 0)
+    : []
+  const uniqueReferences = Array.from(new Set([input.imageUrl, ...referenceImages]))
+
+  if (uniqueReferences.length > 1) {
+    return {
+      endpoint: 'alibaba/happy-horse/reference-to-video',
+      payload: {
+        prompt: input.options.prompt || '',
+        image_urls: uniqueReferences.slice(0, 9),
+        ...(input.options.aspectRatio ? { aspect_ratio: input.options.aspectRatio } : {}),
+        ...(input.options.resolution ? { resolution: input.options.resolution } : {}),
+        ...(typeof input.options.duration === 'number' ? { duration: input.options.duration } : {}),
+      },
+    }
+  }
+
+  return {
+    endpoint: 'alibaba/happy-horse/image-to-video',
+    payload: {
+      image_url: input.imageUrl,
+      ...(input.options.prompt ? { prompt: input.options.prompt } : {}),
+      ...(input.options.resolution ? { resolution: input.options.resolution } : {}),
+      ...(typeof input.options.duration === 'number' ? { duration: input.options.duration } : {}),
+    },
+  }
+}
+
+function assertSeedance2VideoOptions(options: FalVideoOptions, input: { fast: boolean; textOnly: boolean }) {
+  const resolutions = input.fast ? FAL_SEEDANCE_2_FAST_RESOLUTIONS : FAL_SEEDANCE_2_RESOLUTIONS
+  if (options.resolution !== undefined && !resolutions.has(options.resolution)) {
     throw new Error(`FAL_VIDEO_OPTION_VALUE_UNSUPPORTED: resolution=${options.resolution}`)
+  }
+  if (!input.fast && input.textOnly && options.resolution === '1080p') {
+    throw new Error('FAL_VIDEO_OPTION_VALUE_UNSUPPORTED: resolution=1080p_for_text_to_video')
   }
   if (options.duration !== undefined) {
     if (!Number.isInteger(options.duration) || options.duration < 4 || options.duration > 15) {
@@ -124,9 +187,10 @@ function assertSeedance2VideoOptions(options: FalVideoOptions) {
 function buildSeedance2Payload(input: {
   imageUrl: string
   options: FalVideoOptions
-}): { endpoint: string; payload: FalSeedance2ImageVideoPayload | FalSeedance2ReferenceVideoPayload } {
-  assertSeedance2VideoOptions(input.options)
+  fast: boolean
+}): { endpoint: string; payload: FalSeedance2ImageVideoPayload | FalSeedance2ReferenceVideoPayload | FalSeedance2TextVideoPayload } {
   const prompt = input.options.prompt || ''
+  const endpointPrefix = input.fast ? 'bytedance/seedance-2.0/fast' : 'bytedance/seedance-2.0'
   const sharedOptions = {
     ...(input.options.resolution ? { resolution: input.options.resolution } : {}),
     ...(typeof input.options.duration === 'number' ? { duration: String(input.options.duration) } : {}),
@@ -136,14 +200,22 @@ function buildSeedance2Payload(input: {
   const referenceImages = Array.isArray(input.options.referenceImages)
     ? input.options.referenceImages.filter((url): url is string => typeof url === 'string' && url.trim().length > 0)
     : []
-  const uniqueReferences = Array.from(new Set([input.imageUrl, ...referenceImages]))
+  const inputImageUrl = typeof input.imageUrl === 'string' ? input.imageUrl.trim() : ''
+  const uniqueReferences = Array.from(new Set([
+    ...(inputImageUrl ? [inputImageUrl] : []),
+    ...referenceImages,
+  ]))
+  assertSeedance2VideoOptions(input.options, { fast: input.fast, textOnly: uniqueReferences.length === 0 })
 
   if (input.options.lastFrameImageUrl) {
+    if (!inputImageUrl) {
+      throw new Error('FAL_VIDEO_OPTION_VALUE_UNSUPPORTED: lastFrameImageUrl_without_imageUrl')
+    }
     return {
-      endpoint: 'bytedance/seedance-2.0/image-to-video',
+      endpoint: `${endpointPrefix}/image-to-video`,
       payload: {
         prompt,
-        image_url: input.imageUrl,
+        image_url: inputImageUrl,
         end_image_url: input.options.lastFrameImageUrl,
         ...sharedOptions,
       },
@@ -152,7 +224,7 @@ function buildSeedance2Payload(input: {
 
   if (uniqueReferences.length > 1) {
     return {
-      endpoint: 'bytedance/seedance-2.0/reference-to-video',
+      endpoint: `${endpointPrefix}/reference-to-video`,
       payload: {
         prompt,
         image_urls: uniqueReferences.slice(0, 9),
@@ -161,11 +233,26 @@ function buildSeedance2Payload(input: {
     }
   }
 
+  if (uniqueReferences.length === 0) {
+    return {
+      endpoint: `${endpointPrefix}/text-to-video`,
+      payload: {
+        prompt,
+        ...sharedOptions,
+      },
+    }
+  }
+
+  const primaryReference = uniqueReferences[0]
+  if (!primaryReference) {
+    throw new Error('FAL_VIDEO_REFERENCE_IMAGE_REQUIRED')
+  }
+
   return {
-    endpoint: 'bytedance/seedance-2.0/image-to-video',
+    endpoint: `${endpointPrefix}/image-to-video`,
     payload: {
       prompt,
-      image_url: input.imageUrl,
+      image_url: primaryReference,
       ...sharedOptions,
     },
   }
@@ -229,18 +316,30 @@ export async function executeFalVideoGeneration(input: AiProviderVideoExecutionC
       }
       break
     case FAL_HAPPY_HORSE_IMAGE_TO_VIDEO_MODEL_ID:
-      assertHappyHorseVideoOptions(options)
-      payload = {
-        image_url: input.imageUrl,
-        ...(input.options?.prompt ? { prompt: input.options.prompt } : {}),
-        ...(resolution ? { resolution } : {}),
-        ...(typeof duration === 'number' ? { duration } : {}),
+      {
+        const happyHorseRequest = buildHappyHorsePayload({
+          imageUrl: input.imageUrl,
+          options,
+        })
+        endpoint = happyHorseRequest.endpoint
+        payload = happyHorseRequest.payload
       }
       break
     case FAL_SEEDANCE_2_VIDEO_MODEL_ID: {
       const seedance2Request = buildSeedance2Payload({
         imageUrl: input.imageUrl,
         options,
+        fast: false,
+      })
+      endpoint = seedance2Request.endpoint
+      payload = seedance2Request.payload
+      break
+    }
+    case FAL_SEEDANCE_2_FAST_VIDEO_MODEL_ID: {
+      const seedance2Request = buildSeedance2Payload({
+        imageUrl: input.imageUrl,
+        options,
+        fast: true,
       })
       endpoint = seedance2Request.endpoint
       payload = seedance2Request.payload

@@ -29,6 +29,14 @@ export function useWorkspaceConfigActions({
     }
   }, [updateProjectConfig])
 
+  const handleUpdateConfigPatch = useCallback(async (patch: Record<string, unknown>) => {
+    try {
+      await updateProjectConfig({ patch })
+    } catch (error: unknown) {
+      _ulogError('Update config patch error:', error)
+    }
+  }, [updateProjectConfig])
+
   const handleUpdateEpisode = useCallback(async (key: string, value: unknown) => {
     if (!episodeId) {
       _ulogError('No episode selected')
@@ -48,6 +56,7 @@ export function useWorkspaceConfigActions({
 
   return {
     handleUpdateConfig,
+    handleUpdateConfigPatch,
     handleUpdateEpisode,
     getProjectStoryboardStats,
   }
