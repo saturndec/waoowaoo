@@ -53,6 +53,26 @@ describe('workspace node auto layout', () => {
     expect(repairedDragged && repairedNeighbor ? workspaceCanvasNodesOverlap(repairedDragged, repairedNeighbor) : true).toBe(false)
   })
 
+  it('repairs even a one-pixel edge overlap', () => {
+    const dragged = createNode({ id: 'dragged', x: 100, y: 100 })
+    const neighbor = createNode({ id: 'neighbor', x: 199, y: 100 })
+
+    expect(workspaceCanvasNodesOverlap(dragged, neighbor)).toBe(true)
+
+    const repaired = repairWorkspaceNodeOverlapsNearMovedNodes(
+      [dragged, neighbor],
+      new Set(['dragged']),
+      { gap: 24 },
+    )
+
+    const repairedDragged = repaired.find((node) => node.id === 'dragged')
+    const repairedNeighbor = repaired.find((node) => node.id === 'neighbor')
+
+    expect(repairedDragged?.position).toEqual({ x: 100, y: 100 })
+    expect(repairedNeighbor?.position).toEqual({ x: 224, y: 100 })
+    expect(repairedDragged && repairedNeighbor ? workspaceCanvasNodesOverlap(repairedDragged, repairedNeighbor) : true).toBe(false)
+  })
+
   it('pushes only the local collision chain when a neighbor lands on another card', () => {
     const dragged = createNode({ id: 'dragged', x: 100, y: 100 })
     const firstNeighbor = createNode({ id: 'first-neighbor', x: 150, y: 100 })

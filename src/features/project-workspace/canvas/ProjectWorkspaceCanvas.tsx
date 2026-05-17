@@ -449,12 +449,13 @@ function ProjectWorkspaceCanvasContent({ onAssistantSelectionChange, editScriptP
   }, [])
 
   const handleNodeDragStop = useCallback<OnNodeDrag<WorkspaceCanvasFlowNode>>((_event, node, draggedNodes) => {
-    const movedNodeIds = new Set<string>([
-      node.id,
-      ...draggedNodes.map((draggedNode) => draggedNode.id),
-    ])
+    const movedNodesById = new Map<string, WorkspaceCanvasFlowNode>(
+      [node, ...draggedNodes].map((movedNode) => [movedNode.id, movedNode]),
+    )
+    const movedNodeIds = new Set(movedNodesById.keys())
+    const currentNodes = reactFlow.getNodes().map((currentNode) => movedNodesById.get(currentNode.id) ?? currentNode)
     const repairedNodes = attachNodeUiState(
-      repairWorkspaceNodeOverlapsNearMovedNodes(reactFlow.getNodes(), movedNodeIds),
+      repairWorkspaceNodeOverlapsNearMovedNodes(currentNodes, movedNodeIds),
     )
     setNodes(repairedNodes)
     persistCurrentLayoutSafely(repairedNodes)
