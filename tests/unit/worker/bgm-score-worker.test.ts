@@ -199,7 +199,7 @@ describe('bgm score worker', () => {
     prismaMock.videoEditorProject.findUnique.mockResolvedValue({ projectData: null })
   })
 
-  it('fails explicitly when the video timeline is incomplete', async () => {
+  it('generates BGM from the scheduled video group timeline before video media exists', async () => {
     mockReadyProject()
     prismaMock.projectPanel.findMany.mockResolvedValue([
       {
@@ -221,13 +221,53 @@ describe('bgm score worker', () => {
         },
       },
     ])
+    prismaMock.projectVideoGroup.findMany.mockResolvedValue([
+      {
+        id: 'group-1',
+        gridMode: '2x2',
+        shotNumbers: [1],
+        durationSec: 3,
+        status: 'processing',
+        prompt: 'group prompt',
+        videoUrl: null,
+        videoMedia: null,
+      },
+    ])
+    executeAiTextStepMock.mockResolvedValue({ text: buildValidPlanText() })
+    generateMusicMock.mockResolvedValue({
+      success: true,
+      audioBase64: Buffer.from('draft-bgm').toString('base64'),
+      audioMimeType: 'audio/mpeg',
+    })
+
+    const { handleBgmScoreGenerateTask } = await import('@/lib/bgm-score/generate')
+    const result = await handleBgmScoreGenerateTask(buildJob({
+      episodeId: 'episode-1',
+      musicModel: 'google::lyria-3-pro-preview',
+    }))
+
+    expect(result).toMatchObject({
+      episodeId: 'episode-1',
+      mediaId: 'media-mix',
+      audioUrl: '/m/bgm-mix',
+    })
+    expect(executeAiTextStepMock).toHaveBeenCalledTimes(1)
+    const planPrompt = String(executeAiTextStepMock.mock.calls[0]?.[0]?.messages?.[0]?.content)
+    expect(planPrompt).toContain('"sourceKind": "videoGroup"')
+    expect(planPrompt).toContain('"groupId": "group-1"')
+    expect(generateMusicMock).toHaveBeenCalledTimes(1)
+  })
+
+  it('fails explicitly when no schedulable video timeline exists', async () => {
+    mockReadyProject()
+    prismaMock.projectPanel.findMany.mockResolvedValue([])
     prismaMock.projectVideoGroup.findMany.mockResolvedValue([])
 
     const { handleBgmScoreGenerateTask } = await import('@/lib/bgm-score/generate')
     await expect(handleBgmScoreGenerateTask(buildJob({
       episodeId: 'episode-1',
       musicModel: 'google::lyria-3-pro-preview',
-    }))).rejects.toThrow('BGM_SCORE_VIDEO_TIMELINE_INCOMPLETE:panel-1')
+    }))).rejects.toThrow('BGM_SCORE_VIDEO_TIMELINE_INCOMPLETE')
 
     expect(executeAiTextStepMock).not.toHaveBeenCalled()
     expect(generateMusicMock).not.toHaveBeenCalled()

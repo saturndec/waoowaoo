@@ -132,14 +132,11 @@ async function buildEditScript(episodeId: string): Promise<FinalRenderEditScript
   }
 }
 
-function ensureCompleteTimeline(clips: readonly FinalRenderClipPlan[]): void {
+function ensureSchedulableTimeline(clips: readonly FinalRenderClipPlan[]): void {
   if (clips.length === 0) throw new Error('BGM_SCORE_VIDEO_TIMELINE_INCOMPLETE')
-  const missingClip = clips.find((clip) =>
-    typeof clip.source === 'string'
-      ? !clip.source.trim()
-      : !readString(clip.source.url) && !readString(clip.source.storageKey))
-  if (missingClip) {
-    throw new Error(`BGM_SCORE_VIDEO_TIMELINE_INCOMPLETE:${missingClip.groupId ?? missingClip.panelId}`)
+  const invalidClip = clips.find((clip) => !Number.isFinite(clip.durationSeconds) || clip.durationSeconds <= 0)
+  if (invalidClip) {
+    throw new Error(`BGM_SCORE_VIDEO_TIMELINE_INCOMPLETE:${invalidClip.groupId ?? invalidClip.panelId}`)
   }
 }
 
@@ -275,7 +272,7 @@ export async function handleBgmScoreGenerateTask(job: Job<TaskJobData>) {
     if (!analysisModel) throw new Error('BGM_SCORE_ANALYSIS_MODEL_REQUIRED')
 
     const clips = buildFinalRenderClips({ panels, videoGroups, editScript })
-    ensureCompleteTimeline(clips)
+    ensureSchedulableTimeline(clips)
     editScriptId = editScript.id
     durationSeconds = clips.reduce((total, clip) => total + clip.durationSeconds, 0)
     signature = timelineSignature(clips)
