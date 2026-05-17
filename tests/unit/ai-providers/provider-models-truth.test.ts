@@ -131,7 +131,7 @@ describe('provider models truth', () => {
       ...VIDU_BUILTIN_PRICING_CATALOG_ENTRIES,
     ]
 
-    const apiTypes = new Set(['text', 'image', 'video', 'voice', 'voice-design', 'lip-sync'])
+    const apiTypes = new Set(['text', 'image', 'video', 'music', 'voice', 'voice-design', 'lip-sync'])
 
     for (const entry of pricingEntries) {
       if (!isRecord(entry)) {
@@ -189,6 +189,7 @@ describe('provider models truth', () => {
     expect(ARK_BUILTIN_CAPABILITY_CATALOG_ENTRIES.find((entry) => entry.modelId === 'doubao-seedance-2-0-260128')?.capabilities?.video?.resolutionOptions).toEqual(['480p', '720p'])
     expect(BAILIAN_BUILTIN_CAPABILITY_CATALOG_ENTRIES.find((entry) => entry.modelId === 'wan2.7-i2v')?.capabilities?.video?.generationModeOptions).toEqual(['normal', 'firstlastframe'])
     expect(FAL_BUILTIN_CAPABILITY_CATALOG_ENTRIES.find((entry) => entry.modelId === 'banana-2')?.capabilities?.image?.resolutionOptions).toEqual(['1K', '2K', '4K'])
+    expect(FAL_BUILTIN_CAPABILITY_CATALOG_ENTRIES.find((entry) => entry.modelId === 'gpt-image-2')?.capabilities?.image?.resolutionOptions).toContain('landscape_16_9')
     expect(GOOGLE_BUILTIN_CAPABILITY_CATALOG_ENTRIES.find((entry) => entry.modelId === 'gemini-3-pro-image-preview')?.capabilities?.image?.resolutionOptions).toEqual(['1K', '2K', '4K'])
     expect(GOOGLE_BUILTIN_CAPABILITY_CATALOG_ENTRIES.find((entry) => entry.modelId === 'gemini-3.1-flash-image-preview')?.capabilities?.image?.resolutionOptions).toEqual(['0.5K', '1K', '2K', '4K'])
     expect(GOOGLE_BUILTIN_CAPABILITY_CATALOG_ENTRIES.find((entry) => entry.modelId === 'gemini-2.5-flash-image-preview')?.capabilities?.image?.resolutionOptions).toEqual(['1K'])
@@ -314,6 +315,18 @@ describe('provider models truth', () => {
       options: { resolution: '8K' },
       context: 'fal-image',
     })).toThrow('AI_OPTION_INVALID:fal-image:resolution:unsupported_value=8K')
+
+    const falGptImage = falAdapter.image?.describe(mediaSelection({
+      provider: 'fal',
+      modelId: 'gpt-image-2',
+      modelKey: 'fal::gpt-image-2',
+    }))
+    expect(falGptImage).toBeDefined()
+    expectValidOptions(falGptImage!.optionSchema, {
+      resolution: 'portrait_16_9',
+      outputFormat: 'png',
+      quality: 'high',
+    }, 'fal-gpt-image-2')
 
     const googleImage = googleAdapter.image?.describe(mediaSelection({
       provider: 'google',

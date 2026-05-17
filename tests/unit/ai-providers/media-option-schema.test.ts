@@ -92,6 +92,34 @@ describe('media adapter option schema', () => {
     })).toThrow('AI_OPTION_INVALID:unit:resolution:unsupported_value=8K')
   })
 
+  it('validates Fal GPT Image 2 image size and quality options before provider execution', () => {
+    const descriptor = falAdapter.image?.describe(mediaSelection({
+      provider: 'fal',
+      modelId: 'gpt-image-2',
+      modelKey: 'fal::gpt-image-2',
+    }))
+    expect(descriptor).toBeDefined()
+
+    expect(() => validateDescriptorOptions({
+      schema: descriptor!.optionSchema,
+      options: {
+        resolution: 'landscape_16_9',
+        quality: 'medium',
+        outputFormat: 'webp',
+      },
+    })).not.toThrow()
+    expect(() => validateDescriptorOptions({
+      schema: descriptor!.optionSchema,
+      options: { resolution: '4K' },
+      context: 'fal-gpt-image-2',
+    })).toThrow('AI_OPTION_INVALID:fal-gpt-image-2:resolution:unsupported_value=4K')
+    expect(() => validateDescriptorOptions({
+      schema: descriptor!.optionSchema,
+      options: { quality: 'standard' },
+      context: 'fal-gpt-image-2',
+    })).toThrow('AI_OPTION_INVALID:fal-gpt-image-2:quality:unsupported_value=standard')
+  })
+
   it('validates Google Lyria music generation options before provider execution', () => {
     const descriptor = googleAdapter.music?.describe(mediaSelection({
       provider: 'google',
