@@ -20,15 +20,16 @@ export default function TaskStatusOverlay({ state, className }: TaskStatusOverla
       className={[
         'absolute inset-0 flex flex-col items-center justify-center',
         'bg-[var(--glass-overlay)]',
+        state.isError ? '' : 'workspace-node-loading-surface',
         className || '',
       ].join(' ').trim()}
     >
       {state.isError ? (
         <AppIcon name="alertSolid" className="h-7 w-7 text-[var(--glass-tone-danger-fg)]" />
       ) : (
-        <AppIcon name="loader" className="h-7 w-7 animate-spin text-white" />
+        <AppIcon name="loader" className="relative z-10 h-7 w-7 animate-spin text-white" />
       )}
-      <span className="mt-2 text-xs text-white">{label}</span>
+      <span className="relative z-10 mt-2 text-xs text-white">{label}</span>
     </div>
   )
 }

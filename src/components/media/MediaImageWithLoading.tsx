@@ -62,7 +62,7 @@ export function MediaImageWithLoading({
       {shouldShowSkeleton && (
         <div
           className={mergeClassNames(
-            'pointer-events-none absolute inset-0 z-0 animate-pulse bg-[var(--glass-bg-muted)]',
+            'workspace-node-loading-surface pointer-events-none absolute inset-0 z-0 bg-[var(--glass-bg-muted)]',
             skeletonClassName,
           )}
         />

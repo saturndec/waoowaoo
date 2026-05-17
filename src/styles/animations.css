@@ -169,26 +169,56 @@
 
 @keyframes workspaceNodeLightSweep {
   0% {
-    transform: translateX(-140%) skewX(-14deg);
+    transform: translateX(-160%) skewX(-16deg);
   }
 
   100% {
-    transform: translateX(240%) skewX(-14deg);
+    transform: translateX(260%) skewX(-16deg);
   }
 }
 
 .workspace-node-loading-surface {
   position: relative;
   overflow: hidden;
+  isolation: isolate;
+  background-image:
+    linear-gradient(135deg, rgba(224, 242, 254, 0.32), transparent 42%, rgba(255, 255, 255, 0.2));
+  background-blend-mode: screen;
+  box-shadow:
+    inset 0 0 0 1px rgba(56, 189, 248, 0.28),
+    inset 0 0 44px rgba(14, 165, 233, 0.16);
 }
 
+.workspace-node-loading-surface::before,
 .workspace-node-loading-surface::after {
   content: '';
   position: absolute;
-  inset: -20%;
-  width: 44%;
-  z-index: 8;
   pointer-events: none;
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.78), transparent);
-  animation: workspaceNodeLightSweep 1.45s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+
+.workspace-node-loading-surface::before {
+  inset: 0;
+  z-index: 7;
+  background:
+    linear-gradient(90deg, rgba(14, 165, 233, 0.08), transparent 34%, rgba(14, 165, 233, 0.1)),
+    repeating-linear-gradient(135deg, rgba(255, 255, 255, 0.08) 0 1px, transparent 1px 9px);
+}
+
+.workspace-node-loading-surface::after {
+  inset: -24%;
+  width: 62%;
+  z-index: 8;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(125, 211, 252, 0.28) 28%,
+    rgba(255, 255, 255, 0.98) 50%,
+    rgba(125, 211, 252, 0.34) 72%,
+    transparent 100%
+  );
+  filter: blur(0.5px);
+  opacity: 0.96;
+  mix-blend-mode: screen;
+  box-shadow: 0 0 28px rgba(56, 189, 248, 0.42);
+  animation: workspaceNodeLightSweep 1.08s cubic-bezier(0.35, 0, 0.2, 1) infinite;
 }
