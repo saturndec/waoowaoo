@@ -26,6 +26,7 @@ import type {
   EditScreenplayPayload,
   EditScriptPayload,
   EditScriptShot,
+  EditScriptVideoBlock,
 } from './types'
 import { designEditAssetRequirements } from './asset-design'
 
@@ -187,6 +188,8 @@ interface PanelDraft {
   readonly videoPrompt: string
   readonly photographyRules: string
   readonly actingNotes: string | null
+  readonly sourceShotNumber: number
+  readonly sourceVideoBlockId: string
 }
 
 interface StoryboardPanelTaskTarget {
@@ -194,6 +197,24 @@ interface StoryboardPanelTaskTarget {
   readonly panelIndex: number
   readonly imageUrl: string | null
   readonly candidateImages: string | null
+}
+
+interface EditStoryboardPanelSource {
+  readonly sourceType: 'editScriptShot'
+  readonly editScriptId: string
+  readonly sourceShotNumber: number
+  readonly sourceVideoBlockId: string
+  readonly sourceVideoBlockIndex: number
+  readonly sourceVideoBlockKind: EditScriptVideoBlock['kind']
+}
+
+interface EditStoryboardVideoBlockBinding {
+  readonly sourceVideoBlockId: string
+  readonly blockIndex: number
+  readonly kind: EditScriptVideoBlock['kind']
+  readonly shotNumbers: readonly number[]
+  readonly panelNumbers: readonly number[]
+  readonly panelIndexes: readonly number[]
 }
 
 function stringifyForPrompt(value: unknown): string {
@@ -1376,6 +1397,52 @@ function buildEditStoryboardMarker(editScriptId: string): string {
   })
 }
 
+function buildEditStoryboardVideoBlockId(editScriptId: string, blockIndex: number): string {
+  return `${editScriptId}:videoBlock:${blockIndex + 1}`
+}
+
+function findVideoBlockForShot(
+  editScript: EditScriptPayload,
+  shotNumber: number,
+): { readonly block: EditScriptVideoBlock; readonly blockIndex: number } {
+  const blockIndex = editScript.videoBlocks.findIndex((block) => block.shotNumbers.includes(shotNumber))
+  if (blockIndex < 0) throw new Error(`EDIT_SCRIPT_STORYBOARD_VIDEO_BLOCK_MISSING:${shotNumber}`)
+  const block = editScript.videoBlocks[blockIndex]
+  if (!block) throw new Error(`EDIT_SCRIPT_STORYBOARD_VIDEO_BLOCK_MISSING:${shotNumber}`)
+  return { block, blockIndex }
+}
+
+function editStoryboardPanelSourceToJson(source: EditStoryboardPanelSource): string {
+  return JSON.stringify({
+    source: 'edit_script',
+    ...source,
+  })
+}
+
+function buildEditStoryboardVideoBlockBindings(input: {
+  readonly editScript: EditScriptPayload
+  readonly panelDrafts: readonly PanelDraft[]
+}): readonly EditStoryboardVideoBlockBinding[] {
+  const draftByShotNumber = new Map(input.panelDrafts.map((draft) => [draft.sourceShotNumber, draft]))
+  const editScriptId = input.editScript.id
+  if (!editScriptId) throw new Error('EDIT_SCRIPT_ID_REQUIRED')
+  return input.editScript.videoBlocks.map((block, blockIndex) => {
+    const drafts = block.shotNumbers.map((shotNumber) => {
+      const draft = draftByShotNumber.get(shotNumber)
+      if (!draft) throw new Error(`EDIT_SCRIPT_STORYBOARD_PANEL_DRAFT_MISSING:${shotNumber}`)
+      return draft
+    })
+    return {
+      sourceVideoBlockId: buildEditStoryboardVideoBlockId(editScriptId, blockIndex),
+      blockIndex,
+      kind: block.kind,
+      shotNumbers: block.shotNumbers,
+      panelNumbers: drafts.map((draft) => draft.panelNumber),
+      panelIndexes: drafts.map((draft) => draft.panelIndex),
+    }
+  })
+}
+
 async function assertStoryboardImageModelReady(input: {
   readonly projectId: string
   readonly userId: string
@@ -1458,25 +1525,60 @@ async function buildCharacterRefsByRequirementId(
 function buildShotPanelDrafts(input: {
   readonly editScript: EditScriptPayload
   readonly characterRefsByRequirementId: ReadonlyMap<string, StoryboardCharacterRef>
+  readonly locale: Locale
 }): PanelDraft[] {
   let cursor = 0
   return input.editScript.shots.map((shot, index) => {
     const shotNumber = shot.shotNumber
-    const characterRefs = input.editScript.requirements
+    const characterRequirements = input.editScript.requirements
       .filter((requirement) => requirement.kind === 'character' && requirement.id && requirement.shotNumbers.includes(shotNumber))
-      .map((requirement) => input.characterRefsByRequirementId.get(requirement.id!))
+    const characterRefs = characterRequirements
+      .map((requirement) => requirement.id ? input.characterRefsByRequirementId.get(requirement.id) : undefined)
       .filter((reference): reference is StoryboardCharacterRef => Boolean(reference))
     const location = input.editScript.requirements
       .find((requirement) => requirement.kind === 'location' && requirement.shotNumbers.includes(shotNumber))
+    const { block, blockIndex } = findVideoBlockForShot(input.editScript, shotNumber)
+    const editScriptId = input.editScript.id
+    if (!editScriptId) throw new Error('EDIT_SCRIPT_ID_REQUIRED')
+    const sourceVideoBlockId = buildEditStoryboardVideoBlockId(editScriptId, blockIndex)
     const srtStart = cursor
     const srtEnd = cursor + shot.durationSec
     cursor = srtEnd
-    const imagePrompt = [
-      shot.visualAction,
-      `人物/场景：${shot.charactersAndScene}`,
-      `镜头方式：${shot.camera}`,
-      `视频提示词：${shot.videoPrompt}`,
-    ].join('\n')
+    const imagePrompt = buildAiPrompt({
+      promptId: AI_PROMPT_IDS.EDIT_SCRIPT_STORYBOARD_PANEL,
+      locale: input.locale,
+      variables: {
+        shot_json: stringifyForPrompt(shot),
+        video_block_json: stringifyForPrompt({
+          sourceVideoBlockId,
+          blockIndex,
+          kind: block.kind,
+          shotNumbers: block.shotNumbers,
+          gridMode: block.gridMode ?? null,
+          reason: block.reason,
+          prompt: block.prompt,
+        }),
+        character_assets_json: stringifyForPrompt(characterRequirements.map((requirement) => ({
+          requirementId: requirement.id,
+          name: requirement.name,
+          description: requirement.description,
+          reference: requirement.id ? input.characterRefsByRequirementId.get(requirement.id) ?? null : null,
+        }))),
+        location_assets_json: stringifyForPrompt(location ? [{
+          requirementId: location.id ?? null,
+          name: location.name,
+          description: location.description,
+        }] : []),
+      },
+    })
+    const source: EditStoryboardPanelSource = {
+      sourceType: 'editScriptShot',
+      editScriptId,
+      sourceShotNumber: shotNumber,
+      sourceVideoBlockId,
+      sourceVideoBlockIndex: blockIndex,
+      sourceVideoBlockKind: block.kind,
+    }
 
     return {
       panelIndex: index,
@@ -1493,14 +1595,10 @@ function buildShotPanelDrafts(input: {
       duration: shot.durationSec,
       imagePrompt,
       videoPrompt: shot.videoPrompt,
-      photographyRules: JSON.stringify({
-        source: 'edit_script',
-        editScriptId: input.editScript.id,
-        shotNumber,
-        camera: shot.camera,
-        sound: shot.sound,
-      }),
+      photographyRules: editStoryboardPanelSourceToJson(source),
       actingNotes: null,
+      sourceShotNumber: shotNumber,
+      sourceVideoBlockId,
     }
   })
 }
@@ -1514,6 +1612,25 @@ async function upsertEditScriptStoryboardPanels(input: {
   if (!editScriptId || !episodeId) throw new Error('EDIT_SCRIPT_STORYBOARD_INPUT_INVALID')
   const marker = buildEditStoryboardMarker(editScriptId)
   const markerNeedle = `"editScriptId":"${editScriptId}"`
+  const videoBlockBindings = buildEditStoryboardVideoBlockBindings({
+    editScript: input.editScript,
+    panelDrafts: input.panelDrafts,
+  })
+  const storyboardTextJson = JSON.stringify({
+    source: 'edit_script',
+    sourceType: 'editScriptStoryboard',
+    editScriptId,
+    title: input.editScript.title,
+    shots: input.editScript.shots,
+    videoBlocks: videoBlockBindings,
+  })
+  const photographyPlan = JSON.stringify({
+    source: 'edit_script',
+    sourceType: 'editScriptStoryboard',
+    editScriptId,
+    mode: 'pure_prompt_extraction',
+    rules: 'Use edit-script shot fields and parent videoBlocks as the source of truth for storyboard panel prompts. Do not apply spatial continuity correction in this stage.',
+  })
   const existing = await prisma.projectStoryboard.findFirst({
     where: {
       episodeId,
@@ -1531,7 +1648,42 @@ async function upsertEditScriptStoryboardPanels(input: {
     },
   })
 
-  const storyboard = existing ?? await prisma.$transaction(async (tx) => {
+  const storyboard = existing
+    ? await prisma.$transaction(async (tx) => {
+        await tx.projectClip.update({
+          where: { id: existing.clipId },
+          data: {
+            end: input.editScript.durationSec,
+            duration: input.editScript.durationSec,
+            summary: input.editScript.title,
+            location: input.editScript.requirements
+              .filter((requirement) => requirement.kind === 'location')
+              .map((requirement) => requirement.name)
+              .join('、') || null,
+            characters: JSON.stringify(input.editScript.requirements
+              .filter((requirement) => requirement.kind === 'character')
+              .map((requirement) => requirement.name)),
+            content: input.editScript.logline || input.editScript.userPrompt || input.editScript.title,
+            shotCount: input.editScript.shotCount,
+            screenplay: marker,
+          },
+        })
+        return await tx.projectStoryboard.update({
+          where: { id: existing.id },
+          data: {
+            panelCount: input.panelDrafts.length,
+            storyboardTextJson,
+            photographyPlan,
+          },
+          include: {
+            clip: true,
+            panels: {
+              orderBy: { panelIndex: 'asc' },
+            },
+          },
+        })
+      })
+    : await prisma.$transaction(async (tx) => {
     const clip = await tx.projectClip.create({
       data: {
         episodeId,
@@ -1557,17 +1709,8 @@ async function upsertEditScriptStoryboardPanels(input: {
         episodeId,
         clipId: clip.id,
         panelCount: input.panelDrafts.length,
-        storyboardTextJson: JSON.stringify({
-          source: 'edit_script',
-          editScriptId,
-          title: input.editScript.title,
-          shots: input.editScript.shots,
-        }),
-        photographyPlan: JSON.stringify({
-        source: 'edit_script',
-        editScriptId,
-        rules: 'Use edit-script block-first shot fields as the source of truth for storyboard panels.',
-      }),
+        storyboardTextJson,
+        photographyPlan,
       },
       include: {
         clip: true,
@@ -1582,11 +1725,31 @@ async function upsertEditScriptStoryboardPanels(input: {
   for (const draft of input.panelDrafts) {
     const existingPanel = existingPanels.get(draft.panelIndex)
     if (existingPanel) {
+      const panel = await prisma.projectPanel.update({
+        where: { id: existingPanel.id },
+        data: {
+          panelNumber: draft.panelNumber,
+          shotType: draft.shotType,
+          cameraMove: draft.cameraMove,
+          description: draft.description,
+          location: draft.location,
+          characters: draft.characters,
+          props: draft.props,
+          srtSegment: draft.srtSegment,
+          srtStart: draft.srtStart,
+          srtEnd: draft.srtEnd,
+          duration: draft.duration,
+          imagePrompt: draft.imagePrompt,
+          videoPrompt: draft.videoPrompt,
+          photographyRules: draft.photographyRules,
+          actingNotes: draft.actingNotes,
+        },
+      })
       panelTargets.push({
-        id: existingPanel.id,
-        panelIndex: existingPanel.panelIndex,
-        imageUrl: existingPanel.imageUrl,
-        candidateImages: existingPanel.candidateImages,
+        id: panel.id,
+        panelIndex: panel.panelIndex,
+        imageUrl: panel.imageUrl,
+        candidateImages: panel.candidateImages,
       })
       continue
     }
@@ -1650,6 +1813,7 @@ export async function generateProjectEditScriptStoryboard(input: GenerateEditScr
   const panelDrafts = buildShotPanelDrafts({
     editScript,
     characterRefsByRequirementId,
+    locale: input.locale,
   })
   const storyboard = await upsertEditScriptStoryboardPanels({
     editScript,

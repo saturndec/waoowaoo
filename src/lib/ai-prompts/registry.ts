@@ -225,6 +225,15 @@ export const AI_PROMPT_CATALOG: Record<AiPromptId, AiPromptCatalogEntry> = {
     pathStem: 'edit-script/asset-extract',
     variableKeys: ['edit_script_json'],
   },
+  [AI_PROMPT_IDS.EDIT_SCRIPT_STORYBOARD_PANEL]: {
+    pathStem: 'edit-script/storyboard-panel',
+    variableKeys: [
+      'shot_json',
+      'video_block_json',
+      'character_assets_json',
+      'location_assets_json',
+    ],
+  },
 }
 
 const OPERATION_TO_AI_PROMPT_ID = new Map<string, AiPromptId>()

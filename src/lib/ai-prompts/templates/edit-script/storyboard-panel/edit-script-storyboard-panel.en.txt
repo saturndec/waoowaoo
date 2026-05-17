@@ -1,0 +1,19 @@
+Convert the edit-first shot below into one storyboard panel image prompt. Generate only one frame for this shot. Do not expand the story, add extra spatial-continuity rules, or force characters that are not present in the shot data.
+
+[Shot Data]
+{shot_json}
+
+[Parent Video Block]
+{video_block_json}
+
+[Character Assets]
+{character_assets_json}
+
+[Location Assets]
+{location_assets_json}
+
+Image generation requirements:
+- Treat shot.videoPrompt as the core visual intent.
+- Preserve the action, characters, scene, and camera information from shot.visualAction, shot.charactersAndScene, and shot.camera.
+- Use the video block only to understand the edit segment, rhythm, and continuous action. Do not let it override the individual shot.
+- This is a cinematic storyboard image. Do not include subtitles, words, numbers, labels, watermarks, or split-screen layouts.

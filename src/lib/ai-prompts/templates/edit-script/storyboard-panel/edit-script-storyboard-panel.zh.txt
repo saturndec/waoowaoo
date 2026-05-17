@@ -1,0 +1,19 @@
+请把以下剪辑镜头转换为单张分镜图画面。只生成这个镜头对应的一张画面，不扩写剧情，不补充额外空间一致性规则，不强制增加未出现在镜头信息里的角色。
+
+【镜头数据】
+{shot_json}
+
+【所属视频段】
+{video_block_json}
+
+【角色资产】
+{character_assets_json}
+
+【场景资产】
+{location_assets_json}
+
+画面生成要求：
+- 以 shot.videoPrompt 作为核心画面意图。
+- 同时保留 shot.visualAction、shot.charactersAndScene、shot.camera 中的动作、人物、场景和镜头信息。
+- video block 只用于理解该镜头所在的剪辑段落、节奏和连续动作，不得覆盖单个 shot 的内容。
+- 这是一张电影分镜图，不要出现字幕、文字、编号、标签、水印或分屏。
