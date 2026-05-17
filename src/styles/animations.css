@@ -181,36 +181,24 @@
   position: relative;
   overflow: hidden;
   isolation: isolate;
-  background-image:
-    linear-gradient(135deg, rgba(224, 242, 254, 0.32), transparent 42%, rgba(255, 255, 255, 0.2));
-  background-blend-mode: screen;
 }
 
-.workspace-node-loading-surface::before,
 .workspace-node-loading-surface::after {
   content: '';
   position: absolute;
   pointer-events: none;
 }
 
-.workspace-node-loading-surface::before {
-  inset: 0;
-  z-index: 7;
-  background:
-    linear-gradient(90deg, rgba(14, 165, 233, 0.08), transparent 34%, rgba(14, 165, 233, 0.1)),
-    repeating-linear-gradient(135deg, rgba(255, 255, 255, 0.08) 0 1px, transparent 1px 9px);
-}
-
 .workspace-node-loading-surface::after {
   inset: -24%;
-  width: 62%;
+  width: 58%;
   z-index: 8;
   background: linear-gradient(
     90deg,
     transparent 0%,
-    rgba(125, 211, 252, 0.28) 28%,
-    rgba(255, 255, 255, 0.98) 50%,
-    rgba(125, 211, 252, 0.34) 72%,
+    rgba(255, 255, 255, 0.18) 28%,
+    rgba(255, 255, 255, 0.96) 50%,
+    rgba(255, 255, 255, 0.22) 72%,
     transparent 100%
   );
   filter: blur(0.5px);
